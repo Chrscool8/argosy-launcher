@@ -15,7 +15,7 @@ import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.repository.GameRepository
 import com.nendo.argosy.domain.model.SyncProgress
 import com.nendo.argosy.util.SafeCoroutineScope
-import com.nendo.argosy.util.StorageAccess
+import com.nendo.argosy.util.openStorageAccessSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -207,8 +207,6 @@ class SessionEndCoordinator @Inject constructor(
     }
 
     private fun openAllFilesAccessSettings() {
-        application.startActivity(
-            StorageAccess.settingsIntent(application).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
+        application.openStorageAccessSettings()
     }
 }
