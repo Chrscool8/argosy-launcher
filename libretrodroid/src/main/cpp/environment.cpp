@@ -29,6 +29,7 @@
 #include "log.h"
 #include "environment.h"
 #include "vfs/vfs.h"
+#include "vulkan/vulkanbackend.h"
 #include "microphone/microphoneinterface.h"
 
 void Environment::initialize(
@@ -54,6 +55,7 @@ void Environment::deinitialize() {
 
     pixelFormat = RETRO_PIXEL_FORMAT_RGB565;
     useHWAcceleration = false;
+    useVulkan = false;
     useDepth = false;
     useStencil = false;
     bottomLeftOrigin = false;
@@ -163,10 +165,18 @@ bool Environment::environment_handle_set_hw_render(struct retro_hw_render_callba
         case RETRO_HW_CONTEXT_OPENGLES2:
         case RETRO_HW_CONTEXT_OPENGLES3:
         case RETRO_HW_CONTEXT_OPENGLES_VERSION:
+            useVulkan = false;
+            break;
+        case RETRO_HW_CONTEXT_VULKAN:
+            if (!libretrodroid::VulkanBackend::getInstance().isAvailable()) {
+                LOGW("Refusing Vulkan context: this device cannot share Vulkan frames with GLES");
+                return false;
+            }
+            useVulkan = true;
             break;
         default:
             LOGE(
-                "Refusing hardware context type %d: only GLES contexts can be presented",
+                "Refusing hardware context type %d: only GLES and Vulkan contexts can be presented",
                 hw_render_callback->context_type
             );
             return false;
@@ -175,13 +185,45 @@ bool Environment::environment_handle_set_hw_render(struct retro_hw_render_callba
     useHWAcceleration = true;
     useDepth = hw_render_callback->depth;
     useStencil = hw_render_callback->stencil;
-    bottomLeftOrigin = hw_render_callback->bottom_left_origin;
+    bottomLeftOrigin = !useVulkan && hw_render_callback->bottom_left_origin;
 
     hw_context_destroy = hw_render_callback->context_destroy;
     hw_context_reset = hw_render_callback->context_reset;
-    hw_render_callback->get_current_framebuffer = callback_get_current_framebuffer;
-    hw_render_callback->get_proc_address = &eglGetProcAddress;
+    if (!useVulkan) {
+        hw_render_callback->get_current_framebuffer = callback_get_current_framebuffer;
+        hw_render_callback->get_proc_address = &eglGetProcAddress;
+    }
 
+    return true;
+}
+
+bool Environment::environment_handle_set_negotiation_interface(
+    const struct retro_hw_render_context_negotiation_interface* negotiation
+) {
+    if (negotiation == nullptr || negotiation->interface_type != RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN) {
+        return false;
+    }
+    libretrodroid::VulkanBackend::getInstance().setNegotiationInterface(
+        reinterpret_cast<const struct retro_hw_render_context_negotiation_interface_vulkan*>(negotiation)
+    );
+    return true;
+}
+
+bool Environment::environment_handle_get_negotiation_support(
+    struct retro_hw_render_context_negotiation_interface* negotiation
+) {
+    negotiation->interface_version =
+        negotiation->interface_type == RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN
+            ? RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION
+            : 0;
+    return true;
+}
+
+bool Environment::environment_handle_get_hw_render_interface(const struct retro_hw_render_interface** received) {
+    if (!useVulkan) return false;
+    auto* renderInterface = libretrodroid::VulkanBackend::getInstance().getRenderInterface();
+    if (renderInterface == nullptr) return false;
+    *received = reinterpret_cast<const struct retro_hw_render_interface*>(renderInterface);
     return true;
 }
 
@@ -291,6 +333,21 @@ bool Environment::handle_callback_environment(unsigned cmd, void *data) {
         case RETRO_ENVIRONMENT_SET_HW_RENDER:
             LOGD("Called RETRO_ENVIRONMENT_SET_HW_RENDER");
             return environment_handle_set_hw_render(static_cast<struct retro_hw_render_callback*>(data));
+
+        case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+            LOGD("Called RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE");
+            return environment_handle_set_negotiation_interface(
+                static_cast<const struct retro_hw_render_context_negotiation_interface*>(data));
+
+        case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT:
+            LOGD("Called RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT");
+            return environment_handle_get_negotiation_support(
+                static_cast<struct retro_hw_render_context_negotiation_interface*>(data));
+
+        case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
+            LOGD("Called RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE");
+            return environment_handle_get_hw_render_interface(
+                static_cast<const struct retro_hw_render_interface**>(data));
 
         case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
             LOGD("Called RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE");
@@ -453,6 +510,10 @@ int Environment::getPixelFormat() const {
 
 bool Environment::isUseHwAcceleration() const {
     return useHWAcceleration;
+}
+
+bool Environment::isUseVulkan() const {
+    return useVulkan;
 }
 
 bool Environment::isUseDepth() const {

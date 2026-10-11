@@ -21,6 +21,8 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <android/hardware_buffer.h>
 #include <optional>
 #include <array>
 #include <vector>
@@ -46,6 +48,7 @@ public:
         bool useStencil;
         int openglESVersion;
         int pixelFormat;
+        bool vulkan = false;
     };
 
     struct ShaderChainEntry {
@@ -127,6 +130,14 @@ public:
      */
     void resizeHWRenderTarget(unsigned int width, unsigned int height);
 
+    bool presentsExternalFrames() const { return externalFrames; }
+
+    /**
+     * Samples [buffer] as the hardware frame from now on. Used when the core renders through
+     * Vulkan and hands its frames over in an AHardwareBuffer; replaces any earlier buffer.
+     */
+    bool attachExternalFrame(AHardwareBuffer* buffer, unsigned int width, unsigned int height);
+
 private:
     void updateProgram();
     bool tryBuildShaderChain(const ShaderManager::Chain& shaders, std::vector<ShaderChainEntry>& outChain);
@@ -184,6 +195,10 @@ private:
     unsigned hwFBOHeight = 0;
     bool hwUseDepth = false;
     bool hwUseStencil = false;
+
+    bool externalFrames = false;
+    EGLImageKHR externalFrameImage = EGL_NO_IMAGE_KHR;
+    void releaseExternalFrame();
 };
 
 }

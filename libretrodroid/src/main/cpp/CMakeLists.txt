@@ -95,6 +95,8 @@ add_library(libretrodroid SHARED
         core.cpp
         video.h
         video.cpp
+        vulkan/vulkanbackend.h
+        vulkan/vulkanbackend.cpp
         immersivemode.h
         immersivemode.cpp
         backgroundframe.h
@@ -172,8 +174,9 @@ target_link_options(libretrodroid PRIVATE "-Wl,-z,max-page-size=16384")
 # add lib dependencies
 target_link_libraries(libretrodroid
                       android
-                      log 
+                      log
                       EGL
                       oboe
                       GLESv3
+                      nativewindow
 )

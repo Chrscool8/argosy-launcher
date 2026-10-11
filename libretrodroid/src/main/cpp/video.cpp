@@ -416,7 +416,7 @@ std::vector<uint8_t> Video::captureRawFrame(int& outWidth, int& outHeight) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDeleteFramebuffers(1, &fbo);
 
-    if (hwAccelerated) {
+    if (hwAccelerated && !externalFrames) {
         int rowBytes = outWidth * 4;
         std::vector<uint8_t> tempRow(rowBytes);
         for (int y = 0; y < outHeight / 2; y++) {
@@ -525,6 +525,8 @@ Video::~Video() {
 
     delete renderer;
     renderer = nullptr;
+
+    releaseExternalFrame();
 
     if (hwAccelerated && eglDisplay != EGL_NO_DISPLAY) {
         if (hwRenderFBO != 0) {
@@ -672,6 +674,60 @@ void Video::initializeHWRenderContext(unsigned int width, unsigned int height,
     eglMakeCurrent(eglDisplay, eglSurface, eglSurface, mainCtx);
 }
 
+void Video::releaseExternalFrame() {
+    if (!externalFrames) return;
+    if (hwRenderTexture != 0) {
+        glDeleteTextures(1, &hwRenderTexture);
+        hwRenderTexture = 0;
+    }
+    if (externalFrameImage != EGL_NO_IMAGE_KHR) {
+        auto destroyImage = reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
+        if (destroyImage != nullptr) destroyImage(eglGetCurrentDisplay(), externalFrameImage);
+        externalFrameImage = EGL_NO_IMAGE_KHR;
+    }
+}
+
+bool Video::attachExternalFrame(AHardwareBuffer* buffer, unsigned int width, unsigned int height) {
+    if (!externalFrames || buffer == nullptr) return false;
+
+    auto getClientBuffer = reinterpret_cast<PFNEGLGETNATIVECLIENTBUFFERANDROIDPROC>(
+        eglGetProcAddress("eglGetNativeClientBufferANDROID"));
+    auto createImage = reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
+    auto targetTexture = reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
+        eglGetProcAddress("glEGLImageTargetTexture2DOES"));
+    if (getClientBuffer == nullptr || createImage == nullptr || targetTexture == nullptr) {
+        LOGE("EGL cannot import AHardwareBuffer frames on this device");
+        return false;
+    }
+
+    releaseExternalFrame();
+
+    EGLint attributes[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    externalFrameImage = createImage(
+        eglGetCurrentDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, getClientBuffer(buffer), attributes);
+    if (externalFrameImage == EGL_NO_IMAGE_KHR) {
+        LOGE("eglCreateImageKHR failed for the Vulkan frame buffer: 0x%x", eglGetError());
+        return false;
+    }
+
+    glGenTextures(1, &hwRenderTexture);
+    glBindTexture(GL_TEXTURE_2D, hwRenderTexture);
+    targetTexture(GL_TEXTURE_2D, static_cast<GLeglImageOES>(externalFrameImage));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    hwFBOWidth = width;
+    hwFBOHeight = height;
+    if (renderer != nullptr) {
+        renderer->updateRenderedResolution(width, height);
+    }
+    LOGI("Vulkan frame buffer imported into GLES: tex=%u %ux%u", hwRenderTexture, width, height);
+    return true;
+}
+
 void Video::resizeHWRenderTarget(unsigned int width, unsigned int height) {
     if (!hwAccelerated || hwCtx == EGL_NO_CONTEXT) return;
     if (width == 0 || height == 0) return;
@@ -717,10 +773,16 @@ void Video::initializeRenderer(RenderingOptions renderingOptions) {
 
     if (renderingOptions.hardwareAccelerated) {
         hwAccelerated = true;
-        initializeHWRenderContext(
-            renderingOptions.width, renderingOptions.height,
-            renderingOptions.useDepth, renderingOptions.useStencil
-        );
+        externalFrames = renderingOptions.vulkan;
+        if (externalFrames) {
+            hwFBOWidth = renderingOptions.width;
+            hwFBOHeight = renderingOptions.height;
+        } else {
+            initializeHWRenderContext(
+                renderingOptions.width, renderingOptions.height,
+                renderingOptions.useDepth, renderingOptions.useStencil
+            );
+        }
         renderer = new FramebufferRenderer(
             renderingOptions.width,
             renderingOptions.height,

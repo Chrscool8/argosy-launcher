@@ -48,6 +48,7 @@
 #include "utils/rect.h"
 #include "errorcodes.h"
 #include "vfs/vfs.h"
+#include "vulkan/vulkanbackend.h"
 
 namespace libretrodroid {
 
@@ -235,7 +236,7 @@ bool LibretroDroid::unserializeStateWithPolicy(
         return false;
     }
 
-    if (video && video->isHWAccelerated()) {
+    if (video && video->isHWAccelerated() && !video->presentsExternalFrames()) {
         auto contextReset = Environment::getInstance().getHwContextReset();
         if (contextReset) {
             video->bindHWContext();
@@ -346,6 +347,10 @@ void LibretroDroid::onSurfaceCreated() {
     // base_* is only the display size: Flycast pins base at 640x480 while rendering the internal
     // resolution into max_*. Sizing the render target from base crops everything above 1x.
     bool hwAccelerated = Environment::getInstance().isUseHwAcceleration();
+    bool vulkan = hwAccelerated && Environment::getInstance().isUseVulkan();
+    if (vulkan && !VulkanBackend::getInstance().start()) {
+        LOGE("The core asked for Vulkan but no Vulkan context could be created");
+    }
     unsigned renderWidth = system_av_info.geometry.base_width;
     unsigned renderHeight = system_av_info.geometry.base_height;
     if (hwAccelerated) {
@@ -360,7 +365,8 @@ void LibretroDroid::onSurfaceCreated() {
         Environment::getInstance().isUseDepth(),
         Environment::getInstance().isUseStencil(),
         openglESVersion,
-        Environment::getInstance().getPixelFormat()
+        Environment::getInstance().getPixelFormat(),
+        vulkan
     };
 
     auto newVideo = new Video(
@@ -390,6 +396,16 @@ void LibretroDroid::onSurfaceCreated() {
         video->setBackgroundFrameBehind(backgroundFrameBehind);
     }
 
+    if (vulkan) {
+        attachVulkanFrame(renderWidth, renderHeight);
+        if (!vulkanContextReset && VulkanBackend::getInstance().isStarted() &&
+            Environment::getInstance().getHwContextReset() != nullptr) {
+            Environment::getInstance().getHwContextReset()();
+            vulkanContextReset = true;
+        }
+        return;
+    }
+
     if (Environment::getInstance().getHwContextReset() != nullptr) {
         if (video && video->isHWAccelerated()) {
             video->bindHWContext();
@@ -399,6 +415,12 @@ void LibretroDroid::onSurfaceCreated() {
             video->bindMainContext();
         }
     }
+}
+
+void LibretroDroid::attachVulkanFrame(unsigned int width, unsigned int height) {
+    auto& backend = VulkanBackend::getInstance();
+    if (!video || !backend.ensureFrameBuffer(width, height)) return;
+    video->attachExternalFrame(backend.getFrameBuffer(), backend.getFrameBufferWidth(), backend.getFrameBufferHeight());
 }
 
 void LibretroDroid::onMotionEvent(
@@ -653,7 +675,10 @@ void LibretroDroid::destroy() {
     clearScreenSplit();
 
     auto contextDestroy = Environment::getInstance().getHwContextDestroy();
-    if (contextDestroy != nullptr && video && video->isHWAccelerated()) {
+    bool vulkan = Environment::getInstance().isUseVulkan();
+    if (vulkan) {
+        if (contextDestroy != nullptr && vulkanContextReset) contextDestroy();
+    } else if (contextDestroy != nullptr && video && video->isHWAccelerated()) {
         video->bindHWContext();
         contextDestroy();
         video->bindMainContext();
@@ -661,10 +686,20 @@ void LibretroDroid::destroy() {
 
     if (core) {
         core->retro_unload_game();
-        core->retro_deinit();
     }
 
     video = nullptr;
+
+    if (vulkan) {
+        VulkanBackend::getInstance().destroyCoreDevice();
+        VulkanBackend::getInstance().shutdown();
+        vulkanContextReset = false;
+    }
+
+    if (core) {
+        core->retro_deinit();
+    }
+
     core = nullptr;
     rumble = nullptr;
     fpsSync = nullptr;
@@ -786,10 +821,17 @@ void LibretroDroid::step() {
     if (video && Environment::getInstance().isGameMaxGeometryUpdated()) {
         Environment::getInstance().clearGameMaxGeometryUpdated();
 
-        video->resizeHWRenderTarget(
-            Environment::getInstance().getGameMaxGeometryWidth(),
-            Environment::getInstance().getGameMaxGeometryHeight()
-        );
+        if (video->presentsExternalFrames()) {
+            attachVulkanFrame(
+                Environment::getInstance().getGameMaxGeometryWidth(),
+                Environment::getInstance().getGameMaxGeometryHeight()
+            );
+        } else {
+            video->resizeHWRenderTarget(
+                Environment::getInstance().getGameMaxGeometryWidth(),
+                Environment::getInstance().getGameMaxGeometryHeight()
+            );
+        }
     }
 
     if (video && Environment::getInstance().isGameGeometryUpdated()) {
@@ -866,10 +908,17 @@ void LibretroDroid::stepForNetplay() {
     if (video && Environment::getInstance().isGameMaxGeometryUpdated()) {
         Environment::getInstance().clearGameMaxGeometryUpdated();
 
-        video->resizeHWRenderTarget(
-            Environment::getInstance().getGameMaxGeometryWidth(),
-            Environment::getInstance().getGameMaxGeometryHeight()
-        );
+        if (video->presentsExternalFrames()) {
+            attachVulkanFrame(
+                Environment::getInstance().getGameMaxGeometryWidth(),
+                Environment::getInstance().getGameMaxGeometryHeight()
+            );
+        } else {
+            video->resizeHWRenderTarget(
+                Environment::getInstance().getGameMaxGeometryWidth(),
+                Environment::getInstance().getGameMaxGeometryHeight()
+            );
+        }
     }
 
     if (video && Environment::getInstance().isGameGeometryUpdated()) {
@@ -1103,6 +1152,11 @@ void LibretroDroid::handleVideoRefresh(
     size_t pitch
 ) {
     if (video) {
+        if (data == RETRO_HW_FRAME_BUFFER_VALID && video->presentsExternalFrames()) {
+            glFinish();
+            VulkanBackend::getInstance().presentFrame(width, height);
+        }
+
         video->onNewFrame(data, width, height, pitch);
 
         if (video->rendersInVideoCallback()) {

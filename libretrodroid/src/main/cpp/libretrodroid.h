@@ -222,6 +222,7 @@ private:
     float findDefaultAspectRatio(const retro_system_av_info &system_av_info);
     void afterGameLoad();
     void refreshTimingFromCoreIfFollowingGeometry();
+    void attachVulkanFrame(unsigned int width, unsigned int height);
 
 protected:
     static void callback_hw_video_refresh(const void *data, unsigned width, unsigned height, size_t pitch);
@@ -260,6 +261,7 @@ private:
     bool skipDuplicateFrames = false;
     bool timingFollowsGeometry = false;
     bool immersiveModeEnabled = false;
+    bool vulkanContextReset = false;
     bool backgroundFrameBehind = false;
     ImmersiveMode::Config immersiveModeConfig {};
 
