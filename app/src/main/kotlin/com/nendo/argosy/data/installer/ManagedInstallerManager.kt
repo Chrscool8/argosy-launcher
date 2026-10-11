@@ -211,7 +211,8 @@ class ManagedInstallerManager @Inject constructor(
                 variant = ApkAssetMatcher.extractVariantFromAssetName(chosenAsset.name)
                     ?: chosenAsset.name
             } else {
-                when (val match = ApkAssetMatcher.matchApk(release.assets, storedVariant = row.assetVariant)) {
+                val assets = SeededInstallers.installableAssets(row, release.assets)
+                when (val match = ApkAssetMatcher.matchApk(assets, storedVariant = row.assetVariant)) {
                     is ApkMatchResult.SingleMatch -> {
                         asset = match.asset
                         variant = match.variant
