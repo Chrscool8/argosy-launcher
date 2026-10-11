@@ -98,7 +98,8 @@ fun frostedSurfaceColor(): Color = if (LocalLauncherTheme.current.isDarkTheme) {
     ColorTokens.Domain.FrostedSurface.light
 }
 
-val minimumTouchTarget: Dp get() = ComponentDefaults.FrostedSurface.minimumTouchTargetDp.dp
+val minimumTouchTarget: Dp
+    @Composable get() = ComponentDefaults.FrostedSurface.minimumTouchTargetDp.dp * LocalUiScale.current.scale
 
 val frostedVisualChromeHeight: Dp
     @Composable get() = ComponentDefaults.FrostedSurface.chromeHeightDp.dp * LocalUiScale.current.scale

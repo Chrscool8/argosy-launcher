@@ -91,9 +91,9 @@ object Dimens {
     val headerHeightLg: Dp @Composable get() = DimensionTokens.Layout.headerHeightLg.dp * scale
     val breadcrumbMaxWidth: Dp @Composable get() = DimensionTokens.Layout.breadcrumbMaxWidth.dp * scale
     val footerHeight: Dp @Composable get() = maxOf(
-        footerHeightBase.dp * scale,
-        ComponentDefaults.FrostedSurface.minimumTouchTargetDp.dp
-    )
+        footerHeightBase,
+        ComponentDefaults.FrostedSurface.minimumTouchTargetDp
+    ).dp * scale
     val footerClearance: Dp @Composable get() = footerHeight + spacingMd
     val modalWidth: Dp @Composable get() = DimensionTokens.Layout.modalWidth.dp * scale
     val modalWidthLg: Dp @Composable get() = DimensionTokens.Layout.modalWidthLg.dp * scale
