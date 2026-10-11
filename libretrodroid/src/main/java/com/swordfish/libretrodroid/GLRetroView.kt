@@ -239,6 +239,13 @@ class GLRetroView(
 
     override fun onCreate(owner: LifecycleOwner) = catchExceptions {
         lifecycle = owner.lifecycle
+        LibretroDroid.setVulkanConfig(
+            data.preferVulkan,
+            data.vulkanDriver?.directory,
+            data.vulkanDriver?.libraryName,
+            context.applicationInfo.nativeLibraryDir,
+            context.cacheDir.absolutePath
+        )
         LibretroDroid.create(
             openGLESVersion,
             data.coreFilePath,

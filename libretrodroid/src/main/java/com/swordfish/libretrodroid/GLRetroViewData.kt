@@ -37,4 +37,6 @@ class GLRetroViewData(context: Context) {
     var timingFollowsGeometry: Boolean = false
     var enableMicrophone: Boolean = false
     var immersiveMode: ImmersiveMode? = null
+    var preferVulkan: Boolean = false
+    var vulkanDriver: VulkanDriver? = null
 }

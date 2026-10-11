@@ -53,6 +53,21 @@ public:
     VulkanBackend(VulkanBackend const&) = delete;
     void operator=(VulkanBackend const&) = delete;
 
+    struct DriverConfig {
+        std::string directory;
+        std::string library;
+        std::string hookDirectory;
+        std::string scratchDirectory;
+
+        bool isCustom() const { return !directory.empty() && !library.empty(); }
+        bool operator==(const DriverConfig& other) const {
+            return directory == other.directory && library == other.library &&
+                   hookDirectory == other.hookDirectory && scratchDirectory == other.scratchDirectory;
+        }
+    };
+
+    void configure(bool preferVulkan, const DriverConfig& driver);
+    bool isPreferred() const { return preferVulkan; }
     bool isAvailable();
     void setNegotiationInterface(const retro_hw_render_context_negotiation_interface_vulkan* negotiation);
     bool start();
@@ -144,6 +159,8 @@ private:
     void waitForFrame();
 
     void* loaderHandle = nullptr;
+    bool preferVulkan = false;
+    DriverConfig driverConfig;
     Dispatch vk;
     const retro_hw_render_context_negotiation_interface_vulkan* negotiation = nullptr;
     bool negotiatedDevice = false;

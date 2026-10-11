@@ -44,6 +44,7 @@
 #include "renderers/es2/imagerendereres2.h"
 #include "renderers/es3/imagerendereres3.h"
 #include "utils/jnistring.h"
+#include "vulkan/vulkanbackend.h"
 #include "achievements_test.h"
 #include "stateloadpolicy_test.h"
 #include <rc_hash.h>
@@ -752,6 +753,26 @@ JNIEXPORT void JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_setNetplay
     jboolean active
 ) {
     LibretroDroid::getInstance().setNetplayActive(active);
+}
+
+JNIEXPORT void JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_setVulkanConfig(
+    JNIEnv* env,
+    jclass obj,
+    jboolean preferVulkan,
+    jstring driverDirectory,
+    jstring driverLibrary,
+    jstring hookDirectory,
+    jstring scratchDirectory
+) {
+    auto toString = [env](jstring value) {
+        return value == nullptr ? std::string() : JniString(env, value).stdString();
+    };
+    VulkanBackend::getInstance().configure(preferVulkan, VulkanBackend::DriverConfig {
+        toString(driverDirectory),
+        toString(driverLibrary),
+        toString(hookDirectory),
+        toString(scratchDirectory)
+    });
 }
 
 JNIEXPORT void JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_setRumbleEnabled(

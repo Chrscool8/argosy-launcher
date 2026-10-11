@@ -43,6 +43,19 @@ bool hasExtension(const std::vector<VkExtensionProperties>& available, const cha
 
 }
 
+void VulkanBackend::configure(bool prefer, const DriverConfig& driver) {
+    preferVulkan = prefer;
+    if (driver == driverConfig || isStarted()) return;
+
+    driverConfig = driver;
+    availability = -1;
+    vk = Dispatch {};
+    if (loaderHandle != nullptr) {
+        dlclose(loaderHandle);
+        loaderHandle = nullptr;
+    }
+}
+
 bool VulkanBackend::loadLoader() {
     if (vk.getInstanceProcAddr != nullptr) return true;
 

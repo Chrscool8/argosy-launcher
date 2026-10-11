@@ -326,7 +326,10 @@ bool Environment::handle_callback_environment(unsigned cmd, void *data) {
 
         case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER: {
             LOGD("Called RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER");
-            *((unsigned*) data) = retro_hw_context_type::RETRO_HW_CONTEXT_OPENGLES3;
+            auto& vulkan = libretrodroid::VulkanBackend::getInstance();
+            *((unsigned*) data) = vulkan.isPreferred() && vulkan.isAvailable()
+                ? retro_hw_context_type::RETRO_HW_CONTEXT_VULKAN
+                : retro_hw_context_type::RETRO_HW_CONTEXT_OPENGLES3;
             return true;
         }
 
