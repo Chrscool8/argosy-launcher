@@ -101,6 +101,17 @@ def stability_findings(text, rel, stability_checks, added=None):
     ]
 
 
+def service_stability_findings(text, rel, service_checks, added=None):
+    if not matches_any(rel, service_checks.PATHS):
+        return []
+    lines = text.splitlines()
+    touched = None if added is None else (lambda i: lines[i] in added)
+    return [
+        (rule_id, message, snippet)
+        for rule_id, message, snippet, _ in service_checks.findings(lines, touched)
+    ]
+
+
 def kdoc_findings(text, rel, comment_checks, added=None):
     if comment_checks is None:
         return []
@@ -182,6 +193,12 @@ def main():
         )
     except Exception:
         stability = []
+    try:
+        stability += service_stability_findings(
+            block_text, rel, load_ci_module(root, "service_stability_checks"), added_lines
+        )
+    except Exception:
+        pass
 
     if not findings and not doc_findings and not prose and not stability:
         sys.exit(0)
