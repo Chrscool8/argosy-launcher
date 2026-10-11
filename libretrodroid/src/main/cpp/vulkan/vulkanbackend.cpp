@@ -23,6 +23,10 @@
 
 #include "../log.h"
 
+#ifdef LIBRETRODROID_ADRENOTOOLS
+#include <adrenotools/driver.h>
+#endif
+
 namespace libretrodroid {
 
 namespace {
@@ -56,10 +60,47 @@ void VulkanBackend::configure(bool prefer, const DriverConfig& driver) {
     }
 }
 
+void* VulkanBackend::openCustomDriver() const {
+#ifdef LIBRETRODROID_ADRENOTOOLS
+    auto withSlash = [](const std::string& path) { return path.back() == '/' ? path : path + "/"; };
+    const std::string driverDirectory = withSlash(driverConfig.directory);
+    const std::string hookDirectory = withSlash(driverConfig.hookDirectory);
+    const std::string scratchDirectory = driverConfig.scratchDirectory.empty()
+        ? std::string()
+        : withSlash(driverConfig.scratchDirectory);
+
+    void* handle = adrenotools_open_libvulkan(
+        RTLD_NOW | RTLD_LOCAL,
+        ADRENOTOOLS_DRIVER_CUSTOM,
+        scratchDirectory.empty() ? nullptr : scratchDirectory.c_str(),
+        hookDirectory.c_str(),
+        driverDirectory.c_str(),
+        driverConfig.library.c_str(),
+        nullptr,
+        nullptr
+    );
+    if (handle == nullptr) {
+        LOGW("Custom Vulkan driver %s%s could not be loaded; using the system driver",
+             driverDirectory.c_str(), driverConfig.library.c_str());
+    } else {
+        LOGI("Custom Vulkan driver loaded: %s%s", driverDirectory.c_str(), driverConfig.library.c_str());
+    }
+    return handle;
+#else
+    LOGW("Custom Vulkan drivers are only supported on arm64; using the system driver");
+    return nullptr;
+#endif
+}
+
 bool VulkanBackend::loadLoader() {
     if (vk.getInstanceProcAddr != nullptr) return true;
 
-    loaderHandle = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
+    if (driverConfig.isCustom() && !driverConfig.hookDirectory.empty()) {
+        loaderHandle = openCustomDriver();
+    }
+    if (loaderHandle == nullptr) {
+        loaderHandle = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
+    }
     if (loaderHandle == nullptr) {
         LOGW("Vulkan loader unavailable: %s", dlerror());
         return false;

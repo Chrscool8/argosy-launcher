@@ -145,6 +145,9 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     testOptions {

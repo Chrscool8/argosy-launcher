@@ -132,6 +132,7 @@ private:
     };
 
     bool loadLoader();
+    void* openCustomDriver() const;
     bool loadInstanceFunctions();
     bool loadDeviceFunctions();
     bool createInstance();

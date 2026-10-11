@@ -180,3 +180,12 @@ target_link_libraries(libretrodroid
                       GLESv3
                       nativewindow
 )
+
+if(ANDROID_ABI STREQUAL "arm64-v8a")
+    add_subdirectory(libadrenotools)
+    target_link_libraries(libretrodroid adrenotools)
+    target_compile_definitions(libretrodroid PRIVATE LIBRETRODROID_ADRENOTOOLS)
+    foreach(hook hook_impl main_hook file_redirect_hook gsl_alloc_hook)
+        target_link_options(${hook} PRIVATE "-Wl,-z,max-page-size=16384")
+    endforeach()
+endif()
