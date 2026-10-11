@@ -187,6 +187,12 @@ class SettingsViewModel @Inject constructor(
     internal val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+    val controllerSeats = com.nendo.argosy.ui.screens.settings.components.ControllerSeatController(
+        repository = inputConfigRepository,
+        scope = viewModelScope,
+        onSeatsChanged = { routeRefreshControllerOrderCount(this) }
+    )
+
     internal val _openUrlEvent = MutableSharedFlow<String>()
     val openUrlEvent: SharedFlow<String> = _openUrlEvent.asSharedFlow()
 
@@ -365,6 +371,7 @@ class SettingsViewModel @Inject constructor(
     fun dismissVariantPicker() = emulatorDelegate.dismissVariantPicker()
     fun navigateToBuiltinVideo() = emulatorDelegate.navigateToBuiltinVideo(viewModelScope)
     fun navigateToBuiltinControls() = emulatorDelegate.navigateToBuiltinControls(viewModelScope)
+    fun navigateToBuiltinSaves() = emulatorDelegate.navigateToBuiltinSaves(viewModelScope)
     fun navigateToCoreManagement() = emulatorDelegate.navigateToCoreManagement(viewModelScope)
     fun navigateToCoreOptions() = emulatorDelegate.navigateToCoreOptions(viewModelScope)
     fun navigateToCoreOptionsForPlatform() {
@@ -608,19 +615,22 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun navigateToBuiltinVideoForPlatform(platformIndex: Int) {
-        val config = _uiState.value.emulators.platforms.getOrNull(platformIndex) ?: return
-        val ctxIndex = _uiState.value.builtinVideo.availablePlatforms
-            .indexOfFirst { it.platformId == config.platform.id }
-        if (ctxIndex >= 0) {
-            _uiState.update {
-                it.copy(builtinVideo = it.builtinVideo.copy(platformContextIndex = ctxIndex + 1))
-            }
-        }
+        if (!selectBuiltinPlatformContext(platformIndex)) return
         emulatorDelegate.navigateToBuiltinVideo(viewModelScope)
     }
 
     fun navigateToBuiltinControlsForPlatform(platformIndex: Int) {
-        val config = _uiState.value.emulators.platforms.getOrNull(platformIndex) ?: return
+        if (!selectBuiltinPlatformContext(platformIndex)) return
+        emulatorDelegate.navigateToBuiltinControls(viewModelScope)
+    }
+
+    fun navigateToBuiltinSavesForPlatform(platformIndex: Int) {
+        if (!selectBuiltinPlatformContext(platformIndex)) return
+        emulatorDelegate.navigateToBuiltinSaves(viewModelScope)
+    }
+
+    private fun selectBuiltinPlatformContext(platformIndex: Int): Boolean {
+        val config = _uiState.value.emulators.platforms.getOrNull(platformIndex) ?: return false
         val ctxIndex = _uiState.value.builtinVideo.availablePlatforms
             .indexOfFirst { it.platformId == config.platform.id }
         if (ctxIndex >= 0) {
@@ -628,7 +638,7 @@ class SettingsViewModel @Inject constructor(
                 it.copy(builtinVideo = it.builtinVideo.copy(platformContextIndex = ctxIndex + 1))
             }
         }
-        emulatorDelegate.navigateToBuiltinControls(viewModelScope)
+        return true
     }
 
     fun getInstalledCoreIds(): Set<String> =
@@ -723,8 +733,6 @@ class SettingsViewModel @Inject constructor(
     fun setBuiltinDpadAsAnalog(enabled: Boolean) = routeSetBuiltinDpadAsAnalog(this, enabled)
     fun showControllerOrderModal() = routeShowControllerOrderModal(this)
     fun hideControllerOrderModal() = routeHideControllerOrderModal(this)
-    fun assignControllerToPort(port: Int, device: android.view.InputDevice) = routeAssignControllerToPort(this, port, device)
-    fun clearControllerOrder() = routeClearControllerOrder(this)
     fun getControllerOrder() = inputConfigRepository.observeControllerOrder()
     fun showInputMappingModal() = routeShowInputMappingModal(this)
     fun hideInputMappingModal() = routeHideInputMappingModal(this)
@@ -882,8 +890,9 @@ class SettingsViewModel @Inject constructor(
     fun loadCoreManagementState(preserveFocus: Boolean = false) = routeLoadCoreManagementState(this, preserveFocus)
     fun moveCoreManagementPlatformFocus(delta: Int): Boolean = routeMoveCoreManagementPlatformFocus(this, delta)
     fun moveCoreManagementCoreFocus(delta: Int): Boolean = routeMoveCoreManagementCoreFocus(this, delta)
-    fun selectCoreForPlatform() = routeSelectCoreForPlatform(this)
-    fun selectCoreAt(platformIndex: Int, coreIndex: Int) = routeSelectCoreAt(this, platformIndex, coreIndex)
+    fun confirmCoreManagement() = routeCoreManagementConfirm(this)
+    fun selectCoreAt(rowIndex: Int, coreIndex: Int) = routeSelectCoreAt(this, rowIndex, coreIndex)
+    fun updateAllCores() = routeTapUpdateAllCores(this)
 
     fun loadCoreOptionsState() = routeLoadCoreOptionsState(this)
     fun cycleCoreOptionsPlatformContext(direction: Int) = routeCycleCoreOptionsPlatformContext(this, direction)
@@ -1131,6 +1140,7 @@ class SettingsViewModel @Inject constructor(
         routeAdjustHomeLayoutField(this, field, direction)
     fun setPresentationStyle(style: com.nendo.argosy.domain.model.PresentationStyle) =
         displayDelegate.setPresentationStyle(viewModelScope, style)
+    fun adjustPresentationBackgroundBlur(delta: Int) = routeAdjustPresentationBackgroundBlur(this, delta)
     fun setUseAccentColorFooter(use: Boolean) = displayDelegate.setUseAccentColorFooter(viewModelScope, use)
     fun setCompactFooter(enabled: Boolean) = displayDelegate.setCompactFooter(viewModelScope, enabled)
     fun setLockScreenArt(enabled: Boolean) = displayDelegate.setLockScreenArt(viewModelScope, enabled)

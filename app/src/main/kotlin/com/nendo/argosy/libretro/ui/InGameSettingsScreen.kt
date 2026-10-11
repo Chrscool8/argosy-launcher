@@ -1,8 +1,6 @@
 package com.nendo.argosy.libretro.ui
 
-import android.view.InputDevice
 import androidx.annotation.StringRes
-import com.nendo.argosy.data.local.entity.ControllerOrderEntity
 import com.nendo.argosy.data.local.entity.CoreInputMode
 import com.nendo.argosy.data.local.entity.HotkeyAction
 import com.nendo.argosy.data.local.entity.HotkeyScopeType
@@ -59,6 +57,7 @@ import com.nendo.argosy.ui.screens.settings.CoreOptionViewItem
 import com.nendo.argosy.ui.input.InputHandler
 import com.nendo.argosy.ui.input.InputResult
 import com.nendo.argosy.ui.screens.settings.components.ControllerOrderModal
+import com.nendo.argosy.ui.screens.settings.components.ControllerSeatController
 import com.nendo.argosy.ui.screens.settings.components.GripSettingsModal
 import com.nendo.argosy.ui.screens.settings.components.HotkeysModal
 import com.nendo.argosy.data.repository.MappingPlatforms
@@ -169,11 +168,9 @@ sealed class InGameControlsAction {
 }
 
 data class InGameModalCallbacks(
-    val controllerOrder: List<ControllerOrderEntity>,
+    val controllerSeats: ControllerSeatController,
     val hotkeys: List<HotkeyEntity>,
     val connectedControllers: List<ControllerInfo>,
-    val onAssignController: (Int, InputDevice) -> Unit,
-    val onClearControllerOrder: () -> Unit,
     val onGetMapping: suspend (ControllerInfo, String?) -> ScopedMapping,
     val onSaveMapping: suspend (ControllerInfo, Map<InputSource, Int>, String?, Boolean, String?) -> Unit,
     val onApplyPreset: suspend (ControllerInfo, String) -> Unit,
@@ -356,7 +353,7 @@ fun InGameSettingsScreen(
         )
     }
     val videoLibretroCount = remember(platformSlug, canEnableBFI) {
-        libretroSettingsMaxFocusIndex(platformSlug, canEnableBFI, showSavingSection = false) + 1
+        libretroSettingsMaxFocusIndex(platformSlug, canEnableBFI) + 1
     }
     val maxVideoFocusIndex = videoLibretroCount + InGameHudItem.entries.size - 1
     val controlsMaxFocusIndex = remember(controlsVisibility) {
@@ -385,8 +382,7 @@ fun InGameSettingsScreen(
         InGameSettingsTab.VIDEO -> libretroSettingsItemAtFocusIndex(
             index = index,
             platformSlug = platformSlug,
-            canEnableBFI = canEnableBFI,
-            showSavingSection = false
+            canEnableBFI = canEnableBFI
         )
         InGameSettingsTab.CONTROLS -> null
         InGameSettingsTab.CORE_OPTIONS -> null
@@ -430,6 +426,11 @@ fun InGameSettingsScreen(
         return currentCoreOptions.value.getOrNull(index - offset)?.key
     }
 
+    fun openControllerOrder() {
+        modalCallbacks.controllerSeats.open()
+        showControllerOrderModal = true
+    }
+
     fun cycleControlsItem(direction: Int): Boolean {
         val item = controlsLayout.itemAtFocusIndex(focusedIndex, controlsVisibility)
         if (item !is InGameControlsItem.ControllerType) return false
@@ -444,7 +445,7 @@ fun InGameSettingsScreen(
         when (item) {
             InGameControlsItem.GameSpecificControls -> action(InGameControlsAction.SetGameSpecificControls(!state.gameSpecificControls))
             InGameControlsItem.Rumble -> action(InGameControlsAction.SetRumble(!state.rumbleEnabled))
-            InGameControlsItem.ControllerOrder -> showControllerOrderModal = true
+            InGameControlsItem.ControllerOrder -> openControllerOrder()
             is InGameControlsItem.ControllerType ->
                 action(InGameControlsAction.CycleControllerType(item.port, 1))
             InGameControlsItem.InputMapping -> showInputMappingModal = true
@@ -649,7 +650,6 @@ fun InGameSettingsScreen(
                             focusedIndex = focusedIndex,
                             platformSlug = platformSlug,
                             canEnableBFI = canEnableBFI,
-                            showSavingSection = false,
                             listState = videoListState,
                             enablePicker = false,
                             trailingContent = { InGameHudHeader() },
@@ -674,7 +674,7 @@ fun InGameSettingsScreen(
                             visibility = controlsVisibility,
                             onAction = { action ->
                                 when (action) {
-                                    InGameControlsAction.ShowControllerOrder -> showControllerOrderModal = true
+                                    InGameControlsAction.ShowControllerOrder -> openControllerOrder()
                                     InGameControlsAction.ShowGripSettings -> showGripSettingsModal = true
                                     InGameControlsAction.ShowInputMapping -> showInputMappingModal = true
                                     InGameControlsAction.ShowHotkeys -> showHotkeysModal = true
@@ -716,9 +716,7 @@ fun InGameSettingsScreen(
 
         if (showControllerOrderModal) {
             ControllerOrderModal(
-                existingOrder = modalCallbacks.controllerOrder,
-                onAssign = modalCallbacks.onAssignController,
-                onClearAll = modalCallbacks.onClearControllerOrder,
+                controller = modalCallbacks.controllerSeats,
                 onDismiss = { showControllerOrderModal = false }
             )
         }

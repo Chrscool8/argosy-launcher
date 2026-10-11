@@ -64,6 +64,18 @@
     <string name="settings_shell_coremanagement_download_required_desc">Download erforderlich</string>
     <string name="settings_shell_coremanagement_netplay_tag">Netplay</string>
     <string name="settings_shell_coremanagement_update_tag">Update</string>
+    <plurals name="settings_shell_coremanagement_update_all_title">
+        <item quantity="one">%d Core aktualisieren</item>
+        <item quantity="other">Alle %d Cores aktualisieren</item>
+    </plurals>
+    <string name="settings_shell_coremanagement_update_all_subtitle">Neuesten Build jedes zum Update markierten Cores herunterladen</string>
+    <string name="settings_shell_coremanagement_update_all_starting">Wird gestartet&#8230;</string>
+    <string name="settings_shell_coremanagement_update_all_progress">%1$s wird aktualisiert (%2$d von %3$d)</string>
+    <plurals name="settings_shell_coremanagement_update_all_failed">
+        <item quantity="one">%d Core konnte nicht aktualisiert werden</item>
+        <item quantity="other">%d Cores konnten nicht aktualisiert werden</item>
+    </plurals>
+    <string name="settings_shell_coremanagement_update_builds">%1$s: installiert %2$s -> verfügbar %3$s</string>
 
     <!-- ===== BuiltinVideoSection: per-platform save/state path rows ===== -->
 
@@ -116,6 +128,7 @@
     <string name="settings_shell_header_platform_detail_fallback">PLATTFORM</string>
     <string name="settings_shell_header_builtin_video">INTEGRIERTE A/V &amp; LEISTUNG</string>
     <string name="settings_shell_header_builtin_controls">INTEGRIERTE STEUERUNG</string>
+    <string name="settings_shell_header_builtin_saves">INTEGRIERTE SPIELSTÄNDE</string>
     <string name="settings_shell_header_core_management">CORES VERWALTEN</string>
     <string name="settings_shell_header_core_options">CORE-OPTIONEN</string>
     <string name="settings_shell_header_bios">BIOS-DATEIEN</string>
@@ -337,6 +350,7 @@
     <string name="settings_shell_footer_update">Aktualisieren</string>
     <string name="settings_shell_footer_reset_builtinvideo_override">Zurücksetzen</string>
     <string name="settings_shell_footer_reset_builtincontrols_override">Zurücksetzen</string>
+    <string name="settings_shell_footer_reset_builtinsaves_override">Zurücksetzen</string>
     <string name="settings_shell_footer_back">Zurück</string>
     <string name="settings_shell_footer_unassign_shortcut">Entfernen</string>
 
@@ -428,6 +442,17 @@
     <string name="settings_shell_router_core_downloaded_subtitle">Core ist jetzt verfügbar</string>
     <string name="settings_shell_router_core_download_failed_title">Download fehlgeschlagen</string>
     <string name="settings_shell_router_core_download_failed_fallback">Unbekannter Fehler</string>
+    <string name="settings_shell_router_cannot_update_all_offline">Cores können offline nicht aktualisiert werden</string>
+    <string name="settings_shell_router_cores_updating_title">Cores werden aktualisiert</string>
+    <plurals name="settings_shell_router_cores_updated_title">
+        <item quantity="one">%d Core aktualisiert</item>
+        <item quantity="other">%d Cores aktualisiert</item>
+    </plurals>
+    <plurals name="settings_shell_router_cores_update_failed_title">
+        <item quantity="one">%d Core konnte nicht aktualisiert werden</item>
+        <item quantity="other">%d Cores konnten nicht aktualisiert werden</item>
+    </plurals>
+    <string name="settings_shell_router_cores_update_error_title">Core-Update abgebrochen</string>
 
     <!-- ===== Routers: SettingsAboutRouter ===== -->
 

@@ -521,6 +521,17 @@ class DisplaySettingsDelegate @Inject constructor(
         scope.launch { preferencesRepository.setPresentationStyle(style) }
     }
 
+    fun adjustPresentationBackgroundBlur(scope: CoroutineScope, delta: Int) {
+        val current = _state.value.presentationBackgroundBlur
+        val newValue = (current + delta).coerceIn(0, 100)
+        if (newValue != current) {
+            scope.launch {
+                preferencesRepository.setPresentationBackgroundBlur(newValue)
+                _state.update { it.copy(presentationBackgroundBlur = newValue) }
+            }
+        }
+    }
+
     fun setUseAccentColorFooter(scope: CoroutineScope, use: Boolean) {
         scope.launch {
             preferencesRepository.setUseAccentColorFooter(use)

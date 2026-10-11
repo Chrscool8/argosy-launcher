@@ -90,6 +90,23 @@
     <string name="settings_shell_coremanagement_netplay_tag">Netplay</string>
     <!-- Small tag on a core chip that has an update available. Noun. -->
     <string name="settings_shell_coremanagement_update_tag">Update</string>
+    <!-- Action row at the top of core management. Verb. %d is how many installed cores have a newer build. -->
+    <plurals name="settings_shell_coremanagement_update_all_title">
+        <item quantity="one">Update %d core</item>
+        <item quantity="other">Update all %d cores</item>
+    </plurals>
+    <string name="settings_shell_coremanagement_update_all_subtitle">Download the newest build of every core marked for update</string>
+    <!-- Subtitle of the update-all row before the first core starts downloading. -->
+    <string name="settings_shell_coremanagement_update_all_starting">Starting&#8230;</string>
+    <!-- Subtitle of the update-all row while it runs. %1$s is the core name, %2$d its position, %3$d the total. -->
+    <string name="settings_shell_coremanagement_update_all_progress">Updating %1$s (%2$d of %3$d)</string>
+    <!-- Subtitle of the update-all row after a run where some cores did not update. %d is how many. -->
+    <plurals name="settings_shell_coremanagement_update_all_failed">
+        <item quantity="one">%d core failed to update</item>
+        <item quantity="other">%d cores failed to update</item>
+    </plurals>
+    <!-- Line under a platform's cores. %1$s is the core name, %2$s the build date installed, %3$s the newer build date. -->
+    <string name="settings_shell_coremanagement_update_builds">%1$s: installed %2$s -> available %3$s</string>
 
     <!-- ===== BuiltinVideoSection: per-platform save/state path rows ===== -->
 
@@ -162,6 +179,8 @@
     <string name="settings_shell_header_platform_detail_fallback">PLATFORM</string>
     <string name="settings_shell_header_builtin_video">BUILT-IN A/V &amp; PERFORMANCE</string>
     <string name="settings_shell_header_builtin_controls">BUILT-IN CONTROLS</string>
+    <!-- "SAVES" is a noun, plural: saved games, not the verb. -->
+    <string name="settings_shell_header_builtin_saves">BUILT-IN SAVES</string>
     <string name="settings_shell_header_core_management">MANAGE CORES</string>
     <string name="settings_shell_header_core_options">CORE OPTIONS</string>
     <!-- "BIOS" is the console startup firmware file; commonly left untranslated. -->
@@ -450,6 +469,8 @@
     <string name="settings_shell_footer_reset_builtinvideo_override">Reset</string>
     <!-- Y-button hint that resets a built-in controls per-platform override. Separate site. -->
     <string name="settings_shell_footer_reset_builtincontrols_override">Reset</string>
+    <!-- Y-button hint that resets a built-in saves per-platform override. Separate site. -->
+    <string name="settings_shell_footer_reset_builtinsaves_override">Reset</string>
     <string name="settings_shell_footer_back">Back</string>
     <!-- Y-button hint on the Shortcuts rows that removes the assigned button. Verb. -->
     <string name="settings_shell_footer_unassign_shortcut">Unassign</string>
@@ -554,6 +575,21 @@
     <string name="settings_shell_router_core_downloaded_subtitle">Core is now available</string>
     <string name="settings_shell_router_core_download_failed_title">Download failed</string>
     <string name="settings_shell_router_core_download_failed_fallback">Unknown error</string>
+    <string name="settings_shell_router_cannot_update_all_offline">Cannot update cores while offline</string>
+    <!-- Persistent notification title while every core with a newer build downloads. -->
+    <string name="settings_shell_router_cores_updating_title">Updating cores</string>
+    <!-- Notification after updating every core succeeded. %d is how many cores updated. -->
+    <plurals name="settings_shell_router_cores_updated_title">
+        <item quantity="one">Updated %d core</item>
+        <item quantity="other">Updated %d cores</item>
+    </plurals>
+    <!-- Error notification title; the subtitle lists the core names. %d is how many cores did not update. -->
+    <plurals name="settings_shell_router_cores_update_failed_title">
+        <item quantity="one">%d core failed to update</item>
+        <item quantity="other">%d cores failed to update</item>
+    </plurals>
+    <!-- Error notification title when updating every core stopped before finishing. -->
+    <string name="settings_shell_router_cores_update_error_title">Core update stopped</string>
 
     <!-- ===== Routers: SettingsAboutRouter ===== -->
 

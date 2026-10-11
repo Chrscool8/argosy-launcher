@@ -32,6 +32,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -132,6 +136,9 @@ fun CompanionAppBar(
             if (focusedIndex in apps.indices) listState.animateScrollToItem(focusedIndex)
         }
 
+        val toolsAvailable = dockToolsEnabled(
+            onSwapRoles, onKeyboardToggle, onFocusPickerToggle, focusDisplays
+        ).any { it }
         BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
             val widths = dockWidths(
                 maximum = maxWidth.value,
@@ -141,7 +148,8 @@ fun CompanionAppBar(
                 gap = gap.value,
                 padding = padding.value,
                 appIconSize = appIconSize.value,
-                controlIconSize = controlIconSize.value
+                controlIconSize = controlIconSize.value,
+                controlCount = if (toolsAvailable) 2 else 1
             )
             Row(
                 modifier = Modifier
@@ -159,7 +167,7 @@ fun CompanionAppBar(
                         modifier = Modifier.size(controlIconSize)
                     )
                 }
-                Spacer(Modifier.width(widths.groupGap.dp))
+                if (apps.isNotEmpty() || toolsAvailable) Spacer(Modifier.width(widths.groupGap.dp))
                 if (apps.isNotEmpty()) {
                     LazyRow(
                         state = listState,
@@ -178,9 +186,9 @@ fun CompanionAppBar(
                             )
                         }
                     }
-                    Spacer(Modifier.width(widths.groupGap.dp))
+                    if (toolsAvailable) Spacer(Modifier.width(widths.groupGap.dp))
                 }
-                Box {
+                if (toolsAvailable) Box {
                     DockControl(
                         slot,
                         focusedIndex == apps.size || toolsOpen,
@@ -264,8 +272,7 @@ private fun DockToolsPopup(
     onFocusDisplay: (Int) -> Unit,
     controllerInputEnabled: Boolean
 ) {
-    val enabled = listOf(onSwapRoles != null, onKeyboardToggle != null,
-        onPickerToggle != null && displays.size > 1)
+    val enabled = dockToolsEnabled(onSwapRoles, onKeyboardToggle, onPickerToggle, displays)
     val dismiss = {
         if (pickerOpen) onPickerToggle?.invoke()
         onDismiss()
@@ -444,6 +451,15 @@ internal fun CompanionAppItem(
     onClick: () -> Unit,
     onLongPress: (() -> Unit)? = null
 ) {
+    val context = LocalContext.current
+    val label by produceState<String?>(null, packageName) {
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                val pm = context.packageManager
+                pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
+            }.getOrNull()
+        }
+    }
     Box(
         modifier = Modifier.size(maxOf(minimumTouchTarget, Dimens.iconXl))
             .let { base ->
@@ -459,7 +475,7 @@ internal fun CompanionAppItem(
     ) {
         AsyncImage(
             model = AppIconData(packageName),
-            contentDescription = packageName,
+            contentDescription = label,
             modifier = Modifier
                 .size(Dimens.iconXl)
                 .argosyFocusIndicators(

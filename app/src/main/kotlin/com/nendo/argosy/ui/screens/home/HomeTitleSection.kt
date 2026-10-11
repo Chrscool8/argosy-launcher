@@ -2,12 +2,10 @@ package com.nendo.argosy.ui.screens.home
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
@@ -24,12 +21,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
@@ -38,8 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import com.nendo.argosy.data.social.FriendActivity
+import com.nendo.argosy.ui.components.GameTitle
 import com.nendo.argosy.ui.components.StatBadgeItem
 import com.nendo.argosy.ui.components.gameStatBadges
 import com.nendo.argosy.ui.components.friends.FriendsActivityBadge
@@ -49,10 +41,11 @@ import com.nendo.argosy.ui.components.friends.FRIENDS_MAX_STACKED_AVATARS
 import com.nendo.argosy.ui.components.friends.friendsActivityLine
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.util.formatTimeToBeat
-import kotlin.math.ceil
+
+private const val HOME_TITLE_SERIES_SCALE = 0.75f
 
 internal data class HomeMetadataMeasureInput(
-    val developer: String?,
+    val subtitle: String?,
     val badges: List<String>,
     val friendsLabel: String?,
     val avatarCount: Int
@@ -64,6 +57,15 @@ private data class HomeTextMeasureKey(
     val maxWidth: Int,
     val maxLines: Int
 )
+
+private const val HOME_TEXT_MEASURE_CACHE_SIZE = 2048
+
+private class HomeTextMeasureCache : LinkedHashMap<HomeTextMeasureKey, HomeFlowSize>(
+    HOME_TEXT_MEASURE_CACHE_SIZE, 0.75f, true
+) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<HomeTextMeasureKey, HomeFlowSize>?): Boolean =
+        size > HOME_TEXT_MEASURE_CACHE_SIZE
+}
 
 @Composable
 internal fun rememberHomeTitleMetadata(uiState: HomeUiState): List<HomeMetadataMeasureInput> {
@@ -79,7 +81,7 @@ internal fun rememberHomeTitleMetadata(uiState: HomeUiState): List<HomeMetadataM
                     val playing = friends.filter { it.playingNow }
                     val shown = playing.ifEmpty { friends }
                     HomeMetadataMeasureInput(
-                        developer = game.developer,
+                        subtitle = null,
                         badges = gameStatBadges(
                             game.rating, game.userRating, game.userDifficulty,
                             game.achievementCount, game.earnedAchievementCount,
@@ -106,12 +108,12 @@ internal fun rememberHomeTitleReserve(inputs: List<HomeMetadataMeasureInput>, ma
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
     val titleStyle = MaterialTheme.typography.headlineMedium
-    val developerStyle = MaterialTheme.typography.bodyMedium
+    val subtitleStyle = MaterialTheme.typography.bodyMedium
     val badgeStyle = MaterialTheme.typography.labelMedium
     val fontFamilyResolver = LocalFontFamilyResolver.current
-    val resolvedTypefaces by remember(fontFamilyResolver, titleStyle, developerStyle, badgeStyle) {
+    val resolvedTypefaces by remember(fontFamilyResolver, titleStyle, subtitleStyle, badgeStyle) {
         derivedStateOf {
-            listOf(titleStyle, developerStyle, badgeStyle).map { style ->
+            listOf(titleStyle, subtitleStyle, badgeStyle).map { style ->
                 fontFamilyResolver.resolve(
                     fontFamily = style.fontFamily,
                     fontWeight = style.fontWeight ?: FontWeight.Normal,
@@ -122,20 +124,19 @@ internal fun rememberHomeTitleReserve(inputs: List<HomeMetadataMeasureInput>, ma
         }
     }
     val measurements = remember(
-        maxWidth, titleStyle, developerStyle, badgeStyle, density, configuration,
+        maxWidth, titleStyle, subtitleStyle, badgeStyle, density, configuration,
         textMeasurer, resolvedTypefaces
-    ) { mutableMapOf<HomeTextMeasureKey, HomeFlowSize>() }
+    ) { HomeTextMeasureCache() }
     val gap = with(density) { Dimens.spacingXs.roundToPx() }
     val rowGap = with(density) { Dimens.spacingSm.roundToPx() }
     val friendGap = with(density) { Dimens.spacingSm.roundToPx() }
     val icon = with(density) { Dimens.iconXs.roundToPx() }
     val avatar = with(density) { Dimens.iconMd.toPx() }
     return remember(
-        inputs, maxWidth, titleStyle, developerStyle, badgeStyle, density, configuration,
+        inputs, maxWidth, titleStyle, subtitleStyle, badgeStyle, density, configuration,
         textMeasurer, resolvedTypefaces, measurements, gap, rowGap, friendGap, icon, avatar
     ) {
         val width = with(density) { maxWidth.roundToPx().coerceAtLeast(1) }
-        val usedMeasurements = mutableSetOf<HomeTextMeasureKey>()
         fun measure(
             value: String,
             style: TextStyle,
@@ -143,7 +144,6 @@ internal fun rememberHomeTitleReserve(inputs: List<HomeMetadataMeasureInput>, ma
             maxLines: Int = Int.MAX_VALUE
         ): HomeFlowSize {
             val key = HomeTextMeasureKey(value, style, available.coerceAtLeast(1), maxLines)
-            usedMeasurements.add(key)
             return measurements.getOrPut(key) {
                 val result = textMeasurer.measure(
                     value, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis,
@@ -152,9 +152,9 @@ internal fun rememberHomeTitleReserve(inputs: List<HomeMetadataMeasureInput>, ma
                 HomeFlowSize(result.size.width, result.size.height)
             }
         }
-        val metadata = inputs.maxOfOrNull { input ->
+        val metadata = inputs.distinct().maxOfOrNull { input ->
+            val subtitleHeight = input.subtitle?.let { measure(it, subtitleStyle, maxLines = 1).height } ?: 0
             val items = buildList {
-                input.developer?.let { add(measure(it, developerStyle)) }
                 input.friendsLabel?.let {
                     val avatarAdvance = avatar * (1f - FRIENDS_AVATAR_OVERLAP_SHARE)
                     val avatarsWidth = (avatar + avatarAdvance * (input.avatarCount - 1)).toInt()
@@ -168,11 +168,12 @@ internal fun rememberHomeTitleReserve(inputs: List<HomeMetadataMeasureInput>, ma
                     add(HomeFlowSize(icon + gap + label.width, maxOf(icon, label.height)))
                 }
             }
-            val metadataHeight = homeFlowSize(items, width, rowGap, gap).height
-            metadataHeight + if (metadataHeight > 0) gap else 0
+            val badgesHeight = homeFlowSize(items, width, rowGap, gap).height
+            val stacked = listOf(subtitleHeight, badgesHeight).filter { it > 0 }
+            stacked.sum() + gap * stacked.size
         } ?: 0
-        val twoTitleLines = measure("M\nM", titleStyle).height
-        measurements.keys.retainAll(usedMeasurements)
+        val seriesStyle = titleStyle.copy(fontSize = titleStyle.fontSize * HOME_TITLE_SERIES_SCALE)
+        val twoTitleLines = measure("M", seriesStyle).height + measure("M", titleStyle).height
         with(density) { (twoTitleLines + metadata).toDp() }
     }
 }
@@ -182,7 +183,7 @@ internal fun rememberHomeTitleReserve(inputs: List<HomeMetadataMeasureInput>, ma
 internal fun HomeTitleSection(
     game: HomeGameUi?,
     title: String,
-    developer: String?,
+    subtitle: String?,
     friends: List<FriendActivity>,
     maxWidth: Dp,
     centered: Boolean,
@@ -210,7 +211,25 @@ internal fun HomeTitleSection(
     Layout(
         modifier = modifier,
         content = {
-            HomeMeasuredTitle(title, maxWidth, centered, titleColor)
+            GameTitle(
+                title = title,
+                titleStyle = MaterialTheme.typography.headlineMedium,
+                titleColor = titleColor,
+                seriesScale = HOME_TITLE_SERIES_SCALE,
+                adaptiveSize = true,
+                textAlign = if (centered) TextAlign.Center else TextAlign.Start,
+                horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start
+            )
+            subtitle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = subtitleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.graphicsLayer { alpha = metadataAlpha }
+                )
+            }
             Box(Modifier.graphicsLayer { alpha = metadataAlpha }) {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(
@@ -219,9 +238,6 @@ internal fun HomeTitleSection(
                     ),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
-                    developer?.let {
-                        Text(text = it, style = MaterialTheme.typography.bodyMedium, color = subtitleColor)
-                    }
                     FriendsActivityBadge(friends = friends, textColor = subtitleColor)
                     badges.forEach { badge ->
                         StatBadgeItem(badge, textColorOverride ?: badge.tint, subtitleColor)
@@ -244,37 +260,5 @@ internal fun HomeTitleSection(
                 y += child.height + gap.roundToPx()
             }
         }
-    }
-}
-
-@Composable
-private fun HomeMeasuredTitle(title: String, maxWidth: Dp, centered: Boolean, color: Color) {
-    val textMeasurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    val direction = LocalLayoutDirection.current
-    val style = MaterialTheme.typography.headlineMedium.copy(
-        textAlign = if (centered) TextAlign.Center else TextAlign.Start
-    )
-    val result = textMeasurer.measure(
-        text = title,
-        style = style,
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis,
-        constraints = Constraints(maxWidth = with(density) { maxWidth.roundToPx().coerceAtLeast(1) })
-    )
-    val visibleWidth = ceil((0 until result.lineCount).maxOfOrNull {
-        result.getLineRight(it) - result.getLineLeft(it)
-    } ?: 0f).toInt().coerceAtMost(result.size.width)
-    val x = when {
-        centered -> (visibleWidth - result.size.width) / 2f
-        direction == LayoutDirection.Rtl -> (visibleWidth - result.size.width).toFloat()
-        else -> 0f
-    }
-    Canvas(
-        Modifier
-            .size(with(density) { visibleWidth.toDp() }, with(density) { result.size.height.toDp() })
-            .semantics { text = AnnotatedString(title) }
-    ) {
-        drawText(result, color = color, topLeft = Offset(x, 0f))
     }
 }

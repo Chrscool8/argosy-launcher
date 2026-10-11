@@ -140,7 +140,6 @@ data class DrawerItem(
 data class NavRingState(
     val destinations: List<DrawerItem> = emptyList(),
     val pages: List<DrawerItem> = emptyList(),
-    val homeAppBarConfigured: Boolean = false,
     val isBarVisible: Boolean = false
 )
 
@@ -465,7 +464,6 @@ class ArgosyViewModel @Inject constructor(
         NavRingState(
             destinations = ring,
             pages = pages,
-            homeAppBarConfigured = prefs.secondaryHomeApps.isNotEmpty(),
             isBarVisible = barVisible
         )
     }.stateIn(

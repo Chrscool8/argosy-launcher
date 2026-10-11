@@ -194,7 +194,6 @@ class ArgosyApp : Application(), Configuration.Provider, ImageLoaderFactory {
                 }
             }
             coreManager.migrateAbiIfNeeded()
-            coreManager.checkAndUpdateCoresIfDue()
             compatCoreCache.evictStale()
         }
         appScope.launch {

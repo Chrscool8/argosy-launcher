@@ -3,20 +3,17 @@ package com.nendo.argosy.ui.screens.settings
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.lifecycle.viewModelScope
-import com.nendo.argosy.data.emulator.EmulatorRegistry
 import com.nendo.argosy.data.local.entity.PlatformLibretroSettingsEntity
 import com.nendo.argosy.libretro.LibretroBuildbot
 import com.nendo.argosy.data.platform.PlatformWeightRegistry
 import com.nendo.argosy.libretro.ControllerTypeSelection
 import com.nendo.argosy.libretro.CorePortDeviceCatalog
 import com.nendo.argosy.libretro.LibretroCoreRegistry
-import com.nendo.argosy.libretro.NetplaySupportLevel
 import com.nendo.argosy.ui.input.InputResult
 import com.nendo.argosy.ui.input.stepOption
 import com.nendo.argosy.libretro.shader.ShaderChainConfig
 import com.nendo.argosy.libretro.shader.ShaderChainManager
 import com.nendo.argosy.libretro.shader.ShaderPreviewRenderer
-import com.nendo.argosy.ui.input.HapticPattern
 import com.nendo.argosy.core.notification.NotificationText
 import com.nendo.argosy.core.notification.NotificationType
 import com.nendo.argosy.core.notification.showError
@@ -470,6 +467,7 @@ internal fun routeSetBuiltinDpadAsAnalog(vm: SettingsViewModel, enabled: Boolean
 }
 
 internal fun routeShowControllerOrderModal(vm: SettingsViewModel) {
+    vm.controllerSeats.open()
     vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(showControllerOrderModal = true)) }
 }
 
@@ -477,20 +475,9 @@ internal fun routeHideControllerOrderModal(vm: SettingsViewModel) {
     vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(showControllerOrderModal = false)) }
 }
 
-internal fun routeAssignControllerToPort(vm: SettingsViewModel, port: Int, device: android.view.InputDevice) {
-    vm.viewModelScope.launch {
-        vm.inputConfigRepository.assignControllerToPort(port, device)
-        val count = vm.inputConfigRepository.getControllerOrder().size
-        vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(controllerOrderCount = count)) }
-    }
-}
-
-internal fun routeClearControllerOrder(vm: SettingsViewModel) {
-    vm.viewModelScope.launch {
-        vm.inputConfigRepository.clearControllerOrder()
-        val count = vm.inputConfigRepository.getControllerOrder().size
-        vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(controllerOrderCount = count)) }
-    }
+internal suspend fun routeRefreshControllerOrderCount(vm: SettingsViewModel) {
+    val count = vm.inputConfigRepository.getControllerOrder().size
+    vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(controllerOrderCount = count)) }
 }
 
 internal fun routeShowInputMappingModal(vm: SettingsViewModel) {
@@ -781,8 +768,7 @@ internal fun routeResetAllPlatformLibretroSettings(vm: SettingsViewModel) {
             shader = null, shaderChain = null, filter = null, aspectRatio = null, portraitPosition = null, rotation = null,
             overscanCrop = null, frame = null, blackFrameInsertion = null, fastForwardEnabled = null, fastForwardSpeed = null,
             rewindEnabled = null, rewindSpeed = null, rewindBufferDuration = null,
-            skipDuplicateFrames = null, lowLatencyAudio = null, audioVolume = null, vsync = null,
-            autoSaveState = null, autoRestoreState = null, preferNewerServerSave = null, hwCoreSaveStates = null
+            skipDuplicateFrames = null, lowLatencyAudio = null, audioVolume = null, vsync = null
         )
         if (updated.hasAnyOverrides()) {
             vm.libretroSettingsRepo.upsert(updated)
@@ -847,170 +833,6 @@ private fun routeParseOverscanValue(value: String?): Int? {
 private fun routeParseFastForwardValue(value: String?): Int? {
     if (value == null) return null
     return value.removeSuffix("x").toIntOrNull()
-}
-
-internal fun routeLoadCoreManagementState(vm: SettingsViewModel, preserveFocus: Boolean = false) {
-    vm.viewModelScope.launch {
-        try {
-            loadCoreManagementStateInternal(vm, preserveFocus)
-        } catch (e: Exception) {
-            android.util.Log.e("CoreManagement", "Failed to load core management state", e)
-            vm._uiState.update { it.copy(coreManagement = CoreManagementState()) }
-            vm.notificationManager.showError(NotificationText.Res(R.string.settings_shell_router_cores_load_failed))
-        }
-    }
-}
-
-private suspend fun loadCoreManagementStateInternal(vm: SettingsViewModel, preserveFocus: Boolean) {
-        val currentState = vm._uiState.value.coreManagement
-        val isOnline = com.nendo.argosy.util.NetworkUtils.isOnline(vm.context)
-        val syncEnabledPlatforms = vm.platformRepository.getSyncEnabledPlatforms()
-        val installedCoreIds = vm.getInstalledCoreIds()
-        val updatableCoreIds = vm.coreManager.getCoreIdsWithUpdatesAvailable()
-
-        val platformRows = syncEnabledPlatforms
-            .filter { LibretroCoreRegistry.isPlatformSupported(it.slug) }
-            .distinctBy { it.slug }
-            .map { platform ->
-                val availableCores = LibretroCoreRegistry.getCoresForPlatform(platform.slug)
-                val activeCoreId = vm.builtinCoreResolver.resolveCoreId(
-                    gameId = null,
-                    platformId = platform.id,
-                    platformSlug = platform.slug
-                )
-
-                PlatformCoreRow(
-                    platformId = platform.id,
-                    platformSlug = platform.slug,
-                    platformName = platform.name,
-                    cores = availableCores.map { core ->
-                        CoreChipState(
-                            coreId = core.coreId,
-                            displayName = core.displayName,
-                            isInstalled = core.coreId in installedCoreIds,
-                            isActive = core.coreId == activeCoreId,
-                            netplaySupported = core.netplaySupport == NetplaySupportLevel.SUPPORTED,
-                            updateAvailable = core.coreId in updatableCoreIds
-                        )
-                    }
-                )
-            }
-            .filter { it.cores.isNotEmpty() }
-
-        val focusedPlatformIndex = if (preserveFocus) {
-            currentState.focusedPlatformIndex.coerceIn(0, (platformRows.size - 1).coerceAtLeast(0))
-        } else {
-            0
-        }
-        val focusedCoreIndex = if (preserveFocus) {
-            val maxCoreIndex = (platformRows.getOrNull(focusedPlatformIndex)?.cores?.size ?: 1) - 1
-            currentState.focusedCoreIndex.coerceIn(0, maxCoreIndex.coerceAtLeast(0))
-        } else {
-            platformRows.firstOrNull()?.activeCoreIndex ?: 0
-        }
-
-        vm._uiState.update {
-            it.copy(
-                coreManagement = CoreManagementState(
-                    platforms = platformRows,
-                    focusedPlatformIndex = focusedPlatformIndex,
-                    focusedCoreIndex = focusedCoreIndex,
-                    isOnline = isOnline
-                )
-            )
-        }
-}
-
-internal fun routeMoveCoreManagementPlatformFocus(vm: SettingsViewModel, delta: Int): Boolean {
-    val state = vm._uiState.value.coreManagement
-    if (state.platforms.isEmpty()) return false
-    val newIndex = (state.focusedPlatformIndex + delta).coerceIn(0, state.platforms.size - 1)
-    if (newIndex == state.focusedPlatformIndex) {
-        vm.hapticManager.vibrate(HapticPattern.BOUNDARY_HIT)
-        return false
-    }
-    val newPlatform = state.platforms.getOrNull(newIndex)
-    vm._uiState.update {
-        it.copy(
-            coreManagement = it.coreManagement.copy(
-                focusedPlatformIndex = newIndex,
-                focusedCoreIndex = newPlatform?.activeCoreIndex ?: 0
-            )
-        )
-    }
-    return true
-}
-
-internal fun routeMoveCoreManagementCoreFocus(vm: SettingsViewModel, delta: Int): Boolean {
-    val state = vm._uiState.value.coreManagement
-    val platform = state.focusedPlatform ?: return false
-    if (platform.cores.isEmpty()) return false
-    val newIndex = (state.focusedCoreIndex + delta).coerceIn(0, platform.cores.size - 1)
-    if (newIndex == state.focusedCoreIndex) {
-        vm.hapticManager.vibrate(HapticPattern.BOUNDARY_HIT)
-        return false
-    }
-    vm._uiState.update {
-        it.copy(coreManagement = it.coreManagement.copy(focusedCoreIndex = newIndex))
-    }
-    return true
-}
-
-/**
- * Acts on the core a tap landed on, by moving the focus there first.
- *
- * [routeSelectCoreForPlatform] reads the focused platform and core, which is the right shape for a
- * gamepad and the wrong one for a touch: every chip on screen is reachable at once, so a tap that
- * does not carry its own coordinates acts on whatever the cursor happened to be sitting on.
- * Pointing the focus at the tapped chip keeps both modalities on the single action path.
- */
-internal fun routeSelectCoreAt(vm: SettingsViewModel, platformIndex: Int, coreIndex: Int) {
-    val state = vm._uiState.value.coreManagement
-    val cores = state.platforms.getOrNull(platformIndex)?.cores ?: return
-    if (coreIndex !in cores.indices) return
-
-    vm._uiState.update {
-        it.copy(
-            coreManagement = it.coreManagement.copy(
-                focusedPlatformIndex = platformIndex,
-                focusedCoreIndex = coreIndex
-            )
-        )
-    }
-    routeSelectCoreForPlatform(vm)
-}
-
-internal fun routeSelectCoreForPlatform(vm: SettingsViewModel) {
-    val state = vm._uiState.value.coreManagement
-    val platform = state.focusedPlatform ?: return
-    val core = state.focusedCore ?: return
-
-    if (!core.isInstalled) {
-        if (state.isOnline) {
-            routeDownloadCoreWithNotification(vm, core.coreId)
-        } else {
-            vm.notificationManager.showError(NotificationText.Res(R.string.settings_shell_router_cannot_download_offline))
-        }
-        return
-    }
-
-    if (core.updateAvailable && core.isActive) {
-        if (state.isOnline) {
-            routeDownloadCoreWithNotification(vm, core.coreId)
-        } else {
-            vm.notificationManager.showError(NotificationText.Res(R.string.settings_shell_router_cannot_update_offline))
-        }
-        return
-    }
-
-    vm.viewModelScope.launch {
-        vm.libretroSettingsRepo.setBuiltinCoreForPlatform(platform.platformSlug, core.coreId)
-        val platformConfig = vm.emulatorConfigRepo.getDefaultForPlatform(platform.platformId)
-        if (platformConfig?.packageName == EmulatorRegistry.BUILTIN_PACKAGE && platformConfig.coreName != null) {
-            vm.emulatorConfigRepo.updateCoreNameForPlatform(platform.platformId, null)
-        }
-        vm.loadCoreManagementState(preserveFocus = true)
-    }
 }
 
 internal fun routeDownloadCoreWithNotification(vm: SettingsViewModel, coreId: String) {

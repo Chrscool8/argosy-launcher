@@ -131,17 +131,8 @@
          saves, past participle, not a command to sync them. -->
     <string name="dual_companion_saves_synced">Saves synced</string>
 
-    <!-- Spoken description of the plus button at the left of the companion app bar. Verb phrase:
-         opens the list of every installed app so one can be pinned to the bar. -->
-    <string name="dual_companion_app_bar_add_description">Add app</string>
     <!-- Title of the modal that lists every installed app. Noun phrase. -->
     <string name="dual_companion_app_drawer_title">All Apps</string>
-    <!-- Spoken description of the app bar's media button while the media panel is on screen.
-         Verb phrase: the press returns to the launcher. -->
-    <string name="dual_companion_app_bar_media_to_library_description">Back to library</string>
-    <!-- Spoken description of the app bar's media button while the launcher is on screen. Noun
-         phrase naming what the press goes to: the film or episode playing on the other screen. -->
-    <string name="dual_companion_app_bar_media_to_player_description">Now watching</string>
     <!-- Spoken description of the app bar's keyboard button, which raises or lowers the system
          keyboard for the other screen. Noun. -->
     <string name="dual_companion_app_bar_keyboard_description">Keyboard</string>

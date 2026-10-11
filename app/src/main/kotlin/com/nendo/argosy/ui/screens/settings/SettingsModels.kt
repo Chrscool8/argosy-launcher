@@ -120,6 +120,7 @@ enum class SettingsSection {
     BUILTIN_EMULATOR,
     BUILTIN_VIDEO,
     BUILTIN_CONTROLS,
+    BUILTIN_SAVES,
     SHADER_STACK,
     FRAME_PICKER,
     CORE_MANAGEMENT,
@@ -259,6 +260,7 @@ data class DisplayState(
         com.nendo.argosy.domain.model.HomeLayoutSettings(),
     val presentationStyle: com.nendo.argosy.domain.model.PresentationStyle =
         com.nendo.argosy.domain.model.PresentationStyle(),
+    val presentationBackgroundBlur: Int = 0,
     val box3dCapableGames: Int = 0,
     val libraryBoxArt3d: Boolean = false,
     val useAccentColorFooter: Boolean = false,
@@ -762,13 +764,26 @@ enum class CoreChipStatus {
     ACTIVE
 }
 
+data class CoreUpdateBuilds(
+    val installedVersion: String,
+    val latestVersion: String
+)
+
 data class CoreChipState(
     val coreId: String,
     val displayName: String,
     val isInstalled: Boolean,
     val isActive: Boolean,
     val netplaySupported: Boolean = false,
-    val updateAvailable: Boolean = false
+    val pendingUpdate: CoreUpdateBuilds? = null
+) {
+    val updateAvailable: Boolean get() = pendingUpdate != null
+}
+
+data class CoreBulkUpdateProgress(
+    val coreName: String? = null,
+    val position: Int = 0,
+    val total: Int = 0
 )
 
 data class PlatformCoreRow(
@@ -782,14 +797,16 @@ data class PlatformCoreRow(
 
 data class CoreManagementState(
     val platforms: List<PlatformCoreRow> = emptyList(),
-    val focusedPlatformIndex: Int = 0,
+    val focusedRowIndex: Int = 0,
     val focusedCoreIndex: Int = 0,
     val isOnline: Boolean = false,
     val isDownloading: Boolean = false,
-    val downloadingCoreId: String? = null
+    val downloadingCoreId: String? = null,
+    val pendingUpdateCount: Int = 0,
+    val bulkUpdate: CoreBulkUpdateProgress? = null,
+    val bulkUpdateFailedCount: Int = 0
 ) {
-    val focusedPlatform: PlatformCoreRow? get() = platforms.getOrNull(focusedPlatformIndex)
-    val focusedCore: CoreChipState? get() = focusedPlatform?.cores?.getOrNull(focusedCoreIndex)
+    val showUpdateAll: Boolean get() = pendingUpdateCount > 0 || bulkUpdate != null
 }
 
 data class CoreOptionsCoreContext(

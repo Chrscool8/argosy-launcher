@@ -241,6 +241,7 @@
     <string name="settings_presentation_scrim_blur">模糊</string>
     <string name="settings_presentation_scrim_none">無</string>
     <string name="settings_presentation_scrim_strength_title">遮罩強度</string>
+    <string name="settings_presentation_background_blur_title">背景模糊</string>
     <string name="settings_presentation_art_title">封面</string>
     <string name="settings_presentation_art_cover">封面</string>
     <string name="settings_presentation_art_box_3d">3D 盒裝</string>
@@ -1246,9 +1247,11 @@
     <string name="settings_builtin_architecture_title">架構</string>
 
     <string name="settings_builtin_video_title">影音與效能</string>
-    <string name="settings_builtin_video_subtitle">著色器、顯示、效能、存檔</string>
+    <string name="settings_builtin_video_subtitle">著色器、顯示、效能</string>
     <string name="settings_builtin_controls_title">控制</string>
     <string name="settings_builtin_controls_subtitle">震動、按鍵對應、快捷鍵</string>
+    <string name="settings_builtin_saves_title">存檔</string>
+    <string name="settings_builtin_saves_subtitle">即時存檔、伺服器存檔、資料夾</string>
 
     <string name="settings_builtin_cores_title">管理核心</string>
     <string name="settings_builtin_cores_subtitle">已安裝%2$d個核心中的%1$d個</string>
@@ -1500,9 +1503,11 @@
     <string name="settings_platform_launch_args_title">啟動參數</string>
     <string name="settings_platform_launch_args_subtitle">自訂Argosy啟動此模擬器的方式</string>
     <string name="settings_platform_builtin_video_title">內建影音與效能</string>
-    <string name="settings_platform_builtin_video_subtitle">顯示、效能與存檔覆寫</string>
+    <string name="settings_platform_builtin_video_subtitle">顯示與效能覆寫</string>
     <string name="settings_platform_builtin_controls_title">內建控制</string>
     <string name="settings_platform_builtin_controls_subtitle">震動、搖桿對應覆寫</string>
+    <string name="settings_platform_builtin_saves_title">內建存檔</string>
+    <string name="settings_platform_builtin_saves_subtitle">即時存檔與資料夾覆寫</string>
     <string name="settings_platform_core_options_title">核心選項</string>
     <string name="settings_platform_core_options_subtitle">此平台各核心的設定</string>
 
@@ -1946,13 +1951,12 @@
     <string name="settings_app_picker_empty">找不到可啟動的應用程式。</string>
 
     <string name="settings_controller_order_title">控制器順序</string>
-    <string name="settings_controller_order_subtitle">按下任意按鍵以指派控制器</string>
-    <string name="settings_controller_order_hint_confirm">確認</string>
-    <string name="settings_controller_order_hint_unregister_back">取消註冊／返回</string>
+    <string name="settings_controller_order_subtitle">按下控制器上的按鍵即可找到它。</string>
+    <string name="settings_controller_order_hint_clear_all">全部清除</string>
     <string name="settings_controller_order_default_name">控制器</string>
     <string name="settings_controller_order_slot_label">P%1$d</string>
-    <string name="settings_controller_order_slot_pressing">請按下&#8230;</string>
-    <string name="settings_controller_order_slot_empty">空</string>
+    <string name="settings_controller_order_seat_none">無</string>
+    <string name="settings_controller_order_empty">未連接控制器</string>
 
     <string name="settings_grip_controller_default_name">控制器</string>
     <string name="settings_grip_controller_title">控制器握把</string>

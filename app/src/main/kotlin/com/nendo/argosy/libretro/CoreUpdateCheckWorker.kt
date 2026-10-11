@@ -87,9 +87,11 @@ class CoreUpdateCheckWorker @AssistedInject constructor(
                 }
 
                 val existing = coreVersionDao.getByCoreId(coreInfo.coreId)
-                val updateAvailable = existing?.installedVersion != null &&
-                    existing.installedVersion != latestVersion &&
-                    existing.blockedVersion != latestVersion
+                val updateAvailable = LibretroCoreManager.isUpdateAvailable(
+                    installedVersion = existing?.installedVersion,
+                    latestVersion = latestVersion,
+                    blockedVersion = existing?.blockedVersion
+                )
 
                 if (updateAvailable) {
                     updatesFound++

@@ -57,6 +57,7 @@ import com.nendo.argosy.ui.components.FooterHost
 import com.nendo.argosy.ui.components.FooterHostController
 import com.nendo.argosy.ui.components.LocalFooterHost
 import com.nendo.argosy.ui.components.LocalFrostedBackdrop
+import com.nendo.argosy.ui.components.frostedBackdropSource
 import com.nendo.argosy.ui.components.rememberFrostedBackdrop
 import com.nendo.argosy.ui.components.LocalTransientHomeStatusVisible
 import com.nendo.argosy.data.sync.ConflictResolution
@@ -1072,6 +1073,7 @@ fun ArgosyApp(
     }
 
     val frostedBackdrop = rememberFrostedBackdrop()
+    val screenFrostedBackdrop = rememberFrostedBackdrop()
     val hasCapturingOverlay = inputDispatcher.hasCapturingOverlay()
     LaunchedEffect(hasCapturingOverlay) {
         if (hasCapturingOverlay) viewModel.hideNavBar()
@@ -1237,7 +1239,8 @@ fun ArgosyApp(
                         LocalTransientHomeStatusVisible provides (
                             currentRoute == Screen.Home.route && maxWidth <= maxHeight &&
                                 !presentationShowsHints && navBarAllowed && navRingState.isBarVisible
-                            )
+                            ),
+                        LocalFrostedBackdrop provides screenFrostedBackdrop
                     ) {
                         NavGraph(
                             navController = navController,
@@ -1254,7 +1257,9 @@ fun ArgosyApp(
                                         )
                                     )
                             },
-                            modifier = Modifier.blur(contentBlur)
+                            modifier = Modifier
+                                .frostedBackdropSource(frostedBackdrop)
+                                .blur(contentBlur)
                         )
                     }
 

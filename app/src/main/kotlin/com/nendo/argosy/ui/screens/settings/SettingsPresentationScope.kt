@@ -11,6 +11,12 @@ internal val SECTIONS_WITH_OWN_PRESENTATION = setOf(
     SettingsSection.FRAME_PICKER
 )
 
+internal val BUILTIN_PLATFORM_CONTEXT_SECTIONS = setOf(
+    SettingsSection.BUILTIN_VIDEO,
+    SettingsSection.BUILTIN_CONTROLS,
+    SettingsSection.BUILTIN_SAVES
+)
+
 internal fun settingsPlatformScope(state: SettingsUiState): SettingsPlatformScope? =
     when (state.currentSection) {
         SettingsSection.PLATFORM_DETAIL ->
@@ -19,7 +25,7 @@ internal fun settingsPlatformScope(state: SettingsUiState): SettingsPlatformScop
         SettingsSection.STORAGE_PLATFORM_GAMES ->
             state.storagePlatformGames.takeIf { it.selectedPlatformId >= 0 }
                 ?.let { SettingsPlatformScope(it.selectedPlatformId, it.platformName) }
-        SettingsSection.BUILTIN_VIDEO, SettingsSection.BUILTIN_CONTROLS ->
+        in BUILTIN_PLATFORM_CONTEXT_SECTIONS ->
             state.builtinVideo.currentPlatformContext?.let { SettingsPlatformScope(it.platformId, it.platformName) }
         SettingsSection.CORE_OPTIONS ->
             state.coreOptions.currentPlatformContext?.let { SettingsPlatformScope(it.platformId, it.platformName) }

@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
@@ -29,7 +30,9 @@ class CompanionAppBarTest {
 
     @Test
     fun pinnedAppRemainsVisibleAndTouchableWhenNavigationIsNarrow() {
-        val packageName = InstrumentationRegistry.getInstrumentation().targetContext.packageName
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val packageName = context.packageName
+        val label = context.packageManager.getApplicationLabel(context.applicationInfo).toString()
         var launchedPackage: String? = null
         compose.setContent {
             MaterialTheme {
@@ -46,7 +49,8 @@ class CompanionAppBarTest {
             }
         }
 
-        compose.onNodeWithContentDescription(packageName)
+        compose.waitUntil { compose.onAllNodesWithContentDescription(label).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription(label)
             .assertIsDisplayed()
             .performTouchInput { click() }
         compose.runOnIdle { assertEquals(packageName, launchedPackage) }

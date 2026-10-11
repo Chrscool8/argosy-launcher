@@ -22,18 +22,26 @@ import com.nendo.argosy.ui.components.SectionFocusedScroll
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
 
+/**
+ * Which libretro settings a screen renders. [VIDEO] is every group except saving; [SAVES] is
+ * the saving group alone.
+ */
+enum class LibretroSettingsScope { VIDEO, SAVES }
+
+private const val SAVING_SECTION = "saving"
+
 data class LibretroVisibilityState(
     val platformSlug: String?,
     val canEnableBFI: Boolean,
-    val showSavingSection: Boolean = true
+    val scope: LibretroSettingsScope = LibretroSettingsScope.VIDEO
 )
 
 private val libretroSettingsLayout = SettingsLayout<LibretroSettingDef, LibretroVisibilityState>(
     allItems = LibretroSettingDef.ALL,
     isFocusable = { true },
     visibleWhen = { item, state ->
-        if (item.section == "saving" && !state.showSavingSection) return@SettingsLayout false
-        PlatformWeightRegistry.isSettingVisible(item, state.platformSlug, state.canEnableBFI)
+        val inScope = (item.section == SAVING_SECTION) == (state.scope == LibretroSettingsScope.SAVES)
+        inScope && PlatformWeightRegistry.isSettingVisible(item, state.platformSlug, state.canEnableBFI)
     },
     sectionOf = { it.section }
 )
@@ -44,7 +52,7 @@ fun LibretroSettingsSection(
     focusedIndex: Int,
     platformSlug: String? = null,
     canEnableBFI: Boolean = false,
-    showSavingSection: Boolean = true,
+    scope: LibretroSettingsScope = LibretroSettingsScope.VIDEO,
     listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
     enablePicker: Boolean = true,
@@ -55,8 +63,8 @@ fun LibretroSettingsSection(
 ) {
     val isPerPlatform = platformSlug != null
 
-    val visibilityState = remember(platformSlug, canEnableBFI, showSavingSection) {
-        LibretroVisibilityState(platformSlug, canEnableBFI, showSavingSection)
+    val visibilityState = remember(platformSlug, canEnableBFI, scope) {
+        LibretroVisibilityState(platformSlug, canEnableBFI, scope)
     }
 
     val visibleSettings = remember(visibilityState) {
@@ -196,21 +204,24 @@ private fun buildFlatItemSections(
     }
 }
 
-fun libretroSettingsMaxFocusIndex(platformSlug: String?, canEnableBFI: Boolean, showSavingSection: Boolean = true): Int =
-    libretroSettingsLayout.maxFocusIndex(LibretroVisibilityState(platformSlug, canEnableBFI, showSavingSection))
+fun libretroSettingsMaxFocusIndex(
+    platformSlug: String?,
+    canEnableBFI: Boolean,
+    scope: LibretroSettingsScope = LibretroSettingsScope.VIDEO
+): Int =
+    libretroSettingsLayout.maxFocusIndex(LibretroVisibilityState(platformSlug, canEnableBFI, scope))
 
 /**
- * Resolves a focus index to a libretro setting. [showSavingSection] must match the value the
- * matching [LibretroSettingsSection] renders with, or indices past the visible rows resolve to
- * hidden saving rows instead of null.
+ * Resolves a focus index to a libretro setting. [scope] must match the value the matching
+ * [LibretroSettingsSection] renders with, or indices resolve against the other screen's rows.
  */
 fun libretroSettingsItemAtFocusIndex(
     index: Int,
     platformSlug: String?,
     canEnableBFI: Boolean,
-    showSavingSection: Boolean = true
+    scope: LibretroSettingsScope = LibretroSettingsScope.VIDEO
 ): LibretroSettingDef? =
     libretroSettingsLayout.itemAtFocusIndex(
         index,
-        LibretroVisibilityState(platformSlug, canEnableBFI, showSavingSection)
+        LibretroVisibilityState(platformSlug, canEnableBFI, scope)
     )

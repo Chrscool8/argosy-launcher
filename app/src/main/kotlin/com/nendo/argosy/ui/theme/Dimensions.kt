@@ -3,6 +3,7 @@ package com.nendo.argosy.ui.theme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import com.nendo.argosy.ui.theme.generated.DimensionTokens
 
 object Dimens {
@@ -89,7 +90,10 @@ object Dimens {
     val headerHeight: Dp @Composable get() = DimensionTokens.Layout.headerHeight.dp * scale
     val headerHeightLg: Dp @Composable get() = DimensionTokens.Layout.headerHeightLg.dp * scale
     val breadcrumbMaxWidth: Dp @Composable get() = DimensionTokens.Layout.breadcrumbMaxWidth.dp * scale
-    val footerHeight: Dp @Composable get() = footerHeightBase.dp * scale
+    val footerHeight: Dp @Composable get() = maxOf(
+        footerHeightBase.dp * scale,
+        ComponentDefaults.FrostedSurface.minimumTouchTargetDp.dp
+    )
     val footerClearance: Dp @Composable get() = footerHeight + spacingMd
     val modalWidth: Dp @Composable get() = DimensionTokens.Layout.modalWidth.dp * scale
     val modalWidthLg: Dp @Composable get() = DimensionTokens.Layout.modalWidthLg.dp * scale

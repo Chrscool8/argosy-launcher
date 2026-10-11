@@ -262,6 +262,7 @@
     <string name="settings_presentation_scrim_blur">Размытие</string>
     <string name="settings_presentation_scrim_none">Нет</string>
     <string name="settings_presentation_scrim_strength_title">Сила затемнения</string>
+    <string name="settings_presentation_background_blur_title">Размытие фона</string>
     <string name="settings_presentation_art_title">Обложка</string>
     <string name="settings_presentation_art_cover">Обложка</string>
     <string name="settings_presentation_art_box_3d">3D-коробка</string>
@@ -1422,9 +1423,11 @@
     <string name="settings_builtin_architecture_title">Архитектура</string>
 
     <string name="settings_builtin_video_title">A/V и производительность</string>
-    <string name="settings_builtin_video_subtitle">Шейдеры, экран, производительность, сохранение</string>
+    <string name="settings_builtin_video_subtitle">Шейдеры, экран, производительность</string>
     <string name="settings_builtin_controls_title">Управление</string>
     <string name="settings_builtin_controls_subtitle">Вибрация, раскладка кнопок, горячие клавиши</string>
+    <string name="settings_builtin_saves_title">Сохранения</string>
+    <string name="settings_builtin_saves_subtitle">Состояния, сохранения на сервере, папки</string>
 
     <string name="settings_builtin_cores_title">Управление ядрами</string>
     <string name="settings_builtin_cores_subtitle">Установлено %1$d из %2$d ядер</string>
@@ -1702,9 +1705,11 @@
     <string name="settings_platform_launch_args_title">Параметры запуска</string>
     <string name="settings_platform_launch_args_subtitle">Настроить, как Argosy запускает этот эмулятор</string>
     <string name="settings_platform_builtin_video_title">Встроенные A/V и производительность</string>
-    <string name="settings_platform_builtin_video_subtitle">Переопределения экрана, производительности и сохранения</string>
+    <string name="settings_platform_builtin_video_subtitle">Переопределения экрана и производительности</string>
     <string name="settings_platform_builtin_controls_title">Встроенное управление</string>
     <string name="settings_platform_builtin_controls_subtitle">Переопределения вибрации и раскладки стиков</string>
+    <string name="settings_platform_builtin_saves_title">Встроенные сохранения</string>
+    <string name="settings_platform_builtin_saves_subtitle">Переопределения состояний и папок</string>
     <string name="settings_platform_core_options_title">Настройки ядра</string>
     <string name="settings_platform_core_options_subtitle">Настройки ядра для этой платформы</string>
 
@@ -2215,13 +2220,12 @@
     <!-- ===== Controller order modal (Settings > components > ControllerOrderModal) ===== -->
 
     <string name="settings_controller_order_title">Порядок контроллеров</string>
-    <string name="settings_controller_order_subtitle">Нажмите любую кнопку, чтобы назначить контроллер</string>
-    <string name="settings_controller_order_hint_confirm">Подтвердить</string>
-    <string name="settings_controller_order_hint_unregister_back">Отменить/Назад</string>
+    <string name="settings_controller_order_subtitle">Нажмите кнопку на контроллере, чтобы найти его.</string>
+    <string name="settings_controller_order_hint_clear_all">Очистить все</string>
     <string name="settings_controller_order_default_name">Контроллер</string>
     <string name="settings_controller_order_slot_label">P%1$d</string>
-    <string name="settings_controller_order_slot_pressing">Нажмите...</string>
-    <string name="settings_controller_order_slot_empty">Пусто</string>
+    <string name="settings_controller_order_seat_none">Нет</string>
+    <string name="settings_controller_order_empty">Контроллеры не подключены</string>
 
     <!-- ===== Grip controller modal (Settings > components > GripControllerModal) ===== -->
 

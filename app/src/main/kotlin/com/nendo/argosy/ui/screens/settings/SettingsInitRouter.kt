@@ -577,6 +577,7 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             homeBackgroundMode = prefs.homeBackgroundMode,
             homeLayout = prefs.homeLayout,
             presentationStyle = prefs.presentationStyle,
+            presentationBackgroundBlur = prefs.presentationBackgroundBlur,
             box3dCapableGames = box3dCapableGames,
             libraryBoxArt3d = prefs.libraryBoxArt3d,
             useAccentColorFooter = prefs.useAccentColorFooter,

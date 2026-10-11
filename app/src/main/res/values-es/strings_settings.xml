@@ -270,6 +270,7 @@
     <string name="settings_presentation_scrim_blur">Desenfoque</string>
     <string name="settings_presentation_scrim_none">Ninguno</string>
     <string name="settings_presentation_scrim_strength_title">Intensidad del sombreado</string>
+    <string name="settings_presentation_background_blur_title">Desenfoque del fondo</string>
     <string name="settings_presentation_art_title">Portada</string>
     <string name="settings_presentation_art_cover">Portada</string>
     <string name="settings_presentation_art_box_3d">Caja 3D</string>
@@ -1396,9 +1397,11 @@
     <string name="settings_builtin_architecture_title">Arquitectura</string>
 
     <string name="settings_builtin_video_title">A/V y rendimiento</string>
-    <string name="settings_builtin_video_subtitle">Shaders, pantalla, rendimiento, guardado</string>
+    <string name="settings_builtin_video_subtitle">Shaders, pantalla, rendimiento</string>
     <string name="settings_builtin_controls_title">Controles</string>
     <string name="settings_builtin_controls_subtitle">Vibración, mapeo de entradas, atajos</string>
+    <string name="settings_builtin_saves_title">Partidas guardadas</string>
+    <string name="settings_builtin_saves_subtitle">Estados guardados, partidas del servidor, carpetas</string>
 
     <string name="settings_builtin_cores_title">Gestionar cores</string>
     <string name="settings_builtin_cores_subtitle">%1$d de %2$d cores instalados</string>
@@ -1670,9 +1673,11 @@
     <string name="settings_platform_launch_args_title">Argumentos de inicio</string>
     <string name="settings_platform_launch_args_subtitle">Personaliza cómo Argosy inicia este emulador</string>
     <string name="settings_platform_builtin_video_title">A/V y rendimiento integrados</string>
-    <string name="settings_platform_builtin_video_subtitle">Anulaciones de pantalla, rendimiento y guardado</string>
+    <string name="settings_platform_builtin_video_subtitle">Anulaciones de pantalla y rendimiento</string>
     <string name="settings_platform_builtin_controls_title">Controles integrados</string>
     <string name="settings_platform_builtin_controls_subtitle">Anulaciones de vibración y mapeo de sticks</string>
+    <string name="settings_platform_builtin_saves_title">Partidas guardadas integradas</string>
+    <string name="settings_platform_builtin_saves_subtitle">Anulaciones de estados guardados y carpetas</string>
     <string name="settings_platform_core_options_title">Opciones del core</string>
     <string name="settings_platform_core_options_subtitle">Ajustes por core para esta plataforma</string>
 
@@ -2174,13 +2179,12 @@
     <!-- ===== Controller order modal (Settings > components > ControllerOrderModal) ===== -->
 
     <string name="settings_controller_order_title">Orden de mandos</string>
-    <string name="settings_controller_order_subtitle">Pulsa cualquier botón para asignar un mando</string>
-    <string name="settings_controller_order_hint_confirm">Confirmar</string>
-    <string name="settings_controller_order_hint_unregister_back">Anular registro/Atrás</string>
+    <string name="settings_controller_order_subtitle">Pulsa un botón en un mando para encontrarlo.</string>
+    <string name="settings_controller_order_hint_clear_all">Borrar todo</string>
     <string name="settings_controller_order_default_name">Mando</string>
     <string name="settings_controller_order_slot_label">J%1$d</string>
-    <string name="settings_controller_order_slot_pressing">Pulsa...</string>
-    <string name="settings_controller_order_slot_empty">Vacío</string>
+    <string name="settings_controller_order_seat_none">Ninguno</string>
+    <string name="settings_controller_order_empty">No hay mandos conectados</string>
 
     <!-- ===== Grip controller modal (Settings > components > GripControllerModal) ===== -->
 

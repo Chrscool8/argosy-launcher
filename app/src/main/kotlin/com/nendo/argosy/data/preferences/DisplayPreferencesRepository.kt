@@ -74,6 +74,7 @@ data class DisplayPreferences(
         com.nendo.argosy.domain.model.HomeLayoutSettings(),
     val presentationStyle: com.nendo.argosy.domain.model.PresentationStyle =
         com.nendo.argosy.domain.model.PresentationStyle(),
+    val presentationBackgroundBlur: Int = 0,
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
@@ -173,6 +174,7 @@ class DisplayPreferencesRepository @Inject constructor(
         val HOME_BACKGROUND_MODE = stringPreferencesKey("home_background_mode")
         val HOME_LAYOUT_CONFIG = stringPreferencesKey("home_layout_config")
         val PRESENTATION_STYLE = stringPreferencesKey("presentation_style")
+        val PRESENTATION_BACKGROUND_BLUR = intPreferencesKey("presentation_background_blur")
         val USE_ACCENT_COLOR_FOOTER = booleanPreferencesKey("use_accent_color_footer")
         val COMPACT_FOOTER = booleanPreferencesKey("compact_footer")
         val LOCK_SCREEN_ART = booleanPreferencesKey("lock_screen_art")
@@ -279,6 +281,7 @@ class DisplayPreferencesRepository @Inject constructor(
             presentationStyle = com.nendo.argosy.domain.model.PresentationStyle.fromJson(
                 prefs[Keys.PRESENTATION_STYLE]
             ),
+            presentationBackgroundBlur = prefs[Keys.PRESENTATION_BACKGROUND_BLUR] ?: 0,
             useAccentColorFooter = prefs[Keys.USE_ACCENT_COLOR_FOOTER] ?: false,
             compactFooter = prefs[Keys.COMPACT_FOOTER] ?: false,
             lockScreenArt = prefs[Keys.LOCK_SCREEN_ART] ?: true,
@@ -563,6 +566,10 @@ class DisplayPreferencesRepository @Inject constructor(
 
     suspend fun setPresentationStyle(style: com.nendo.argosy.domain.model.PresentationStyle) {
         dataStore.edit { it[Keys.PRESENTATION_STYLE] = style.toJson() }
+    }
+
+    suspend fun setPresentationBackgroundBlur(blur: Int) {
+        dataStore.edit { it[Keys.PRESENTATION_BACKGROUND_BLUR] = blur.coerceIn(0, 100) }
     }
 
     suspend fun setUseAccentColorFooter(use: Boolean) {

@@ -242,7 +242,6 @@ object ComponentDefaults {
         const val dotSizeActive = 10
         const val dotGap = 6
         const val dotInactiveAlpha = 0.3f
-        const val infoSplitMinSideDp = 160
     }
 
     object SurfaceBackdrop {
@@ -263,7 +262,6 @@ object ComponentDefaults {
     }
 
     object OverlayLegibility {
-        const val scrimAlpha = 0.4f
         const val scrimPaddingHorizDp = 12
         const val scrimPaddingVertDp = 6
     }

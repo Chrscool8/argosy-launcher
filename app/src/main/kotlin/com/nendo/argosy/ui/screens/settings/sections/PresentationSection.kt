@@ -32,6 +32,7 @@ import com.nendo.argosy.ui.dualscreen.CompanionDetail
 import com.nendo.argosy.ui.dualscreen.PresentOnCompanion
 import com.nendo.argosy.ui.dualscreen.PresentationSlot
 import com.nendo.argosy.ui.dualscreen.SlotOwner
+import com.nendo.argosy.ui.screens.settings.SettingsInputHandler
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
 import com.nendo.argosy.ui.screens.settings.components.SectionPaneLayout
@@ -68,6 +69,11 @@ internal sealed class PresentationItem(
         section = "background",
         visibleWhen = { it.scrim != PresentationScrim.NONE }
     )
+    data object BackgroundBlur : PresentationItem(
+        key = "presentationBackgroundBlur",
+        section = "background",
+        visibleWhen = { it.scrim == PresentationScrim.GRADIENT }
+    )
     data object Art : PresentationItem(
         key = "presentationArt",
         section = "artwork",
@@ -86,6 +92,7 @@ internal sealed class PresentationItem(
             Header("backgroundHeader", "background", R.string.settings_presentation_section_background),
             Scrim,
             ScrimStrength,
+            BackgroundBlur,
             Header("artworkHeader", "artwork", R.string.settings_presentation_section_artwork),
             Art,
             Header("statsHeader", "stats", R.string.settings_presentation_section_stats)
@@ -132,7 +139,7 @@ internal fun adjustPresentationItem(
     )
     PresentationItem.Art -> style.copy(art = stepEnum(style.art, direction))
     is PresentationItem.Stat -> style.withStat(item.stat, shown = direction > 0)
-    is PresentationItem.Header -> null
+    PresentationItem.BackgroundBlur, is PresentationItem.Header -> null
 }
 
 private inline fun <reified T : Enum<T>> stepEnum(current: T, direction: Int): T {
@@ -253,6 +260,18 @@ fun PresentationSection(uiState: SettingsUiState, viewModel: SettingsViewModel) 
                     focus(item)
                     adjustPresentationItem(style, item, if (delta < 0) -1 else 1)
                         ?.let(viewModel::setPresentationStyle)
+                }
+            )
+
+            PresentationItem.BackgroundBlur -> SliderPreference(
+                title = stringResource(R.string.settings_presentation_background_blur_title),
+                value = uiState.display.presentationBackgroundBlur / 10,
+                minValue = 0,
+                maxValue = 10,
+                isFocused = isFocused(item),
+                onAdjust = {
+                    focus(item)
+                    viewModel.adjustPresentationBackgroundBlur(it * SettingsInputHandler.SLIDER_STEP)
                 }
             )
 

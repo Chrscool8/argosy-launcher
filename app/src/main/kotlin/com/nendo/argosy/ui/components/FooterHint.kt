@@ -370,7 +370,7 @@ fun FooterBar(
             .fillMaxWidth()
             .onSizeChanged { measuredWidth = it.width }
             .footerCollapse(collapseProgress)
-            .heightIn(min = frostedChromeHeight)
+            .heightIn(min = Dimens.footerHeight)
             .frostedSurface(
                 shape = RectangleShape,
                 color = backgroundColor
@@ -444,7 +444,7 @@ fun FooterBarWithState(
             .fillMaxWidth()
             .onSizeChanged { measuredWidth = it.width }
             .footerCollapse(collapseProgress)
-            .heightIn(min = frostedChromeHeight)
+            .heightIn(min = Dimens.footerHeight)
             .frostedSurface(
                 shape = RectangleShape,
                 color = backgroundColor
@@ -535,7 +535,7 @@ fun SubtleFooterBar(
             .fillMaxWidth()
             .onSizeChanged { measuredWidth = it.width }
             .footerCollapse(collapseProgress)
-            .heightIn(min = frostedChromeHeight)
+            .heightIn(min = Dimens.footerHeight)
             .frostedSurface(
                 shape = RectangleShape,
                 color = backgroundColor

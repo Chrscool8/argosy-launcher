@@ -122,6 +122,7 @@ object SettingsBackupKeys {
     private val HOME_AND_LIBRARY = listOf(
         SettingsBackupKey("home_layout_config", SettingsBackupType.STRING),
         SettingsBackupKey("presentation_style", SettingsBackupType.STRING),
+        SettingsBackupKey("presentation_background_blur", SettingsBackupType.INT),
         SettingsBackupKey("default_view", SettingsBackupType.STRING),
         SettingsBackupKey("installed_only_home", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("show_status_clock", SettingsBackupType.BOOLEAN),

@@ -59,17 +59,18 @@ class DualScreenManagerRoleSwapTest {
         testScope.testScheduler.runCurrent()
         val initial = preferences.value
         assertEquals(initial.presentationStyle, manager.presentationStyle.value)
-        assertEquals(initial.backgroundBlur, manager.presentationBackgroundBlur.value)
+        assertEquals(initial.presentationBackgroundBlur, manager.presentationBackgroundBlur.value)
 
         testScope.cancel()
         val hidden = initial.copy(
             presentationStyle = initial.presentationStyle.copy(hiddenStats = PresentationStat.entries.toSet()),
-            backgroundBlur = 80
+            presentationBackgroundBlur = 80,
+            backgroundBlur = 20
         )
         preferences.value = hidden
         testScope.testScheduler.runCurrent()
         assertEquals(initial.presentationStyle, manager.presentationStyle.value)
-        assertEquals(initial.backgroundBlur, manager.presentationBackgroundBlur.value)
+        assertEquals(initial.presentationBackgroundBlur, manager.presentationBackgroundBlur.value)
 
         val replacementScope = TestScope(testDispatcher)
         try {
@@ -77,13 +78,13 @@ class DualScreenManagerRoleSwapTest {
             testScope.testScheduler.runCurrent()
             assertTrue(replacementScope.isActive)
             assertEquals(hidden.presentationStyle, manager.presentationStyle.value)
-            assertEquals(hidden.backgroundBlur, manager.presentationBackgroundBlur.value)
+            assertEquals(80, manager.presentationBackgroundBlur.value)
 
-            val shown = initial.copy(backgroundBlur = 0)
+            val shown = initial.copy(presentationBackgroundBlur = 0, backgroundBlur = 60)
             preferences.value = shown
             testScope.testScheduler.runCurrent()
             assertEquals(shown.presentationStyle, manager.presentationStyle.value)
-            assertEquals(shown.backgroundBlur, manager.presentationBackgroundBlur.value)
+            assertEquals(0, manager.presentationBackgroundBlur.value)
         } finally {
             replacementScope.cancel()
             testScope.testScheduler.runCurrent()

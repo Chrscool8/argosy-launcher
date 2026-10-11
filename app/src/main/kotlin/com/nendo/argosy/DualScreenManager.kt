@@ -952,7 +952,7 @@ class DualScreenManager(
         _presentationStyle
 
     private val _presentationBackgroundBlur =
-        MutableStateFlow(preferencesRepository.latest?.backgroundBlur ?: 0)
+        MutableStateFlow(preferencesRepository.latest?.presentationBackgroundBlur ?: 0)
     val presentationBackgroundBlur: StateFlow<Int> = _presentationBackgroundBlur
 
     private val _selectSwapMode =
@@ -1248,7 +1248,7 @@ class DualScreenManager(
             preferencesRepository.userPreferences.collect { prefs ->
                 menuWrapMode = prefs.menuWrapMode
                 _presentationStyle.value = prefs.presentationStyle
-                _presentationBackgroundBlur.value = prefs.backgroundBlur
+                _presentationBackgroundBlur.value = prefs.presentationBackgroundBlur
                 _selectSwapMode.value = prefs.selectSwapMode
             }
         }

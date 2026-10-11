@@ -49,6 +49,7 @@ import androidx.compose.ui.res.stringResource
 import com.nendo.argosy.libretro.ui.RAConnectionNotification
 import com.nendo.argosy.core.input.ConnectedControllerTracker
 import com.nendo.argosy.core.input.ControllerDetector
+import com.nendo.argosy.core.input.isPhysicalGamepad
 import com.nendo.argosy.core.input.VirtualPad
 import com.nendo.argosy.ui.input.LocalABIconsSwapped
 import com.nendo.argosy.ui.input.LocalSwapStartSelect
@@ -116,6 +117,7 @@ import com.nendo.argosy.libretro.ui.InGameShaderChainScreen
 import com.nendo.argosy.libretro.ui.LibretroGamepadInputHandler
 import com.nendo.argosy.libretro.ui.LibretroMenuInputHandler
 import com.nendo.argosy.ui.input.InputHandler
+import com.nendo.argosy.ui.input.InputResult
 import com.nendo.argosy.ui.input.LocalGamepadInputHandler
 import com.nendo.argosy.ui.screens.settings.libretro.InGameLibretroSettingsAccessor
 import com.nendo.argosy.libretro.frame.FrameDownloader
@@ -240,6 +242,14 @@ class LibretroActivity : ComponentActivity() {
     private val portResolver = ControllerPortResolver()
     private val inputMapper = ControllerInputMapper()
     private lateinit var inputConfig: InputConfigCoordinator
+    private val controllerSeats by lazy {
+        com.nendo.argosy.ui.screens.settings.components.ControllerSeatController(
+            repository = inputConfigRepository,
+            scope = lifecycleScope,
+            onSeatsChanged = { inputConfig.refreshControllerOrder() }
+        )
+    }
+    private var seatPromptVisible by mutableStateOf(false)
     private lateinit var hotkeyDispatcher: LibretroHotkeyDispatcher
     private lateinit var motionProcessor: MotionEventProcessor
     private var vibrator: Vibrator? = null
@@ -395,6 +405,7 @@ class LibretroActivity : ComponentActivity() {
 
     private val isAnyMenuOpen: Boolean
         get() = menuVisible || shaderChainEditorVisible || frameEditorVisible || autoRestorePromptVisible || discMenuVisible ||
+            seatPromptVisible ||
             speedrunPickerVisible || readerKind != null || isClosing || netplay.isAnyDialogVisible
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -575,7 +586,11 @@ class LibretroActivity : ComponentActivity() {
             controllerTypeForPort = { port -> appliedControllerTypes[port] ?: effectiveControllerType(port) },
             scope = lifecycleScope
         )
-        inputConfig.initialize()
+        portResolver.setLaunchPad(
+            controllerId = intent.getStringExtra(EXTRA_LAUNCH_CONTROLLER_ID),
+            isDocked = isDockedDark()
+        )
+        inputConfig.initialize(onControllerOrderLoaded = ::promptForSeatsIfNeeded)
 
         if (settings.rumbleEnabled) {
             setupRumble()
@@ -1007,6 +1022,7 @@ class LibretroActivity : ComponentActivity() {
                     is GLRetroView.GLRetroEvents.FrameRendered -> {
                         if (!firstFrameRendered) {
                             firstFrameRendered = true
+                            if (seatPromptVisible) retroView.pauseEmulation()
                             Log.i(TAG, "[Startup] First frame rendered - emulation running successfully")
                             Log.d(TAG, "[Startup] gameId=$gameId, core=$coreName, hardcore=$hardcoreMode")
                             checkStateSupport()
@@ -1691,6 +1707,13 @@ class LibretroActivity : ComponentActivity() {
                         onSkip = { handleAutoRestoreResponse(false) }
                     )
                 }
+                if (seatPromptVisible) {
+                    activeMenuHandler = seatPromptInputHandler
+                    com.nendo.argosy.ui.screens.settings.components.ControllerOrderModal(
+                        controller = controllerSeats,
+                        onDismiss = ::closeSeatPrompt
+                    )
+                }
                 if (!isAnyMenuOpen) {
                     activeMenuHandler = null
                 }
@@ -2353,21 +2376,9 @@ class LibretroActivity : ComponentActivity() {
     private fun buildModalCallbacks(): InGameModalCallbacks {
         val repo = inputConfig.inputConfigRepository
         return InGameModalCallbacks(
-            controllerOrder = inputConfig.controllerOrderList,
+            controllerSeats = controllerSeats,
             hotkeys = inputConfig.hotkeyList,
             connectedControllers = repo.getConnectedControllers(),
-            onAssignController = { port, device ->
-                lifecycleScope.launch {
-                    repo.assignControllerToPort(port, device)
-                    inputConfig.refreshControllerOrder()
-                }
-            },
-            onClearControllerOrder = {
-                lifecycleScope.launch {
-                    repo.clearControllerOrder()
-                    inputConfig.refreshControllerOrder()
-                }
-            },
             lockedProfileIndex = repo.getConnectedControllers()
                 .firstNotNullOfOrNull { InputDevice.getDevice(it.deviceId) }
                 ?.let { device ->
@@ -3152,6 +3163,32 @@ class LibretroActivity : ComponentActivity() {
         }
     }
 
+    private fun promptForSeatsIfNeeded(savedOrder: List<com.nendo.argosy.data.local.entity.ControllerOrderEntity>) {
+        if (isGuestJoinedSession || netplay.inSession) return
+        val connected = InputDevice.getDeviceIds().toList()
+            .mapNotNull { InputDevice.getDevice(it) }
+            .filter { it.isPhysicalGamepad() }
+            .map { SeatedPad(getControllerId(it), ControllerDetector.isBuiltInPad(it)) }
+            .distinctBy { it.controllerId }
+        val savedIds = savedOrder.mapTo(mutableSetOf()) { it.controllerId }
+        if (!ControllerSeating.shouldPromptForSeats(connected, savedIds)) return
+        controllerSeats.open()
+        seatPromptVisible = true
+        retroView.suppressAutoResume = true
+        if (firstFrameRendered) retroView.pauseEmulation()
+    }
+
+    private fun closeSeatPrompt() {
+        seatPromptVisible = false
+    }
+
+    private val seatPromptInputHandler = object : InputHandler {
+        override fun onBack(): InputResult {
+            closeSeatPrompt()
+            return InputResult.HANDLED
+        }
+    }
+
     fun enterTouchEditMode() {
         menuVisible = false
         closeMenuSection()
@@ -3811,6 +3848,7 @@ class LibretroActivity : ComponentActivity() {
         const val EXTRA_STATES_DIR = "states_dir"
         const val EXTRA_NETPLAY_JOIN_SESSION_ID = "netplay_join_session_id"
         const val EXTRA_NETPLAY_JOIN_HOST_USER_ID = "netplay_join_host_user_id"
+        const val EXTRA_LAUNCH_CONTROLLER_ID = "launch_controller_id"
         const val ACTION_SHOW_MENU = "com.nendo.argosy.action.SHOW_MENU"
         const val ACTION_QUIT = "com.nendo.argosy.action.QUIT"
 

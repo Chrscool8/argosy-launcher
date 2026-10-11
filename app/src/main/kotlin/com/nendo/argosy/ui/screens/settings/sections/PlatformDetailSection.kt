@@ -82,6 +82,7 @@ internal sealed class PlatformDetailItem(
     data object LaunchArgs : PlatformDetailItem("launch_args", "emulator", { !it.isBuiltin && !it.isAndroid })
     data object BuiltinVideo : PlatformDetailItem("builtin_video", "emulator", { it.isBuiltin && !it.isAndroid })
     data object BuiltinControls : PlatformDetailItem("builtin_controls", "emulator", { it.isBuiltin && !it.isAndroid })
+    data object BuiltinSaves : PlatformDetailItem("builtin_saves", "emulator", { it.isBuiltin && !it.isAndroid })
     data object BuiltinCoreOptions : PlatformDetailItem("builtin_core_options", "emulator", { it.isBuiltin && !it.isAndroid })
 
     data object ClearArtCache : PlatformDetailItem("clear_art_cache", "platform")
@@ -109,7 +110,7 @@ internal sealed class PlatformDetailItem(
         val ALL: List<PlatformDetailItem>
             get() = listOf(
                 Header("header_emulator", "emulator", R.string.settings_platform_section_emulator, { !it.isAndroid }),
-                Emulator, Core, Extension, DisplayTarget, LegacyMode, LaunchArgs, BuiltinVideo, BuiltinControls, BuiltinCoreOptions,
+                Emulator, Core, Extension, DisplayTarget, LegacyMode, LaunchArgs, BuiltinVideo, BuiltinControls, BuiltinSaves, BuiltinCoreOptions,
                 Header("header_platform", "platform", R.string.settings_platform_section_platform),
                 InfoItem("info_platform_stats", "platform"),
                 ScanFiles, ScanApps, ClearArtCache,
@@ -420,6 +421,13 @@ fun PlatformDetailSection(
                     subtitle = stringResource(R.string.settings_platform_builtin_controls_subtitle),
                     isFocused = isFocused(item),
                     onClick = { openFrom(item) { viewModel.navigateToBuiltinControlsForPlatform(detail.platformIndex) } }
+                )
+                PlatformDetailItem.BuiltinSaves -> NavigationPreference(
+                    icon = Icons.Default.Gamepad,
+                    title = stringResource(R.string.settings_platform_builtin_saves_title),
+                    subtitle = stringResource(R.string.settings_platform_builtin_saves_subtitle),
+                    isFocused = isFocused(item),
+                    onClick = { openFrom(item) { viewModel.navigateToBuiltinSavesForPlatform(detail.platformIndex) } }
                 )
                 PlatformDetailItem.BuiltinCoreOptions -> NavigationPreference(
                     icon = Icons.Default.Gamepad,

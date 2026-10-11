@@ -143,7 +143,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.FooterSpacer
-import com.nendo.argosy.ui.components.LocalFooterHost
 import com.nendo.argosy.ui.components.NEW_BADGE_TOP_OVERFLOW
 import com.nendo.argosy.ui.components.FooterVariant
 import com.nendo.argosy.ui.components.DiscPickerModal
@@ -217,7 +216,13 @@ fun HomeScreen(
     var videoPlayedForGameId by remember { mutableStateOf<Long?>(null) }
     val swipeThreshold = with(LocalDensity.current) { 50.dp.toPx() }
 
-    val currentOnDrawerToggle by rememberUpdatedState(onDrawerToggle)
+    val toggleDrawer: () -> Unit = remember(onDrawerToggle, viewModel) {
+        {
+            viewModel.dismissAppBarTools()
+            onDrawerToggle()
+        }
+    }
+    val currentOnDrawerToggle by rememberUpdatedState(toggleDrawer)
 
     LaunchedEffect(Unit) {
         snapshotFlow { Triple(uiState.focusedGameIndex, uiState.currentRow, uiState.currentItems.size) }
@@ -301,12 +306,12 @@ fun HomeScreen(
     }
 
     val inputDispatcher = LocalInputDispatcher.current
-    val inputHandler = remember(onGameSelect, onDrawerToggle, isDefaultView) {
+    val inputHandler = remember(onGameSelect, toggleDrawer, isDefaultView) {
         viewModel.createInputHandler(
             isDefaultView = isDefaultView,
             onGameSelect = onGameSelect,
             onNavigateToDefault = onNavigateToDefault,
-            onDrawerToggle = onDrawerToggle,
+            onDrawerToggle = toggleDrawer,
             onScrollOverflow = { direction ->
                 val canScroll = if (direction < 0) {
                     overflowScrollState.canScrollBackward
@@ -339,6 +344,7 @@ fun HomeScreen(
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             viewModel.clearCompanionDetail()
+            viewModel.dismissAppBarTools()
         }
     }
 
@@ -467,6 +473,7 @@ fun HomeScreen(
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE -> {
+                    viewModel.dismissAppBarTools()
                     viewModel.deactivateVideoPreview()
                     videoPlayedForGameId = uiState.focusedGame?.id
                 }
@@ -702,7 +709,7 @@ fun HomeScreen(
             val footerHeight = if (presentationShowsHints) {
                 dockHeight + chromeVerticalPadding
             } else {
-                LocalFooterHost.current.measuredHeight
+                Dimens.footerHeight
             }
             val edge = if (maxWidth.value < ComponentDefaults.Carousel.compactWidthDp) {
                 Dimens.spacingMd
@@ -1214,7 +1221,7 @@ fun HomeScreen(
                         HomeTitleSection(
                             game = game,
                             title = title,
-                            developer = game?.developer ?: uiState.focusedMedia?.subtitle,
+                            subtitle = if (game == null) uiState.focusedMedia?.subtitle else null,
                             friends = uiState.friendsFor(game),
                             maxWidth = titleWidth,
                             centered = geometry.titleAbove,

@@ -254,6 +254,7 @@
     <string name="settings_presentation_scrim_blur">模糊</string>
     <string name="settings_presentation_scrim_none">无</string>
     <string name="settings_presentation_scrim_strength_title">遮罩强度</string>
+    <string name="settings_presentation_background_blur_title">背景模糊</string>
     <string name="settings_presentation_art_title">封面</string>
     <string name="settings_presentation_art_cover">封面</string>
     <string name="settings_presentation_art_box_3d">3D 盒装</string>
@@ -1312,9 +1313,11 @@
     <string name="settings_builtin_architecture_title">架构</string>
 
     <string name="settings_builtin_video_title">音视频与性能</string>
-    <string name="settings_builtin_video_subtitle">着色器、显示、性能、存档</string>
+    <string name="settings_builtin_video_subtitle">着色器、显示、性能</string>
     <string name="settings_builtin_controls_title">控制</string>
     <string name="settings_builtin_controls_subtitle">震动、按键映射、快捷键</string>
+    <string name="settings_builtin_saves_title">存档</string>
+    <string name="settings_builtin_saves_subtitle">即时存档、服务器存档、文件夹</string>
 
     <string name="settings_builtin_cores_title">管理核心</string>
     <string name="settings_builtin_cores_subtitle">已安装%1$d/%2$d个核心</string>
@@ -1575,9 +1578,11 @@
     <string name="settings_platform_launch_args_title">启动参数</string>
     <string name="settings_platform_launch_args_subtitle">自定义Argosy启动此模拟器的方式</string>
     <string name="settings_platform_builtin_video_title">内置音视频与性能</string>
-    <string name="settings_platform_builtin_video_subtitle">显示、性能与存档的覆盖设置</string>
+    <string name="settings_platform_builtin_video_subtitle">显示与性能的覆盖设置</string>
     <string name="settings_platform_builtin_controls_title">内置控制</string>
     <string name="settings_platform_builtin_controls_subtitle">震动、摇杆映射的覆盖设置</string>
+    <string name="settings_platform_builtin_saves_title">内置存档</string>
+    <string name="settings_platform_builtin_saves_subtitle">即时存档与文件夹的覆盖设置</string>
     <string name="settings_platform_core_options_title">核心选项</string>
     <string name="settings_platform_core_options_subtitle">此平台的各核心设置</string>
 
@@ -2060,13 +2065,12 @@
     <!-- ===== Controller order modal ===== -->
 
     <string name="settings_controller_order_title">手柄顺序</string>
-    <string name="settings_controller_order_subtitle">按任意按钮以分配手柄</string>
-    <string name="settings_controller_order_hint_confirm">确认</string>
-    <string name="settings_controller_order_hint_unregister_back">取消注册/返回</string>
+    <string name="settings_controller_order_subtitle">按下手柄上的按钮即可找到它。</string>
+    <string name="settings_controller_order_hint_clear_all">全部清除</string>
     <string name="settings_controller_order_default_name">手柄</string>
     <string name="settings_controller_order_slot_label">P%1$d</string>
-    <string name="settings_controller_order_slot_pressing">请按下...</string>
-    <string name="settings_controller_order_slot_empty">空</string>
+    <string name="settings_controller_order_seat_none">无</string>
+    <string name="settings_controller_order_empty">未连接手柄</string>
 
     <!-- ===== Grip controller modal ===== -->
 

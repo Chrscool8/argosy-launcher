@@ -386,6 +386,15 @@ internal fun routeAdjustBackgroundBlur(vm: SettingsViewModel, delta: Int) {
     vm.displayDelegate.adjustBackgroundBlur(vm.viewModelScope, delta)
 }
 
+internal fun routeAdjustPresentationBackgroundBlur(vm: SettingsViewModel, delta: Int) {
+    val current = vm.uiState.value.display.presentationBackgroundBlur
+    val wouldBe = (current + delta).coerceIn(0, 100)
+    if (wouldBe == current && delta != 0) {
+        vm.hapticManager.vibrate(HapticPattern.BOUNDARY_HIT)
+    }
+    vm.displayDelegate.adjustPresentationBackgroundBlur(vm.viewModelScope, delta)
+}
+
 internal fun routeAdjustBackgroundSaturation(vm: SettingsViewModel, delta: Int) {
     val current = vm.uiState.value.display.backgroundSaturation
     val wouldBe = (current + delta).coerceIn(0, 100)

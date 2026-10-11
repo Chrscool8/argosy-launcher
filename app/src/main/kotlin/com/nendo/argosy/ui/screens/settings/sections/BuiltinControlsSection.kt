@@ -509,9 +509,7 @@ fun BuiltinControlsSection(
 
         if (controlsState.showControllerOrderModal) {
             ControllerOrderModal(
-                existingOrder = controllerOrder,
-                onAssign = { port, device -> viewModel.assignControllerToPort(port, device) },
-                onClearAll = { viewModel.clearControllerOrder() },
+                controller = viewModel.controllerSeats,
                 onDismiss = { viewModel.hideControllerOrderModal() }
             )
         }

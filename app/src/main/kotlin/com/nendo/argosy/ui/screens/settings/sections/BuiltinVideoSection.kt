@@ -10,7 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.nendo.argosy.R
-import com.nendo.argosy.ui.components.ActionPreference
 import com.nendo.argosy.ui.screens.gamedetail.components.OptionItem
 import com.nendo.argosy.ui.screens.settings.BuiltinVideoState
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
@@ -76,10 +75,6 @@ fun BuiltinVideoSection(
                         LibretroSettingDef.RewindEnabled -> viewModel.setBuiltinRewindEnabled(enabled)
                         LibretroSettingDef.SkipDuplicateFrames -> viewModel.setBuiltinSkipDuplicateFrames(enabled)
                         LibretroSettingDef.LowLatencyAudio -> viewModel.setBuiltinLowLatencyAudio(enabled)
-                        LibretroSettingDef.AutoSaveState -> viewModel.setBuiltinAutoSaveState(enabled)
-                        LibretroSettingDef.AutoRestoreState -> viewModel.setBuiltinAutoRestoreState(enabled)
-                        LibretroSettingDef.PreferNewerServerSave -> viewModel.setBuiltinPreferNewerServerSave(enabled)
-                        LibretroSettingDef.HwCoreSaveStates -> viewModel.setBuiltinHwCoreSaveStates(enabled)
                         else -> {}
                     }
                 },
@@ -104,16 +99,6 @@ fun BuiltinVideoSection(
     }
 
     val showResetAll = !isGlobal && hasAnyOverrides
-    val resetAllExtra = if (showResetAll) 1 else 0
-    val savePathFocusIndex = maxSettingsFocusIndex + 1 + resetAllExtra
-    val statePathFocusIndex = maxSettingsFocusIndex + 2 + resetAllExtra
-
-    val effectiveSavePath = if (isGlobal) videoState.savePath else (platformSettings?.savePath ?: videoState.savePath)
-    val effectiveStatePath = if (isGlobal) videoState.statePath else (platformSettings?.statePath ?: videoState.statePath)
-    val hasPlatformSaveOverride = !isGlobal && platformSettings?.savePath != null
-    val hasPlatformStateOverride = !isGlobal && platformSettings?.statePath != null
-
-    val showPathItems = effectiveSavePath.isNotEmpty()
 
     LibretroSettingsSection(
         accessor = accessor,
@@ -135,58 +120,6 @@ fun BuiltinVideoSection(
                     onClick = { viewModel.resetAllPlatformLibretroSettings() }
                 )
             }
-        } else null,
-        trailingItems = if (showPathItems) {
-            {
-                item(key = "save_path") {
-                    ActionPreference(
-                        title = stringResource(R.string.settings_shell_builtinvideo_save_path_title),
-                        subtitle = formatStoragePath(effectiveSavePath),
-                        trailingText = when {
-                            isGlobal && videoState.isCustomSavePath ->
-                                stringResource(R.string.settings_shell_builtinvideo_save_trailing_custom)
-                            !isGlobal && hasPlatformSaveOverride ->
-                                stringResource(R.string.settings_shell_builtinvideo_save_trailing_custom_platform)
-                            !isGlobal -> stringResource(R.string.settings_shell_builtinvideo_save_trailing_from_global)
-                            else -> null
-                        },
-                        isFocused = uiState.focusedIndex == savePathFocusIndex,
-                        onClick = {
-                            if (isGlobal) viewModel.openBuiltinSavePathBrowser()
-                            else platformContext?.let { viewModel.openPlatformBuiltinSavePathBrowser(it.platformId) }
-                        },
-                        showResetButton = if (isGlobal) videoState.isCustomSavePath else hasPlatformSaveOverride,
-                        onReset = {
-                            if (isGlobal) viewModel.resetBuiltinSavePath()
-                            else platformContext?.let { viewModel.resetPlatformBuiltinSavePath(it.platformId) }
-                        }
-                    )
-                }
-                item(key = "state_path") {
-                    ActionPreference(
-                        title = stringResource(R.string.settings_shell_builtinvideo_state_path_title),
-                        subtitle = formatStoragePath(effectiveStatePath),
-                        trailingText = when {
-                            isGlobal && videoState.isCustomStatePath ->
-                                stringResource(R.string.settings_shell_builtinvideo_state_trailing_custom)
-                            !isGlobal && hasPlatformStateOverride ->
-                                stringResource(R.string.settings_shell_builtinvideo_state_trailing_custom_platform)
-                            !isGlobal -> stringResource(R.string.settings_shell_builtinvideo_state_trailing_from_global)
-                            else -> null
-                        },
-                        isFocused = uiState.focusedIndex == statePathFocusIndex,
-                        onClick = {
-                            if (isGlobal) viewModel.openBuiltinStatePathBrowser()
-                            else platformContext?.let { viewModel.openPlatformBuiltinStatePathBrowser(it.platformId) }
-                        },
-                        showResetButton = if (isGlobal) videoState.isCustomStatePath else hasPlatformStateOverride,
-                        onReset = {
-                            if (isGlobal) viewModel.resetBuiltinStatePath()
-                            else platformContext?.let { viewModel.resetPlatformBuiltinStatePath(it.platformId) }
-                        }
-                    )
-                }
-            }
         } else null
     )
 }
@@ -198,9 +131,8 @@ fun builtinVideoMaxFocusIndex(state: BuiltinVideoState, platformSettings: Map<Lo
         platformSlug = platformContext?.platformSlug,
         canEnableBFI = state.canEnableBlackFrameInsertion
     )
-    val pathItems = if (state.savePath.isNotEmpty()) 2 else 0
     val resetAllItem = if (!state.isGlobalContext && hasAnyOverrides) 1 else 0
-    return settingsMax + resetAllItem + pathItems
+    return settingsMax + resetAllItem
 }
 
 fun builtinVideoItemAtFocusIndex(

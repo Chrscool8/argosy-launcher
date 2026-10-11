@@ -125,6 +125,7 @@ class UserPreferencesRepository @Inject constructor(
             homeBackgroundMode = display.homeBackgroundMode,
             homeLayout = display.homeLayout,
             presentationStyle = display.presentationStyle,
+            presentationBackgroundBlur = display.presentationBackgroundBlur,
             useAccentColorFooter = display.useAccentColorFooter,
             compactFooter = display.compactFooter,
             lockScreenArt = display.lockScreenArt,
@@ -339,6 +340,7 @@ class UserPreferencesRepository @Inject constructor(
         displayPrefs.setHomeLayout(settings)
     suspend fun setPresentationStyle(style: com.nendo.argosy.domain.model.PresentationStyle) =
         displayPrefs.setPresentationStyle(style)
+    suspend fun setPresentationBackgroundBlur(blur: Int) = displayPrefs.setPresentationBackgroundBlur(blur)
     suspend fun setUseAccentColorFooter(use: Boolean) = displayPrefs.setUseAccentColorFooter(use)
     suspend fun setCompactFooter(enabled: Boolean) = displayPrefs.setCompactFooter(enabled)
     suspend fun setLockScreenArt(enabled: Boolean) = displayPrefs.setLockScreenArt(enabled)
@@ -869,6 +871,7 @@ data class UserPreferences(
         com.nendo.argosy.domain.model.HomeLayoutSettings(),
     val presentationStyle: com.nendo.argosy.domain.model.PresentationStyle =
         com.nendo.argosy.domain.model.PresentationStyle(),
+    val presentationBackgroundBlur: Int = 0,
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
