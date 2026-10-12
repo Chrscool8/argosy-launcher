@@ -258,7 +258,10 @@ interface InputHandler {
     fun onSelect(): InputResult = InputResult.UNHANDLED
     fun onLeftStickClick(): InputResult = InputResult.UNHANDLED
     fun onRightStickClick(): InputResult = InputResult.UNHANDLED
+    fun onRightStickUp(): InputResult = InputResult.UNHANDLED
+    fun onRightStickDown(): InputResult = InputResult.UNHANDLED
     fun onLongConfirm(): InputResult = InputResult.UNHANDLED
+    fun onLongSelect(): InputResult = InputResult.UNHANDLED
 }
 ```
 
@@ -271,6 +274,7 @@ enum class InputButton {
     A, B, X, Y,
     DPAD, DPAD_UP, DPAD_DOWN, DPAD_LEFT, DPAD_RIGHT, DPAD_HORIZONTAL, DPAD_VERTICAL,
     LB, RB, LB_RB, LT, RT, LT_RT,
+    RIGHT_STICK_VERTICAL,
     START, SELECT
 }
 ```

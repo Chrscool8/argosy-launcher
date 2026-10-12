@@ -285,6 +285,15 @@
     <!-- Second line of that row, standing in for a typeface the user has not changed. Adjective
          used as a noun. -->
     <string name="settings_theme_fonts_subtitle_default">Default</string>
+    <!-- Row title. Noun phrase: a separately installed app that supplies replacement app icons,
+         in the sense used by Android launchers. -->
+    <string name="settings_theme_icon_pack_title">Icon Pack</string>
+    <!-- Second line of that row when at least one icon pack is installed. -->
+    <string name="settings_theme_icon_pack_subtitle">Replaces app icons with an installed icon pack</string>
+    <!-- Second line of that row when no icon pack is installed. -->
+    <string name="settings_theme_icon_pack_subtitle_none">No icon packs installed</string>
+    <!-- Value of that row meaning each app keeps the icon it ships with. Noun phrase. -->
+    <string name="settings_theme_icon_pack_system">System Icons</string>
 
     <!-- ===== Interface section ===== -->
 

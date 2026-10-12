@@ -236,11 +236,11 @@
 
     <string name="ui_save_conflict_title">Spielstandkonflikt</string>
     <string name="ui_save_conflict_default_slot">Standard-Spielstand</string>
-    <string name="ui_save_conflict_message">Der Server hat einen neueren Spielstand. Beim Überschreiben wird er durch Ihren lokalen Spielstand ersetzt.</string>
+    <string name="ui_save_conflict_message">Der Server hat einen neueren Spielstand. Beim Hochladen wird Ihr lokaler Spielstand zum neuesten, und die Kopie auf dem Server bleibt erhalten.</string>
     <string name="ui_save_conflict_source_local">Lokal</string>
     <string name="ui_save_conflict_source_server">Server</string>
     <string name="ui_save_conflict_skip">Sync überspringen</string>
-    <string name="ui_save_conflict_overwrite">Überschreiben</string>
+    <string name="ui_save_conflict_overwrite">Hochladen</string>
     <string name="ui_save_conflict_hardcore_title">Hardcore-Spielstand ersetzen?</string>
     <string name="ui_save_conflict_hardcore_message">Der aktuelle Spielstand dieses Kanals wurde im Hardcore-Modus erstellt. Wenn Sie diesen Spielstand behalten, ersetzt er ihn als aktuellen Spielstand. Der Hardcore-Spielstand bleibt im Verlauf erhalten.</string>
     <string name="ui_save_conflict_hardcore_replace">Ersetzen</string>
@@ -706,14 +706,14 @@
     <string name="ui_sync_overlay_post_session_title">Spielstandkonflikt</string>
     <string name="ui_sync_overlay_post_session_subject">\"%1$s\" -- %2$s</string>
     <string name="ui_sync_overlay_post_session_default_slot">Standard-Spielstand</string>
-    <string name="ui_sync_overlay_post_session_message">Der Server hat einen neueren Spielstand. Beim Überschreiben wird er durch Ihren lokalen Spielstand ersetzt.</string>
+    <string name="ui_sync_overlay_post_session_message">Der Server hat einen neueren Spielstand. Beim Hochladen wird Ihr lokaler Spielstand zum neuesten, und die Kopie auf dem Server bleibt erhalten.</string>
     <string name="ui_sync_overlay_post_session_local">Lokal</string>
     <string name="ui_sync_overlay_post_session_server">Server</string>
     <string name="ui_sync_overlay_post_session_server_named">Server (%1$s)</string>
     <string name="ui_sync_overlay_post_session_skip">Sync überspringen</string>
     <string name="ui_sync_overlay_post_session_skip_subtitle">Lokalen Spielstand behalten, nicht hochladen</string>
-    <string name="ui_sync_overlay_post_session_overwrite">Server überschreiben</string>
-    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Serverspielstand durch Ihre lokale Version ersetzen</string>
+    <string name="ui_sync_overlay_post_session_overwrite">Lokalen Spielstand hochladen</string>
+    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Ihr lokaler Spielstand wird zum neuesten. Die Kopie auf dem Server bleibt erhalten.</string>
     <string name="ui_sync_overlay_legacy_status">Synchronisierung...</string>
 
     <!-- Quick menu (ui/quickmenu) -->
@@ -758,10 +758,8 @@
     <string name="ui_file_browser_permission_footer_back">Zurück</string>
     <string name="ui_file_browser_error_unreadable">Zugriff auf Verzeichnis nicht möglich</string>
     <string name="ui_file_browser_empty_folder">Leerer Ordner</string>
-    <string name="ui_file_browser_footer_select_file">Datei auswählen</string>
-    <string name="ui_file_browser_footer_select_file_or_folder">Datei auswählen</string>
-    <string name="ui_file_browser_footer_open_folder">Öffnen</string>
-    <string name="ui_file_browser_footer_back">Zurück</string>
+    <string name="ui_file_browser_action_use_folder">Diesen Ordner verwenden</string>
+    <string name="ui_file_browser_action_new_folder">Neuer Ordner</string>
     <string name="ui_file_browser_footer_new_folder">Neuer Ordner</string>
     <string name="ui_file_browser_footer_use_folder">Ordner verwenden</string>
     <string name="ui_file_browser_new_folder_title">Neuer Ordner</string>

@@ -79,8 +79,6 @@ class SecondaryHomeActivity :
         )
     }
 
-    private var launchedExternalApp = false
-
     private var isInitialized by mutableStateOf(false)
     var isArgosyForeground by mutableStateOf(false)
         private set
@@ -239,7 +237,6 @@ class SecondaryHomeActivity :
             dsm = currentDsm
             initializeCompanion()
         }
-        launchedExternalApp = false
         dsm.notifyUserActivity("companionResume")
         syncFromSessionStore()
         dsm.onCompanionResumed()
@@ -247,7 +244,6 @@ class SecondaryHomeActivity :
 
     private fun syncFromSessionStore() {
         val store = dsm.sessionStateStore
-        store.setForeignAppOnSecondary(false)
         isGameActive = store.hasActiveSession()
         isHardcore = store.isHardcore()
         currentChannelName = store.getChannelName()
@@ -255,7 +251,9 @@ class SecondaryHomeActivity :
 
     override fun onStop() {
         super.onStop()
-        if (::dsm.isInitialized) dsm.onCompanionPaused()
+        if (::dsm.isInitialized) {
+            dsm.onCompanionStopped(hostDisplayId(), isFinishing, isChangingConfigurations)
+        }
     }
 
     override fun finishCompanion() {
@@ -395,6 +393,7 @@ class SecondaryHomeActivity :
             if (forward != null && forward(event)) return true
         }
         if (gamepadInputHandler.handleMotionEvent(event)) return true
+        gamepadInputHandler.processRightStickMotion(event)
         val stickEvent = gamepadInputHandler.processStickMotion(event)
         if (stickEvent != null) {
             gamepadInputHandler.injectEvent(stickEvent)
@@ -866,6 +865,7 @@ class SecondaryHomeActivity :
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) window.hideSystemBars()
+        if (!hasFocus) gamepadInputHandler.releaseRightStick()
         if (!::dsm.isInitialized) return
         if (hasFocus) {
             dsm.onLauncherWindowFocused(this)

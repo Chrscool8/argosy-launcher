@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -21,15 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
+import coil.compose.SubcomposeAsyncImage
 import com.nendo.argosy.R
 import com.nendo.argosy.data.platform.LaunchableApp
+import com.nendo.argosy.ui.coil.AppIconData
 import com.nendo.argosy.ui.components.Modal
 import com.nendo.argosy.ui.screens.settings.AppPickerModalState
 import com.nendo.argosy.ui.theme.Dimens
@@ -145,23 +145,17 @@ private fun AppRow(
 
 @Composable
 private fun AppIcon(app: LaunchableApp, modifier: Modifier = Modifier) {
-    val icon = app.icon
-    if (icon != null) {
-        val density = LocalDensity.current
-        val sizePx = with(density) { 40.dp.roundToPx() }
-        val bitmap = runCatching { icon.toBitmap(width = sizePx, height = sizePx) }.getOrNull()
-        if (bitmap != null) {
-            androidx.compose.foundation.Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = app.displayName,
-                modifier = modifier
+    SubcomposeAsyncImage(
+        model = AppIconData(app.packageName),
+        contentDescription = app.displayName,
+        modifier = modifier,
+        error = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(Dimens.radiusSm))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             )
-            return
         }
-    }
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(Dimens.radiusSm))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
     )
 }

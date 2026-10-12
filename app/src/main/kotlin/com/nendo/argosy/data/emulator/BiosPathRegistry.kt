@@ -509,7 +509,8 @@ object BiosPathRegistry {
         "dev.eden.eden_emulator.relWithDebInfo",
         "dev.eden.eden_emulator.debug",
         "dev.legacy.eden",
-        "org.eden.emulator"
+        "org.eden.emulator",
+        "dev.igawa6.edenduo"
     )
 
     fun getEdenDataPath(packageName: String): String {

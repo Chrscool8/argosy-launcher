@@ -553,6 +553,19 @@ class DisplaySettingsDelegate @Inject constructor(
         }
     }
 
+    fun setIconPack(scope: CoroutineScope, packageName: String?) {
+        scope.launch {
+            preferencesRepository.setIconPack(packageName)
+            _state.update { it.copy(iconPack = packageName) }
+        }
+    }
+
+    fun cycleIconPack(scope: CoroutineScope, direction: Int) {
+        val state = _state.value
+        val options = state.iconPackOptions
+        setIconPack(scope, options[(state.selectedIconPackIndex + direction).mod(options.size)])
+    }
+
     fun showGripControllerModal() {
         _state.update { it.copy(showGripControllerModal = true) }
     }

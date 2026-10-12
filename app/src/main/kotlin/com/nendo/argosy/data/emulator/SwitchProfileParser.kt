@@ -17,6 +17,7 @@ class SwitchProfileParser @Inject constructor(
         private val EDEN_PACKAGES = setOf(
             "dev.eden.eden_emulator",
             "dev.eden.eden_emulator.debug",
+            "dev.igawa6.edenduo",
             "dev.lemon.lemon_emulator"
         )
 

@@ -28,6 +28,7 @@ class JellyfinApiClient @Inject constructor(
         userId: String,
         parentId: String? = null,
         includeItemTypes: String? = null,
+        collapseBoxSetItems: Boolean? = null,
         recursive: Boolean = true,
         startIndex: Int = 0,
         limit: Int = DEFAULT_PAGE_SIZE,
@@ -38,6 +39,7 @@ class JellyfinApiClient @Inject constructor(
         put("userId", userId)
         parentId?.let { put("parentId", it) }
         includeItemTypes?.let { put("includeItemTypes", it) }
+        collapseBoxSetItems?.let { put("collapseBoxSetItems", it.toString()) }
         put("recursive", recursive.toString())
         put("startIndex", startIndex.toString())
         put("limit", limit.toString())

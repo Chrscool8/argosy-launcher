@@ -100,9 +100,9 @@
     <string name="firstrun_core_prompt_explainer">Diese ermöglichen integrierte Emulation ohne separate Emulator-Apps.</string>
     <string name="firstrun_core_prompt_all_installed">Alle Cores für Ihre gewählten Plattformen sind bereits installiert.</string>
     <string name="firstrun_core_prompt_button_download">Cores herunterladen</string>
-    <string name="firstrun_core_prompt_button_skip">Überspringen (integrierten Emulator deaktivieren)</string>
+    <string name="firstrun_core_prompt_button_skip">Überspringen</string>
     <string name="firstrun_core_prompt_button_continue">Weiter</string>
-    <string name="firstrun_core_prompt_note_skip">Beim Überspringen wird der integrierte Emulator deaktiviert. Sie können ihn später in den Einstellungen wieder aktivieren und Cores herunterladen.</string>
+    <string name="firstrun_core_prompt_note_skip">Jeder Core wird beim ersten Start eines Spiels heruntergeladen, das ihn braucht. Sie können Cores auch später in den Einstellungen herunterladen.</string>
 
     <string name="firstrun_core_download_title">Emulator-Cores werden heruntergeladen</string>
     <string name="firstrun_core_download_none_needed">Keine Cores für die gewählten Plattformen nötig</string>

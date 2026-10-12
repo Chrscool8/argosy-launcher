@@ -55,6 +55,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.nendo.argosy.libretro.frame.FrameRegistry
 import androidx.compose.ui.text.input.KeyboardType
+import com.nendo.argosy.ui.common.rememberStorageAccessRequest
 import com.nendo.argosy.ui.components.CustomTileMenuModal
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.FooterSpacer
@@ -340,15 +341,13 @@ fun SettingsScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.requestStoragePermissionEvent.collect {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                    data = Uri.parse("package:${context.packageName}")
-                }
-                context.startActivity(intent)
-            }
-        }
+    val requestStorageAccess = rememberStorageAccessRequest(onResult = {
+        viewModel.checkStoragePermission()
+        viewModel.refreshPermissions()
+    })
+
+    LaunchedEffect(requestStorageAccess) {
+        viewModel.requestStoragePermissionEvent.collect { requestStorageAccess() }
     }
 
     LaunchedEffect(Unit) {

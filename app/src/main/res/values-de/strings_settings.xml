@@ -107,6 +107,10 @@
     <string name="settings_theme_backdrop_subtitle_off">Aus</string>
     <string name="settings_theme_fonts_title">Schriftarten</string>
     <string name="settings_theme_fonts_subtitle_default">Standard</string>
+    <string name="settings_theme_icon_pack_title">Icon-Paket</string>
+    <string name="settings_theme_icon_pack_subtitle">Ersetzt App-Symbole durch ein installiertes Icon-Paket</string>
+    <string name="settings_theme_icon_pack_subtitle_none">Keine Icon-Pakete installiert</string>
+    <string name="settings_theme_icon_pack_system">System-Symbole</string>
 
     <!-- ===== Interface section ===== -->
 

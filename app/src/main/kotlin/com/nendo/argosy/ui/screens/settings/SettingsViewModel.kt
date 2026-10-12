@@ -103,6 +103,7 @@ class SettingsViewModel @Inject constructor(
     internal val touchLayoutRepository: com.nendo.argosy.data.repository.TouchLayoutRepository,
     internal val launchArgsRepo: com.nendo.argosy.data.repository.LaunchArgsRepository,
     internal val installedAppResolver: com.nendo.argosy.data.platform.InstalledAppResolver,
+    internal val iconPackRepository: com.nendo.argosy.data.iconpack.IconPackRepository,
     internal val emulatorConfigRepo: EmulatorConfigRepository,
     internal val emulatorDetector: EmulatorDetector,
     internal val builtinCoreResolver: BuiltinCoreResolver,
@@ -1151,6 +1152,8 @@ class SettingsViewModel @Inject constructor(
     fun setUseAccentColorFooter(use: Boolean) = displayDelegate.setUseAccentColorFooter(viewModelScope, use)
     fun setCompactFooter(enabled: Boolean) = displayDelegate.setCompactFooter(viewModelScope, enabled)
     fun setLockScreenArt(enabled: Boolean) = displayDelegate.setLockScreenArt(viewModelScope, enabled)
+    fun setIconPack(packageName: String?) = displayDelegate.setIconPack(viewModelScope, packageName)
+    fun cycleIconPack(direction: Int) = displayDelegate.cycleIconPack(viewModelScope, direction)
 
     fun showGripControllerModal() = displayDelegate.showGripControllerModal()
 
@@ -1533,7 +1536,6 @@ class SettingsViewModel @Inject constructor(
         installerDelegate.selectVariantAt(viewModelScope, index)
     fun openInstallerImeSettings() = installerDelegate.openImeSettings()
     fun showInstallerImePicker() = installerDelegate.showImePicker()
-    fun openStorageSettings() = permissionsDelegate.openStorageSettings()
     fun openNotificationSettings() = permissionsDelegate.openNotificationSettings()
     fun openWriteSettings() = permissionsDelegate.openWriteSettings()
     fun openDisplayOverlaySettings() = permissionsDelegate.openDisplayOverlaySettings()

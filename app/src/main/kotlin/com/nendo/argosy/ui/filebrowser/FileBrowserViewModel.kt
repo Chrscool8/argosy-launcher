@@ -1,7 +1,6 @@
 package com.nendo.argosy.ui.filebrowser
 
-import android.os.Build
-import android.os.Environment
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +9,9 @@ import com.nendo.argosy.core.storage.StorageVolume
 import com.nendo.argosy.data.storage.FileAccessLayer
 import com.nendo.argosy.data.storage.FileInfo
 import com.nendo.argosy.data.storage.StorageVolumeDetector
+import com.nendo.argosy.util.StorageAccess
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FileBrowserViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val volumeDetector: StorageVolumeDetector,
     private val fileAccessLayer: FileAccessLayer
 ) : ViewModel() {
@@ -43,11 +45,7 @@ class FileBrowserViewModel @Inject constructor(
 
     fun recheckPermission() {
         viewModelScope.launch {
-            val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Environment.isExternalStorageManager()
-            } else {
-                true
-            }
+            val hasPermission = StorageAccess.isGranted(context)
 
             _state.update { it.copy(hasPermission = hasPermission) }
 
@@ -96,13 +94,13 @@ class FileBrowserViewModel @Inject constructor(
             when (result) {
                 is DirectoryListing.Success -> {
                     _state.update { state ->
-                        state.copy(
+                        val listed = state.copy(
                             currentPath = path,
                             entries = result.entries,
-                            fileFocusIndex = 0,
                             focusedPane = FocusedPane.FILES,
                             isLoading = false
                         )
+                        listed.copy(fileFocusIndex = listed.firstEntryIndex)
                     }
                 }
                 is DirectoryListing.Error -> {
@@ -202,10 +200,9 @@ class FileBrowserViewModel @Inject constructor(
                     state.copy(volumeFocusIndex = newIndex)
                 }
                 FocusedPane.FILES -> {
-                    val maxIndex = (state.entries.size - 1).coerceAtLeast(0)
-                    val newIndex = (state.fileFocusIndex + delta).coerceIn(0, maxIndex)
-                    moved = newIndex != state.fileFocusIndex
-                    state.copy(fileFocusIndex = newIndex)
+                    val next = state.withFileFocusMoved(delta)
+                    moved = next.fileFocusIndex != state.fileFocusIndex
+                    next
                 }
             }
         }
@@ -233,13 +230,28 @@ class FileBrowserViewModel @Inject constructor(
                 }
             }
             FocusedPane.FILES -> {
-                val entry = state.entries.getOrNull(state.fileFocusIndex)
-                if (entry != null && entry.isDirectory) {
-                    navigate(entry.path)
-                } else if (entry != null && state.mode == FileBrowserMode.FILE_SELECTION) {
-                    selectPath(entry.path)
+                val action = state.focusedAction
+                if (action != null) {
+                    performAction(action)
+                } else {
+                    state.focusedEntry?.let { openEntry(it) }
                 }
             }
+        }
+    }
+
+    fun openEntry(entry: FileEntry) {
+        when {
+            entry.isDirectory -> navigate(entry.path)
+            _state.value.mode != FileBrowserMode.FOLDER_SELECTION -> selectPath(entry.path)
+        }
+    }
+
+    fun performAction(action: FileBrowserAction) {
+        if (action !in _state.value.actions) return
+        when (action) {
+            FileBrowserAction.USE_FOLDER -> selectPath(_state.value.currentPath)
+            FileBrowserAction.NEW_FOLDER -> showCreateFolderDialog()
         }
     }
 
@@ -260,8 +272,7 @@ class FileBrowserViewModel @Inject constructor(
         }
     }
 
-    fun showCreateFolderDialog() {
-        if (_state.value.currentPath.isEmpty()) return
+    private fun showCreateFolderDialog() {
         _state.update {
             it.copy(
                 showCreateFolderDialog = true,

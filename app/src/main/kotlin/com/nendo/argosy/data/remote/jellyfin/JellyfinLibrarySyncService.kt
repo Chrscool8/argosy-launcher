@@ -173,6 +173,7 @@ class JellyfinLibrarySyncService @Inject constructor(
                 userId = owner,
                 parentId = library.libraryId,
                 includeItemTypes = itemType.wireValue,
+                collapseBoxSetItems = false,
                 startIndex = startIndex,
                 limit = JellyfinApiClient.DEFAULT_PAGE_SIZE,
                 fields = JellyfinApiClient.TITLE_FIELDS

@@ -317,6 +317,15 @@ object SavePathRegistry {
             usesFolderBasedSaves = true,
             usesPackageTemplate = true
         ),
+        "eden_duo" to SavePathConfig(
+            emulatorId = "eden_duo",
+            defaultPaths = listOf(
+                "{extStorage}/Android/data/{package}/files/nand/user/save"
+            ),
+            saveExtensions = listOf("*"),
+            usesFolderBasedSaves = true,
+            usesPackageTemplate = true
+        ),
         "lemon" to SavePathConfig(
             emulatorId = "lemon",
             defaultPaths = listOf(
@@ -755,6 +764,7 @@ object SavePathRegistry {
         "org.dolphinemu.mmjr" to "dolphin_mmjr",
         "org.dolphinemu.handheld" to "dolphin",
         "com.joeyos.dolphinemu" to "dolphin",
+        "dev.igawa6.edenduo" to "eden_duo",
         "com.retroarch" to "retroarch",
         "com.retroarch.aarch64" to "retroarch_64",
         "com.retroarch.ra32" to "retroarch_32",

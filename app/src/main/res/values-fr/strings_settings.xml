@@ -99,6 +99,10 @@
     <string name="settings_theme_backdrop_subtitle_off">Désactivé</string>
     <string name="settings_theme_fonts_title">Polices</string>
     <string name="settings_theme_fonts_subtitle_default">Par défaut</string>
+    <string name="settings_theme_icon_pack_title">Pack d\'icônes</string>
+    <string name="settings_theme_icon_pack_subtitle">Remplace les icônes des applications par un pack installé</string>
+    <string name="settings_theme_icon_pack_subtitle_none">Aucun pack d\'icônes installé</string>
+    <string name="settings_theme_icon_pack_system">Icônes du système</string>
 
     <!-- ===== Section Interface ===== -->
 

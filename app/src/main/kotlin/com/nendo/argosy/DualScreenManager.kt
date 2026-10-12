@@ -390,6 +390,7 @@ class DualScreenManager(
         setSecondaryHomeComponentEnabled(enabled && displayAffinityHelper.secondaryDisplayUsable)
         if (!isToggle) return
         if (enabled) {
+            clearForeignAppOnSecondary("dual screen enabled")
             reprobeSecondaryDisplay()
             ensureCompanionLaunched()
         } else {
@@ -1562,6 +1563,7 @@ class DualScreenManager(
         }
 
         override fun onDisplayRemoved(displayId: Int) {
+            releaseForeignAppOnDisplayChange(displayId)
             dockedDark = displayAffinityHelper.isDockedDark
             companionLaunchJob?.cancel()
             companionLaunchJob = null
@@ -1579,6 +1581,7 @@ class DualScreenManager(
         }
 
         override fun onDisplayChanged(displayId: Int) {
+            releaseForeignAppOnDisplayChange(displayId)
             syncDockedState()
             if (displayId != android.view.Display.DEFAULT_DISPLAY &&
                 !_isCompanionActive.value &&
@@ -1798,6 +1801,7 @@ class DualScreenManager(
     // --- Public methods for companion -> DSM direction ---
 
     fun onCompanionResumed() {
+        clearForeignAppOnSecondary("companionResumed")
         companionPausedPending = false
         companionLaunchAttempts = 0
         companionWatchdogJob?.cancel()
@@ -1806,11 +1810,60 @@ class DualScreenManager(
         resyncCompanionState()
     }
 
-    fun onCompanionPaused() {
+    /**
+     * Marks the companion on [displayId] inactive and, when the stop is
+     * [com.nendo.argosy.hardware.CompanionStopCause.FOREIGN_APP], records another app as holding
+     * that display so the companion relaunch paths stand down until the companion resumes.
+     */
+    fun onCompanionStopped(displayId: Int, finishing: Boolean, recreating: Boolean) {
         _isCompanionActive.value = false
         companionPausedPending = false
         companionWatchdogJob?.cancel()
+        val display = displayFor(displayId)
+        val cause = com.nendo.argosy.hardware.ForeignAppPolicy.stopCause(
+            displayId = displayId,
+            finishing = finishing,
+            recreating = recreating,
+            displayPresent = display != null,
+            displayOn = display?.state == android.view.Display.STATE_ON,
+            deviceInteractive = isDeviceInteractive(),
+            gameMoving = isMovingGame,
+            sessionActive = hasLiveSession() || sessionStateStore.hasActiveSession(),
+            gameBoundForThisDisplay = emulatorDisplayId == displayId
+        )
+        if (cause != com.nendo.argosy.hardware.CompanionStopCause.FOREIGN_APP) {
+            Log.d(TAG, "Companion on display $displayId stopped, cause=$cause, foreign-app flag unchanged")
+            return
+        }
+        Log.i(TAG, "Foreign-app flag set: companion on display $displayId stopped under another app")
+        sessionStateStore.setForeignAppOnSecondary(true)
     }
+
+    private fun clearForeignAppOnSecondary(reason: String) {
+        if (!sessionStateStore.isForeignAppOnSecondary()) return
+        Log.i(TAG, "Foreign-app flag cleared: $reason")
+        sessionStateStore.setForeignAppOnSecondary(false)
+    }
+
+    private fun releaseForeignAppOnDisplayChange(displayId: Int) {
+        val display = displayFor(displayId)
+        val releases = com.nendo.argosy.hardware.ForeignAppPolicy.displayChangeReleases(
+            displayId = displayId,
+            displayPresent = display != null,
+            displayOn = display?.state == android.view.Display.STATE_ON,
+            deviceInteractive = isDeviceInteractive()
+        )
+        if (!releases) return
+        clearForeignAppOnSecondary(
+            if (display == null) "display $displayId removed" else "display $displayId off"
+        )
+    }
+
+    private fun displayFor(displayId: Int): android.view.Display? =
+        appContext.getSystemService(DisplayManager::class.java)?.getDisplay(displayId)
+
+    private fun isDeviceInteractive(): Boolean =
+        appContext.getSystemService(android.os.PowerManager::class.java)?.isInteractive ?: true
 
 
     fun onOpenOverlayFromCompanion(eventName: String) {

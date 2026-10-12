@@ -6,8 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
-import android.os.Build
-import android.os.Environment
 import com.nendo.argosy.data.emulator.EmulatorDownloadManager
 import com.nendo.argosy.data.emulator.EmulatorRegistry
 import com.nendo.argosy.data.launcher.GameNativeStoreSync
@@ -38,6 +36,7 @@ import com.nendo.argosy.core.notification.NotificationManager
 import com.nendo.argosy.core.notification.NotificationText
 import com.nendo.argosy.core.notification.showError
 import com.nendo.argosy.ui.screens.settings.SteamSettingsState
+import com.nendo.argosy.util.StorageAccess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -280,9 +279,7 @@ class SteamSettingsDelegate @Inject constructor(
         scope.launch {
             val gnInstalled = isGnInstalled(context)
             val gnStoragePath = withContext(Dispatchers.IO) { steamPathResolver.findGnStoragePath() }
-            val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Environment.isExternalStorageManager()
-            } else true
+            val hasPermission = StorageAccess.isGranted(context)
 
             val installedLaunchers = SteamLaunchers.getInstalled(context).map { launcher ->
                 InstalledSteamLauncher(

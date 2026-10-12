@@ -277,15 +277,14 @@
     <string name="firstrun_core_prompt_all_installed">All cores for your selected platforms are already installed.</string>
     <!-- Button that starts downloading the missing cores. Verb phrase, imperative. -->
     <string name="firstrun_core_prompt_button_download">Download Cores</string>
-    <!-- Button that declines the download. The bracketed half warns what declining does: the
-         built-in emulator is switched off. Verb, imperative. -->
-    <string name="firstrun_core_prompt_button_skip">Skip (Disable Built-in Emulator)</string>
+    <!-- Button that declines the download. Verb, imperative. -->
+    <string name="firstrun_core_prompt_button_skip">Skip</string>
     <!-- Label that button takes on when there is nothing to download, so it merely moves on.
          Verb, imperative. -->
     <string name="firstrun_core_prompt_button_continue">Continue</string>
-    <!-- Note under the skip button spelling out the consequence and the way back. "Settings"
+    <!-- Note under the skip button saying what happens to the cores not downloaded now. "Settings"
          names the Settings screen inside this app, not the Android system settings. -->
-    <string name="firstrun_core_prompt_note_skip">Skipping turns off the built-in emulator. You can re-enable it and download cores later from Settings.</string>
+    <string name="firstrun_core_prompt_note_skip">Each core downloads the first time you launch a game that needs it. You can also download cores later from Settings.</string>
 
     <!-- ===== Step 9: downloading the cores ===== -->
 

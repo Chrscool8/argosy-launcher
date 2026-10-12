@@ -109,6 +109,10 @@
     <string name="settings_theme_backdrop_subtitle_off">Desactivado</string>
     <string name="settings_theme_fonts_title">Fuentes</string>
     <string name="settings_theme_fonts_subtitle_default">Predeterminada</string>
+    <string name="settings_theme_icon_pack_title">Paquete de iconos</string>
+    <string name="settings_theme_icon_pack_subtitle">Sustituye los iconos de las aplicaciones por un paquete instalado</string>
+    <string name="settings_theme_icon_pack_subtitle_none">No hay paquetes de iconos instalados</string>
+    <string name="settings_theme_icon_pack_system">Iconos del sistema</string>
 
     <!-- ===== Interface section ===== -->
 

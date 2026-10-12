@@ -136,7 +136,7 @@ class SigilSaveHandler @Inject constructor(
             "ps3" to mapOf("aps3e" to "aps3e", "armsx3" to "armsx3", "armsx3_play" to "armsx3"),
             "switch" to listOf(
                 "yuzu", "eden", "citron", "sudachi", "lemon", "skyline", "strato", "ryujinx", "kenjinx"
-            ).associateWith { it },
+            ).associateWith { it } + ("eden_duo" to "eden"),
             "wiiu" to mapOf("cemu" to "cemu", "cemu_dualscreen" to "cemu"),
             "3ds" to mapOf("citra" to "citra", "azahar" to "azahar", "lime3ds" to "lime3ds")
         )

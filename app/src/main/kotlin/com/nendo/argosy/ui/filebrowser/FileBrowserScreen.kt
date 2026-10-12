@@ -1,9 +1,5 @@
 package com.nendo.argosy.ui.filebrowser
 
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,11 +22,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
@@ -66,14 +65,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.unit.dp
 import android.content.res.Configuration
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.nendo.argosy.core.input.SoundType
+import com.nendo.argosy.ui.common.rememberStorageAccessRequest
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.FooterSpacer
 import com.nendo.argosy.ui.components.InputButton
@@ -98,34 +96,17 @@ fun FileBrowserScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val inputDispatcher = LocalInputDispatcher.current
-    val context = LocalContext.current
+    val currentOnPathSelected by rememberUpdatedState(onPathSelected)
 
-    val requestStoragePermission = remember(context) {
-        {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                    data = Uri.parse("package:${context.packageName}")
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                context.startActivity(intent)
-            }
-        }
-    }
+    val requestStoragePermission = rememberStorageAccessRequest(onResult = { viewModel.recheckPermission() })
 
     LaunchedEffect(mode, fileFilter) {
         viewModel.setMode(mode)
         viewModel.setFileFilter(fileFilter)
     }
 
-    val useCurrentFolder = remember(onPathSelected) {
-        {
-            val current = viewModel.state.value.currentPath
-            if (current.isNotEmpty()) onPathSelected(current)
-        }
-    }
-
-    val inputHandler = remember(onDismiss, requestStoragePermission, useCurrentFolder) {
-        FileBrowserInputHandler(viewModel, onDismiss, requestStoragePermission, useCurrentFolder)
+    val inputHandler = remember(onDismiss, requestStoragePermission) {
+        FileBrowserInputHandler(viewModel, onDismiss, requestStoragePermission)
     }
 
     DisposableEffect(inputHandler) {
@@ -139,7 +120,7 @@ fun FileBrowserScreen(
 
     LaunchedEffect(Unit) {
         viewModel.resultPath.collect { path ->
-            onPathSelected(path)
+            currentOnPathSelected(path)
         }
     }
 
@@ -200,31 +181,22 @@ fun FileBrowserScreen(
                         Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
                         FilePane(
+                            actions = state.actions,
                             entries = state.entries,
                             focusedIndex = state.fileFocusIndex,
                             isFocused = state.focusedPane == FocusedPane.FILES,
                             isLoading = state.isLoading,
                             errorRes = state.errorRes,
-                            onEntryClick = { entry ->
-                                if (entry.isDirectory) {
-                                    viewModel.navigate(entry.path)
-                                } else if (mode == FileBrowserMode.FILE_SELECTION ||
-                                           mode == FileBrowserMode.FILE_OR_FOLDER_SELECTION) {
-                                    onPathSelected(entry.path)
-                                }
-                            },
+                            onActionClick = { viewModel.performAction(it) },
+                            onEntryClick = { viewModel.openEntry(it) },
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
 
                 FileBrowserFooter(
-                    mode = mode,
-                    currentPath = state.currentPath,
-                    onOpenFocused = { viewModel.confirmFocusedItem() },
-                    onUseCurrentFolder = useCurrentFolder,
-                    onNewFolder = { viewModel.showCreateFolderDialog() },
-                    onCancel = onDismiss
+                    actions = state.actions,
+                    onAction = { viewModel.performAction(it) }
                 )
             }
         }
@@ -482,24 +454,27 @@ private fun BreadcrumbBar(
 
 @Composable
 private fun FilePane(
+    actions: List<FileBrowserAction>,
     entries: List<FileEntry>,
     focusedIndex: Int,
     isFocused: Boolean,
     isLoading: Boolean,
     @StringRes errorRes: Int?,
+    onActionClick: (FileBrowserAction) -> Unit,
     onEntryClick: (FileEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
 
     val scrollAhead = 3
+    val focusedEntryIndex = focusedIndex - actions.size
 
-    LaunchedEffect(focusedIndex, isFocused, entries.size) {
-        if (!isFocused || entries.isEmpty() || focusedIndex !in entries.indices) return@LaunchedEffect
+    LaunchedEffect(focusedEntryIndex, isFocused, entries.size) {
+        if (!isFocused || entries.isEmpty() || focusedEntryIndex !in entries.indices) return@LaunchedEffect
 
         val visibleItems = listState.layoutInfo.visibleItemsInfo
         if (visibleItems.isEmpty()) {
-            listState.animateScrollToItem(focusedIndex)
+            listState.animateScrollToItem(focusedEntryIndex)
             return@LaunchedEffect
         }
 
@@ -508,12 +483,12 @@ private fun FilePane(
         val visibleCount = lastVisible - firstVisible
 
         when {
-            focusedIndex <= firstVisible + scrollAhead -> {
-                val newFirst = (focusedIndex - scrollAhead).coerceAtLeast(0)
+            focusedEntryIndex <= firstVisible + scrollAhead -> {
+                val newFirst = (focusedEntryIndex - scrollAhead).coerceAtLeast(0)
                 listState.animateScrollToItem(newFirst)
             }
-            focusedIndex >= lastVisible - scrollAhead -> {
-                val newFirst = (focusedIndex - visibleCount + scrollAhead).coerceAtLeast(0)
+            focusedEntryIndex >= lastVisible - scrollAhead -> {
+                val newFirst = (focusedEntryIndex - visibleCount + scrollAhead).coerceAtLeast(0)
                 listState.animateScrollToItem(newFirst)
             }
         }
@@ -525,80 +500,142 @@ private fun FilePane(
         MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
     }
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .border(Dimens.borderThin, borderColor, RoundedCornerShape(Dimens.radiusMd))
             .clip(RoundedCornerShape(Dimens.radiusMd))
             .background(MaterialTheme.colorScheme.surface)
     ) {
-        when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(Dimens.iconLg),
-                        color = MaterialTheme.colorScheme.primary
+        if (actions.isNotEmpty()) {
+            Column(
+                modifier = Modifier.padding(
+                    start = Dimens.spacingSm,
+                    end = Dimens.spacingSm,
+                    top = Dimens.spacingSm
+                )
+            ) {
+                actions.forEachIndexed { index, action ->
+                    FileActionItem(
+                        action = action,
+                        isFocused = isFocused && index == focusedIndex,
+                        onClick = { onActionClick(action) }
                     )
                 }
             }
-            errorRes != null -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(Dimens.spacingLg),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Folder,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(Dimens.iconXl)
-                    )
-                    Spacer(modifier = Modifier.height(Dimens.spacingSm))
-                    Text(
-                        text = stringResource(errorRes),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            FilePaneContent(
+                entries = entries,
+                focusedEntryIndex = if (isFocused) focusedEntryIndex else -1,
+                isLoading = isLoading,
+                errorRes = errorRes,
+                listState = listState,
+                onEntryClick = onEntryClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilePaneContent(
+    entries: List<FileEntry>,
+    focusedEntryIndex: Int,
+    isLoading: Boolean,
+    @StringRes errorRes: Int?,
+    listState: LazyListState,
+    onEntryClick: (FileEntry) -> Unit
+) {
+    when {
+        isLoading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(Dimens.iconLg),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
-            entries.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.ui_file_browser_empty_folder),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+        }
+        errorRes != null -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(Dimens.spacingLg),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(Dimens.iconXl)
+                )
+                Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                Text(
+                    text = stringResource(errorRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
-            else -> {
-                LazyColumn(
-                    state = listState,
-                    contentPadding = PaddingValues(
-                        start = Dimens.spacingSm,
-                        end = Dimens.spacingSm,
-                        top = Dimens.spacingSm,
-                        bottom = 80.dp
+        }
+        entries.isEmpty() -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.ui_file_browser_empty_folder),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        else -> {
+            LazyColumn(
+                state = listState,
+                contentPadding = PaddingValues(
+                    start = Dimens.spacingSm,
+                    end = Dimens.spacingSm,
+                    top = Dimens.spacingSm,
+                    bottom = Dimens.footerClearance
+                )
+            ) {
+                itemsIndexed(entries, key = { _, e -> e.path }) { index, entry ->
+                    FileItem(
+                        entry = entry,
+                        isFocused = index == focusedEntryIndex,
+                        onClick = { onEntryClick(entry) }
                     )
-                ) {
-                    itemsIndexed(entries, key = { _, e -> e.path }) { index, entry ->
-                        FileItem(
-                            entry = entry,
-                            isFocused = isFocused && index == focusedIndex,
-                            onClick = { onEntryClick(entry) }
-                        )
-                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun FileActionItem(
+    action: FileBrowserAction,
+    isFocused: Boolean,
+    onClick: () -> Unit
+) {
+    val (icon, labelRes) = when (action) {
+        FileBrowserAction.USE_FOLDER -> Icons.Default.Check to R.string.ui_file_browser_action_use_folder
+        FileBrowserAction.NEW_FOLDER -> Icons.Default.CreateNewFolder to R.string.ui_file_browser_action_new_folder
+    }
+    FileBrowserRow(
+        icon = icon,
+        restIconTint = MaterialTheme.colorScheme.primary,
+        label = stringResource(labelRes),
+        trailing = null,
+        isFocused = isFocused,
+        onClick = onClick
+    )
 }
 
 @Composable
@@ -612,7 +649,29 @@ private fun FileItem(
         entry.isDirectory -> Icons.Default.Folder
         else -> Icons.AutoMirrored.Filled.InsertDriveFile
     }
+    FileBrowserRow(
+        icon = icon,
+        restIconTint = if (entry.isDirectory) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        label = entry.name,
+        trailing = if (!entry.isDirectory && !entry.isParentLink) formatBytes(entry.size) else null,
+        isFocused = isFocused,
+        onClick = onClick
+    )
+}
 
+@Composable
+private fun FileBrowserRow(
+    icon: ImageVector,
+    restIconTint: Color,
+    label: String,
+    trailing: String?,
+    isFocused: Boolean,
+    onClick: () -> Unit
+) {
     val backgroundColor = if (isFocused) {
         LocalArgosyTheme.current.focusAccent.copy(alpha = 0.15f)
     } else {
@@ -625,11 +684,7 @@ private fun FileItem(
         MaterialTheme.colorScheme.onSurface
     }
 
-    val iconTint = when {
-        isFocused -> lerp(LocalArgosyTheme.current.focusAccent, Color.White, 0.45f)
-        entry.isDirectory -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val iconTint = if (isFocused) contentColor else restIconTint
 
     Row(
         modifier = Modifier
@@ -648,16 +703,16 @@ private fun FileItem(
         )
         Spacer(modifier = Modifier.width(Dimens.spacingMd))
         Text(
-            text = entry.name,
+            text = label,
             style = MaterialTheme.typography.bodyMedium,
             color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
-        if (!entry.isDirectory && !entry.isParentLink) {
+        if (trailing != null) {
             Text(
-                text = formatBytes(entry.size),
+                text = trailing,
                 style = MaterialTheme.typography.bodySmall,
                 color = contentColor.copy(alpha = 0.6f)
             )
@@ -667,45 +722,22 @@ private fun FileItem(
 
 @Composable
 private fun FileBrowserFooter(
-    mode: FileBrowserMode,
-    currentPath: String,
-    onOpenFocused: () -> Unit,
-    onUseCurrentFolder: () -> Unit,
-    onNewFolder: () -> Unit,
-    onCancel: () -> Unit
+    actions: List<FileBrowserAction>,
+    onAction: (FileBrowserAction) -> Unit
 ) {
-    val selectHint = when (mode) {
-        FileBrowserMode.FILE_SELECTION ->
-            stringResource(R.string.ui_file_browser_footer_select_file)
-        FileBrowserMode.FILE_OR_FOLDER_SELECTION ->
-            stringResource(R.string.ui_file_browser_footer_select_file_or_folder)
-        FileBrowserMode.FOLDER_SELECTION ->
-            stringResource(R.string.ui_file_browser_footer_open_folder)
-    }
-    val showFolderOptions = mode == FileBrowserMode.FOLDER_SELECTION ||
-                            mode == FileBrowserMode.FILE_OR_FOLDER_SELECTION
-    val backHint = stringResource(R.string.ui_file_browser_footer_back)
     val newFolderHint = stringResource(R.string.ui_file_browser_footer_new_folder)
     val useFolderHint = stringResource(R.string.ui_file_browser_footer_use_folder)
     val hints = buildList {
-        add(InputButton.A to selectHint)
-        add(InputButton.B to backHint)
-        if (showFolderOptions && currentPath.isNotEmpty()) {
-            if (mode == FileBrowserMode.FOLDER_SELECTION) {
-                add(InputButton.Y to newFolderHint)
-            }
-            add(InputButton.X to useFolderHint)
-        }
+        if (FileBrowserAction.NEW_FOLDER in actions) add(InputButton.Y to newFolderHint)
+        if (FileBrowserAction.USE_FOLDER in actions) add(InputButton.X to useFolderHint)
     }
 
     FooterHints(
         hints = hints,
         onHintClick = { button ->
             when (button) {
-                InputButton.A -> onOpenFocused()
-                InputButton.Y -> onNewFolder()
-                InputButton.X -> onUseCurrentFolder()
-                InputButton.B -> onCancel()
+                InputButton.Y -> onAction(FileBrowserAction.NEW_FOLDER)
+                InputButton.X -> onAction(FileBrowserAction.USE_FOLDER)
                 else -> {}
             }
         }

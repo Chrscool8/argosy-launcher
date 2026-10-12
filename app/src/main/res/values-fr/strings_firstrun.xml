@@ -105,9 +105,9 @@
     <string name="firstrun_core_prompt_explainer">Ils activent l\'émulation intégrée sans avoir besoin d\'applications d\'émulateur séparées.</string>
     <string name="firstrun_core_prompt_all_installed">Tous les cœurs pour vos plateformes sélectionnées sont déjà installés.</string>
     <string name="firstrun_core_prompt_button_download">Télécharger les cœurs</string>
-    <string name="firstrun_core_prompt_button_skip">Ignorer (désactiver l\'émulateur intégré)</string>
+    <string name="firstrun_core_prompt_button_skip">Ignorer</string>
     <string name="firstrun_core_prompt_button_continue">Continuer</string>
-    <string name="firstrun_core_prompt_note_skip">Ignorer désactive l\'émulateur intégré. Vous pourrez le réactiver et télécharger des cœurs plus tard depuis les paramètres.</string>
+    <string name="firstrun_core_prompt_note_skip">Chaque cœur est téléchargé au premier lancement d\'un jeu qui en a besoin. Vous pourrez aussi télécharger des cœurs plus tard depuis les paramètres.</string>
 
     <string name="firstrun_core_download_title">Téléchargement des cœurs d\'émulateur</string>
     <string name="firstrun_core_download_none_needed">Aucun cœur nécessaire pour les plateformes sélectionnées</string>

@@ -1,5 +1,6 @@
 package com.nendo.argosy.ui.screens.library
 
+import com.nendo.argosy.core.input.SoundType
 import com.nendo.argosy.data.local.entity.GameListItem
 import com.nendo.argosy.data.model.GameSource
 import com.nendo.argosy.data.model.SourceFilter
@@ -186,6 +187,51 @@ class LibrarySectionRailTest {
         advanceUntilIdle()
 
         assertEquals("banana", viewModel.uiState.value.focusedGame?.sortTitle)
+    }
+
+    @Test
+    fun `with quick navigation on the right stick jumps letters and wraps both ways`() = runTest(dispatcher) {
+        val (viewModel, handler) = loaded(LibraryLayout.LIST)
+
+        val up = handler.onRightStickUp()
+        advanceUntilIdle()
+        assertTrue(up.handled)
+        assertEquals(SoundType.SECTION_CHANGE, up.soundOverride)
+        assertEquals("cherry", viewModel.uiState.value.focusedGame?.sortTitle)
+
+        assertTrue(handler.onRightStickDown().handled)
+        advanceUntilIdle()
+        assertEquals("alpha", viewModel.uiState.value.focusedGame?.sortTitle)
+
+        assertTrue(handler.onRightStickDown().handled)
+        advanceUntilIdle()
+        assertEquals("banana", viewModel.uiState.value.focusedGame?.sortTitle)
+    }
+
+    @Test
+    fun `with quick navigation off the right stick also jumps letters`() = runTest(dispatcher) {
+        quickNavigation.value = false
+        val (viewModel, handler) = loaded(LibraryLayout.LIST)
+
+        assertTrue(handler.onRightStickDown().handled)
+        advanceUntilIdle()
+
+        assertEquals("banana", viewModel.uiState.value.focusedGame?.sortTitle)
+    }
+
+    @Test
+    fun `the right stick is held without jumping while the rail has focus`() = runTest(dispatcher) {
+        val (viewModel, handler) = loaded(LibraryLayout.LIST)
+        handler.onRight()
+        val railIndex = viewModel.uiState.value.sectionRailFocusIndex
+
+        val result = handler.onRightStickDown()
+        advanceUntilIdle()
+
+        assertTrue(result.handled)
+        assertNull(result.soundOverride)
+        assertEquals(railIndex, viewModel.uiState.value.sectionRailFocusIndex)
+        assertEquals(0, viewModel.uiState.value.focusedIndex)
     }
 
     @Test

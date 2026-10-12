@@ -242,11 +242,11 @@
 
     <string name="ui_save_conflict_title">Conflicto de partida guardada</string>
     <string name="ui_save_conflict_default_slot">Partida guardada predeterminada</string>
-    <string name="ui_save_conflict_message">El servidor tiene una partida guardada más reciente. Sobrescribir la reemplazará con tu partida guardada local.</string>
+    <string name="ui_save_conflict_message">El servidor tiene una partida guardada más reciente. Al subir tu partida guardada local, pasa a ser la más reciente y se conserva la copia del servidor.</string>
     <string name="ui_save_conflict_source_local">Local</string>
     <string name="ui_save_conflict_source_server">Servidor</string>
     <string name="ui_save_conflict_skip">Omitir sincronización</string>
-    <string name="ui_save_conflict_overwrite">Sobrescribir</string>
+    <string name="ui_save_conflict_overwrite">Subir</string>
     <string name="ui_save_conflict_hardcore_title">¿Reemplazar una partida guardada hardcore?</string>
     <string name="ui_save_conflict_hardcore_message">La partida guardada actual de este canal se hizo en modo hardcore. Conservar esta partida guardada la reemplaza como actual. La partida guardada hardcore permanece en el historial.</string>
     <string name="ui_save_conflict_hardcore_replace">Reemplazar</string>
@@ -720,14 +720,14 @@
     <string name="ui_sync_overlay_post_session_title">Conflicto de partida guardada</string>
     <string name="ui_sync_overlay_post_session_subject">\"%1$s\" -- %2$s</string>
     <string name="ui_sync_overlay_post_session_default_slot">Partida guardada predeterminada</string>
-    <string name="ui_sync_overlay_post_session_message">El servidor tiene una partida guardada más reciente. Sobrescribir la reemplazará con tu partida guardada local.</string>
+    <string name="ui_sync_overlay_post_session_message">El servidor tiene una partida guardada más reciente. Al subir tu partida guardada local, pasa a ser la más reciente y se conserva la copia del servidor.</string>
     <string name="ui_sync_overlay_post_session_local">Local</string>
     <string name="ui_sync_overlay_post_session_server">Servidor</string>
     <string name="ui_sync_overlay_post_session_server_named">Servidor (%1$s)</string>
     <string name="ui_sync_overlay_post_session_skip">Omitir sincronización</string>
     <string name="ui_sync_overlay_post_session_skip_subtitle">Conservar tu partida guardada local, no subirla</string>
-    <string name="ui_sync_overlay_post_session_overwrite">Sobrescribir servidor</string>
-    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Reemplazar la partida guardada del servidor con tu versión local</string>
+    <string name="ui_sync_overlay_post_session_overwrite">Subir partida local</string>
+    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Tu partida guardada local pasa a ser la más reciente. Se conserva la copia del servidor.</string>
     <string name="ui_sync_overlay_legacy_status">Sincronizando...</string>
 
     <!-- Quick menu (ui/quickmenu) -->
@@ -772,10 +772,8 @@
     <string name="ui_file_browser_permission_footer_back">Atrás</string>
     <string name="ui_file_browser_error_unreadable">No se puede acceder al directorio</string>
     <string name="ui_file_browser_empty_folder">Carpeta vacía</string>
-    <string name="ui_file_browser_footer_select_file">Seleccionar archivo</string>
-    <string name="ui_file_browser_footer_select_file_or_folder">Seleccionar archivo</string>
-    <string name="ui_file_browser_footer_open_folder">Abrir</string>
-    <string name="ui_file_browser_footer_back">Atrás</string>
+    <string name="ui_file_browser_action_use_folder">Usar esta carpeta</string>
+    <string name="ui_file_browser_action_new_folder">Nueva carpeta</string>
     <string name="ui_file_browser_footer_new_folder">Nueva carpeta</string>
     <string name="ui_file_browser_footer_use_folder">Usar carpeta</string>
     <string name="ui_file_browser_new_folder_title">Nueva carpeta</string>

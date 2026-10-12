@@ -266,6 +266,8 @@ data class DisplayState(
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
+    val iconPack: String? = null,
+    val iconPacks: List<com.nendo.argosy.data.model.IconPack> = emptyList(),
     val boxArtShape: BoxArtShape = BoxArtShape.STANDARD,
     val boxArtCornerRadius: BoxArtCornerRadius = BoxArtCornerRadius.MEDIUM,
     val boxArtBorderThickness: BoxArtBorderThickness = BoxArtBorderThickness.MEDIUM,
@@ -328,6 +330,12 @@ data class DisplayState(
 ) {
     val secondaryDisplayUnsupported: Boolean
         get() = dualScreenEnabled && hasPhysicalSecondaryDisplay && !hasSecondaryDisplay
+
+    val iconPackOptions: List<String?>
+        get() = listOf<String?>(null) + iconPacks.map { it.packageName }
+
+    val selectedIconPackIndex: Int
+        get() = iconPackOptions.indexOf(iconPack).coerceAtLeast(0)
 }
 
 data class ScreenAssignment(

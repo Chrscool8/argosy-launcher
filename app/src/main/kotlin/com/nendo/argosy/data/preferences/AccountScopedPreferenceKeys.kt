@@ -109,6 +109,7 @@ object AccountScopedPreferenceKeys {
         "presentation_style",
         "presentation_background_blur",
         "use_accent_color_footer",
+        "icon_pack",
         "installed_only_home",
         "video_wallpaper_enabled",
         "video_wallpaper_muted",

@@ -105,9 +105,9 @@
     <string name="firstrun_core_prompt_explainer">Habilitan la emulación integrada sin necesidad de apps de emulador aparte.</string>
     <string name="firstrun_core_prompt_all_installed">Todos los núcleos de tus plataformas seleccionadas ya están instalados.</string>
     <string name="firstrun_core_prompt_button_download">Descargar núcleos</string>
-    <string name="firstrun_core_prompt_button_skip">Omitir (desactivar emulador integrado)</string>
+    <string name="firstrun_core_prompt_button_skip">Omitir</string>
     <string name="firstrun_core_prompt_button_continue">Continuar</string>
-    <string name="firstrun_core_prompt_note_skip">Omitir desactiva el emulador integrado. Puedes reactivarlo y descargar núcleos más tarde desde Ajustes.</string>
+    <string name="firstrun_core_prompt_note_skip">Cada núcleo se descarga la primera vez que inicias un juego que lo necesita. También puedes descargar núcleos más tarde desde Ajustes.</string>
 
     <string name="firstrun_core_download_title">Descargando núcleos de emulador</string>
     <string name="firstrun_core_download_none_needed">No se necesitan núcleos para las plataformas seleccionadas</string>

@@ -97,6 +97,10 @@
     <string name="settings_theme_backdrop_subtitle_off">बंद</string>
     <string name="settings_theme_fonts_title">फ़ॉन्ट</string>
     <string name="settings_theme_fonts_subtitle_default">डिफ़ॉल्ट</string>
+    <string name="settings_theme_icon_pack_title">आइकन पैक</string>
+    <string name="settings_theme_icon_pack_subtitle">ऐप आइकन को इंस्टॉल किए गए आइकन पैक से बदलें</string>
+    <string name="settings_theme_icon_pack_subtitle_none">कोई आइकन पैक इंस्टॉल नहीं है</string>
+    <string name="settings_theme_icon_pack_system">सिस्टम आइकन</string>
 
     <!-- ===== Interface section ===== -->
 

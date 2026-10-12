@@ -88,6 +88,10 @@
     <string name="settings_theme_backdrop_subtitle_off">關閉</string>
     <string name="settings_theme_fonts_title">字型</string>
     <string name="settings_theme_fonts_subtitle_default">預設</string>
+    <string name="settings_theme_icon_pack_title">圖示包</string>
+    <string name="settings_theme_icon_pack_subtitle">使用已安裝的圖示包取代應用程式圖示</string>
+    <string name="settings_theme_icon_pack_subtitle_none">未安裝圖示包</string>
+    <string name="settings_theme_icon_pack_system">系統圖示</string>
 
     <string name="settings_interface_ui_scale_title">介面縮放</string>
     <string name="settings_interface_compact_footer_title">精簡頁尾</string>

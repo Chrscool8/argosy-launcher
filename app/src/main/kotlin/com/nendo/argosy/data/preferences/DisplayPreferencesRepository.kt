@@ -15,6 +15,7 @@ import com.nendo.argosy.domain.model.ScreenLayouts
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import com.nendo.argosy.util.DisplayAffinityHelper
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -78,6 +79,7 @@ data class DisplayPreferences(
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
+    val iconPack: String? = null,
     val boxArtShape: BoxArtShape = BoxArtShape.STANDARD,
     val boxArtCornerRadius: BoxArtCornerRadius = BoxArtCornerRadius.MEDIUM,
     val boxArtBorderThickness: BoxArtBorderThickness = BoxArtBorderThickness.MEDIUM,
@@ -180,6 +182,7 @@ class DisplayPreferencesRepository @Inject constructor(
         val LOCK_SCREEN_ART = booleanPreferencesKey("lock_screen_art")
         val LOCK_SCREEN_ART_APPLIED = booleanPreferencesKey("lock_screen_art_applied")
         val LIVE_WALLPAPER_OFFERED = booleanPreferencesKey("live_wallpaper_offered")
+        val ICON_PACK = stringPreferencesKey("icon_pack")
         val GRIP_AUTO_CONTROLLERS = stringPreferencesKey("grip_auto_controllers")
         val GRIP_RESERVE_MODE = stringPreferencesKey("grip_reserve_mode")
         val BOX_ART_SHAPE = stringPreferencesKey("box_art_shape")
@@ -285,6 +288,7 @@ class DisplayPreferencesRepository @Inject constructor(
             useAccentColorFooter = prefs[Keys.USE_ACCENT_COLOR_FOOTER] ?: false,
             compactFooter = prefs[Keys.COMPACT_FOOTER] ?: false,
             lockScreenArt = prefs[Keys.LOCK_SCREEN_ART] ?: true,
+            iconPack = prefs[Keys.ICON_PACK],
             boxArtShape = BoxArtShape.fromString(prefs[Keys.BOX_ART_SHAPE]),
             boxArtCornerRadius = BoxArtCornerRadius.fromString(prefs[Keys.BOX_ART_CORNER_RADIUS]),
             boxArtBorderThickness = BoxArtBorderThickness.fromString(prefs[Keys.BOX_ART_BORDER_THICKNESS]),
@@ -332,6 +336,10 @@ class DisplayPreferencesRepository @Inject constructor(
             installedOnlyHome = prefs[Keys.INSTALLED_ONLY_HOME] ?: false
         )
     }
+
+    val iconPack: Flow<String?> = dataStore.data
+        .map { it[Keys.ICON_PACK] }
+        .distinctUntilChanged()
 
     suspend fun setThemeMode(mode: ThemeMode) {
         dataStore.edit { it[Keys.THEME_MODE] = mode.name }
@@ -582,6 +590,13 @@ class DisplayPreferencesRepository @Inject constructor(
 
     suspend fun setLockScreenArt(enabled: Boolean) {
         dataStore.edit { it[Keys.LOCK_SCREEN_ART] = enabled }
+    }
+
+    suspend fun setIconPack(packageName: String?) {
+        dataStore.edit { prefs ->
+            if (packageName != null) prefs[Keys.ICON_PACK] = packageName
+            else prefs.remove(Keys.ICON_PACK)
+        }
     }
 
     suspend fun isLockScreenArtApplied(): Boolean =

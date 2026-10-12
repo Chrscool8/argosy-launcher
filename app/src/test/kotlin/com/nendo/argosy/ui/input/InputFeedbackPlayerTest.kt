@@ -92,6 +92,16 @@ class InputFeedbackPlayerTest {
     }
 
     @Test
+    fun `a right stick step plays only the sound its handler names`() {
+        player.play(GamepadEvent.RightStickDown, InputResult.HANDLED)
+        verify(exactly = 0) { haptics.vibrate(any()) }
+        verify(exactly = 0) { sounds.playSound(any()) }
+
+        player.play(GamepadEvent.RightStickUp, InputResult.handled(SoundType.SECTION_CHANGE))
+        verify(exactly = 1) { sounds.playSound(SoundType.SECTION_CHANGE) }
+    }
+
+    @Test
     fun `the player never plays the event cue through the sound manager`() {
         player.play(GamepadEvent.Confirm, InputResult.HANDLED)
         verify(exactly = 0) { sounds.play(any()) }

@@ -334,6 +334,33 @@ class SaveStateManagerTest {
         assertEquals(null, mgr.getQuickRingInfoList().first().screenshotFile)
     }
 
+    @Test
+    fun `saveSram on a core with no RTC memory writes no rtc file and still writes SRAM`() {
+        val mgr = manager(mockk(relaxed = true), mockk(relaxed = true))
+        val sram = byteArrayOf(1, 2, 3, 4)
+        val retroView = mockk<GLRetroView>()
+        every { retroView.getRtcData() } returns null
+        every { retroView.serializeSRAM() } returns sram
+
+        mgr.saveSram(retroView)
+
+        assertFalse(mgr.getRtcFile().exists())
+        assertArrayEquals(sram, mgr.getSramFile().readBytes())
+    }
+
+    @Test
+    fun `saveSram writes the core's RTC memory beside the SRAM`() {
+        val mgr = manager(mockk(relaxed = true), mockk(relaxed = true))
+        val rtc = byteArrayOf(9, 8, 7)
+        val retroView = mockk<GLRetroView>()
+        every { retroView.getRtcData() } returns rtc
+        every { retroView.serializeSRAM() } returns byteArrayOf(1)
+
+        mgr.saveSram(retroView)
+
+        assertArrayEquals(rtc, mgr.getRtcFile().readBytes())
+    }
+
     private fun fillRing(mgr: SaveStateManager) {
         repeat(SaveStateManager.QUICK_RING_SIZE) { index ->
             val file = mgr.getSlotFile(SaveStateManager.QUICK_SLOT_BASE + index)

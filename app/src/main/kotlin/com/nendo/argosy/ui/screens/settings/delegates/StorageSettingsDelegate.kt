@@ -1,8 +1,6 @@
 package com.nendo.argosy.ui.screens.settings.delegates
 
 import android.content.Context
-import android.os.Build
-import android.os.Environment
 import android.util.Log
 import com.nendo.argosy.R
 import com.nendo.argosy.core.notification.NotificationManager
@@ -33,6 +31,7 @@ import com.nendo.argosy.ui.screens.settings.PlatformMigrationInfo
 import com.nendo.argosy.ui.screens.settings.PlatformStorageConfig
 import com.nendo.argosy.ui.screens.settings.StorageState
 import com.nendo.argosy.util.Logger
+import com.nendo.argosy.util.StorageAccess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -103,12 +102,7 @@ class StorageSettingsDelegate @Inject constructor(
     }
 
     fun checkAllFilesAccess() {
-        val hasAccess = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            true
-        }
-        _state.update { it.copy(hasAllFilesAccess = hasAccess) }
+        _state.update { it.copy(hasAllFilesAccess = StorageAccess.isGranted(context)) }
     }
 
     fun requestAllFilesAccess(scope: CoroutineScope) {

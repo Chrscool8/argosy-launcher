@@ -100,6 +100,10 @@
     <string name="settings_theme_backdrop_subtitle_off">Выкл</string>
     <string name="settings_theme_fonts_title">Шрифты</string>
     <string name="settings_theme_fonts_subtitle_default">По умолчанию</string>
+    <string name="settings_theme_icon_pack_title">Набор значков</string>
+    <string name="settings_theme_icon_pack_subtitle">Заменяет значки приложений установленным набором</string>
+    <string name="settings_theme_icon_pack_subtitle_none">Наборы значков не установлены</string>
+    <string name="settings_theme_icon_pack_system">Системные значки</string>
 
     <!-- ===== Interface section ===== -->
 

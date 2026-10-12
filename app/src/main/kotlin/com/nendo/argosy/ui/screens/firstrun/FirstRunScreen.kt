@@ -3,7 +3,6 @@ package com.nendo.argosy.ui.screens.firstrun
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -85,6 +84,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.TextField
 import com.nendo.argosy.R
 import com.nendo.argosy.data.local.entity.PlatformEntity
+import com.nendo.argosy.ui.common.rememberStorageAccessRequest
 import com.nendo.argosy.ui.components.PermissionCard
 import com.nendo.argosy.ui.components.PlatformFilterHeader
 import com.nendo.argosy.ui.components.SwitchPreference
@@ -106,14 +106,7 @@ fun FirstRunScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    val requestStorage = {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                data = Uri.parse("package:${context.packageName}")
-            }
-            context.startActivity(intent)
-        }
-    }
+    val requestStorage = rememberStorageAccessRequest(onResult = { viewModel.refreshAllPermissions() })
 
     val requestNotifications = {
         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {

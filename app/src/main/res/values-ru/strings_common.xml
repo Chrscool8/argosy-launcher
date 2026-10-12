@@ -244,11 +244,11 @@
 
     <string name="ui_save_conflict_title">Конфликт сохранений</string>
     <string name="ui_save_conflict_default_slot">Сохранение по умолчанию</string>
-    <string name="ui_save_conflict_message">На сервере есть более новое сохранение. Перезапись заменит его вашим локальным сохранением.</string>
+    <string name="ui_save_conflict_message">На сервере есть более новое сохранение. При отправке на сервер ваше локальное сохранение станет самым новым, а копия на сервере сохранится.</string>
     <string name="ui_save_conflict_source_local">Локальное</string>
     <string name="ui_save_conflict_source_server">Сервер</string>
     <string name="ui_save_conflict_skip">Пропустить синхронизацию</string>
-    <string name="ui_save_conflict_overwrite">Перезаписать</string>
+    <string name="ui_save_conflict_overwrite">Отправить</string>
     <string name="ui_save_conflict_hardcore_title">Заменить хардкорное сохранение?</string>
     <string name="ui_save_conflict_hardcore_message">Текущее сохранение этого канала сделано в режиме хардкор. Если оставить это сохранение, оно станет текущим. Хардкорное сохранение останется в истории.</string>
     <string name="ui_save_conflict_hardcore_replace">Заменить</string>
@@ -720,14 +720,14 @@
     <string name="ui_sync_overlay_post_session_title">Конфликт сохранений</string>
     <string name="ui_sync_overlay_post_session_subject">\"%1$s\" -- %2$s</string>
     <string name="ui_sync_overlay_post_session_default_slot">Сохранение по умолчанию</string>
-    <string name="ui_sync_overlay_post_session_message">На сервере есть более новое сохранение. Перезапись заменит его вашим локальным сохранением.</string>
+    <string name="ui_sync_overlay_post_session_message">На сервере есть более новое сохранение. При отправке на сервер ваше локальное сохранение станет самым новым, а копия на сервере сохранится.</string>
     <string name="ui_sync_overlay_post_session_local">Локальное</string>
     <string name="ui_sync_overlay_post_session_server">Сервер</string>
     <string name="ui_sync_overlay_post_session_server_named">Сервер (%1$s)</string>
     <string name="ui_sync_overlay_post_session_skip">Пропустить синхронизацию</string>
     <string name="ui_sync_overlay_post_session_skip_subtitle">Оставить локальное сохранение, не отправлять</string>
-    <string name="ui_sync_overlay_post_session_overwrite">Перезаписать сервер</string>
-    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Заменить сохранение на сервере локальной версией</string>
+    <string name="ui_sync_overlay_post_session_overwrite">Отправить локальное сохранение</string>
+    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Ваше локальное сохранение станет самым новым. Копия на сервере сохранится.</string>
     <string name="ui_sync_overlay_legacy_status">Синхронизация...</string>
 
     <string name="ui_quick_menu_orb_search">Поиск</string>
@@ -768,10 +768,8 @@
     <string name="ui_file_browser_permission_footer_back">Назад</string>
     <string name="ui_file_browser_error_unreadable">Не удалось получить доступ к каталогу</string>
     <string name="ui_file_browser_empty_folder">Пустая папка</string>
-    <string name="ui_file_browser_footer_select_file">Выбрать файл</string>
-    <string name="ui_file_browser_footer_select_file_or_folder">Выбрать файл</string>
-    <string name="ui_file_browser_footer_open_folder">Открыть</string>
-    <string name="ui_file_browser_footer_back">Назад</string>
+    <string name="ui_file_browser_action_use_folder">Использовать эту папку</string>
+    <string name="ui_file_browser_action_new_folder">Новая папка</string>
     <string name="ui_file_browser_footer_new_folder">Новая папка</string>
     <string name="ui_file_browser_footer_use_folder">Использовать папку</string>
     <string name="ui_file_browser_new_folder_title">Новая папка</string>

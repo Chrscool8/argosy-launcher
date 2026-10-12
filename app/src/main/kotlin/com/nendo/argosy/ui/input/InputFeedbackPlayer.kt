@@ -22,6 +22,8 @@ class InputFeedbackPlayer(
             GamepadEvent.PrevSection, GamepadEvent.NextSection,
             GamepadEvent.PrevTrigger, GamepadEvent.NextTrigger ->
                 playMove(result, SoundType.SECTION_CHANGE)
+            GamepadEvent.RightStickUp, GamepadEvent.RightStickDown ->
+                result.soundOverride?.let { playMove(result, it) }
             GamepadEvent.Confirm, GamepadEvent.LongConfirm -> {
                 val sound = result.soundOverride ?: SoundType.SELECT
                 vibrate(result.hapticOverride ?: sound.hapticCue ?: HapticPattern.SELECTION)

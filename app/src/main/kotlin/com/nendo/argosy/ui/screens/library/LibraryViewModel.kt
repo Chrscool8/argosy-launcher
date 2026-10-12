@@ -2529,6 +2529,10 @@ class LibraryViewModel @Inject constructor(
 
         override fun onNextTrigger(): InputResult = trigger(1)
 
+        override fun onRightStickUp(): InputResult = sectionJump(-1)
+
+        override fun onRightStickDown(): InputResult = sectionJump(1)
+
         private fun bumper(direction: Int): InputResult {
             val state = _uiState.value
             return when {
@@ -2542,6 +2546,10 @@ class LibraryViewModel @Inject constructor(
 
         private fun trigger(direction: Int): InputResult {
             if (quickNavigation.enabled.value) return switchPlatform(direction)
+            return sectionJump(direction)
+        }
+
+        private fun sectionJump(direction: Int): InputResult {
             val state = _uiState.value
             if (state.hasInternalFocus || isLiftingPlatform) return InputResult.HANDLED
             if (state.sectionLabels.isEmpty()) return InputResult.UNHANDLED

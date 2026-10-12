@@ -580,6 +580,7 @@ fun LibraryScreen(
                                     viewModel.jumpToAdjacentSection(1)
                                 }
                                 InputButton.LB_RB -> viewModel.nextPlatform()
+                                InputButton.RIGHT_STICK_VERTICAL -> viewModel.jumpToAdjacentSection(1)
                                 InputButton.SELECT -> if (com.nendo.argosy.ui.dualscreen.selectSwapsRoles()) {
                                     com.nendo.argosy.DualScreenManagerHolder.instance?.swapRoles()
                                 } else {
@@ -1296,8 +1297,9 @@ private fun LibraryFooter(
             val platformButtons = if (quickNavigation) InputButton.LT_RT else InputButton.LB_RB
             add(platformButtons to stringResource(R.string.library_footer_hint_switch_platform))
         }
-        if (!quickNavigation && canJumpSection) {
-            add(InputButton.LT_RT to stringResource(R.string.library_footer_hint_jump_section))
+        if (canJumpSection) {
+            val sectionButton = if (quickNavigation) InputButton.RIGHT_STICK_VERTICAL else InputButton.LT_RT
+            add(sectionButton to stringResource(R.string.library_footer_hint_jump_section))
         }
         add(
             InputButton.A to stringResource(

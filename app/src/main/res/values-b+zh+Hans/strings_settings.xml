@@ -95,6 +95,10 @@
     <string name="settings_theme_backdrop_subtitle_off">关闭</string>
     <string name="settings_theme_fonts_title">字体</string>
     <string name="settings_theme_fonts_subtitle_default">默认</string>
+    <string name="settings_theme_icon_pack_title">图标包</string>
+    <string name="settings_theme_icon_pack_subtitle">使用已安装的图标包替换应用图标</string>
+    <string name="settings_theme_icon_pack_subtitle_none">未安装图标包</string>
+    <string name="settings_theme_icon_pack_system">系统图标</string>
 
     <!-- ===== Interface section ===== -->
 

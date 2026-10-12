@@ -544,6 +544,7 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
         val availableSpace = vm.gameRepository.getAvailableStorageBytes()
         val box3dCapableGames = vm.gameRepository.countBox3dCapableGames()
         val libraryRegionOptions = vm.gameRepository.getDistinctRegions()
+        val iconPacks = vm.iconPackRepository.installedPacks()
 
         vm.displayDelegate.updateState(DisplayState(
             themeMode = prefs.themeMode,
@@ -584,6 +585,8 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             useAccentColorFooter = prefs.useAccentColorFooter,
             compactFooter = prefs.compactFooter,
             lockScreenArt = prefs.lockScreenArt,
+            iconPack = prefs.iconPack,
+            iconPacks = iconPacks,
             boxArtShape = prefs.boxArtShape,
             boxArtCornerRadius = prefs.boxArtCornerRadius,
             boxArtBorderThickness = prefs.boxArtBorderThickness,
