@@ -112,6 +112,7 @@ private:
         PFN_vkResetCommandBuffer resetCommandBuffer = nullptr;
         PFN_vkCmdPipelineBarrier cmdPipelineBarrier = nullptr;
         PFN_vkCmdBlitImage cmdBlitImage = nullptr;
+        PFN_vkCmdClearColorImage cmdClearColorImage = nullptr;
         PFN_vkCreateFence createFence = nullptr;
         PFN_vkDestroyFence destroyFence = nullptr;
         PFN_vkWaitForFences waitForFences = nullptr;
@@ -145,14 +146,20 @@ private:
     void destroyPresentationSurface();
     bool pickPhysicalDevice();
     bool createDevice();
+    bool coreCreatesDevice() const;
+    bool createDeviceThroughCore();
     bool createDeviceWithoutNegotiation();
     bool createFrameResources();
+    void clearFrameImage();
     void destroyFrameBuffer();
     std::vector<const char*> requiredDeviceExtensions() const;
     uint32_t requestedApiVersion() const;
 
     static VkInstance createInstanceWrapper(void* opaque, const VkInstanceCreateInfo* createInfo);
     static VkDevice createDeviceWrapper(VkPhysicalDevice gpu, void* opaque, const VkDeviceCreateInfo* createInfo);
+    static VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL coreGetInstanceProcAddr(VkInstance instance, const char* name);
+    static VKAPI_ATTR VkResult VKAPI_CALL coreCreateDevice(VkPhysicalDevice gpu, const VkDeviceCreateInfo* createInfo,
+                                                           const VkAllocationCallbacks* allocator, VkDevice* created);
 
     static void callbackSetImage(void* handle, const retro_vulkan_image* image, uint32_t numSemaphores,
                                  const VkSemaphore* semaphores, uint32_t srcQueueFamily);

@@ -433,10 +433,36 @@ bool VulkanBackend::createDeviceWithoutNegotiation() {
     return true;
 }
 
-bool VulkanBackend::createDevice() {
+VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VulkanBackend::coreGetInstanceProcAddr(VkInstance instance, const char* name) {
+    if (strcmp(name, "vkCreateDevice") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(&coreCreateDevice);
+    }
+    return getInstance().vk.getInstanceProcAddr(instance, name);
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL VulkanBackend::coreCreateDevice(VkPhysicalDevice physicalDevice,
+                                                               const VkDeviceCreateInfo* createInfo,
+                                                               const VkAllocationCallbacks* allocator,
+                                                               VkDevice* created) {
+    auto& self = getInstance();
+    const auto extensions = withExtensions(createInfo->ppEnabledExtensionNames, createInfo->enabledExtensionCount,
+                                           self.requiredDeviceExtensions());
+    VkDeviceCreateInfo info = *createInfo;
+    info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    info.ppEnabledExtensionNames = extensions.data();
+    return self.vk.createDevice(physicalDevice, &info, allocator, created);
+}
+
+bool VulkanBackend::coreCreatesDevice() const {
+    return negotiation != nullptr &&
+           ((negotiation->interface_version >= 2 && negotiation->create_device2 != nullptr) ||
+            negotiation->create_device != nullptr);
+}
+
+bool VulkanBackend::createDeviceThroughCore() {
     retro_vulkan_context context {};
 
-    if (negotiation != nullptr && negotiation->interface_version >= 2 && negotiation->create_device2 != nullptr) {
+    if (negotiation->interface_version >= 2 && negotiation->create_device2 != nullptr) {
         negotiatedDevice = negotiation->create_device2(
             &context, instance, gpu, surface, vk.getInstanceProcAddr, &createDeviceWrapper, this);
         if (!negotiatedDevice) {
@@ -444,19 +470,32 @@ bool VulkanBackend::createDevice() {
                 &context, instance, VK_NULL_HANDLE, surface, vk.getInstanceProcAddr,
                 &createDeviceWrapper, this);
         }
-    } else if (negotiation != nullptr && negotiation->create_device != nullptr) {
+    } else {
         auto extensions = requiredDeviceExtensions();
+        VkPhysicalDeviceFeatures requiredFeatures {};
         negotiatedDevice = negotiation->create_device(
-            &context, instance, gpu, surface, vk.getInstanceProcAddr,
-            extensions.data(), static_cast<unsigned>(extensions.size()), nullptr, 0, nullptr);
+            &context, instance, gpu, surface, &coreGetInstanceProcAddr,
+            extensions.data(), static_cast<unsigned>(extensions.size()), nullptr, 0, &requiredFeatures);
     }
 
-    if (negotiatedDevice) {
-        gpu = context.gpu;
-        device = context.device;
-        queue = context.queue;
-        queueFamily = context.queue_family_index;
-        return device != VK_NULL_HANDLE && queue != VK_NULL_HANDLE;
+    if (!negotiatedDevice) return false;
+    gpu = context.gpu;
+    device = context.device;
+    queue = context.queue;
+    queueFamily = context.queue_family_index;
+    return device != VK_NULL_HANDLE && queue != VK_NULL_HANDLE;
+}
+
+bool VulkanBackend::createDevice() {
+    if (coreCreatesDevice()) {
+        if (createDeviceThroughCore()) return true;
+        if (surface != VK_NULL_HANDLE) {
+            LOGW("The core could not create a Vulkan device for the presentation surface; retrying without it");
+            destroyPresentationSurface();
+            if (createDeviceThroughCore()) return true;
+        }
+        LOGE("The core could not create its Vulkan device");
+        return false;
     }
 
     if (!createDeviceWithoutNegotiation()) return false;
@@ -478,6 +517,7 @@ bool VulkanBackend::loadDeviceFunctions() {
     vk.resetCommandBuffer = reinterpret_cast<PFN_vkResetCommandBuffer>(load("vkResetCommandBuffer"));
     vk.cmdPipelineBarrier = reinterpret_cast<PFN_vkCmdPipelineBarrier>(load("vkCmdPipelineBarrier"));
     vk.cmdBlitImage = reinterpret_cast<PFN_vkCmdBlitImage>(load("vkCmdBlitImage"));
+    vk.cmdClearColorImage = reinterpret_cast<PFN_vkCmdClearColorImage>(load("vkCmdClearColorImage"));
     vk.createFence = reinterpret_cast<PFN_vkCreateFence>(load("vkCreateFence"));
     vk.destroyFence = reinterpret_cast<PFN_vkDestroyFence>(load("vkDestroyFence"));
     vk.waitForFences = reinterpret_cast<PFN_vkWaitForFences>(load("vkWaitForFences"));
@@ -491,7 +531,7 @@ bool VulkanBackend::loadDeviceFunctions() {
     vk.getAndroidHardwareBufferProperties = reinterpret_cast<PFN_vkGetAndroidHardwareBufferPropertiesANDROID>(
         load("vkGetAndroidHardwareBufferPropertiesANDROID"));
 
-    return vk.destroyDevice && vk.queueSubmit && vk.cmdBlitImage && vk.createImage &&
+    return vk.destroyDevice && vk.queueSubmit && vk.cmdBlitImage && vk.cmdClearColorImage && vk.createImage &&
            vk.getAndroidHardwareBufferProperties;
 }
 
@@ -636,8 +676,61 @@ bool VulkanBackend::ensureFrameBuffer(unsigned width, unsigned height) {
 
     frameWidth = width;
     frameHeight = height;
+    clearFrameImage();
     LOGI("Vulkan shared frame buffer ready: %ux%u", width, height);
     return true;
+}
+
+void VulkanBackend::clearFrameImage() {
+    waitForFrame();
+
+    vk.resetCommandBuffer(commandBuffer, 0);
+    VkCommandBufferBeginInfo begin { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vk.beginCommandBuffer(commandBuffer, &begin);
+
+    const VkImageSubresourceRange range { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+    VkImageMemoryBarrier toTransfer { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+    toTransfer.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    toTransfer.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    toTransfer.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    toTransfer.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    toTransfer.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    toTransfer.image = frameImage;
+    toTransfer.subresourceRange = range;
+    vk.cmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                          0, 0, nullptr, 0, nullptr, 1, &toTransfer);
+
+    const VkClearColorValue black {};
+    vk.cmdClearColorImage(commandBuffer, frameImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &black, 1, &range);
+
+    VkImageMemoryBarrier release { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+    release.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    release.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    release.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+    release.srcQueueFamilyIndex = queueFamily;
+    release.dstQueueFamilyIndex = VK_QUEUE_FAMILY_FOREIGN_EXT;
+    release.image = frameImage;
+    release.subresourceRange = range;
+    vk.cmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                          0, 0, nullptr, 0, nullptr, 1, &release);
+    vk.endCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submit { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submit.commandBufferCount = 1;
+    submit.pCommandBuffers = &commandBuffer;
+    VkResult result;
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        result = vk.queueSubmit(queue, 1, &submit, frameFence);
+    }
+    if (result != VK_SUCCESS) {
+        LOGE("Clearing the shared frame buffer failed: %d", result);
+        return;
+    }
+    frameInFlight = true;
+    waitForFrame();
 }
 
 void VulkanBackend::waitForFrame() {
@@ -670,7 +763,7 @@ bool VulkanBackend::presentFrame(unsigned width, unsigned height) {
 
     VkImageMemoryBarrier acquire[2] {};
     acquire[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    acquire[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+    acquire[0].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
     acquire[0].dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     acquire[0].oldLayout = pendingImage.layout;
     acquire[0].newLayout = sourceLayout;
@@ -682,10 +775,10 @@ bool VulkanBackend::presentFrame(unsigned width, unsigned height) {
     acquire[1].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     acquire[1].srcAccessMask = 0;
     acquire[1].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    acquire[1].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    acquire[1].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
     acquire[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    acquire[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    acquire[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    acquire[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_FOREIGN_EXT;
+    acquire[1].dstQueueFamilyIndex = queueFamily;
     acquire[1].image = frameImage;
     acquire[1].subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 

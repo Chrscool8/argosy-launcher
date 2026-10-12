@@ -440,7 +440,12 @@ JNIEXPORT void JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_onSurfaceC
     JNIEnv* env,
     jclass obj
 ) {
-    LibretroDroid::getInstance().onSurfaceCreated();
+    try {
+        LibretroDroid::getInstance().onSurfaceCreated();
+    } catch (libretrodroid::LibretroDroidError& exception) {
+        LOGE("Error in onSurfaceCreated: %s", exception.what());
+        JavaUtils::throwRetroException(env, exception.getErrorCode());
+    }
 }
 
 JNIEXPORT void JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_onMotionEvent(
