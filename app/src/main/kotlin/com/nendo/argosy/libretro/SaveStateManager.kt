@@ -289,29 +289,7 @@ class SaveStateManager(
         return when (launchMode) {
             LaunchMode.NEW_HARDCORE, LaunchMode.NEW_CASUAL -> {
                 Log.d(TAG, "New game mode - starting fresh (no save)")
-                val sramFile = primarySaveFile
-                val members = saveCacheManager.unitMemberPaths(gameId, EmulatorRegistry.BUILTIN_ID, sramFile.absolutePath)
-                if (sramFile.exists()) {
-                    val result = saveCacheManager.cacheAsRollback(
-                        gameId,
-                        EmulatorRegistry.BUILTIN_ID,
-                        sramFile.absolutePath
-                    )
-                    when (result) {
-                        is SaveCacheManager.CacheResult.Created ->
-                            Log.d(TAG, "Created rollback backup before fresh start")
-                        is SaveCacheManager.CacheResult.Duplicate ->
-                            Log.d(TAG, "Rollback skipped - identical save already cached")
-                        is SaveCacheManager.CacheResult.Failed ->
-                            Log.w(TAG, "Failed to create rollback backup")
-                    }
-                    sramFile.delete()
-                    Log.d(TAG, "Deleted existing save file for fresh start")
-                }
-                members.filter { it != sramFile.absolutePath }.forEach { path ->
-                    val removed = File(path).delete()
-                    Log.d(TAG, "Fresh start removed unit member | path=$path removed=$removed")
-                }
+                clearSaveForFreshStart()
                 deleteAllStates()
                 RestoreResult(null)
             }
@@ -366,10 +344,46 @@ class SaveStateManager(
         Log.i(TAG, "[SRAM] unit members ${if (ok) "placed" else "NOT placed"} | cache=${entity.id}")
     }
 
+    private suspend fun clearSaveForFreshStart() {
+        val sramFile = primarySaveFile
+        val members = saveCacheManager.unitMemberPaths(gameId, EmulatorRegistry.BUILTIN_ID, sramFile.absolutePath)
+        if (sramFile.exists()) {
+            val result = saveCacheManager.cacheAsRollback(
+                gameId,
+                EmulatorRegistry.BUILTIN_ID,
+                sramFile.absolutePath
+            )
+            when (result) {
+                is SaveCacheManager.CacheResult.Created ->
+                    Log.d(TAG, "Created rollback backup before fresh start")
+                is SaveCacheManager.CacheResult.Duplicate ->
+                    Log.d(TAG, "Rollback skipped - identical save already cached")
+                is SaveCacheManager.CacheResult.Failed ->
+                    Log.w(TAG, "Failed to create rollback backup")
+            }
+            sramFile.delete()
+            Log.d(TAG, "Deleted existing save file for fresh start")
+        }
+        members.filter { it != sramFile.absolutePath }.forEach { path ->
+            val removed = File(path).delete()
+            Log.d(TAG, "Fresh start removed unit member | path=$path removed=$removed")
+        }
+    }
+
     private suspend fun restoreResumeSave(activeSave: SaveCacheEntity?): RestoreResult {
+        val chosenChannel = channelName
         val targetSave = if (activeSave != null) {
             Log.d(TAG, "RESUME: Using active save cacheId=${activeSave.id} channel='${activeSave.channelName}'")
             activeSave
+        } else if (chosenChannel != null) {
+            val latestInChannel = saveCacheManager.getMostRecentInChannel(gameId, chosenChannel)
+            if (latestInChannel == null) {
+                Log.d(TAG, "RESUME: Active slot '$chosenChannel' has no saves - starting it blank")
+                clearSaveForFreshStart()
+                return RestoreResult(null)
+            }
+            Log.d(TAG, "RESUME: No active row, using latest in slot '$chosenChannel' cacheId=${latestInChannel.id}")
+            latestInChannel
         } else {
             Log.d(TAG, "RESUME: No active save, looking for most recent save overall")
             saveCacheManager.getMostRecentSave(gameId)

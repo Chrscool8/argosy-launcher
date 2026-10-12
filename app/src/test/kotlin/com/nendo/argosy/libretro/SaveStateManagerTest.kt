@@ -119,6 +119,76 @@ class SaveStateManagerTest {
         )
     }
 
+    private fun managerInSlot(
+        name: String,
+        channelName: String?,
+        activeSaveRepository: ActiveSaveRepository,
+        cache: SaveCacheManager
+    ): Pair<SaveStateManager, File> {
+        val saves = tempFolder.newFolder("$name-saves")
+        val states = tempFolder.newFolder("$name-states")
+        coEvery { cache.restoreThroughSigil(any()) } returns SigilRestore.NotRouted
+        coEvery { cache.cacheAsRollback(any(), any(), any()) } returns SaveCacheManager.CacheResult.Duplicate(1, "h")
+        val mgr = SaveStateManager(
+            savesDir = saves,
+            statesDir = states,
+            romPath = File(saves, "Sonic Advance.gba").absolutePath,
+            gameId = GAME_ID,
+            activeSaveRepository = activeSaveRepository,
+            saveCacheManager = cache,
+            channelName = channelName
+        )
+        return mgr to File(saves, "Sonic Advance.srm")
+    }
+
+    @Test
+    fun `RESUME into a chosen slot with no saves starts blank and clears the previous slot's save`() = runBlocking {
+        val activeSaveRepository = mockk<ActiveSaveRepository>()
+        val cache = mockk<SaveCacheManager>(relaxed = true)
+        coEvery { activeSaveRepository.getActiveRow(GAME_ID) } returns null
+        coEvery { cache.getMostRecentInChannel(GAME_ID, "quick") } returns null
+        coEvery { cache.getMostRecentSave(GAME_ID) } returns cacheEntity(hardcore = false)
+        val (mgr, primary) = managerInSlot("empty-slot", "quick", activeSaveRepository, cache)
+        primary.writeBytes(byteArrayOf(5, 5, 5))
+
+        val result = mgr.restoreSaveForLaunchMode(LaunchMode.RESUME)
+
+        assertEquals(null, result.sramData)
+        assertFalse("the other slot's save must not stay on disk", primary.exists())
+    }
+
+    @Test
+    fun `RESUME into a chosen slot without an active row loads that slot's latest save`() = runBlocking {
+        val activeSaveRepository = mockk<ActiveSaveRepository>()
+        val cache = mockk<SaveCacheManager>(relaxed = true)
+        val inSlot = cacheEntity(hardcore = false)
+        val slotBytes = byteArrayOf(4, 2)
+        coEvery { activeSaveRepository.getActiveRow(GAME_ID) } returns null
+        coEvery { cache.getMostRecentInChannel(GAME_ID, "quick") } returns inSlot
+        coEvery { cache.getSaveBytesFromEntity(inSlot) } returns slotBytes
+        val (mgr, _) = managerInSlot("slot-latest", "quick", activeSaveRepository, cache)
+
+        val result = mgr.restoreSaveForLaunchMode(LaunchMode.RESUME)
+
+        assertArrayEquals(slotBytes, result.sramData)
+    }
+
+    @Test
+    fun `RESUME with no chosen slot still falls back to the most recent save`() = runBlocking {
+        val activeSaveRepository = mockk<ActiveSaveRepository>()
+        val cache = mockk<SaveCacheManager>(relaxed = true)
+        val newest = cacheEntity(hardcore = false)
+        val newestBytes = byteArrayOf(8)
+        coEvery { activeSaveRepository.getActiveRow(GAME_ID) } returns null
+        coEvery { cache.getMostRecentSave(GAME_ID) } returns newest
+        coEvery { cache.getSaveBytesFromEntity(newest) } returns newestBytes
+        val (mgr, _) = managerInSlot("no-slot", null, activeSaveRepository, cache)
+
+        val result = mgr.restoreSaveForLaunchMode(LaunchMode.RESUME)
+
+        assertArrayEquals(newestBytes, result.sramData)
+    }
+
     // --- Flat live layout (refactor: channels are cache-only) ---
 
     @Test
