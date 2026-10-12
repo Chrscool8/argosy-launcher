@@ -80,6 +80,18 @@
     <string name="sync_session_save_upload_failed">上传失败</string>
     <string name="sync_session_save_upload_failed_subtitle">%1$s：%2$s</string>
     <string name="sync_session_save_upload_failed_name_fallback">存档</string>
+    <string name="sync_migration_refused_title">无法迁移 %1$s 的存档</string>
+    <string name="sync_migration_refused_no_route">Argosy 无法在这两个模拟器之间转换存档</string>
+    <string name="sync_migration_refused_unreadable">无法读取模拟器的存档文件夹</string>
+    <string name="sync_migration_refused_backup_failed">无法先备份已有的存档</string>
+    <string name="sync_migration_refused_conflict">存档文件在写入时发生了变化</string>
+    <string name="sync_migration_refused_no_space">记忆卡已满</string>
+    <string name="sync_migration_refused_no_target">模拟器还没有可存放此存档的位置</string>
+    <string name="sync_migration_refused_ambiguous">有多个记忆卡或用户档案可以接收此存档</string>
+    <string name="sync_migration_refused_damaged">模拟器文件夹中的一个存档文件已损坏</string>
+    <string name="sync_migration_refused_unsupported_format">此存档的格式无法转换</string>
+    <string name="sync_migration_refused_exists">模拟器的存档文件夹没有可用于此存档的文件名</string>
+    <string name="sync_migration_refused_io">无法写入存档文件</string>
 
     <plurals name="sync_conflict_pending_title">
         <item quantity="other">%1$d个存档需要你处理</item>

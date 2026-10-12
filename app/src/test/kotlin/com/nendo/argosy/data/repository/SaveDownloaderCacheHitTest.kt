@@ -108,7 +108,7 @@ class SaveDownloaderCacheHitTest {
         )
         coEvery { saveCacheManager.findCachedByHash(gameId, serverHash) } returns cachedRow(isHardcore = false)
         coEvery { saveCacheManager.protectBeforeOverwrite(any(), any(), any()) } returns true
-        coEvery { saveCacheManager.restoreSave(any(), any()) } returns true
+        coEvery { saveCacheManager.restoreSave(any(), any(), any()) } returns true
     }
 
     @Test
@@ -117,7 +117,7 @@ class SaveDownloaderCacheHitTest {
 
         assertTrue(result is SaveSyncResult.Success)
         coVerify { saveCacheManager.protectBeforeOverwrite(gameId, "mgba", savePath) }
-        coVerify { saveCacheManager.restoreSave(cachedId, savePath) }
+        coVerify { saveCacheManager.restoreSave(cachedId, savePath, "mgba") }
         coVerify { activeSaveRepository.activateCache(gameId, cachedId) }
         coVerify { activeSaveRepository.setActiveSaveApplied(gameId, false) }
     }
@@ -136,14 +136,14 @@ class SaveDownloaderCacheHitTest {
 
         coVerify { api.getSaveWithDevice(newerId, "device-abc") }
         coVerify(exactly = 0) { api.getSaveWithDevice(serverSaveId, any()) }
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(cachedId, any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(cachedId, any(), any()) }
     }
 
     @Test
     fun `a cached copy from another channel is never restored or activated for a named channel`() = runTest {
         downloader.downloadSave(gameId, "mgba", channelName = "Main Game")
 
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(cachedId, any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(cachedId, any(), any()) }
         coVerify(exactly = 0) { activeSaveRepository.activateCache(gameId, cachedId) }
     }
 
@@ -154,7 +154,7 @@ class SaveDownloaderCacheHitTest {
         val result = downloader.downloadSave(gameId, "mgba")
 
         assertTrue(result is SaveSyncResult.Error)
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
     }
 
     @Test
@@ -163,7 +163,7 @@ class SaveDownloaderCacheHitTest {
 
         downloader.downloadSave(gameId, "mgba")
 
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(cachedId, any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(cachedId, any(), any()) }
     }
 
     @Test
@@ -182,7 +182,7 @@ class SaveDownloaderCacheHitTest {
         val inflight = java.util.concurrent.atomic.AtomicInteger(0)
         val maxInflight = java.util.concurrent.atomic.AtomicInteger(0)
         val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
-        coEvery { saveCacheManager.restoreSave(any(), any()) } coAnswers {
+        coEvery { saveCacheManager.restoreSave(any(), any(), any()) } coAnswers {
             maxInflight.updateAndGet { maxOf(it, inflight.incrementAndGet()) }
             gate.await()
             inflight.decrementAndGet()
@@ -206,6 +206,6 @@ class SaveDownloaderCacheHitTest {
 
         downloader.downloadSave(gameId, "mgba")
 
-        coVerify { saveCacheManager.restoreSave(cachedId, savePath) }
+        coVerify { saveCacheManager.restoreSave(cachedId, savePath, "mgba") }
     }
 }

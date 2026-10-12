@@ -73,10 +73,23 @@ class SavePathResolver @Inject constructor(
         coreName: String? = null,
         emulatorPackage: String? = null,
         gameId: Long? = null
-    ): String? {
+    ): String? = (discover(emulatorId, gameTitle, platformSlug, romPath, cachedSaveId, coreName, emulatorPackage, gameId)
+        as? SaveLookup.Found)?.path
+
+    private suspend fun discover(
+        emulatorId: String,
+        gameTitle: String,
+        platformSlug: String,
+        romPath: String?,
+        cachedSaveId: String?,
+        coreName: String?,
+        emulatorPackage: String?,
+        gameId: Long?
+    ): SaveLookup {
         var decision = "unknown"
         var selectedMemcardForLog: String? = null
         var savePathOverrideForLog: String? = null
+        var unreadableSigilRoot: String? = null
         val result = discoverSavePathInternal(
             emulatorId, gameTitle, platformSlug, romPath, cachedSaveId, coreName,
             emulatorPackage, gameId,
@@ -84,7 +97,8 @@ class SavePathResolver @Inject constructor(
                 decision = d
                 selectedMemcardForLog = selectedCard
                 savePathOverrideForLog = override
-            }
+            },
+            onSigilUnreadable = { unreadableSigilRoot = it }
         ) ?: libretroSigilRoot(gameId, emulatorId)?.also { decision = "sigil-volume" }
         if (gameId != null) {
             SaveDebugLogger.logDiscoverPath(
@@ -100,7 +114,12 @@ class SavePathResolver @Inject constructor(
                 decision = decision
             )
         }
-        return result
+        val unreadable = unreadableSigilRoot
+        return when {
+            result != null -> SaveLookup.Found(result)
+            unreadable != null -> SaveLookup.Unreadable(unreadable)
+            else -> SaveLookup.Absent
+        }
     }
 
     private suspend fun libretroSigilRoot(gameId: Long?, emulatorId: String): String? {
@@ -123,8 +142,8 @@ class SavePathResolver @Inject constructor(
         emulatorPackage: String? = null,
         gameId: Long? = null
     ): SaveLookup {
-        val path = discoverSavePath(emulatorId, gameTitle, platformSlug, romPath, cachedSaveId, coreName, emulatorPackage, gameId)
-        if (path != null) return SaveLookup.Found(path)
+        val lookup = discover(emulatorId, gameTitle, platformSlug, romPath, cachedSaveId, coreName, emulatorPackage, gameId)
+        if (lookup !is SaveLookup.Absent) return lookup
         val unreadable = findUnreadableCandidateDir(emulatorId, platformSlug, romPath, coreName, emulatorPackage, gameId)
         return if (unreadable != null) SaveLookup.Unreadable(unreadable) else SaveLookup.Absent
     }
@@ -204,7 +223,8 @@ class SavePathResolver @Inject constructor(
         coreName: String? = null,
         emulatorPackage: String? = null,
         gameId: Long? = null,
-        onDecision: (String, String?, String?) -> Unit = { _, _, _ -> }
+        onDecision: (String, String?, String?) -> Unit = { _, _, _ -> },
+        onSigilUnreadable: (String) -> Unit = {}
     ): String? = withContext(Dispatchers.IO) {
         if (emulatorId == "default" || emulatorId.isBlank()) {
             Logger.warn(TAG, "[SaveSync] DISCOVER | Invalid emulatorId='$emulatorId' | game=$gameTitle, platform=$platformSlug")
@@ -223,9 +243,18 @@ class SavePathResolver @Inject constructor(
         if (gameId != null && saveHandlerRegistry.isSigilRouted(config, platformSlug, emulatorId)) {
             val sigil = saveHandlerRegistry.sigil
             val root = sigil.route(gameId, config.emulatorId)?.root
-            val found = root != null && sigil.collect(gameId, config.emulatorId) is SigilCollect.Found
-            onDecision(if (found) "sigil" else "sigil+none", null, root)
-            return@withContext root.takeIf { found }
+            val collected = if (root != null) sigil.collect(gameId, config.emulatorId) else SigilCollect.NotRouted
+            if (root != null && collected is SigilCollect.Unreadable) {
+                Logger.warn(TAG, "[SaveSync] DISCOVER | Sigil could not read the save root | root=$root, reason=${collected.reason}")
+                onSigilUnreadable(root)
+            }
+            val decision = when (collected) {
+                is SigilCollect.Found -> "sigil"
+                is SigilCollect.Unreadable -> "sigil+unreadable"
+                else -> "sigil+none"
+            }
+            onDecision(decision, null, root)
+            return@withContext root.takeIf { collected is SigilCollect.Found }
         }
 
         val saveIdNames = saveIdFileNames(config, platformSlug, romPath, cachedSaveId, emulatorPackage, gameId)

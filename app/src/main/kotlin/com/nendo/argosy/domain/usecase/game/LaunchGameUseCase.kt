@@ -9,6 +9,7 @@ import com.nendo.argosy.data.emulator.PlaySessionTracker
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.repository.GameRepository
 import com.nendo.argosy.data.repository.LibraryPointerRepair
+import com.nendo.argosy.data.sync.CrossEmulatorSaveMigrator
 import com.nendo.argosy.data.wallpaper.LockScreenArtManager
 import com.nendo.argosy.domain.model.LaunchStep
 import javax.inject.Inject
@@ -16,6 +17,7 @@ import javax.inject.Inject
 /**
  * Builds the launch intent, joining the caller's [LaunchProgressTracker] launch or opening one, and
  * opens the play session for an external emulator; LibretroActivity opens in-process sessions.
+ * A fresh launch first runs [CrossEmulatorSaveMigrator] unless the caller passes savesPrepared.
  */
 class LaunchGameUseCase @Inject constructor(
     private val gameLauncher: GameLauncher,
@@ -23,7 +25,8 @@ class LaunchGameUseCase @Inject constructor(
     private val libraryPointerRepair: LibraryPointerRepair,
     private val lockScreenArtManager: LockScreenArtManager,
     private val launchProgressTracker: LaunchProgressTracker,
-    private val gameRepository: GameRepository
+    private val gameRepository: GameRepository,
+    private val crossEmulatorSaveMigrator: CrossEmulatorSaveMigrator
 ) {
     suspend operator fun invoke(
         gameId: Long,
@@ -34,7 +37,8 @@ class LaunchGameUseCase @Inject constructor(
         skipVariantPrompt: Boolean = false,
         allowVariantPrompt: Boolean = true,
         prefetchedGame: GameEntity? = null,
-        origin: LaunchOrigin = LaunchOrigin.INTERNAL
+        origin: LaunchOrigin = LaunchOrigin.INTERNAL,
+        savesPrepared: Boolean = false
     ): LaunchResult {
         val joined = launchProgressTracker.current
         val ticket = joined ?: launchProgressTracker.begin(
@@ -42,7 +46,7 @@ class LaunchGameUseCase @Inject constructor(
         ) ?: return LaunchResult.Cancelled
         var result: LaunchResult = LaunchResult.Cancelled
         try {
-            result = launch(ticket, gameId, discId, forResume, selectedDiscPath, variantFileId, skipVariantPrompt, allowVariantPrompt, prefetchedGame, origin)
+            result = launch(ticket, gameId, discId, forResume, selectedDiscPath, variantFileId, skipVariantPrompt, allowVariantPrompt, prefetchedGame, origin, savesPrepared)
             return result
         } finally {
             if (joined == null) launchProgressTracker.finish(ticket, launched = result is LaunchResult.Success)
@@ -59,9 +63,11 @@ class LaunchGameUseCase @Inject constructor(
         skipVariantPrompt: Boolean,
         allowVariantPrompt: Boolean,
         prefetchedGame: GameEntity?,
-        origin: LaunchOrigin
+        origin: LaunchOrigin,
+        savesPrepared: Boolean
     ): LaunchResult {
         libraryPointerRepair.await()
+        if (!forResume && !savesPrepared) crossEmulatorSaveMigrator.migrateBeforeLaunch(gameId)
         val result = gameLauncher.launch(gameId, discId, forResume, selectedDiscPath, variantFileId, skipVariantPrompt, allowVariantPrompt, prefetchedGame)
         if (ticket.isCancelled) return LaunchResult.Cancelled
         if (result is LaunchResult.Success && !forResume) {

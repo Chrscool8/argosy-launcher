@@ -428,7 +428,7 @@ class GameLaunchDelegate @Inject constructor(
                     else -> null
                 }
 
-                val result = launchGameUseCase(gameId, discId, variantFileId = resolvedVariantId, allowVariantPrompt = allowVariantPrompt, prefetchedGame = game, origin = origin)
+                val result = launchGameUseCase(gameId, discId, variantFileId = resolvedVariantId, allowVariantPrompt = allowVariantPrompt, prefetchedGame = game, origin = origin, savesPrepared = true)
                 launched = dispatchPrimaryLaunchResult(result, channelName, discId, launchMode, origin, onLaunch, onLaunchFailed)
             } finally {
                 launchProgressTracker.finish(ticket, launched)
@@ -466,7 +466,7 @@ class GameLaunchDelegate @Inject constructor(
                     .filter { it.fileId == null || it.isDownloaded }
                     .sortedBy { com.nendo.argosy.data.model.VariantCategory.fromKey(it.category).sortOrder }
                 if (launchable.size <= 1) {
-                    val retry = launchGameUseCase(result.gameId, discId, allowVariantPrompt = false, origin = origin)
+                    val retry = launchGameUseCase(result.gameId, discId, allowVariantPrompt = false, origin = origin, savesPrepared = true)
                     return dispatchPrimaryLaunchResult(retry, channelName, discId, launchMode, origin, onLaunch, onLaunchFailed)
                 } else {
                     _variantPickerState.value = VariantPickerState(

@@ -189,6 +189,25 @@ class SaveStateManagerTest {
         assertArrayEquals(newestBytes, result.sramData)
     }
 
+    @Test
+    fun `RESUME with an active save from another emulator loads the save on disk and never writes the cache`() = runBlocking {
+        val activeSaveRepository = mockk<ActiveSaveRepository>()
+        val cache = mockk<SaveCacheManager>(relaxed = true)
+        val foreign = cacheEntity(hardcore = false).copy(emulatorId = "duckstation")
+        coEvery { activeSaveRepository.getActiveRow(GAME_ID) } returns foreign
+        coEvery { cache.getSaveBytesFromEntity(foreign) } returns byteArrayOf(6, 6)
+        val (mgr, primary) = managerInSlot("foreign-active", null, activeSaveRepository, cache)
+        val placed = byteArrayOf(3, 1, 4)
+        primary.writeBytes(placed)
+
+        val result = mgr.restoreSaveForLaunchMode(LaunchMode.RESUME)
+
+        assertArrayEquals(placed, result.sramData)
+        assertArrayEquals(placed, primary.readBytes())
+        io.mockk.coVerify(exactly = 0) { cache.restoreThroughSigil(any()) }
+        io.mockk.coVerify(exactly = 0) { cache.getSaveBytesFromEntity(any()) }
+    }
+
     // --- Flat live layout (refactor: channels are cache-only) ---
 
     @Test

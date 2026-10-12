@@ -14,6 +14,7 @@ import com.nendo.argosy.data.repository.PreLaunchSyncResult
 import com.nendo.argosy.data.repository.SaveSyncRepository
 import com.nendo.argosy.data.repository.SaveSyncResult
 import com.nendo.argosy.data.repository.SiblingGroupRepository
+import com.nendo.argosy.data.sync.CrossEmulatorSaveMigrator
 import com.nendo.argosy.domain.model.SyncProgress
 import com.nendo.argosy.domain.model.SyncState
 import com.nendo.argosy.domain.usecase.state.PreLaunchStateSyncUseCase
@@ -48,7 +49,8 @@ class LaunchWithSyncUseCase @Inject constructor(
         com.nendo.argosy.domain.usecase.state.SyncStatesOnSessionEndUseCase,
     private val siblingGroupRepository: SiblingGroupRepository,
     private val stateCacheManager: StateCacheManager,
-    private val effectiveLibretroSettingsResolver: EffectiveLibretroSettingsResolver
+    private val effectiveLibretroSettingsResolver: EffectiveLibretroSettingsResolver,
+    private val crossEmulatorSaveMigrator: CrossEmulatorSaveMigrator
 ) {
     private val backgroundScope = SafeCoroutineScope(Dispatchers.IO, TAG)
 
@@ -197,6 +199,8 @@ class LaunchWithSyncUseCase @Inject constructor(
                 activateSaveChannelUseCase(gameId, channelName)
             }
         }
+
+        crossEmulatorSaveMigrator.migrateBeforeLaunch(gameId)
 
         if (skipPreLaunchSync) {
             emit(SyncProgress.Skipped)

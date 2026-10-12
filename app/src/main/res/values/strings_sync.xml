@@ -243,6 +243,36 @@
          game. Noun, singular: the save file itself. -->
     <string name="sync_session_save_upload_failed_name_fallback">Save</string>
 
+    <!-- Notice before a launch when the game's save, last played under another emulator,
+         could not be moved into the emulator about to start. The game still starts and the
+         save is tried again at the next launch. -->
+
+    <!-- Title of the notice. %1$s is the game's title. "Save" is a noun here. -->
+    <string name="sync_migration_refused_title">Couldn\'t move the save for %1$s</string>
+    <!-- Reason line: no conversion exists between the two emulators' save formats. -->
+    <string name="sync_migration_refused_no_route">Argosy can\'t convert saves between these two emulators</string>
+    <!-- Reason line: the new emulator's save folder exists but can't be listed or read. -->
+    <string name="sync_migration_refused_unreadable">The emulator\'s save folder can\'t be read</string>
+    <!-- Reason line: the save already in the new emulator could not be backed up before it
+         would have been replaced, so nothing was replaced. -->
+    <string name="sync_migration_refused_backup_failed">The save already there couldn\'t be backed up first</string>
+    <!-- Reason line: the save files on disk changed while the save was being written. -->
+    <string name="sync_migration_refused_conflict">The save files changed while they were being written</string>
+    <!-- Reason line: the memory card the save goes on has no free space. -->
+    <string name="sync_migration_refused_no_space">The memory card is full</string>
+    <!-- Reason line: the emulator has no file or folder yet that this save goes into. -->
+    <string name="sync_migration_refused_no_target">The emulator has nowhere to put this save yet</string>
+    <!-- Reason line: several memory cards or user profiles could each take the save. -->
+    <string name="sync_migration_refused_ambiguous">More than one memory card or profile could take this save</string>
+    <!-- Reason line: a save file in the emulator's folder is corrupt. -->
+    <string name="sync_migration_refused_damaged">A save file in the emulator\'s folder is damaged</string>
+    <!-- Reason line: the save is in a format the conversion does not read. -->
+    <string name="sync_migration_refused_unsupported_format">This save\'s format can\'t be converted</string>
+    <!-- Reason line: Dolphin's GameCube save folder has no unused file name left for the save. -->
+    <string name="sync_migration_refused_exists">The emulator\'s save folder has no free name for this save</string>
+    <!-- Reason line: writing the save files failed. -->
+    <string name="sync_migration_refused_io">The save files couldn\'t be written</string>
+
     <!-- In-app notice about saves waiting for the user to choose between two versions. -->
 
     <!-- Title of the notice, counting the saves that are waiting. -->

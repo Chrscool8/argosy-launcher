@@ -80,6 +80,18 @@
     <string name="sync_session_save_upload_failed">Échec de l\'envoi</string>
     <string name="sync_session_save_upload_failed_subtitle">%1$s : %2$s</string>
     <string name="sync_session_save_upload_failed_name_fallback">Sauvegarde</string>
+    <string name="sync_migration_refused_title">Impossible de déplacer la sauvegarde de %1$s</string>
+    <string name="sync_migration_refused_no_route">Argosy ne peut pas convertir les sauvegardes entre ces deux émulateurs</string>
+    <string name="sync_migration_refused_unreadable">Le dossier de sauvegarde de l\'émulateur est illisible</string>
+    <string name="sync_migration_refused_backup_failed">La sauvegarde déjà présente n\'a pas pu être copiée d\'abord</string>
+    <string name="sync_migration_refused_conflict">Les fichiers de sauvegarde ont changé pendant l\'écriture</string>
+    <string name="sync_migration_refused_no_space">La carte mémoire est pleine</string>
+    <string name="sync_migration_refused_no_target">L\'émulateur n\'a pas encore d\'emplacement pour cette sauvegarde</string>
+    <string name="sync_migration_refused_ambiguous">Plusieurs cartes mémoire ou profils pourraient recevoir cette sauvegarde</string>
+    <string name="sync_migration_refused_damaged">Un fichier de sauvegarde du dossier de l\'émulateur est endommagé</string>
+    <string name="sync_migration_refused_unsupported_format">Le format de cette sauvegarde ne peut pas être converti</string>
+    <string name="sync_migration_refused_exists">Le dossier de sauvegarde de l\'émulateur n\'a plus de nom libre pour cette sauvegarde</string>
+    <string name="sync_migration_refused_io">Les fichiers de sauvegarde n\'ont pas pu être écrits</string>
 
     <plurals name="sync_conflict_pending_title">
         <item quantity="one">%1$d sauvegarde nécessite votre attention</item>

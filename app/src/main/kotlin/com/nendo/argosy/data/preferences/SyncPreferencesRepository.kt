@@ -72,6 +72,10 @@ data class SyncPreferences(
 class SyncPreferencesRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
+    private companion object {
+        const val MIGRATION_NOTICES_KEPT = 200
+    }
+
     private object Keys {
         val ROMM_URL = stringPreferencesKey("romm_url")
         val ROMM_USERNAME = stringPreferencesKey("romm_username")
@@ -132,6 +136,7 @@ class SyncPreferencesRepository @Inject constructor(
         val SOCIAL_HIDDEN_GAME_IDS = stringPreferencesKey("social_hidden_game_ids")
         val SAVE_SYNC_LOCAL_REKEY_DONE = booleanPreferencesKey("save_sync_local_rekey_done")
         val SAVE_PATH_CACHE_PURGED = booleanPreferencesKey("save_path_cache_purged")
+        val SAVE_MIGRATION_NOTICES_SHOWN = stringPreferencesKey("save_migration_notices_shown")
         val SIBLING_SPLIT_REPAIR_DONE = booleanPreferencesKey("sibling_split_repair_finished")
         val SIBLING_CONFIG_CARRY_OVER_DONE = booleanPreferencesKey("sibling_config_carry_over_done")
         val QUAYPASS_ENABLED = booleanPreferencesKey("quaypass_enabled")
@@ -220,6 +225,19 @@ class SyncPreferencesRepository @Inject constructor(
     suspend fun setSavePathCachePurged() {
         dataStore.edit { it[Keys.SAVE_PATH_CACHE_PURGED] = true }
     }
+
+    suspend fun isSaveMigrationNoticeShown(cacheId: Long): Boolean =
+        dataStore.data.map { cacheId in shownMigrationNotices(it[Keys.SAVE_MIGRATION_NOTICES_SHOWN]) }.first()
+
+    suspend fun markSaveMigrationNoticeShown(cacheId: Long) {
+        dataStore.edit { prefs ->
+            val shown = shownMigrationNotices(prefs[Keys.SAVE_MIGRATION_NOTICES_SHOWN]) - cacheId
+            prefs[Keys.SAVE_MIGRATION_NOTICES_SHOWN] = (shown + cacheId).takeLast(MIGRATION_NOTICES_KEPT).joinToString(",")
+        }
+    }
+
+    private fun shownMigrationNotices(stored: String?): List<Long> =
+        stored?.split(",")?.mapNotNull { it.toLongOrNull() }.orEmpty()
 
     suspend fun isSiblingSplitRepairDone(): Boolean =
         dataStore.data.map { it[Keys.SIBLING_SPLIT_REPAIR_DONE] ?: false }.first()

@@ -767,6 +767,25 @@ class SavePathResolverDiscoveryTest {
         assertNotEquals(memcardDir, fileShapedResult)
     }
 
+    @Test
+    fun `a Sigil save root that cannot be read is reported unreadable, not absent`() = runTest {
+        val root = File(tempDir, "Android/data/org.ppsspp.ppsspp/files").apply { mkdirs() }.absolutePath
+        val sigil = mockk<com.nendo.argosy.data.sync.platform.SigilSaveHandler>()
+        every { saveHandlerRegistry.isSigilRouted(any(), "psp", "ppsspp") } returns true
+        every { saveHandlerRegistry.sigil } returns sigil
+        coEvery { sigil.route(1L, any()) } returns
+            com.nendo.argosy.data.sync.platform.SigilRoute("ppsspp_standalone", root, null, null)
+        coEvery { sigil.collect(1L, any(), any()) } returns
+            com.nendo.argosy.data.sync.platform.SigilCollect.Unreadable("permission denied")
+
+        val lookup = resolver.discoverSavePathChecked(
+            emulatorId = "ppsspp", gameTitle = "Lunar", platformSlug = "psp",
+            romPath = "/roms/lunar.iso", gameId = 1L,
+        )
+
+        assertEquals(SaveLookup.Unreadable(root), lookup)
+    }
+
     private fun rommGame(): GameEntity = GameEntity(
         id = 1L, platformId = 10L, platformSlug = "switch",
         title = "BOTW", sortTitle = "botw",

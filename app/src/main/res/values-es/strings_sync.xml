@@ -80,6 +80,18 @@
     <string name="sync_session_save_upload_failed">Error al subir</string>
     <string name="sync_session_save_upload_failed_subtitle">%1$s: %2$s</string>
     <string name="sync_session_save_upload_failed_name_fallback">Partida guardada</string>
+    <string name="sync_migration_refused_title">No se pudo mover la partida guardada de %1$s</string>
+    <string name="sync_migration_refused_no_route">Argosy no puede convertir partidas entre estos dos emuladores</string>
+    <string name="sync_migration_refused_unreadable">No se puede leer la carpeta de guardado del emulador</string>
+    <string name="sync_migration_refused_backup_failed">No se pudo hacer primero una copia de la partida que ya estaba</string>
+    <string name="sync_migration_refused_conflict">Los archivos de guardado cambiaron mientras se escribían</string>
+    <string name="sync_migration_refused_no_space">La tarjeta de memoria está llena</string>
+    <string name="sync_migration_refused_no_target">El emulador aún no tiene dónde poner esta partida</string>
+    <string name="sync_migration_refused_ambiguous">Más de una tarjeta de memoria o perfil podría recibir esta partida</string>
+    <string name="sync_migration_refused_damaged">Un archivo de guardado de la carpeta del emulador está dañado</string>
+    <string name="sync_migration_refused_unsupported_format">El formato de esta partida no se puede convertir</string>
+    <string name="sync_migration_refused_exists">La carpeta de guardado del emulador no tiene un nombre libre para esta partida</string>
+    <string name="sync_migration_refused_io">No se pudieron escribir los archivos de guardado</string>
 
     <plurals name="sync_conflict_pending_title">
         <item quantity="one">%1$d partida guardada necesita tu atención</item>

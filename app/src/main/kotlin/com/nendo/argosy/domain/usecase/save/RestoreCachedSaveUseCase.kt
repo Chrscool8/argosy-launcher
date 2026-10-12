@@ -88,7 +88,7 @@ class RestoreCachedSaveUseCase @Inject constructor(
             return Result.Error(RestoreCachedSaveFailureReason.ClearExistingSaveFailed)
         }
 
-        if (!saveCacheManager.restoreSave(restoredCacheId, targetPath)) {
+        if (!saveCacheManager.restoreSave(restoredCacheId, targetPath, emulatorId)) {
             return Result.Error(RestoreCachedSaveFailureReason.RestoreFailed)
         }
 

@@ -12,6 +12,7 @@ import com.nendo.argosy.data.sync.platform.GciSaveHandler
 import com.nendo.argosy.data.sync.platform.PlatformSaveHandlerRegistry
 import com.nendo.argosy.data.sync.platform.SigilCollect
 import com.nendo.argosy.data.sync.platform.SigilRestore
+import com.nendo.argosy.data.sync.platform.SigilRoute
 import com.nendo.argosy.data.sync.platform.SigilSaveHandler
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -53,6 +54,7 @@ class SaveCacheFormatTest {
         coEvery { saveCacheDao.insert(capture(stored)) } returns ROW_ID
         coEvery { saveCacheDao.getAllByGameChannelAndHash(any(), any(), any(), any()) } returns emptyList()
         coEvery { saveCacheDao.getLatestByGameChannelAndIdentity(any(), any(), any(), any()) } returns null
+        coEvery { sigil.localRoute(any(), any()) } returns null
         notRouted()
 
         val fal = realFsFal()
@@ -91,6 +93,8 @@ class SaveCacheFormatTest {
         coEvery { sigil.collect(any(), any(), any()) } returns
             SigilCollect.Found(byteArrayOf(4, 5, 6), "backup.ram", "unit-hash", "unit-identity")
         coEvery { sigil.restore(any(), any(), any()) } returns SigilRestore.Restored(hardcoreMarker = false)
+        coEvery { sigil.localRoute(any(), any()) } returns LOCAL_ROUTE
+        coEvery { sigil.restoreInto(any(), any(), any()) } returns SigilRestore.Restored(hardcoreMarker = false)
     }
 
     private suspend fun cacheLiveSave(): SaveCacheEntity {
@@ -119,7 +123,7 @@ class SaveCacheFormatTest {
         routed()
         val target = File(tempDir, "restored/Lunar.srm")
 
-        manager.restoreSave(ROW_ID, target.absolutePath)
+        manager.restoreSave(ROW_ID, target.absolutePath, "retroarch")
 
         coVerify(exactly = 0) { sigil.restore(any(), any(), any()) }
         assertArrayEquals(File(tempDir, "save_cache/${row.cachePath}").readBytes(), target.readBytes())
@@ -129,11 +133,12 @@ class SaveCacheFormatTest {
     fun `a neutral cache no Sigil layout covers is refused and nothing is written`() = runTest {
         routed()
         cacheLiveSave()
-        coEvery { sigil.restore(any(), any(), any()) } returns SigilRestore.NotRouted
+        coEvery { sigil.localRoute(any(), any()) } returns null
         val target = File(tempDir, "restored/backup.ram")
 
-        assertEquals(false, manager.restoreSave(ROW_ID, target.absolutePath))
+        assertEquals(false, manager.restoreSave(ROW_ID, target.absolutePath, "retroarch"))
         assertTrue(!target.exists())
+        coVerify(exactly = 0) { sigil.restoreInto(any(), any(), any()) }
     }
 
     @Test
@@ -141,9 +146,24 @@ class SaveCacheFormatTest {
         routed()
         cacheLiveSave()
 
-        assertTrue(manager.restoreSave(ROW_ID, File(tempDir, "restored/backup.ram").absolutePath))
+        assertTrue(manager.restoreSave(ROW_ID, File(tempDir, "restored/backup.ram").absolutePath, "retroarch"))
 
-        coVerify(exactly = 1) { sigil.restore(GAME_ID, any(), any()) }
+        coVerify(exactly = 1) { sigil.restoreInto(LOCAL_ROUTE, GAME_ID, any()) }
+    }
+
+    @Test
+    fun `a neutral cache restores on a server without save units`() = runTest {
+        routed()
+        val row = cacheLiveSave()
+        coEvery { sigil.restore(any(), any(), any()) } returns SigilRestore.NotRouted
+        val unit = slot<ByteArray>()
+        coEvery { sigil.restoreInto(LOCAL_ROUTE, GAME_ID, capture(unit)) } returns SigilRestore.Restored(hardcoreMarker = false)
+
+        assertTrue(manager.restoreSave(ROW_ID, File(tempDir, "restored/backup.ram").absolutePath, "retroarch"))
+        assertEquals(SigilRestore.Restored(hardcoreMarker = false), manager.restoreThroughSigil(row))
+
+        assertArrayEquals(File(tempDir, "save_cache/${row.cachePath}").readBytes(), unit.captured)
+        coVerify(exactly = 0) { sigil.restore(any(), any(), any()) }
     }
 
     @Test
@@ -177,5 +197,6 @@ class SaveCacheFormatTest {
     private companion object {
         const val GAME_ID = 4L
         const val ROW_ID = 31L
+        val LOCAL_ROUTE = SigilRoute("genesis_plus_gx", "/saves", null, null, libretro = true)
     }
 }

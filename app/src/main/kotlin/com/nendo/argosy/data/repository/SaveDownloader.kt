@@ -344,7 +344,7 @@ class SaveDownloader @Inject constructor(
                     Logger.error(TAG, "[SaveSync] DOWNLOAD gameId=$gameId | Backup failed before cache-hit restore")
                     return@withContext SaveSyncResult.Error("Failed to backup existing save before restore")
                 }
-                val restored = saveCacheManager.get().restoreSave(cachedMatch.id, preDownloadTargetPath)
+                val restored = saveCacheManager.get().restoreSave(cachedMatch.id, preDownloadTargetPath, resolvedEmulatorId)
                 if (!restored) {
                     Logger.warn(TAG, "[SaveSync] DOWNLOAD gameId=$gameId | restoreSave failed, falling through to network download")
                 } else {

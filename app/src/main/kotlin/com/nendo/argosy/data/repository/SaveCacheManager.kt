@@ -11,6 +11,7 @@ import com.nendo.argosy.data.local.dao.SaveOwnershipDao
 import com.nendo.argosy.data.local.dao.SaveSyncDao
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.local.entity.SaveCacheEntity
+import com.nendo.argosy.data.local.entity.SaveSyncEntity
 import com.nendo.argosy.data.platform.PlatformDefinitions
 import com.nendo.argosy.data.preferences.SyncPreferencesRepository
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
@@ -160,7 +161,7 @@ class SaveCacheManager @Inject constructor(
                     )
                     tempFile?.delete()
                     if (channelName != null) saveCacheDao.setActiveRow(gameId, ownerUserId, existingWithHash.id)
-                    if (!secureSaves && !isHardcore) recordLocalWriteAnchor(gameId, emulatorId, channelName, savePath, ownerUserId)
+                    if (!secureSaves && !isHardcore) recordLocalWriteAnchor(gameId, emulatorId, channelName, savePath, ownerUserId, createMissing = false)
                     saveOwnershipTracker.record(savePath, emulatorId, contentHash, gameId, channelName)
                     return@withContext CacheResult.Duplicate(existingWithHash.id, contentHash)
                 }
@@ -234,7 +235,7 @@ class SaveCacheManager @Inject constructor(
             } else {
                 saveCacheDao.clearDirtyFlagForLatest(gameId, ownerUserId)
             }
-            if (!secureSaves && !isHardcore) recordLocalWriteAnchor(gameId, emulatorId, channelName, savePath, ownerUserId)
+            if (!secureSaves && !isHardcore) recordLocalWriteAnchor(gameId, emulatorId, channelName, savePath, ownerUserId, createMissing = false)
             saveOwnershipTracker.record(savePath, emulatorId, contentHash, gameId, channelName)
             val slotInfo = when {
                 isHardcore -> " [HARDCORE]"
@@ -645,18 +646,27 @@ class SaveCacheManager @Inject constructor(
 
     private suspend fun restoreUnlessNative(entity: SaveCacheEntity, cacheFile: File, emulatorId: String?): SigilRestore {
         if (entity.saveFormat == SaveCacheEntity.FORMAT_NATIVE) return SigilRestore.NotRouted
-        val restored = sigilSaveHandler.restore(entity.gameId, cacheFile, emulatorId)
-        return if (restored == SigilRestore.NotRouted && entity.saveFormat == SaveCacheEntity.FORMAT_NEUTRAL) {
-            SigilRestore.Refused("cache ${entity.id} holds a Sigil unit and no Sigil layout covers this emulator now")
-        } else {
-            restored
+        if (entity.saveFormat != SaveCacheEntity.FORMAT_NEUTRAL) {
+            return sigilSaveHandler.restore(entity.gameId, cacheFile, emulatorId)
         }
+        val unrouted = SigilRestore.Refused("cache ${entity.id} holds a Sigil unit and no Sigil layout covers this emulator now")
+        val route = sigilSaveHandler.localRoute(entity.gameId, emulatorId) ?: return unrouted
+        val restored = sigilSaveHandler.restoreInto(route, entity.gameId, cacheFile.readBytes())
+        return if (restored == SigilRestore.NotRouted) unrouted else restored
     }
+
+    private suspend fun isSigilRouteRoot(gameId: Long, emulatorId: String, path: String): Boolean =
+        sigilSaveHandler.localRoute(gameId, emulatorId)?.root?.trimEnd('/') == path.trimEnd('/')
 
     suspend fun findCachedByHash(gameId: Long, contentHash: String): com.nendo.argosy.data.local.entity.SaveCacheEntity? =
         withContext(Dispatchers.IO) { saveCacheDao.getByGameAndHash(gameId, syncPreferencesRepository.getRommUserId(), contentHash) }
 
-    suspend fun restoreSave(cacheId: Long, targetPath: String): Boolean = withContext(Dispatchers.IO) {
+    /**
+     * Writes cache [cacheId] to [targetPath] for [targetEmulatorId], the emulator that reads the
+     * save there. Anchor, ownership and the post-restore hash are recorded under that emulator,
+     * whichever emulator the cached save came from.
+     */
+    suspend fun restoreSave(cacheId: Long, targetPath: String, targetEmulatorId: String): Boolean = withContext(Dispatchers.IO) {
         val entity = saveCacheDao.getById(cacheId)
         if (entity == null) {
             Logger.error(TAG,"Cache entry not found: $cacheId")
@@ -673,24 +683,18 @@ class SaveCacheManager @Inject constructor(
         fal.prepareSaveAccess(targetPath)
         var placedGciMembers: List<String>? = null
         try {
-            when (val sigilRestore = restoreUnlessNative(entity, cacheFile, emulatorId = null)) {
-                SigilRestore.NotRouted -> Unit
+            when (val sigilRestore = restoreUnlessNative(entity, cacheFile, targetEmulatorId)) {
+                SigilRestore.NotRouted -> if (isSigilRouteRoot(entity.gameId, targetEmulatorId, targetPath)) {
+                    Logger.warn(TAG, "Restore of cache $cacheId refused: $targetPath is the Sigil save root of $targetEmulatorId and the cache holds native files")
+                    return@withContext false
+                }
                 is SigilRestore.Refused -> {
                     Logger.warn(TAG, "Restore of cache $cacheId refused: ${sigilRestore.reason}")
                     return@withContext false
                 }
                 is SigilRestore.Restored -> {
                     Log.d(TAG, "Restored save from cache $cacheId through Sigil (legacy hardcore marker=${sigilRestore.hardcoreMarker})")
-                    if (!secureSaves && !entity.isHardcore) {
-                        recordLocalWriteAnchor(
-                            entity.gameId,
-                            entity.emulatorId,
-                            entity.channelName,
-                            targetPath,
-                            entity.ownerUserId ?: syncPreferencesRepository.getRommUserId()
-                        )
-                    }
-                    saveOwnershipTracker.record(targetPath, entity.emulatorId, entity.contentHash, entity.gameId, entity.channelName)
+                    recordPlacement(entity, targetPath, targetEmulatorId, secureSaves)
                     return@withContext true
                 }
             }
@@ -772,7 +776,7 @@ class SaveCacheManager @Inject constructor(
                 }
             } else try {
                 val game = gameDao.getById(entity.gameId)
-                val actualHash = computeRestoredHash(game, targetPath, entity.emulatorId)
+                val actualHash = computeRestoredHash(game, targetPath, targetEmulatorId)
                 val match = actualHash != null && actualHash == entity.contentHash
                 Log.d(TAG, "[RESTORE_VERIFY] cache=$cacheId target=$targetPath expected=${entity.contentHash} actual=$actualHash match=$match | hashedListing=${restoreListing(targetPath)}")
                 SaveDebugLogger.logRestoreVerify(
@@ -791,23 +795,7 @@ class SaveCacheManager @Inject constructor(
                 Logger.warn(TAG,"Restore verify failed for cache $cacheId: ${e.message}")
             }
 
-            if (!secureSaves && !entity.isHardcore) {
-                recordLocalWriteAnchor(
-                    entity.gameId,
-                    entity.emulatorId,
-                    entity.channelName,
-                    targetPath,
-                    entity.ownerUserId ?: syncPreferencesRepository.getRommUserId()
-                )
-            }
-            saveOwnershipTracker.record(
-                targetPath,
-                entity.emulatorId,
-                entity.contentHash,
-                entity.gameId,
-                entity.channelName
-            )
-
+            recordPlacement(entity, targetPath, targetEmulatorId, secureSaves)
             true
         } catch (e: Exception) {
             Logger.error(TAG,"Failed to restore save from cache", e)
@@ -819,6 +807,57 @@ class SaveCacheManager @Inject constructor(
                 error = e
             )
             false
+        }
+    }
+
+    /**
+     * Records that [entity] now sits at [targetPath] for [targetEmulatorId]: the local-write anchor
+     * (Secure Saves off, casual saves only) and the owning account, both under that emulator.
+     */
+    suspend fun recordPlacement(
+        entity: SaveCacheEntity,
+        targetPath: String,
+        targetEmulatorId: String,
+        secureSaves: Boolean
+    ) {
+        if (!secureSaves && !entity.isHardcore) {
+            recordLocalWriteAnchor(
+                entity.gameId,
+                targetEmulatorId,
+                entity.channelName,
+                targetPath,
+                entity.ownerUserId ?: syncPreferencesRepository.getRommUserId(),
+                createMissing = true
+            )
+        }
+        saveOwnershipTracker.record(targetPath, targetEmulatorId, entity.contentHash, entity.gameId, entity.channelName)
+    }
+
+    /**
+     * The files a native cache row holds, by path relative to the folder they were cached from:
+     * each entry of a zipped row, or the single file under its own name. Null when the cache file
+     * is missing or unreadable, or an entry names a path outside that folder.
+     */
+    suspend fun nativeFiles(entity: SaveCacheEntity): Map<String, ByteArray>? = withContext(Dispatchers.IO) {
+        val cacheFile = File(cacheBaseDir, entity.cachePath)
+        if (!cacheFile.isFile) return@withContext null
+        if (!entity.cachePath.endsWith(".zip")) {
+            val bytes = saveArchiver.readBytesWithoutTrailer(cacheFile) ?: cacheFile.readBytes()
+            return@withContext mapOf(cacheFile.name to bytes)
+        }
+        try {
+            java.util.zip.ZipInputStream(cacheFile.inputStream()).use { zip ->
+                val files = LinkedHashMap<String, ByteArray>()
+                generateSequence { zip.nextEntry }.filterNot { it.isDirectory }.forEach { entry ->
+                    val name = entry.name.trimStart('/')
+                    if (name.split('/').any { it == ".." }) return@withContext null
+                    files[name] = zip.readBytes()
+                }
+                files
+            }
+        } catch (e: java.io.IOException) {
+            Logger.warn(TAG, "Cache ${entity.id} could not be read as a zip: ${e.message}")
+            null
         }
     }
 
@@ -1364,16 +1403,28 @@ class SaveCacheManager @Inject constructor(
         emulatorId: String,
         channelName: String?,
         savePath: String,
-        ownerUserId: Long?
+        ownerUserId: Long?,
+        createMissing: Boolean
     ) {
         if (channelName == null) return
-        val row = saveSyncDao.getByGameEmulatorAndChannel(gameId, emulatorId, channelName, ownerUserId) ?: return
+        val key = if (createMissing) SaveSyncApiClient.syncKeyOf(channelName) else channelName
+        val existing = saveSyncDao.getByGameEmulatorAndChannel(gameId, emulatorId, key, ownerUserId)
+        if (existing == null && !createMissing) return
         val newest = if (fal.isDirectory(savePath)) {
             newestUnitWriteTime(gameId, savePath)
         } else {
             fal.lastModified(savePath)
         }
         if (newest <= 0L) return
+        val row = existing ?: SaveSyncEntity(
+            gameId = gameId,
+            rommId = gameDao.getById(gameId)?.rommId ?: 0,
+            emulatorId = emulatorId,
+            channelName = key,
+            localSavePath = savePath,
+            syncStatus = SaveSyncEntity.STATUS_PENDING_UPLOAD,
+            ownerUserId = ownerUserId
+        )
         saveSyncDao.upsert(row.copy(localUpdatedAt = Instant.ofEpochMilli(newest)))
     }
 

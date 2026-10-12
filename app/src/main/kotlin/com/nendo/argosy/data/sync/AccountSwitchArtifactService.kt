@@ -222,7 +222,7 @@ class AccountSwitchArtifactService @Inject constructor(
             )
         )
 
-        if (!saveCacheManager.restoreSave(cache.id, targetPath)) {
+        if (!saveCacheManager.restoreSave(cache.id, targetPath, artifact.emulatorId)) {
             Logger.error(TAG, "Failed to place cache ${cache.id} for game ${artifact.gameId} at $targetPath")
             markNeedsSync(applying, artifact, targetPath, toUserId)
             return@withContext PlacementResult.FAILED

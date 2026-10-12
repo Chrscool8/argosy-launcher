@@ -79,7 +79,7 @@ class SaveCacheManagerRestoreTest {
         every { fal.getTransformedFile(any()) } answers { File(firstArg<String>()) }
         every { saveArchiver.unzipSingleFolder(any(), any()) } returns false
 
-        val ok = manager.restoreSave(cacheId = 1L, targetPath = "/restricted/path/target")
+        val ok = manager.restoreSave(cacheId = 1L, targetPath = "/restricted/path/target", targetEmulatorId = "eden")
 
         assertFalse("Restore must report failure when unzip returns false", ok)
         cacheFile.delete()
@@ -94,7 +94,7 @@ class SaveCacheManagerRestoreTest {
         every { saveArchiver.readBytesWithoutTrailer(any()) } returns null
         every { fal.copyFile(any(), any()) } returns false
 
-        val ok = manager.restoreSave(cacheId = 2L, targetPath = "/restricted/path/target.sav")
+        val ok = manager.restoreSave(cacheId = 2L, targetPath = "/restricted/path/target.sav", targetEmulatorId = "eden")
 
         assertFalse("Restore must report failure when copyFile returns false", ok)
         cacheFile.delete()
@@ -122,7 +122,7 @@ class SaveCacheManagerRestoreTest {
         every { saveArchiver.unzipToFolder(any(), any()) } returns true
         val target = File(tempDir, "memcards/Shared.ps2")
 
-        manager.restoreSave(cacheId = 3L, targetPath = target.absolutePath)
+        manager.restoreSave(cacheId = 3L, targetPath = target.absolutePath, targetEmulatorId = "nethersx2")
 
         io.mockk.verify(exactly = 1) { folderHandler.ensureContainerPrepared(target) }
         cacheFile.delete()

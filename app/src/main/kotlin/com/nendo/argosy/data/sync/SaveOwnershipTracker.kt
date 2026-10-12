@@ -84,6 +84,9 @@ class SaveOwnershipTracker @Inject constructor(
         )
     }
 
+    suspend fun recordedHash(savePath: String, emulatorId: String): String? =
+        saveOwnershipDao.get(savePath, emulatorId)?.contentHash
+
     suspend fun clear(savePath: String, emulatorId: String) {
         saveOwnershipDao.delete(savePath, emulatorId)
     }

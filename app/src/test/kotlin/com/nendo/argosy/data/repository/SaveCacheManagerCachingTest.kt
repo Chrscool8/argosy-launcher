@@ -529,7 +529,7 @@ class SaveCacheManagerCachingTest {
         )
         val card = File(tempDir, "GC/USA/Card A").apply { mkdirs() }
 
-        assertTrue(manager.restoreSave(36L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath))
+        assertTrue(manager.restoreSave(36L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath, "argosy"))
         assertEquals(members.map { it.name }.sorted(), card.list()?.sorted())
     }
 
@@ -587,7 +587,7 @@ class SaveCacheManagerCachingTest {
         val card = File(tempDir, "GC/USA/Card A").apply { mkdirs() }
         File(card, "8P-GFZE-f_zero.dat.gci").apply { mkdirs() }.resolve("blocker").writeBytes(byteArrayOf(0))
 
-        assertFalse(manager.restoreSave(37L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath))
+        assertFalse(manager.restoreSave(37L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath, "argosy"))
     }
 
     @Test

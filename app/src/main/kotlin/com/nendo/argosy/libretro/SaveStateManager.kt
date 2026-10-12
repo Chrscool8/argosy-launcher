@@ -389,6 +389,11 @@ class SaveStateManager(
             saveCacheManager.getMostRecentSave(gameId)
         }
 
+        if (targetSave != null && !isBuiltinSave(targetSave)) {
+            val bytes = primarySaveFile.takeIf { it.exists() }?.readBytes()
+            Log.i(TAG, "RESUME: cache=${targetSave.id} was written by ${targetSave.emulatorId}; using the save the launch placed on disk (${bytes?.size ?: -1} bytes)")
+            return RestoreResult(coreBytes(bytes))
+        }
         if (targetSave != null) {
             var switchToHardcore = false
             if (targetSave.isHardcore) {
@@ -419,6 +424,9 @@ class SaveStateManager(
     }
 
     private fun coreBytes(bytes: ByteArray?): ByteArray? = if (coreOwnsPrimary) null else bytes
+
+    private fun isBuiltinSave(entity: SaveCacheEntity): Boolean =
+        entity.emulatorId == EmulatorRegistry.BUILTIN_ID || entity.emulatorId == EmulatorRegistry.LEGACY_BUILTIN_ID
 
     @Synchronized
     fun saveSram(retroView: GLRetroView) {

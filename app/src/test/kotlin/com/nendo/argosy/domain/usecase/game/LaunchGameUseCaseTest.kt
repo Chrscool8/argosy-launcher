@@ -7,6 +7,7 @@ import com.nendo.argosy.data.emulator.LaunchProgressTracker
 import com.nendo.argosy.data.emulator.LaunchResult
 import com.nendo.argosy.data.emulator.PlaySessionTracker
 import com.nendo.argosy.data.repository.LibraryPointerRepair
+import com.nendo.argosy.data.sync.CrossEmulatorSaveMigrator
 import com.nendo.argosy.data.wallpaper.LockScreenArtManager
 import com.nendo.argosy.domain.model.LaunchStep
 import io.mockk.coVerifyOrder
@@ -30,6 +31,7 @@ class LaunchGameUseCaseTest {
     private lateinit var libraryPointerRepair: LibraryPointerRepair
     private lateinit var lockScreenArtManager: LockScreenArtManager
     private lateinit var tracker: LaunchProgressTracker
+    private lateinit var migrator: CrossEmulatorSaveMigrator
     private lateinit var useCase: LaunchGameUseCase
 
     @Before
@@ -38,6 +40,8 @@ class LaunchGameUseCaseTest {
         playSessionTracker = mockk(relaxed = true)
         libraryPointerRepair = mockk(relaxed = true)
         lockScreenArtManager = mockk(relaxed = true)
+        migrator = mockk(relaxed = true)
+        coEvery { migrator.migrateBeforeLaunch(any()) } returns CrossEmulatorSaveMigrator.Outcome.Untouched
         tracker = LaunchProgressTracker(CoroutineScope(UnconfinedTestDispatcher()))
         useCase = LaunchGameUseCase(
             gameLauncher,
@@ -45,8 +49,31 @@ class LaunchGameUseCaseTest {
             libraryPointerRepair,
             lockScreenArtManager,
             tracker,
-            mockk(relaxed = true)
+            mockk(relaxed = true),
+            migrator
         )
+    }
+
+    @Test
+    fun `a fresh launch carries the save across emulators before resolving the launch`() = runTest {
+        coEvery { gameLauncher.launch(123L, null, any(), any(), any(), any()) } returns LaunchResult.NoEmulator("nes")
+
+        useCase(123L)
+
+        coVerifyOrder {
+            migrator.migrateBeforeLaunch(123L)
+            gameLauncher.launch(123L, null, any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `a resume and a launch whose caller already prepared the saves skip the migration`() = runTest {
+        coEvery { gameLauncher.launch(123L, null, any(), any(), any(), any()) } returns LaunchResult.NoEmulator("nes")
+
+        useCase(123L, forResume = true)
+        useCase(123L, savesPrepared = true)
+
+        coVerify(exactly = 0) { migrator.migrateBeforeLaunch(any()) }
     }
 
     @Test
