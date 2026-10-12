@@ -34,6 +34,8 @@
 #include "../libretro/libretro-common/include/libretro.h"
 #include "../libretro/libretro-common/include/libretro_vulkan.h"
 
+struct AImageReader;
+
 namespace libretrodroid {
 
 /**
@@ -121,6 +123,8 @@ private:
         PFN_vkFreeMemory freeMemory = nullptr;
         PFN_vkBindImageMemory bindImageMemory = nullptr;
         PFN_vkGetAndroidHardwareBufferPropertiesANDROID getAndroidHardwareBufferProperties = nullptr;
+        PFN_vkCreateAndroidSurfaceKHR createAndroidSurface = nullptr;
+        PFN_vkDestroySurfaceKHR destroySurface = nullptr;
     };
 
     struct PendingImage {
@@ -136,6 +140,9 @@ private:
     bool loadInstanceFunctions();
     bool loadDeviceFunctions();
     bool createInstance();
+    std::vector<const char*> surfaceInstanceExtensions() const;
+    void createPresentationSurface();
+    void destroyPresentationSurface();
     bool pickPhysicalDevice();
     bool createDevice();
     bool createDeviceWithoutNegotiation();
@@ -168,6 +175,9 @@ private:
     int availability = -1;
 
     VkInstance instance = VK_NULL_HANDLE;
+    bool surfaceExtensionsEnabled = false;
+    AImageReader* surfaceReader = nullptr;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkPhysicalDevice gpu = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     VkQueue queue = VK_NULL_HANDLE;

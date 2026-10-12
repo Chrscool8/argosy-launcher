@@ -18,6 +18,7 @@
 #include "vulkanbackend.h"
 
 #include <dlfcn.h>
+#include <media/NdkImageReader.h>
 #include <algorithm>
 #include <cstring>
 
@@ -39,10 +40,31 @@ const char* const FRAME_EXPORT_EXTENSIONS[] = {
     VK_EXT_QUEUE_FAMILY_FOREIGN_EXTENSION_NAME,
 };
 
+const char* const SURFACE_INSTANCE_EXTENSIONS[] = {
+    VK_KHR_SURFACE_EXTENSION_NAME,
+    VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
+};
+
+constexpr int32_t SURFACE_WIDTH = 640;
+constexpr int32_t SURFACE_HEIGHT = 480;
+constexpr int32_t SURFACE_MAX_IMAGES = 2;
+
 bool hasExtension(const std::vector<VkExtensionProperties>& available, const char* name) {
     return std::any_of(available.begin(), available.end(), [name](const VkExtensionProperties& ext) {
         return strcmp(ext.extensionName, name) == 0;
     });
+}
+
+std::vector<const char*> withExtensions(const char* const* names, uint32_t count,
+                                        const std::vector<const char*>& extra) {
+    std::vector<const char*> merged(names, names + count);
+    for (const char* name : extra) {
+        bool present = std::any_of(merged.begin(), merged.end(), [name](const char* existing) {
+            return strcmp(existing, name) == 0;
+        });
+        if (!present) merged.push_back(name);
+    }
+    return merged;
 }
 
 }
@@ -194,7 +216,30 @@ uint32_t VulkanBackend::requestedApiVersion() const {
 }
 
 std::vector<const char*> VulkanBackend::requiredDeviceExtensions() const {
-    return { std::begin(FRAME_EXPORT_EXTENSIONS), std::end(FRAME_EXPORT_EXTENSIONS) };
+    std::vector<const char*> extensions { std::begin(FRAME_EXPORT_EXTENSIONS), std::end(FRAME_EXPORT_EXTENSIONS) };
+    if (surface != VK_NULL_HANDLE) extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    return extensions;
+}
+
+std::vector<const char*> VulkanBackend::surfaceInstanceExtensions() const {
+    auto enumerate = reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
+        vk.getInstanceProcAddr(VK_NULL_HANDLE, "vkEnumerateInstanceExtensionProperties"));
+    if (enumerate == nullptr) return {};
+
+    uint32_t count = 0;
+    enumerate(nullptr, &count, nullptr);
+    std::vector<VkExtensionProperties> available(count);
+    enumerate(nullptr, &count, available.data());
+
+    std::vector<const char*> extensions;
+    for (const char* name : SURFACE_INSTANCE_EXTENSIONS) {
+        if (!hasExtension(available, name)) {
+            LOGW("Vulkan instance lacks %s; cores get no presentation surface", name);
+            return {};
+        }
+        extensions.push_back(name);
+    }
+    return extensions;
 }
 
 VkInstance VulkanBackend::createInstanceWrapper(void* opaque, const VkInstanceCreateInfo* createInfo) {
@@ -205,11 +250,17 @@ VkInstance VulkanBackend::createInstanceWrapper(void* opaque, const VkInstanceCr
     app.apiVersion = std::max(app.apiVersion, MINIMUM_API_VERSION);
     info.pApplicationInfo = &app;
 
+    const auto surfaceExtensions = self->surfaceInstanceExtensions();
+    const auto extensions = withExtensions(info.ppEnabledExtensionNames, info.enabledExtensionCount, surfaceExtensions);
+    info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    info.ppEnabledExtensionNames = extensions.data();
+
     VkInstance created = VK_NULL_HANDLE;
     if (self->vk.createInstance(&info, nullptr, &created) != VK_SUCCESS) {
         LOGE("vkCreateInstance failed in the core's create_instance");
         return VK_NULL_HANDLE;
     }
+    self->surfaceExtensionsEnabled = !surfaceExtensions.empty();
     return created;
 }
 
@@ -231,14 +282,62 @@ bool VulkanBackend::createInstance() {
     if (app.pApplicationName == nullptr) app.pApplicationName = "LibretroDroid";
     app.apiVersion = requestedApiVersion();
 
+    const auto surfaceExtensions = surfaceInstanceExtensions();
     VkInstanceCreateInfo info { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
     info.pApplicationInfo = &app;
+    info.enabledExtensionCount = static_cast<uint32_t>(surfaceExtensions.size());
+    info.ppEnabledExtensionNames = surfaceExtensions.data();
     if (vk.createInstance(&info, nullptr, &instance) != VK_SUCCESS) {
         LOGE("vkCreateInstance failed");
         instance = VK_NULL_HANDLE;
         return false;
     }
+    surfaceExtensionsEnabled = !surfaceExtensions.empty();
     return true;
+}
+
+void VulkanBackend::createPresentationSurface() {
+    if (!surfaceExtensionsEnabled) return;
+
+    vk.createAndroidSurface = reinterpret_cast<PFN_vkCreateAndroidSurfaceKHR>(
+        vk.getInstanceProcAddr(instance, "vkCreateAndroidSurfaceKHR"));
+    vk.destroySurface = reinterpret_cast<PFN_vkDestroySurfaceKHR>(
+        vk.getInstanceProcAddr(instance, "vkDestroySurfaceKHR"));
+    if (vk.createAndroidSurface == nullptr || vk.destroySurface == nullptr) return;
+
+    if (AImageReader_new(SURFACE_WIDTH, SURFACE_HEIGHT, AIMAGE_FORMAT_RGBA_8888, SURFACE_MAX_IMAGES,
+                         &surfaceReader) != AMEDIA_OK) {
+        LOGW("Offscreen window for the Vulkan presentation surface could not be created");
+        surfaceReader = nullptr;
+        return;
+    }
+
+    ANativeWindow* window = nullptr;
+    if (AImageReader_getWindow(surfaceReader, &window) != AMEDIA_OK || window == nullptr) {
+        destroyPresentationSurface();
+        return;
+    }
+
+    VkAndroidSurfaceCreateInfoKHR info { VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR };
+    info.window = window;
+    if (vk.createAndroidSurface(instance, &info, nullptr, &surface) != VK_SUCCESS) {
+        LOGW("vkCreateAndroidSurfaceKHR failed; cores get no presentation surface");
+        surface = VK_NULL_HANDLE;
+        destroyPresentationSurface();
+        return;
+    }
+    LOGI("Vulkan presentation surface ready");
+}
+
+void VulkanBackend::destroyPresentationSurface() {
+    if (surface != VK_NULL_HANDLE && vk.destroySurface != nullptr) {
+        vk.destroySurface(instance, surface, nullptr);
+    }
+    surface = VK_NULL_HANDLE;
+    if (surfaceReader != nullptr) {
+        AImageReader_delete(surfaceReader);
+        surfaceReader = nullptr;
+    }
 }
 
 bool VulkanBackend::loadInstanceFunctions() {
@@ -277,14 +376,8 @@ bool VulkanBackend::pickPhysicalDevice() {
 VkDevice VulkanBackend::createDeviceWrapper(VkPhysicalDevice physicalDevice, void* opaque,
                                             const VkDeviceCreateInfo* createInfo) {
     auto* self = static_cast<VulkanBackend*>(opaque);
-    std::vector<const char*> extensions(createInfo->ppEnabledExtensionNames,
-                                        createInfo->ppEnabledExtensionNames + createInfo->enabledExtensionCount);
-    for (const char* required : self->requiredDeviceExtensions()) {
-        bool present = std::any_of(extensions.begin(), extensions.end(), [required](const char* name) {
-            return strcmp(name, required) == 0;
-        });
-        if (!present) extensions.push_back(required);
-    }
+    const auto extensions = withExtensions(createInfo->ppEnabledExtensionNames, createInfo->enabledExtensionCount,
+                                           self->requiredDeviceExtensions());
 
     VkDeviceCreateInfo info = *createInfo;
     info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
@@ -345,16 +438,16 @@ bool VulkanBackend::createDevice() {
 
     if (negotiation != nullptr && negotiation->interface_version >= 2 && negotiation->create_device2 != nullptr) {
         negotiatedDevice = negotiation->create_device2(
-            &context, instance, gpu, VK_NULL_HANDLE, vk.getInstanceProcAddr, &createDeviceWrapper, this);
+            &context, instance, gpu, surface, vk.getInstanceProcAddr, &createDeviceWrapper, this);
         if (!negotiatedDevice) {
             negotiatedDevice = negotiation->create_device2(
-                &context, instance, VK_NULL_HANDLE, VK_NULL_HANDLE, vk.getInstanceProcAddr,
+                &context, instance, VK_NULL_HANDLE, surface, vk.getInstanceProcAddr,
                 &createDeviceWrapper, this);
         }
     } else if (negotiation != nullptr && negotiation->create_device != nullptr) {
         auto extensions = requiredDeviceExtensions();
         negotiatedDevice = negotiation->create_device(
-            &context, instance, gpu, VK_NULL_HANDLE, vk.getInstanceProcAddr,
+            &context, instance, gpu, surface, vk.getInstanceProcAddr,
             extensions.data(), static_cast<unsigned>(extensions.size()), nullptr, 0, nullptr);
     }
 
@@ -422,8 +515,13 @@ bool VulkanBackend::start() {
     if (isStarted()) return true;
     if (!isAvailable()) return false;
 
-    if (!createInstance() || !loadInstanceFunctions() || !pickPhysicalDevice() || !createDevice() ||
-        !loadDeviceFunctions() || !createFrameResources()) {
+    if (!createInstance() || !loadInstanceFunctions()) {
+        LOGE("Vulkan context could not be created");
+        shutdown();
+        return false;
+    }
+    createPresentationSurface();
+    if (!pickPhysicalDevice() || !createDevice() || !loadDeviceFunctions() || !createFrameResources()) {
         LOGE("Vulkan context could not be created");
         shutdown();
         return false;
@@ -723,9 +821,11 @@ void VulkanBackend::shutdown() {
         if (commandPool != VK_NULL_HANDLE) vk.destroyCommandPool(device, commandPool, nullptr);
         if (vk.destroyDevice != nullptr) vk.destroyDevice(device, nullptr);
     }
+    destroyPresentationSurface();
     if (instance != VK_NULL_HANDLE && vk.destroyInstance != nullptr) {
         vk.destroyInstance(instance, nullptr);
     }
+    surfaceExtensionsEnabled = false;
 
     frameFence = VK_NULL_HANDLE;
     commandPool = VK_NULL_HANDLE;

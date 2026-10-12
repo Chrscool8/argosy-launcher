@@ -179,6 +179,7 @@ target_link_libraries(libretrodroid
                       oboe
                       GLESv3
                       nativewindow
+                      mediandk
 )
 
 if(ANDROID_ABI STREQUAL "arm64-v8a")
