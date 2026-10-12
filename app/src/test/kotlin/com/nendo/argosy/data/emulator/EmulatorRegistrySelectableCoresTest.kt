@@ -38,9 +38,9 @@ class EmulatorRegistrySelectableCoresTest {
     }
 
     @Test
-    fun `default built-in psx core is pcsx_rearmed`() {
+    fun `default built-in psx core is beetle psx hw`() {
         assertEquals(
-            "pcsx_rearmed",
+            "mednafen_psx_hw",
             EmulatorRegistry.getDefaultSelectableCore("psx", isBuiltIn = true)?.id
         )
     }

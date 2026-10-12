@@ -71,7 +71,8 @@ object Mupen64PlusNextGles3Manifest : CoreOptionManifest {
             key = "mupen64plus-rdp-plugin",
             displayName = "RDP Plugin",
             values = listOf("angrylion", "parallel", "gliden64"),
-            defaultValue = "gliden64",
+            defaultValue = "parallel",
+            coreDefault = "gliden64",
             description = "Selects the Reality Display Processor plugin for rendering"
         ),
         // Video - GLideN64

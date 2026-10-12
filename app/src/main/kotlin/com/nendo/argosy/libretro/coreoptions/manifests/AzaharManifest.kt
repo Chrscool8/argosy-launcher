@@ -91,7 +91,7 @@ object AzaharManifest : CoreOptionManifest {
             key = "citra_graphics_api",
             displayName = "Graphics API",
             values = listOf("Auto", "Vulkan", "OpenGL", "Software"),
-            defaultValue = "OpenGL",
+            defaultValue = "Vulkan",
             coreDefault = "Auto",
             description = "Selects the renderer; Vulkan needs a device with Vulkan support"
         ),

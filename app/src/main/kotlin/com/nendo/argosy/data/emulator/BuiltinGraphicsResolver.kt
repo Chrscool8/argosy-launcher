@@ -3,6 +3,7 @@ package com.nendo.argosy.data.emulator
 import com.nendo.argosy.data.local.dao.EmulatorConfigDao
 import com.nendo.argosy.data.local.dao.PlatformLibretroSettingsDao
 import com.nendo.argosy.data.local.entity.GameEntity
+import com.nendo.argosy.libretro.GraphicsApi
 import com.nendo.argosy.libretro.GraphicsBackend
 import com.nendo.argosy.libretro.GraphicsBackendRegistry
 import com.nendo.argosy.libretro.coreoptions.CoreOptionResolver
@@ -55,10 +56,18 @@ class BuiltinGraphicsResolver @Inject constructor(
         val platformSettings = platformLibretroSettingsDao.getByPlatformId(platformId)
         val gameConfig = emulatorConfigDao.getByGameId(gameId)
         val backend = GraphicsBackendRegistry.forCore(coreId)
+        val vulkanSupported = vulkanDriverRepository.vulkanSupported()
         val gameBackend = backend?.let { GraphicsBackendRegistry.gameValue(it, gameConfig?.graphicsBackend) }
-        val coreVariables = GraphicsBackendRegistry.applyGameBackend(coreId, resolvedVariables, gameConfig?.graphicsBackend)
+        val requestedVariables = GraphicsBackendRegistry.applyGameBackend(coreId, resolvedVariables, gameConfig?.graphicsBackend)
+        val coreVariables = if (vulkanSupported) {
+            requestedVariables
+        } else {
+            GraphicsBackendRegistry.withoutVulkan(coreId, requestedVariables)
+        }
         val inheritedFrontendApi = platformSettings?.graphicsApi
-        val frontendApi = gameBackend?.takeIf { backend is GraphicsBackend.FrontendApi } ?: inheritedFrontendApi
+            ?: GraphicsApi.OPENGL.token.takeUnless { vulkanSupported }
+        val requestedFrontendApi = gameBackend?.takeIf { backend is GraphicsBackend.FrontendApi } ?: inheritedFrontendApi
+        val frontendApi = if (vulkanSupported) requestedFrontendApi else GraphicsApi.OPENGL.token
         val effectiveVariables = coreVariables.toValueMap()
         val gameDriver = gameConfig?.gpuDriver?.takeIf { it.isNotBlank() }
         val inheritedDriver = GpuDriverPrecedence.select(null, platformSettings?.gpuDriver, globalDriver)
@@ -75,7 +84,12 @@ class BuiltinGraphicsResolver @Inject constructor(
             coreVariables = coreVariables,
             gameBackend = gameBackend,
             inheritedBackend = backend?.let {
-                GraphicsBackendRegistry.effectiveValue(it, resolvedVariables.toValueMap(), inheritedFrontendApi)
+                val inheritedVariables = if (vulkanSupported) {
+                    resolvedVariables
+                } else {
+                    GraphicsBackendRegistry.withoutVulkan(coreId, resolvedVariables)
+                }
+                GraphicsBackendRegistry.effectiveValue(it, inheritedVariables.toValueMap(), inheritedFrontendApi)
             },
             backendValue = backend?.let { GraphicsBackendRegistry.effectiveValue(it, effectiveVariables, frontendApi) },
             preferVulkan = GraphicsBackendRegistry.prefersVulkan(coreId, effectiveVariables, frontendApi),

@@ -80,11 +80,24 @@ class GraphicsBackendRegistryTest {
     }
 
     @Test
-    fun `a frontend core prefers Vulkan only when the platform stored Vulkan`() {
+    fun `a frontend core prefers Vulkan unless the platform stored OpenGL`() {
         assertTrue(GraphicsBackendRegistry.prefersVulkan("dolphin", emptyMap(), "vulkan"))
         assertFalse(GraphicsBackendRegistry.prefersVulkan("dolphin", emptyMap(), "opengl"))
-        assertFalse(GraphicsBackendRegistry.prefersVulkan("flycast", emptyMap(), null))
-        assertFalse(GraphicsBackendRegistry.prefersVulkan("flycast", mapOf("ppsspp_backend" to "vulkan"), "garbage"))
+        assertTrue(GraphicsBackendRegistry.prefersVulkan("flycast", emptyMap(), null))
+        assertTrue(GraphicsBackendRegistry.prefersVulkan("flycast", mapOf("ppsspp_backend" to "opengl"), "garbage"))
+    }
+
+    @Test
+    fun `withoutVulkan swaps only a Vulkan renderer choice for the core default`() {
+        val vulkan = listOf(Variable("beetle_psx_hw_renderer", "hardware_vk"), Variable("beetle_psx_hw_dither_mode", "1x"))
+        val software = listOf(Variable("beetle_psx_hw_renderer", "software"))
+
+        assertEquals(
+            setOf("beetle_psx_hw_renderer" to "hardware", "beetle_psx_hw_dither_mode" to "1x"),
+            GraphicsBackendRegistry.withoutVulkan("mednafen_psx_hw", vulkan).map { it.key to it.value }.toSet()
+        )
+        assertEquals(software, GraphicsBackendRegistry.withoutVulkan("mednafen_psx_hw", software))
+        assertEquals(vulkan, GraphicsBackendRegistry.withoutVulkan("dolphin", vulkan))
     }
 
     @Test
@@ -121,7 +134,7 @@ class GraphicsBackendRegistryTest {
     fun `a stored game value the core does not offer falls back to the option default`() {
         val backend = GraphicsBackendRegistry.forCore("ppsspp")!!
 
-        assertEquals("auto", GraphicsBackendRegistry.gameValue(backend, "metal"))
+        assertEquals("vulkan", GraphicsBackendRegistry.gameValue(backend, "metal"))
         assertEquals("vulkan", GraphicsBackendRegistry.gameValue(backend, "vulkan"))
         assertNull(GraphicsBackendRegistry.gameValue(backend, null))
     }
@@ -135,13 +148,14 @@ class GraphicsBackendRegistryTest {
     }
 
     @Test
-    fun `effective value reads the variable, then the core default, and frontends default to OpenGL`() {
+    fun `effective value reads the variable, then the core default, and frontends default to Vulkan`() {
         val psx = GraphicsBackendRegistry.forCore("mednafen_psx_hw")!!
         val dolphin = GraphicsBackendRegistry.forCore("dolphin")!!
 
         assertEquals("software", GraphicsBackendRegistry.effectiveValue(psx, mapOf("beetle_psx_hw_renderer" to "software"), null))
         assertEquals("hardware", GraphicsBackendRegistry.effectiveValue(psx, emptyMap(), null))
-        assertEquals("opengl", GraphicsBackendRegistry.effectiveValue(dolphin, emptyMap(), null))
+        assertEquals("vulkan", GraphicsBackendRegistry.effectiveValue(dolphin, emptyMap(), null))
+        assertEquals("opengl", GraphicsBackendRegistry.effectiveValue(dolphin, emptyMap(), "opengl"))
         assertEquals("vulkan", GraphicsBackendRegistry.effectiveValue(dolphin, emptyMap(), "vulkan"))
     }
 

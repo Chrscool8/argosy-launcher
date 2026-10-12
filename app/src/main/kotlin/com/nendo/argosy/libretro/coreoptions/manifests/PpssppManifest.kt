@@ -93,7 +93,8 @@ object PpssppManifest : CoreOptionManifest {
             key = "ppsspp_backend",
             displayName = "Backend",
             values = listOf("auto", "opengl", "vulkan", "none"),
-            defaultValue = "auto",
+            defaultValue = "vulkan",
+            coreDefault = "auto",
             description = "Automatic will use the frontend video driver",
             valueLabels = mapOf(
                 "auto" to "Automatic", "opengl" to "OpenGL", "vulkan" to "Vulkan", "none" to "None"

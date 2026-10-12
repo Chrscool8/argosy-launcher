@@ -1,6 +1,7 @@
 package com.nendo.argosy.data.emulator
 
 import android.content.Context
+import android.content.pm.PackageManager
 import com.nendo.argosy.libretro.LibretroBuildbot
 import com.nendo.argosy.util.Logger
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,6 +27,9 @@ class VulkanDriverRepository @Inject constructor(
             LibretroBuildbot.processIs64Bit && driverFetcherRepository.getGpuInfo().adrenoNumber > 0
         ).also { customDriversSupportedCache = it }
     }
+
+    fun vulkanSupported(): Boolean =
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_VULKAN_HARDWARE_VERSION, VULKAN_1_1)
 
     suspend fun listInstalled(): List<InstalledVulkanDriver> = withContext(Dispatchers.IO) {
         VulkanDriverPackages.listInstalled(driversRoot)
@@ -53,5 +57,6 @@ class VulkanDriverRepository @Inject constructor(
     companion object {
         private const val TAG = "VulkanDriverRepository"
         private const val DRIVERS_DIR = "vulkan_drivers"
+        private const val VULKAN_1_1 = 0x401000
     }
 }

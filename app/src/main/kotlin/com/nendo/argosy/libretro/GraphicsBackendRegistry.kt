@@ -33,7 +33,7 @@ sealed interface GraphicsBackend {
 
 object GraphicsBackendRegistry {
 
-    val FRONTEND_API_DEFAULT = GraphicsApi.OPENGL
+    val FRONTEND_API_DEFAULT = GraphicsApi.VULKAN
 
     private val backends: Map<String, GraphicsBackend> = listOf(
         GraphicsBackend.CoreOption("ppsspp", "ppsspp_backend", "vulkan"),
@@ -96,6 +96,22 @@ object GraphicsBackendRegistry {
         val backend = forCore(coreId) as? GraphicsBackend.CoreOption ?: return coreVariables
         val value = gameValue(backend, storedGameBackend) ?: return coreVariables
         return coreVariables.filterNot { it.key == backend.optionKey } + Variable(backend.optionKey, value)
+    }
+
+    /**
+     * [coreVariables] with a Vulkan renderer choice swapped for the core's own default, for
+     * devices that cannot host a Vulkan context.
+     */
+    fun withoutVulkan(coreId: String?, coreVariables: List<Variable>): List<Variable> {
+        val backend = forCore(coreId) as? GraphicsBackend.CoreOption ?: return coreVariables
+        val fallback = optionDef(backend)?.coreDefault ?: return coreVariables
+        return coreVariables.map { variable ->
+            if (variable.key == backend.optionKey && isVulkanValue(backend, variable.value)) {
+                Variable(backend.optionKey, fallback)
+            } else {
+                variable
+            }
+        }
     }
 
     fun prefersVulkan(

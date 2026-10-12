@@ -570,7 +570,7 @@ class GameLauncherTest {
 
         runCatching { launcher.launch(1L) }
 
-        verify { libretroCoreMgr.getCorePathForPlatform("psx", "pcsx_rearmed") }
+        verify { libretroCoreMgr.getCorePathForPlatform("psx", "mednafen_psx_hw") }
         verify(exactly = 0) { libretroCoreMgr.getCorePathForPlatform("psx", "swanstation") }
     }
 
