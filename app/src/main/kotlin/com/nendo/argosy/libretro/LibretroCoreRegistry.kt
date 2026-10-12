@@ -20,6 +20,11 @@ object LibretroCoreRegistry {
         val estimatedSizeBytes: Long = 0L,
         val requiresBios: List<String> = emptyList(),
         val isDefault: Boolean = false,
+        /**
+         * The core a default launch uses instead when none of [requiresBios] is in the libretro
+         * system folder. An explicit core choice is never swapped.
+         */
+        val biosFallbackCoreId: String? = null,
         val netplaySupport: NetplaySupportLevel = NetplaySupportLevel.UNSUPPORTED,
         /**
          * How long the core must keep running after a battery write before that write reaches
@@ -173,8 +178,9 @@ object LibretroCoreRegistry {
             displayName = "Beetle PSX HW",
             platforms = setOf("psx", "ps1", "playstation"),
             estimatedSizeBytes = 4_000_000L,
-            requiresBios = listOf("scph5501.bin"),
-            isDefault = true
+            requiresBios = listOf("scph5500.bin", "scph5501.bin", "scph5502.bin"),
+            isDefault = true,
+            biosFallbackCoreId = "pcsx_rearmed"
         ),
         CoreInfo(
             coreId = "pcsx_rearmed",

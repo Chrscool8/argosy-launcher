@@ -122,7 +122,13 @@ class GameLauncherTest {
             installedAppResolver = installedAppResolver,
             platformLibretroSettingsDao = platformLibretroSettingsDao,
             emulatorDetector = emulatorDetector,
-            builtinCoreResolver = BuiltinCoreResolver(emulatorConfigDao, userPreferencesRepository),
+            builtinCoreResolver = BuiltinCoreResolver(
+                emulatorConfigDao,
+                userPreferencesRepository,
+                kotlin.io.path.createTempDirectory("system").toFile().also {
+                    java.io.File(it, "scph5501.bin").writeBytes(byteArrayOf(0))
+                }
+            ),
             m3uManager = m3uManager,
             libretroCoreMgr = libretroCoreMgr,
             biosRepository = biosRepository,
