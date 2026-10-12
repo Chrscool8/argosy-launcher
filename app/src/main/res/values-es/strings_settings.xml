@@ -2680,7 +2680,8 @@
     <string name="settings_builtin_gpu_driver_global_hint">Global: %1$s</string>
     <string name="settings_builtin_gpu_driver_system">Controlador del sistema</string>
     <string name="settings_builtin_gpu_driver_missing">Falta el controlador (se usa el del sistema)</string>
-    <string name="settings_builtin_gpu_driver_install">Instalar %1$s</string>    <string name="settings_builtin_gpu_driver_installing">Instalando %1$s...</string>
+    <string name="settings_builtin_gpu_driver_install">Instalar %1$s</string>
+    <string name="settings_builtin_gpu_driver_installing">Instalando %1$s...</string>
     <string name="settings_builtin_gpu_driver_installed">%1$s instalado</string>
     <string name="settings_builtin_gpu_driver_install_failed">No se pudo instalar %1$s</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">No compatible con %1$s</string>

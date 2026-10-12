@@ -2600,7 +2600,8 @@
     <string name="settings_builtin_gpu_driver_global_hint">ग्लोबल: %1$s</string>
     <string name="settings_builtin_gpu_driver_system">सिस्टम ड्राइवर</string>
     <string name="settings_builtin_gpu_driver_missing">ड्राइवर नहीं मिला (सिस्टम ड्राइवर चालू)</string>
-    <string name="settings_builtin_gpu_driver_install">%1$s इंस्टॉल करें</string>    <string name="settings_builtin_gpu_driver_installing">%1$s इंस्टॉल हो रहा है...</string>
+    <string name="settings_builtin_gpu_driver_install">%1$s इंस्टॉल करें</string>
+    <string name="settings_builtin_gpu_driver_installing">%1$s इंस्टॉल हो रहा है...</string>
     <string name="settings_builtin_gpu_driver_installed">%1$s इंस्टॉल हो गया</string>
     <string name="settings_builtin_gpu_driver_install_failed">%1$s इंस्टॉल नहीं हो सका</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">%1$s में समर्थित नहीं</string>

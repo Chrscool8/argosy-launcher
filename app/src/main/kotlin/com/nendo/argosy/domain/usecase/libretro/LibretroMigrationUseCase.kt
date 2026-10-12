@@ -25,7 +25,8 @@ class LibretroMigrationUseCase @Inject constructor(
     /**
      * Pins every PS2 platform that already has games and no stored default to the emulator it
      * resolved to before the built-in core became the PS2 default, so an existing install keeps
-     * launching where it did. Runs once; an install with no PS2 games yet is never pinned.
+     * launching where it did. Runs once, against a fresh emulator scan; an install with no PS2
+     * games yet is never pinned, and a scan that returns nothing leaves the pin for the next start.
      */
     suspend fun pinExistingPs2Emulator() {
         if (preferencesRepository.isPs2StandalonePinDone().first()) return
@@ -33,7 +34,10 @@ class LibretroMigrationUseCase @Inject constructor(
             it.gameCount > 0 && PlatformDefinitions.getCanonicalSlug(it.slug) == PS2_SLUG
         }
         if (ps2Platforms.isNotEmpty()) {
-            if (emulatorDetector.installedEmulators.value.isEmpty()) emulatorDetector.detectEmulators()
+            if (emulatorDetector.detectEmulators().isEmpty()) {
+                Log.w(TAG, "Emulator detection returned nothing; PS2 pin retried next start")
+                return
+            }
             val previous = emulatorDetector.getPreferredEmulator(PS2_SLUG, builtinEnabled = false)?.def
             for (platform in ps2Platforms) {
                 if (previous == null) break

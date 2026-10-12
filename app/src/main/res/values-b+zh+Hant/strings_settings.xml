@@ -2365,7 +2365,8 @@
     <string name="settings_builtin_gpu_driver_global_hint">全域：%1$s</string>
     <string name="settings_builtin_gpu_driver_system">系統驅動程式</string>
     <string name="settings_builtin_gpu_driver_missing">找不到驅動程式（正在使用系統驅動程式）</string>
-    <string name="settings_builtin_gpu_driver_install">安裝 %1$s</string>    <string name="settings_builtin_gpu_driver_installing">正在安裝 %1$s...</string>
+    <string name="settings_builtin_gpu_driver_install">安裝 %1$s</string>
+    <string name="settings_builtin_gpu_driver_installing">正在安裝 %1$s...</string>
     <string name="settings_builtin_gpu_driver_installed">已安裝 %1$s</string>
     <string name="settings_builtin_gpu_driver_install_failed">無法安裝 %1$s</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">%1$s 不支援</string>

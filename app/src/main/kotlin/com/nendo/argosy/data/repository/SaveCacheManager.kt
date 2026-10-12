@@ -1407,9 +1407,10 @@ class SaveCacheManager @Inject constructor(
         createMissing: Boolean
     ) {
         if (channelName == null) return
-        val key = if (createMissing) SaveSyncApiClient.syncKeyOf(channelName) else channelName
+        val key = SaveSyncApiClient.syncKeyOf(channelName)
         val existing = saveSyncDao.getByGameEmulatorAndChannel(gameId, emulatorId, key, ownerUserId)
         if (existing == null && !createMissing) return
+        val rommId = if (existing == null) gameDao.getById(gameId)?.rommId ?: return else existing.rommId
         val newest = if (fal.isDirectory(savePath)) {
             newestUnitWriteTime(gameId, savePath)
         } else {
@@ -1418,7 +1419,7 @@ class SaveCacheManager @Inject constructor(
         if (newest <= 0L) return
         val row = existing ?: SaveSyncEntity(
             gameId = gameId,
-            rommId = gameDao.getById(gameId)?.rommId ?: 0,
+            rommId = rommId,
             emulatorId = emulatorId,
             channelName = key,
             localSavePath = savePath,

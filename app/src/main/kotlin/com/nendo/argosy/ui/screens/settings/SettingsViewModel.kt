@@ -190,8 +190,7 @@ class SettingsViewModel @Inject constructor(
 
     val controllerSeats = com.nendo.argosy.ui.screens.settings.components.ControllerSeatController(
         repository = inputConfigRepository,
-        scope = viewModelScope,
-        onSeatsChanged = { routeRefreshControllerOrderCount(this) }
+        scope = viewModelScope
     )
 
     internal val _openUrlEvent = MutableSharedFlow<String>()
@@ -291,6 +290,7 @@ class SettingsViewModel @Inject constructor(
         observeAvatarPreferences()
         routeObservePlatformLibretroSettings(this)
         routeObservePlatforms(this)
+        routeObserveControllerOrder(this)
         loadSettings()
         driversDelegate.loadGpuInfo()
         raDelegate.initialize(viewModelScope)
@@ -734,7 +734,6 @@ class SettingsViewModel @Inject constructor(
     fun setBuiltinDpadAsAnalog(enabled: Boolean) = routeSetBuiltinDpadAsAnalog(this, enabled)
     fun showControllerOrderModal() = routeShowControllerOrderModal(this)
     fun hideControllerOrderModal() = routeHideControllerOrderModal(this)
-    fun getControllerOrder() = inputConfigRepository.observeControllerOrder()
     fun showInputMappingModal() = routeShowInputMappingModal(this)
     fun hideInputMappingModal() = routeHideInputMappingModal(this)
     fun setTouchEnabled(enabled: Boolean) = routeSetTouchEnabled(this, enabled)

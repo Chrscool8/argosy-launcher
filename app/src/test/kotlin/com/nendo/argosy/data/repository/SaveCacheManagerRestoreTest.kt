@@ -128,6 +128,34 @@ class SaveCacheManagerRestoreTest {
         cacheFile.delete()
     }
 
+    @Test
+    fun `placing a save for a game with no RomM id creates no sync row`() = runTest {
+        val target = File(tempDir, "placed.srm").apply { writeBytes(byteArrayOf(1)) }
+        coEvery { saveSyncDao.getByGameEmulatorAndChannel(any(), any(), any(), any()) } returns null
+        coEvery { gameDao.getById(100L) } returns com.nendo.argosy.data.local.entity.GameEntity(
+            id = 100L,
+            title = "Local Game",
+            sortTitle = "local game",
+            platformId = 1L,
+            platformSlug = "snes",
+            rommId = null,
+            igdbId = null,
+            localPath = null,
+            source = com.nendo.argosy.data.model.GameSource.LOCAL_ONLY
+        )
+        every { fal.isDirectory(target.absolutePath) } returns false
+        every { fal.lastModified(target.absolutePath) } returns 1_700_000_000_000L
+
+        manager.recordPlacement(
+            entity(cachePath = "placed.srm").copy(channelName = SaveSyncApiClient.AUTOSAVE_SLOT_NAME),
+            target.absolutePath,
+            "retroarch",
+            secureSaves = false
+        )
+
+        io.mockk.coVerify(exactly = 0) { saveSyncDao.upsert(any()) }
+    }
+
     private fun entity(cachePath: String): SaveCacheEntity = SaveCacheEntity(
         id = 0,
         gameId = 100L,

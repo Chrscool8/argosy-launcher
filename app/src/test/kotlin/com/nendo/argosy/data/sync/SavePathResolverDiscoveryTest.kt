@@ -199,6 +199,20 @@ class SavePathResolverDiscoveryTest {
     }
 
     @Test
+    fun `a standalone emulator never asks for a shared libretro root`() = runTest {
+        val sigil = saveHandlerRegistry.sigil
+        resolver.discoverSavePath(
+            emulatorId = "nethersx2",
+            gameTitle = "Champions of Norrath",
+            platformSlug = "ps2",
+            romPath = "/roms/Champions of Norrath (USA).chd",
+            gameId = 1L,
+        )
+
+        coVerify(exactly = 0) { sigil.sharedLibretroRoot(any(), any()) }
+    }
+
+    @Test
     fun `zipped rom save is found under the extracted entry name`() = runTest {
         stubBuiltinSettings()
         val savesDir = File(tempDir, "libretro/saves").apply { mkdirs() }

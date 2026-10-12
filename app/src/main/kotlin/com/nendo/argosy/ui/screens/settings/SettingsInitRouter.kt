@@ -927,6 +927,7 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
                     gpuDriver = refreshSettings.gpuDriver
                 ),
                 builtinControls = BuiltinControlsState(
+                    controllerOrderCount = it.builtinControls.controllerOrderCount,
                     rumbleEnabled = refreshSettings.rumbleEnabled,
                     limitHotkeysToPlayer1 = refreshSettings.limitHotkeysToPlayer1,
                     speedrunStartOnReset = refreshSettings.speedrunStartOnReset,

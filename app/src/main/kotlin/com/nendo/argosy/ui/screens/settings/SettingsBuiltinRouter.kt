@@ -475,9 +475,12 @@ internal fun routeHideControllerOrderModal(vm: SettingsViewModel) {
     vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(showControllerOrderModal = false)) }
 }
 
-internal suspend fun routeRefreshControllerOrderCount(vm: SettingsViewModel) {
-    val count = vm.inputConfigRepository.getControllerOrder().size
-    vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(controllerOrderCount = count)) }
+internal fun routeObserveControllerOrder(vm: SettingsViewModel) {
+    vm.viewModelScope.launch {
+        vm.inputConfigRepository.observeControllerOrder().collect { order ->
+            vm._uiState.update { it.copy(builtinControls = it.builtinControls.copy(controllerOrderCount = order.size)) }
+        }
+    }
 }
 
 internal fun routeShowInputMappingModal(vm: SettingsViewModel) {

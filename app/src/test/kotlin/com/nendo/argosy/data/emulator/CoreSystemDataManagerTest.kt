@@ -78,13 +78,26 @@ class CoreSystemDataManagerTest {
     }
 
     @Test
-    fun `a failed armsx2 fetch does not abort the launch and is retried next time`() = runTest {
+    fun `a failed armsx2 fetch does not abort the launch and leaves the marker stale`() = runTest {
         serveArmsx2(failing = setOf("Roboto-Regular.ttf"))
 
         assertTrue(manager.ensureCoreSystemData("armsx2", systemDir))
 
         assertTrue(manager.needsSystemData("armsx2", systemDir))
         assertFalse(File(systemDir, "pcsx2/resources/fonts/Roboto-Regular.ttf.part").exists())
+    }
+
+    @Test
+    fun `a failed armsx2 fetch is not retried on the next launch of the same session`() = runTest {
+        serveArmsx2(failing = setOf("armsx2_overrides.yaml", "Roboto-Regular.ttf"))
+        manager.ensureCoreSystemData("armsx2", systemDir)
+        val firstAttempt = requestedUrls.size
+        requestedUrls.clear()
+
+        assertTrue(manager.ensureCoreSystemData("armsx2", systemDir))
+
+        assertEquals(1, firstAttempt)
+        assertTrue(requestedUrls.isEmpty())
     }
 
     @Test

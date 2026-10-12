@@ -564,7 +564,8 @@ class GameLaunchDelegate @Inject constructor(
             val result = launchGameUseCase(
                 gameId = state.gameId,
                 selectedDiscPath = discPath,
-                origin = state.origin
+                origin = state.origin,
+                savesPrepared = true
             )
             when (result) {
                 is LaunchResult.Success -> {
@@ -592,9 +593,9 @@ class GameLaunchDelegate @Inject constructor(
 
         scope.launch {
             val result = if (variantFileId != null) {
-                launchGameUseCase(gameId = state.gameId, variantFileId = variantFileId, origin = state.origin)
+                launchGameUseCase(gameId = state.gameId, variantFileId = variantFileId, origin = state.origin, savesPrepared = true)
             } else {
-                launchGameUseCase(gameId = state.gameId, skipVariantPrompt = true, origin = state.origin)
+                launchGameUseCase(gameId = state.gameId, skipVariantPrompt = true, origin = state.origin, savesPrepared = true)
             }
             dispatchPrimaryLaunchResult(result, state.channelName, null, state.launchMode, state.origin, state.onLaunch, onFailed)
         }
@@ -615,7 +616,8 @@ class GameLaunchDelegate @Inject constructor(
             emulatorSaveConfigRepository.setMemcardPath(state.emulatorId, cardPath)
             val result = launchGameUseCase(
                 gameId = state.gameId,
-                origin = state.origin
+                origin = state.origin,
+                savesPrepared = true
             )
             when (result) {
                 is LaunchResult.Success -> {

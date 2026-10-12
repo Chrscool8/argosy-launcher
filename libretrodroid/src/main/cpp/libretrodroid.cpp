@@ -687,6 +687,7 @@ void LibretroDroid::destroy() {
 
     if (core) {
         core->retro_unload_game();
+        if (!vulkan) core->retro_deinit();
     }
 
     video = nullptr;
@@ -695,10 +696,7 @@ void LibretroDroid::destroy() {
         VulkanBackend::getInstance().destroyCoreDevice();
         VulkanBackend::getInstance().shutdown();
         vulkanContextReset = false;
-    }
-
-    if (core) {
-        core->retro_deinit();
+        if (core) core->retro_deinit();
     }
 
     core = nullptr;

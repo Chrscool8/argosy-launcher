@@ -135,6 +135,45 @@ class VulkanDriverPackagesTest {
     }
 
     @Test
+    fun `a package that expands past the size limit is rejected and leaves the installed driver`() {
+        VulkanDriverPackages.extract(
+            zip("turnip.zip", mapOf("meta.json" to meta, "libvulkan_freedreno.so" to "old")),
+            driversRoot()
+        )
+        val oversized = zip("turnip.zip", mapOf("meta.json" to meta, "libvulkan_freedreno.so" to "x".repeat(4096)))
+
+        assertThrows(IOException::class.java) {
+            VulkanDriverPackages.extract(oversized, driversRoot(), maxUncompressedBytes = 1024)
+        }
+
+        assertEquals("old", File(driversRoot(), "turnip/libvulkan_freedreno.so").readText())
+    }
+
+    @Test
+    fun `a driver moved aside by an interrupted reinstall is restored`() {
+        File(driversRoot(), ".previous-turnip").apply { mkdirs() }.also {
+            File(it, "meta.json").writeText(meta)
+            File(it, "libvulkan_freedreno.so").writeText("kept")
+        }
+
+        assertThrows(IOException::class.java) {
+            VulkanDriverPackages.extract(zip("turnip.zip", mapOf("meta.json" to meta)), driversRoot())
+        }
+
+        assertEquals(listOf("turnip"), VulkanDriverPackages.listInstalled(driversRoot()).map { it.id })
+        assertEquals("kept", File(driversRoot(), "turnip/libvulkan_freedreno.so").readText())
+        assertFalse(File(driversRoot(), ".previous-turnip").exists())
+    }
+
+    @Test
+    fun `a reinstall leaves no aside copy behind`() {
+        VulkanDriverPackages.extract(zip("turnip.zip", mapOf("meta.json" to meta, "libvulkan_freedreno.so" to "a")), driversRoot())
+        VulkanDriverPackages.extract(zip("turnip.zip", mapOf("meta.json" to meta, "libvulkan_freedreno.so" to "b")), driversRoot())
+
+        assertFalse(driversRoot().listFiles()!!.any { it.name.startsWith(".") })
+    }
+
+    @Test
     fun `installed listing skips folders that are not drivers`() {
         File(driversRoot(), "empty").mkdirs()
         File(driversRoot(), "no_library").apply { mkdirs() }.resolve("meta.json").writeText(meta)

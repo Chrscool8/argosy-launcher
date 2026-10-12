@@ -17,6 +17,9 @@ class CoreSystemDataManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val fetcher: SystemDataFetcher
 ) {
+    @Volatile
+    private var armsx2FetchFailedThisSession = false
+
     suspend fun ensureCoreSystemData(coreId: String, systemDir: File): Boolean {
         return when (coreId) {
             "dolphin" -> ensureDolphinSysData(systemDir)
@@ -105,9 +108,13 @@ class CoreSystemDataManager @Inject constructor(
         val versionFile = File(targetDir, VERSION_MARKER)
         val currentVersion = BuildConfig.ARMSX2_SYS_VERSION
         if (!isVersionStale(versionFile, currentVersion)) return@withContext true
+        if (armsx2FetchFailedThisSession) {
+            Logger.debug(TAG, "ARMSX2 resources failed to download earlier this session; launching without them")
+            return@withContext true
+        }
 
         Logger.info(TAG, "Downloading ARMSX2 resources (version $currentVersion)")
-        val fetched = ARMSX2_RESOURCE_FILES.count { (source, target) ->
+        val complete = ARMSX2_RESOURCE_FILES.all { (source, target) ->
             try {
                 downloadFile("$ARMSX2_RAW_BASE/$source", File(targetDir, target))
                 true
@@ -116,9 +123,11 @@ class CoreSystemDataManager @Inject constructor(
                 false
             }
         }
-        if (fetched == ARMSX2_RESOURCE_FILES.size) {
+        if (complete) {
             versionFile.writeText(currentVersion.toString())
             Logger.info(TAG, "ARMSX2 resources installed successfully")
+        } else {
+            armsx2FetchFailedThisSession = true
         }
         true
     }

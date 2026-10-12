@@ -576,19 +576,11 @@ class BiosRepository @Inject constructor(
                 if (!sourceFile.exists()) continue
                 if (firmware.fileName.startsWith(".")) continue
 
-                val builtinPlatformPath = if (isBuiltin) {
-                    BiosPathRegistry.getBuiltinPlatformBiosPath(canonicalSlug, firmware.fileName)
-                } else {
-                    null
-                }
-                val targetFileName = if (builtinPlatformPath != null) {
-                    builtinPlatformPath
-                } else if (requiresExactFilenames) {
-                    BiosPathRegistry.getNestedBiosPath(firmware.fileName)
-                        ?: run {
-                            val md5 = firmware.md5Hash ?: calculateMd5(sourceFile)
-                            BiosPathRegistry.getRetroArchBiosName(md5) ?: firmware.fileName
-                        }
+                val targetFileName = if (requiresExactFilenames) {
+                    BiosPathRegistry.exactSystemFileName(
+                        fileName = firmware.fileName,
+                        builtinPlatformSlug = canonicalSlug.takeIf { isBuiltin }
+                    ) { firmware.md5Hash ?: calculateMd5(sourceFile) }
                 } else {
                     config.targetNameFor(firmware.fileName)
                 }

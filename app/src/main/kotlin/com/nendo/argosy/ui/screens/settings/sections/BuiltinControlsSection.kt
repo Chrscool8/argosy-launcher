@@ -178,7 +178,6 @@ fun BuiltinControlsSection(
 ) {
     val controlsState = uiState.builtinControls
     val context = LocalContext.current
-    val controllerOrder by viewModel.getControllerOrder().collectAsState(initial = emptyList())
     val hotkeys by viewModel.observeHotkeys().collectAsState(initial = emptyList())
 
     val videoState = uiState.builtinVideo
@@ -256,11 +255,11 @@ fun BuiltinControlsSection(
                 BuiltinControlsItem.ControllerOrder -> NavigationPreference(
                     icon = Icons.Default.SortByAlpha,
                     title = stringResource(R.string.settings_builtin_controls_order_title),
-                    subtitle = if (controllerOrder.isNotEmpty()) {
+                    subtitle = if (controlsState.controllerOrderCount > 0) {
                         pluralStringResource(
                             R.plurals.settings_builtin_controls_order_assigned,
-                            controllerOrder.size,
-                            controllerOrder.size
+                            controlsState.controllerOrderCount,
+                            controlsState.controllerOrderCount
                         )
                     } else {
                         stringResource(R.string.settings_builtin_controls_order_subtitle)

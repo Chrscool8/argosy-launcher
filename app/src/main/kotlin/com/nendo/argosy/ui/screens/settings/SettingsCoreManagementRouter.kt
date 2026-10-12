@@ -18,6 +18,7 @@ import com.nendo.argosy.ui.screens.settings.sections.coreManagementItemAtFocusIn
 import com.nendo.argosy.ui.screens.settings.sections.coreManagementMaxFocusIndex
 import com.nendo.argosy.ui.screens.settings.sections.createCoreManagementLayoutInfo
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -218,10 +219,8 @@ internal fun routeUpdateAllCores(vm: SettingsViewModel) {
         vm.notificationManager.showError(NotificationText.Res(R.string.settings_shell_router_cannot_update_all_offline))
         return
     }
-    var started = false
-    vm._uiState.update {
-        started = it.coreManagement.bulkUpdate == null && !it.coreOptions.isDownloading
-        if (!started) {
+    val previous = vm._uiState.getAndUpdate {
+        if (it.isCoreDownloadBusy()) {
             it
         } else {
             it.copy(
@@ -234,9 +233,12 @@ internal fun routeUpdateAllCores(vm: SettingsViewModel) {
             )
         }
     }
-    if (!started) return
+    if (previous.isCoreDownloadBusy()) return
     vm.viewModelScope.launch { runBulkCoreUpdate(vm) }
 }
+
+private fun SettingsUiState.isCoreDownloadBusy(): Boolean =
+    coreManagement.bulkUpdate != null || coreOptions.isDownloading
 
 private suspend fun runBulkCoreUpdate(vm: SettingsViewModel) {
     vm.notificationManager.showPersistent(
@@ -244,6 +246,7 @@ private suspend fun runBulkCoreUpdate(vm: SettingsViewModel) {
         key = CORE_BULK_UPDATE_NOTIFICATION_KEY
     )
     var failedCount = 0
+    var notificationSettled = false
     try {
         val result = vm.coreManager.updateInstalledCores { coreInfo, position, total ->
             vm._uiState.update {
@@ -263,6 +266,7 @@ private suspend fun runBulkCoreUpdate(vm: SettingsViewModel) {
         }
         failedCount = result.failed.size
         reportBulkCoreUpdate(vm, result)
+        notificationSettled = true
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -274,7 +278,9 @@ private suspend fun runBulkCoreUpdate(vm: SettingsViewModel) {
             subtitle = NotificationText.Res(R.string.settings_shell_router_core_download_failed_fallback),
             type = NotificationType.ERROR
         )
+        notificationSettled = true
     } finally {
+        if (!notificationSettled) vm.notificationManager.dismissByKey(CORE_BULK_UPDATE_NOTIFICATION_KEY)
         vm._uiState.update {
             it.copy(
                 coreManagement = it.coreManagement.copy(

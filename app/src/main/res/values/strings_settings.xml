@@ -4976,7 +4976,8 @@
     <string name="settings_builtin_gpu_driver_named_version" translatable="false">%1$s (%2$s)</string>
     <!-- Entry in the GPU Driver list. %1$s is a downloaded driver package file name, never
          translated. Verb. -->
-    <string name="settings_builtin_gpu_driver_install">Install %1$s</string>    <!-- Second line while a driver package unpacks. %1$s is the package file name. -->
+    <string name="settings_builtin_gpu_driver_install">Install %1$s</string>
+    <!-- Second line while a driver package unpacks. %1$s is the package file name. -->
     <string name="settings_builtin_gpu_driver_installing">Installing %1$s...</string>
     <!-- Notification after a driver installs. %1$s is the driver's name. -->
     <string name="settings_builtin_gpu_driver_installed">Installed %1$s</string>

@@ -2737,7 +2737,8 @@
     <string name="settings_builtin_gpu_driver_global_hint">Общее: %1$s</string>
     <string name="settings_builtin_gpu_driver_system">Системный драйвер</string>
     <string name="settings_builtin_gpu_driver_missing">Драйвер не найден (используется системный)</string>
-    <string name="settings_builtin_gpu_driver_install">Установить %1$s</string>    <string name="settings_builtin_gpu_driver_installing">Установка %1$s...</string>
+    <string name="settings_builtin_gpu_driver_install">Установить %1$s</string>
+    <string name="settings_builtin_gpu_driver_installing">Установка %1$s...</string>
     <string name="settings_builtin_gpu_driver_installed">%1$s установлен</string>
     <string name="settings_builtin_gpu_driver_install_failed">Не удалось установить %1$s</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">Не поддерживается в %1$s</string>

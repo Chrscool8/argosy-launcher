@@ -1,7 +1,9 @@
 package com.nendo.argosy.data.emulator
 
 import com.nendo.argosy.data.local.dao.EmulatorConfigDao
+import com.nendo.argosy.data.local.dao.FirmwareDao
 import com.nendo.argosy.data.local.entity.EmulatorConfigEntity
+import com.nendo.argosy.data.local.entity.FirmwareEntity
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import io.mockk.coEvery
 import io.mockk.every
@@ -21,16 +23,57 @@ class BuiltinCoreResolverTest {
     private val platformId = 14L
     private val emulatorConfigDao = mockk<EmulatorConfigDao>()
     private val preferences = mockk<UserPreferencesRepository>()
+    private val firmwareDao = mockk<FirmwareDao>()
 
-    private fun resolver(vararg biosFiles: String, gameCore: String? = null): BuiltinCoreResolver {
+    private fun resolver(
+        vararg biosFiles: String,
+        gameCore: String? = null,
+        library: List<FirmwareEntity> = emptyList()
+    ): BuiltinCoreResolver {
         val systemDir = tempFolder.newFolder()
         biosFiles.forEach { java.io.File(systemDir, it).writeBytes(byteArrayOf(0)) }
         coEvery { emulatorConfigDao.getByGameId(any()) } returns gameCore?.let {
             EmulatorConfigEntity(platformId = null, gameId = 1L, packageName = null, displayName = null, coreName = it)
         }
         coEvery { emulatorConfigDao.getDefaultForPlatform(platformId) } returns null
+        coEvery { firmwareDao.getByPlatformSlug(any()) } returns library
         every { preferences.getBuiltinCoreSelections() } returns flowOf(emptyMap())
-        return BuiltinCoreResolver(emulatorConfigDao, preferences, systemDir)
+        return BuiltinCoreResolver(emulatorConfigDao, preferences, firmwareDao, systemDir)
+    }
+
+    private fun libraryFirmware(fileName: String, md5: String?, downloaded: Boolean = true): FirmwareEntity {
+        val localFile = java.io.File(tempFolder.newFolder(), fileName).apply {
+            if (downloaded) writeBytes(byteArrayOf(0))
+        }
+        return FirmwareEntity(
+            platformId = platformId,
+            platformSlug = "psx",
+            rommId = 1L,
+            fileName = fileName,
+            filePath = "bios/psx/$fileName",
+            fileSizeBytes = 1L,
+            md5Hash = md5,
+            sha1Hash = null,
+            localPath = localFile.absolutePath
+        )
+    }
+
+    @Test
+    fun `a downloaded library BIOS not yet copied to the system dir picks Beetle PSX HW`() = runTest {
+        val library = listOf(libraryFirmware("scph5501.bin", md5 = null))
+        assertEquals("mednafen_psx_hw", resolver(library = library).resolveCoreId(1L, platformId, "psx"))
+    }
+
+    @Test
+    fun `a library BIOS under another name counts when its hash names a required file`() = runTest {
+        val library = listOf(libraryFirmware("SCPH-5501 (USA).BIN", md5 = "490f666e1afb15b7362b406ed1cea246"))
+        assertEquals("mednafen_psx_hw", resolver(library = library).resolveCoreId(1L, platformId, "psx"))
+    }
+
+    @Test
+    fun `a library BIOS row whose file is missing on disk does not count`() = runTest {
+        val library = listOf(libraryFirmware("scph5501.bin", md5 = null, downloaded = false))
+        assertEquals("pcsx_rearmed", resolver(library = library).resolveCoreId(1L, platformId, "psx"))
     }
 
     @Test

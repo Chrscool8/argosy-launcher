@@ -330,7 +330,7 @@ class AccountSwitchArtifactService @Inject constructor(
         val config = emulatorPackage?.let { SavePathRegistry.getConfigForPlatformByPackage(it, game.platformSlug) }
             ?: SavePathRegistry.getConfigForPlatform(row.emulatorId, game.platformSlug)
             ?: return listOf(row.savePath)
-        val handler = saveHandlerRegistry.getHandler(config, game.platformSlug, row.emulatorId)
+        val handler = saveHandlerRegistry.getHandlerFor(game.id, config, game.platformSlug, row.emulatorId)
         val context = SaveContext(
             config = config,
             romPath = game.localPath,

@@ -34,7 +34,7 @@ fun BuiltinVideoSection(
     val platformSettings = platformContext?.let {
         uiState.platformLibretro.platformSettings[it.platformId]
     }
-    val hasAnyOverrides = platformSettings?.hasAnyOverrides() == true
+    val showResetAll = builtinVideoShowsResetAll(videoState, uiState.platformLibretro.platformSettings)
 
     val graphicsRows = builtinGraphicsRows(videoState)
     val maxSettingsFocusIndex = libretroSettingsMaxFocusIndex(
@@ -99,8 +99,6 @@ fun BuiltinVideoSection(
         }
     }
 
-    val showResetAll = !isGlobal && hasAnyOverrides
-
     LibretroSettingsSection(
         accessor = accessor,
         focusedIndex = uiState.focusedIndex,
@@ -132,14 +130,21 @@ fun BuiltinVideoSection(
     )
 }
 
+fun builtinVideoShowsResetAll(
+    state: BuiltinVideoState,
+    platformSettings: Map<Long, com.nendo.argosy.data.local.entity.PlatformLibretroSettingsEntity>
+): Boolean {
+    if (state.isGlobalContext) return false
+    val platformId = state.currentPlatformContext?.platformId ?: return false
+    return platformSettings[platformId]?.hasAnyVideoOverrides() == true
+}
+
 fun builtinVideoMaxFocusIndex(state: BuiltinVideoState, platformSettings: Map<Long, com.nendo.argosy.data.local.entity.PlatformLibretroSettingsEntity>): Int {
-    val platformContext = state.currentPlatformContext
-    val hasAnyOverrides = platformContext?.let { platformSettings[it.platformId]?.hasAnyOverrides() } == true
     val settingsMax = libretroSettingsMaxFocusIndex(
-        platformSlug = platformContext?.platformSlug,
+        platformSlug = state.currentPlatformContext?.platformSlug,
         canEnableBFI = state.canEnableBlackFrameInsertion
     )
-    val resetAllItem = if (!state.isGlobalContext && hasAnyOverrides) 1 else 0
+    val resetAllItem = if (builtinVideoShowsResetAll(state, platformSettings)) 1 else 0
     return builtinGraphicsRows(state).size + settingsMax + resetAllItem
 }
 

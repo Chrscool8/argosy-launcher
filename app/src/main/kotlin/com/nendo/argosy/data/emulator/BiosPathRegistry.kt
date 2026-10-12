@@ -182,6 +182,21 @@ object BiosPathRegistry {
     fun getBuiltinPlatformBiosPath(platformSlug: String, fileName: String): String? =
         getBuiltinPlatformBiosDir(platformSlug)?.let { "$it/$fileName" }
 
+    /**
+     * The path, relative to an emulator's system directory, that a firmware file is copied to for
+     * an emulator that looks BIOS up by exact name. [builtinPlatformSlug] is set only for the
+     * built-in libretro system directory; [md5Hash] is read only when no name rule applies.
+     */
+    fun exactSystemFileName(
+        fileName: String,
+        builtinPlatformSlug: String?,
+        md5Hash: () -> String?
+    ): String =
+        builtinPlatformSlug?.let { getBuiltinPlatformBiosPath(it, fileName) }
+            ?: getNestedBiosPath(fileName)
+            ?: getRetroArchBiosName(md5Hash())
+            ?: fileName
+
     private val platformBiosFiles: Map<String, List<BiosRequirement>> = mapOf(
         "psx" to listOf(
             BiosRequirement("psx", "scph1001.bin", "924e392ed05558ffdb115408c263dccf", "PlayStation NTSC-U BIOS"),

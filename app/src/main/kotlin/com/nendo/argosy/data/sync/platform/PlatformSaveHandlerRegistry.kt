@@ -100,6 +100,21 @@ class PlatformSaveHandlerRegistry @Inject constructor(
         isSigilRouted(config, platformSlug, emulatorId) ||
             sigilSaveHandler.route(gameId, config?.emulatorId ?: emulatorId)?.libretro == false
 
+    /**
+     * [getHandler] for one game: the Sigil handler wherever [isSigilRoutedFor] routes the game.
+     */
+    suspend fun getHandlerFor(
+        gameId: Long,
+        config: SavePathConfig?,
+        platformSlug: String,
+        emulatorId: String
+    ): PlatformSaveHandler =
+        if (isSigilRoutedFor(gameId, config, platformSlug, emulatorId)) {
+            sigilSaveHandler
+        } else {
+            getHandler(config, platformSlug, emulatorId)
+        }
+
     val sigil: SigilSaveHandler get() = sigilSaveHandler
 
     /**

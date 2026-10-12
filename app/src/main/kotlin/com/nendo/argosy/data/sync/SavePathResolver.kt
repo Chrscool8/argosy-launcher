@@ -90,7 +90,9 @@ class SavePathResolver @Inject constructor(
         var selectedMemcardForLog: String? = null
         var savePathOverrideForLog: String? = null
         var unreadableSigilRoot: String? = null
-        val sharedRoot = gameId?.let { saveHandlerRegistry.sigil.sharedLibretroRoot(it, emulatorId) }
+        val sharedRoot = gameId
+            ?.takeIf { emulatorId in PlatformSaveHandlerRegistry.UNIT_EMULATOR_IDS }
+            ?.let { saveHandlerRegistry.sigil.sharedLibretroRoot(it, emulatorId) }
         if (sharedRoot != null) decision = "sigil-shared"
         val result = sharedRoot ?: discoverSavePathInternal(
             emulatorId, gameTitle, platformSlug, romPath, cachedSaveId, coreName,

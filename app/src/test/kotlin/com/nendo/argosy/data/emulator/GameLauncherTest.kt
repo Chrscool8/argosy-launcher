@@ -125,6 +125,7 @@ class GameLauncherTest {
             builtinCoreResolver = BuiltinCoreResolver(
                 emulatorConfigDao,
                 userPreferencesRepository,
+                mockk(relaxed = true),
                 kotlin.io.path.createTempDirectory("system").toFile().also {
                     java.io.File(it, "scph5501.bin").writeBytes(byteArrayOf(0))
                 }

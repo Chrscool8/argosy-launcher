@@ -41,6 +41,7 @@ class Ps2StandalonePinTest {
         every { detector.installedEmulators } returns MutableStateFlow(
             listOf(InstalledEmulator(nethersx2, "1.0", 1L))
         )
+        coEvery { detector.detectEmulators() } returns listOf(InstalledEmulator(nethersx2, "1.0", 1L))
         every { detector.getPreferredEmulator("ps2", false) } returns InstalledEmulator(nethersx2, "1.0", 1L)
         coEvery { emulatorConfigDao.getDefaultForPlatform(any()) } returns null
         useCase = LibretroMigrationUseCase(preferences, platformDao, emulatorConfigDao, mockk(relaxed = true), detector)
@@ -133,6 +134,17 @@ class Ps2StandalonePinTest {
 
         coVerify(exactly = 1) { emulatorConfigDao.insert(any()) }
         coVerify(exactly = 1) { platformDao.getAllPlatforms() }
+    }
+
+    @Test
+    fun `an emulator scan that returns nothing leaves the pin for the next start`() = runTest {
+        coEvery { platformDao.getAllPlatforms() } returns listOf(platform(4L, "ps2", games = 12))
+        coEvery { detector.detectEmulators() } returns emptyList()
+
+        useCase.pinExistingPs2Emulator()
+
+        coVerify(exactly = 0) { emulatorConfigDao.insert(any()) }
+        coVerify(exactly = 0) { preferences.setPs2StandalonePinDone() }
     }
 
     @Test

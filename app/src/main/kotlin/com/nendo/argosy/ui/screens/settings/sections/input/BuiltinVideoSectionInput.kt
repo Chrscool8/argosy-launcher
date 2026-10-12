@@ -21,6 +21,7 @@ import com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowAtFocusIn
 import com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowHasOverride
 import com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRows
 import com.nendo.argosy.ui.screens.settings.sections.builtinVideoItemAtFocusIndex
+import com.nendo.argosy.ui.screens.settings.sections.builtinVideoShowsResetAll
 
 internal class BuiltinVideoSectionInput(
     private val viewModel: SettingsViewModel
@@ -39,15 +40,14 @@ internal class BuiltinVideoSectionInput(
         val isGlobal = videoState.isGlobalContext
         val platformContext = videoState.currentPlatformContext
         val platformSettings = platformContext?.let { state.platformLibretro.platformSettings[it.platformId] }
-        val hasAnyOverrides = platformSettings?.hasAnyOverrides() == true
-
         val maxSettingsIndex = libretroSettingsMaxFocusIndex(
             platformSlug = platformContext?.platformSlug,
             canEnableBFI = videoState.canEnableBlackFrameInsertion
         )
 
         val resetAllIndex = builtinGraphicsRows(videoState).size + maxSettingsIndex + 1
-        if (!isGlobal && hasAnyOverrides && state.focusedIndex == resetAllIndex) {
+        val showsResetAll = builtinVideoShowsResetAll(videoState, state.platformLibretro.platformSettings)
+        if (showsResetAll && state.focusedIndex == resetAllIndex) {
             viewModel.resetAllPlatformLibretroSettings()
             return InputResult.HANDLED
         }
