@@ -16,7 +16,8 @@ import javax.inject.Singleton
 @Singleton
 class AndroidDataAccessor @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val mirror: AndroidDataMirror
+    private val mirror: AndroidDataMirror,
+    private val volumeDetector: StorageVolumeDetector
 ) {
     companion object {
         private const val TAG = "AndroidDataAccessor"
@@ -68,6 +69,9 @@ class AndroidDataAccessor @Inject constructor(
 
     fun getAllStorageRoots(): List<String> {
         val roots = mutableListOf(Environment.getExternalStorageDirectory().absolutePath)
+        volumeDetector.volumeRootPaths().forEach { path ->
+            if (path !in roots) roots.add(path)
+        }
         try {
             File("/storage").listFiles()?.forEach { vol ->
                 if (vol.isDirectory && vol.name != "emulated" && vol.name != "self") {
