@@ -128,6 +128,7 @@ class GameLauncherTest {
             biosRepository = biosRepository,
             userPreferencesRepository = userPreferencesRepository,
             coreOptionResolver = coreOptionResolver,
+            builtinGraphicsResolver = mockk(relaxed = true),
             coreSystemDataManager = coreSystemDataManager,
             gameFileDao = gameFileDao,
             emulatorSaveConfigRepository = emulatorSaveConfigRepository,

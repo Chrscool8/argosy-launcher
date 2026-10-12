@@ -2031,7 +2031,21 @@ private fun SettingsFooter(
                 }
             }
         }
-        if (uiState.currentSection == SettingsSection.BUILTIN_VIDEO && !uiState.builtinVideo.isGlobalContext) {
+        val focusedGraphicsRow = if (uiState.currentSection == SettingsSection.BUILTIN_VIDEO) {
+            com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowAtFocusIndex(
+                uiState.focusedIndex, uiState.builtinVideo
+            )
+        } else {
+            null
+        }
+        if (focusedGraphicsRow != null && !uiState.builtinVideo.isGlobalContext &&
+            com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowHasOverride(focusedGraphicsRow, uiState)
+        ) {
+            add(InputButton.Y to resetBuiltinVideoOverrideHint)
+        }
+        if (uiState.currentSection == SettingsSection.BUILTIN_VIDEO && !uiState.builtinVideo.isGlobalContext &&
+            focusedGraphicsRow == null
+        ) {
             val platformContext = uiState.builtinVideo.currentPlatformContext
             val platformSettings = platformContext?.let { uiState.platformLibretro.platformSettings[it.platformId] }
             val currentSetting = com.nendo.argosy.ui.screens.settings.sections.builtinVideoItemAtFocusIndex(

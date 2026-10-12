@@ -673,7 +673,9 @@ data class BuiltinVideoState(
     val isCustomSavePath: Boolean = false,
     val isCustomStatePath: Boolean = false,
     val platformContextIndex: Int = 0,
-    val availablePlatforms: List<PlatformContext> = emptyList()
+    val availablePlatforms: List<PlatformContext> = emptyList(),
+    val gpuDriver: String = com.nendo.argosy.data.emulator.GpuDriverToken.SYSTEM,
+    val graphics: BuiltinGraphicsState = BuiltinGraphicsState()
 ) {
     val canEnableBlackFrameInsertion: Boolean get() = displayRefreshRate >= 120f
     val isGlobalContext: Boolean get() = platformContextIndex == 0

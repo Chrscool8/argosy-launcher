@@ -768,13 +768,15 @@ internal fun routeResetAllPlatformLibretroSettings(vm: SettingsViewModel) {
             shader = null, shaderChain = null, filter = null, aspectRatio = null, portraitPosition = null, rotation = null,
             overscanCrop = null, frame = null, blackFrameInsertion = null, fastForwardEnabled = null, fastForwardSpeed = null,
             rewindEnabled = null, rewindSpeed = null, rewindBufferDuration = null,
-            skipDuplicateFrames = null, lowLatencyAudio = null, audioVolume = null, vsync = null
+            skipDuplicateFrames = null, lowLatencyAudio = null, audioVolume = null, vsync = null,
+            graphicsApi = null, gpuDriver = null
         )
         if (updated.hasAnyOverrides()) {
             vm.libretroSettingsRepo.upsert(updated)
         } else {
             vm.libretroSettingsRepo.deleteByPlatformId(platformContext.platformId)
         }
+        routeRefreshBuiltinGraphics(vm)
     }
 }
 
@@ -1175,6 +1177,7 @@ internal fun routeCyclePlatformContext(vm: SettingsViewModel, direction: Int) {
         )
     }
     routeLoadControllerPorts(vm)
+    routeRefreshBuiltinGraphics(vm)
 }
 
 internal fun routeLoadControllerPorts(vm: SettingsViewModel) {

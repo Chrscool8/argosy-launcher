@@ -2659,4 +2659,19 @@
     <string name="settings_play_time_devices_list_empty">Aucun appareil n\'a encore de temps de jeu.</string>
     <string name="settings_play_time_games_list_empty">Aucun jeu n\'a encore de temps de jeu.</string>
 
+    <string name="settings_builtin_graphics_header">Graphismes</string>
+    <string name="settings_builtin_graphics_backend_title">Moteur de rendu</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">Option de %1$s, commune à toutes les plateformes qui l\'utilisent</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">Rendu utilisé par %1$s sur cette plateforme</string>
+    <string name="settings_builtin_gpu_driver_title">Pilote GPU</string>
+    <string name="settings_builtin_gpu_driver_subtitle">Pilote Vulkan des cœurs intégrés</string>
+    <string name="settings_builtin_gpu_driver_global_hint">Global : %1$s</string>
+    <string name="settings_builtin_gpu_driver_system">Pilote système</string>
+    <string name="settings_builtin_gpu_driver_missing">Pilote absent (pilote système utilisé)</string>
+    <string name="settings_builtin_gpu_driver_install">Installer %1$s</string>    <string name="settings_builtin_gpu_driver_installing">Installation de %1$s...</string>
+    <string name="settings_builtin_gpu_driver_installed">%1$s installé</string>
+    <string name="settings_builtin_gpu_driver_install_failed">Impossible d\'installer %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">Non pris en charge par %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">S\'applique quand le moteur de rendu est Vulkan</string>
+    <string name="settings_builtin_gpu_driver_reason_device">Les pilotes personnalisés exigent un GPU Adreno</string>
 </resources>

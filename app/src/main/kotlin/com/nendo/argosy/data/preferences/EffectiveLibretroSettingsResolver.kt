@@ -1,5 +1,6 @@
 package com.nendo.argosy.data.preferences
 
+import com.nendo.argosy.data.emulator.GpuDriverPrecedence
 import com.nendo.argosy.data.local.dao.PlatformLibretroSettingsDao
 import com.nendo.argosy.data.platform.PlatformWeightRegistry
 import com.nendo.argosy.libretro.frame.FrameRegistry
@@ -57,7 +58,8 @@ class EffectiveLibretroSettingsResolver @Inject constructor(
             autoRestoreState = perPlatform?.autoRestoreState ?: global.autoRestoreState,
             autoRestoreStateMode = global.autoRestoreStateMode,
             preferNewerServerSave = perPlatform?.preferNewerServerSave ?: global.preferNewerServerSave,
-            hwCoreSaveStatesEnabled = perPlatform?.hwCoreSaveStates ?: global.hwCoreSaveStatesEnabled
+            hwCoreSaveStatesEnabled = perPlatform?.hwCoreSaveStates ?: global.hwCoreSaveStatesEnabled,
+            gpuDriver = GpuDriverPrecedence.select(null, perPlatform?.gpuDriver, global.gpuDriver)
         )
     }
 

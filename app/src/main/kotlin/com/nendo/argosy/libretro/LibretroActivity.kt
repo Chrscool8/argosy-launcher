@@ -143,6 +143,7 @@ import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.GLRetroViewData
 import com.swordfish.libretrodroid.LibretroDroid
 import com.swordfish.libretrodroid.Variable
+import com.swordfish.libretrodroid.VulkanDriver
 import com.nendo.argosy.libretro.coreoptions.CoreControlManifestRegistry
 import com.nendo.argosy.libretro.coreoptions.CoreOptionManifestRegistry
 import com.nendo.argosy.data.local.entity.CoreInputMode
@@ -978,6 +979,8 @@ class LibretroActivity : ComponentActivity() {
                 forceSoftwareTiming = settings.forceSoftwareTiming
                 rumbleEventsEnabled = settings.rumbleEnabled
                 variables = coreVariablesFromIntent()
+                preferVulkan = intent.getBooleanExtra(EXTRA_PREFER_VULKAN, false)
+                vulkanDriver = vulkanDriverFromIntent()
             }
         )
         lifecycle.addObserver(retroView)
@@ -3777,6 +3780,12 @@ class LibretroActivity : ComponentActivity() {
         return keys.zip(values) { k, v -> Variable(k, v) }.toTypedArray()
     }
 
+    private fun vulkanDriverFromIntent(): VulkanDriver? {
+        val directory = intent.getStringExtra(EXTRA_VULKAN_DRIVER_DIR) ?: return null
+        val library = intent.getStringExtra(EXTRA_VULKAN_DRIVER_LIBRARY) ?: return null
+        return VulkanDriver(directory, library)
+    }
+
     /**
      * Releases every key the core is still holding. Key ups stop reaching the core the moment a
      * menu opens, so a button held across that boundary stays down for the rest of the session.
@@ -3844,6 +3853,9 @@ class LibretroActivity : ComponentActivity() {
         const val EXTRA_CORE_NAME = "core_name"
         const val EXTRA_CORE_VAR_KEYS = "core_var_keys"
         const val EXTRA_CORE_VAR_VALUES = "core_var_values"
+        const val EXTRA_PREFER_VULKAN = "prefer_vulkan"
+        const val EXTRA_VULKAN_DRIVER_DIR = "vulkan_driver_dir"
+        const val EXTRA_VULKAN_DRIVER_LIBRARY = "vulkan_driver_library"
         const val EXTRA_SAVES_DIR = "saves_dir"
         const val EXTRA_STATES_DIR = "states_dir"
         const val EXTRA_NETPLAY_JOIN_SESSION_ID = "netplay_join_session_id"

@@ -36,11 +36,12 @@ fun BuiltinVideoSection(
     }
     val hasAnyOverrides = platformSettings?.hasAnyOverrides() == true
 
+    val graphicsRows = builtinGraphicsRows(videoState)
     val maxSettingsFocusIndex = libretroSettingsMaxFocusIndex(
         platformSlug = platformContext?.platformSlug,
         canEnableBFI = videoState.canEnableBlackFrameInsertion
     )
-    val resetAllFocusIndex = maxSettingsFocusIndex + 1
+    val resetAllFocusIndex = graphicsRows.size + maxSettingsFocusIndex + 1
 
     val accessor = remember(videoState, platformSettings) {
         if (isGlobal) {
@@ -106,6 +107,13 @@ fun BuiltinVideoSection(
         platformSlug = platformContext?.platformSlug,
         canEnableBFI = videoState.canEnableBlackFrameInsertion,
         listState = listState,
+        leadingHeader = stringResource(R.string.settings_builtin_graphics_header),
+        leadingFocusCount = graphicsRows.size,
+        leadingRow = { index, isFocused ->
+            graphicsRows.getOrNull(index)?.let { row ->
+                BuiltinGraphicsRowItem(row, uiState, viewModel, isFocused)
+            }
+        },
         pickerTokenFor = { setting ->
             if (uiState.enumPickerKey == setting.key) uiState.enumPickerToken else 0
         },
@@ -132,7 +140,7 @@ fun builtinVideoMaxFocusIndex(state: BuiltinVideoState, platformSettings: Map<Lo
         canEnableBFI = state.canEnableBlackFrameInsertion
     )
     val resetAllItem = if (!state.isGlobalContext && hasAnyOverrides) 1 else 0
-    return settingsMax + resetAllItem
+    return builtinGraphicsRows(state).size + settingsMax + resetAllItem
 }
 
 fun builtinVideoItemAtFocusIndex(
@@ -140,7 +148,7 @@ fun builtinVideoItemAtFocusIndex(
     state: BuiltinVideoState
 ): LibretroSettingDef? =
     libretroSettingsItemAtFocusIndex(
-        index = index,
+        index = index - builtinGraphicsRows(state).size,
         platformSlug = state.currentPlatformContext?.platformSlug,
         canEnableBFI = state.canEnableBlackFrameInsertion
     )

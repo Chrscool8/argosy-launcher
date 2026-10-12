@@ -2671,4 +2671,19 @@
     <string name="settings_play_time_platforms_list_empty">Ninguna plataforma tiene juego todavía.</string>
     <string name="settings_play_time_devices_list_empty">Ningún dispositivo tiene juego todavía.</string>
     <string name="settings_play_time_games_list_empty">Ningún juego tiene tiempo todavía.</string>
+    <string name="settings_builtin_graphics_header">Gráficos</string>
+    <string name="settings_builtin_graphics_backend_title">Motor de renderizado</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">Opción de %1$s, compartida por todas las plataformas que lo usan</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">Renderizado que usa %1$s en esta plataforma</string>
+    <string name="settings_builtin_gpu_driver_title">Controlador de GPU</string>
+    <string name="settings_builtin_gpu_driver_subtitle">Controlador Vulkan para los núcleos integrados</string>
+    <string name="settings_builtin_gpu_driver_global_hint">Global: %1$s</string>
+    <string name="settings_builtin_gpu_driver_system">Controlador del sistema</string>
+    <string name="settings_builtin_gpu_driver_missing">Falta el controlador (se usa el del sistema)</string>
+    <string name="settings_builtin_gpu_driver_install">Instalar %1$s</string>    <string name="settings_builtin_gpu_driver_installing">Instalando %1$s...</string>
+    <string name="settings_builtin_gpu_driver_installed">%1$s instalado</string>
+    <string name="settings_builtin_gpu_driver_install_failed">No se pudo instalar %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">No compatible con %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">Se aplica cuando el motor de renderizado es Vulkan</string>
+    <string name="settings_builtin_gpu_driver_reason_device">Los controladores personalizados requieren una GPU Adreno</string>
 </resources>

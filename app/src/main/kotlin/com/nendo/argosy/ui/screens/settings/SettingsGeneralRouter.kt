@@ -109,6 +109,7 @@ private fun routeApplySectionExit(vm: SettingsViewModel, section: SettingsSectio
     when (section) {
         SettingsSection.SHADER_STACK -> routeFlushShaderChain(vm)
         SettingsSection.STEAM_SETTINGS -> vm.cancelSteamQrAuth()
+        SettingsSection.DRIVERS -> routeRefreshBuiltinGraphics(vm)
         else -> {}
     }
 }
@@ -135,6 +136,7 @@ private fun routeApplySectionEntry(vm: SettingsViewModel, section: SettingsSecti
             vm.syncDelegate.refreshPlatformsFromServer(vm.viewModelScope)
         }
         SettingsSection.BUILTIN_CONTROLS -> routeLoadControllerPorts(vm)
+        SettingsSection.BUILTIN_VIDEO -> routeRefreshBuiltinGraphics(vm)
         SettingsSection.STORAGE -> {
             vm.attributionDelegate.latchSteamTileVisible(storageSteamVisibleLive(vm._uiState.value))
             vm.attributionDelegate.latchMediaTileVisible(storageMediaVisibleLive(vm._uiState.value))

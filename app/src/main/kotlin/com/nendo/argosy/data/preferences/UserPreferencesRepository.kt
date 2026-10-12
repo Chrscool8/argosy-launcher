@@ -687,6 +687,7 @@ data class BuiltinEmulatorSettings(
     val customSavePath: String? = null,
     val customStatePath: String? = null,
     val architectureOverride: String? = null,
+    val gpuDriver: String = com.nendo.argosy.data.emulator.GpuDriverToken.SYSTEM,
     val showTouchControlsWhenNoGamepad: Boolean = true,
     val touchControlsOpacityLandscape: Float = 0.45f,
     val touchControlsOpacityPortrait: Float = 1.0f,

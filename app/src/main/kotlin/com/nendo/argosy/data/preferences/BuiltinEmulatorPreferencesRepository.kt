@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.nendo.argosy.data.emulator.GpuDriverToken
 import com.nendo.argosy.data.local.entity.FastForwardMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +58,7 @@ class BuiltinEmulatorPreferencesRepository @Inject constructor(
         val BUILTIN_CUSTOM_STATE_PATH = stringPreferencesKey("builtin_custom_state_path")
         val BUILTIN_MIGRATION_V1 = booleanPreferencesKey("builtin_migration_v2")
         val BUILTIN_ARCHITECTURE_OVERRIDE = stringPreferencesKey("builtin_architecture_override")
+        val BUILTIN_GPU_DRIVER = stringPreferencesKey("builtin_gpu_driver")
         val TOUCH_SHOW_WHEN_NO_GAMEPAD = booleanPreferencesKey("builtin_touch_show_when_no_gamepad")
         val TOUCH_OPACITY_LANDSCAPE = floatPreferencesKey("builtin_touch_opacity_landscape")
         val TOUCH_OPACITY_PORTRAIT = floatPreferencesKey("builtin_touch_opacity_portrait")
@@ -127,6 +129,7 @@ class BuiltinEmulatorPreferencesRepository @Inject constructor(
             customSavePath = prefs[Keys.BUILTIN_CUSTOM_SAVE_PATH],
             customStatePath = prefs[Keys.BUILTIN_CUSTOM_STATE_PATH],
             architectureOverride = prefs[Keys.BUILTIN_ARCHITECTURE_OVERRIDE],
+            gpuDriver = prefs[Keys.BUILTIN_GPU_DRIVER] ?: GpuDriverToken.SYSTEM,
             showTouchControlsWhenNoGamepad = prefs[Keys.TOUCH_SHOW_WHEN_NO_GAMEPAD] ?: true,
             touchControlsOpacityLandscape = prefs[Keys.TOUCH_OPACITY_LANDSCAPE] ?: 0.45f,
             touchControlsOpacityPortrait = prefs[Keys.TOUCH_OPACITY_PORTRAIT] ?: 1.0f,
@@ -437,6 +440,10 @@ class BuiltinEmulatorPreferencesRepository @Inject constructor(
 
     suspend fun setHudShowLastSave(enabled: Boolean) {
         dataStore.edit { it[Keys.HUD_SHOW_LAST_SAVE] = enabled }
+    }
+
+    suspend fun setBuiltinGpuDriver(token: String) {
+        dataStore.edit { it[Keys.BUILTIN_GPU_DRIVER] = token }
     }
 
     fun getArchitectureOverride(): Flow<String?> = dataStore.data.map { prefs ->

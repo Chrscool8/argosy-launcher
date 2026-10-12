@@ -28,7 +28,9 @@ class ConfigureEmulatorUseCase @Inject constructor(
                 preferredExtension = existing?.preferredExtension,
                 useFileUri = existing?.useFileUri,
                 displayTarget = existing?.displayTarget,
-                controllerTypes = existing?.controllerTypes
+                controllerTypes = existing?.controllerTypes,
+                gpuDriver = existing?.gpuDriver,
+                graphicsBackend = existing?.graphicsBackend
             )
             emulatorConfigDao.insert(config)
         }
@@ -303,6 +305,44 @@ class ConfigureEmulatorUseCase @Inject constructor(
                     displayName = null,
                     coreName = null,
                     displayTarget = displayTarget,
+                    isDefault = false
+                )
+            )
+        }
+    }
+
+    suspend fun setGpuDriverForGame(gameId: Long, gpuDriver: String?) {
+        val existing = emulatorConfigDao.getByGameId(gameId)
+        if (existing != null) {
+            emulatorConfigDao.updateGpuDriverForGame(gameId, gpuDriver)
+        } else if (gpuDriver != null) {
+            emulatorConfigDao.insert(
+                EmulatorConfigEntity(
+                    platformId = null,
+                    gameId = gameId,
+                    packageName = null,
+                    displayName = null,
+                    coreName = null,
+                    gpuDriver = gpuDriver,
+                    isDefault = false
+                )
+            )
+        }
+    }
+
+    suspend fun setGraphicsBackendForGame(gameId: Long, graphicsBackend: String?) {
+        val existing = emulatorConfigDao.getByGameId(gameId)
+        if (existing != null) {
+            emulatorConfigDao.updateGraphicsBackendForGame(gameId, graphicsBackend)
+        } else if (graphicsBackend != null) {
+            emulatorConfigDao.insert(
+                EmulatorConfigEntity(
+                    platformId = null,
+                    gameId = gameId,
+                    packageName = null,
+                    displayName = null,
+                    coreName = null,
+                    graphicsBackend = graphicsBackend,
                     isDefault = false
                 )
             )

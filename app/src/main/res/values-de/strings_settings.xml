@@ -2600,5 +2600,20 @@
     <string name="settings_play_time_platforms_list_empty">Noch keine Plattform mit Spielzeit.</string>
     <string name="settings_play_time_devices_list_empty">Noch kein Gerät mit Spielzeit.</string>
     <string name="settings_play_time_games_list_empty">Noch kein Spiel mit Spielzeit.</string>
+    <string name="settings_builtin_graphics_header">Grafik</string>
+    <string name="settings_builtin_graphics_backend_title">Backend</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">Option von %1$s, gilt für jede Plattform damit</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">Renderer von %1$s auf dieser Plattform</string>
+    <string name="settings_builtin_gpu_driver_title">GPU-Treiber</string>
+    <string name="settings_builtin_gpu_driver_subtitle">Vulkan-Treiber für integrierte Kerne</string>
+    <string name="settings_builtin_gpu_driver_global_hint">Global: %1$s</string>
+    <string name="settings_builtin_gpu_driver_system">Systemtreiber</string>
+    <string name="settings_builtin_gpu_driver_missing">Treiber fehlt (Systemtreiber aktiv)</string>
+    <string name="settings_builtin_gpu_driver_install">%1$s installieren</string>    <string name="settings_builtin_gpu_driver_installing">%1$s wird installiert...</string>
+    <string name="settings_builtin_gpu_driver_installed">%1$s installiert</string>
+    <string name="settings_builtin_gpu_driver_install_failed">%1$s konnte nicht installiert werden</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">Von %1$s nicht unterstützt</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">Gilt, wenn das Backend Vulkan ist</string>
+    <string name="settings_builtin_gpu_driver_reason_device">Eigene Treiber benötigen eine Adreno-GPU</string>
 </resources>
 

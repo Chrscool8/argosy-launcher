@@ -550,4 +550,19 @@
     <string name="reviews_editor_footer_submit">Veröffentlichen</string>
     <string name="reviews_editor_footer_delete">Löschen</string>
     <string name="reviews_editor_footer_back">Zurück</string>
+    <string name="gamedetail_per_game_backend_label">Backend</string>
+    <string name="gamedetail_per_game_backend_inherit">Geerbt (%1$s)</string>
+    <string name="gamedetail_per_game_footer_gpu_driver_options">Optionen</string>
+    <string name="gamedetail_per_game_gpu_driver_install">%1$s installieren</string>
+    <string name="gamedetail_per_game_gpu_driver_installing">%1$s wird installiert...</string>
+    <string name="gamedetail_per_game_gpu_driver_installed">%1$s installiert</string>
+    <string name="gamedetail_per_game_gpu_driver_install_failed">%1$s konnte nicht installiert werden</string>
+    <string name="gamedetail_per_game_gpu_driver_label">GPU-Treiber</string>
+    <string name="gamedetail_per_game_gpu_driver_inherit">Geerbt (%1$s)</string>
+    <string name="gamedetail_per_game_gpu_driver_system">Systemtreiber</string>
+    <string name="gamedetail_per_game_gpu_driver_missing">Treiber fehlt (Systemtreiber aktiv)</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core">Von %1$s nicht unterstützt</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">diesem Kern</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_backend">Gilt, wenn das Backend Vulkan ist</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_device">Eigene Treiber benötigen eine Adreno-GPU</string>
 </resources>

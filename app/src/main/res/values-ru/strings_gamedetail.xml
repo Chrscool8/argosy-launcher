@@ -526,4 +526,19 @@
     <string name="reviews_editor_footer_submit">Опубликовать</string>
     <string name="reviews_editor_footer_delete">Удалить</string>
     <string name="reviews_editor_footer_back">Назад</string>
+    <string name="gamedetail_per_game_backend_label">Рендерер</string>
+    <string name="gamedetail_per_game_backend_inherit">Наследовано (%1$s)</string>
+    <string name="gamedetail_per_game_footer_gpu_driver_options">Варианты</string>
+    <string name="gamedetail_per_game_gpu_driver_install">Установить %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_installing">Установка %1$s...</string>
+    <string name="gamedetail_per_game_gpu_driver_installed">%1$s установлен</string>
+    <string name="gamedetail_per_game_gpu_driver_install_failed">Не удалось установить %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_label">Драйвер GPU</string>
+    <string name="gamedetail_per_game_gpu_driver_inherit">Наследовано (%1$s)</string>
+    <string name="gamedetail_per_game_gpu_driver_system">Системный драйвер</string>
+    <string name="gamedetail_per_game_gpu_driver_missing">Драйвер не найден (используется системный)</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core">Не поддерживается в %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">этом ядре</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_backend">Действует, когда рендерер Vulkan</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_device">Свои драйверы требуют GPU Adreno</string>
 </resources>

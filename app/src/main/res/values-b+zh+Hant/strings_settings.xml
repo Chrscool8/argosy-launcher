@@ -2356,4 +2356,19 @@
     <string name="settings_play_time_platforms_list_empty">還沒有平台有遊戲紀錄。</string>
     <string name="settings_play_time_devices_list_empty">還沒有裝置有遊戲紀錄。</string>
     <string name="settings_play_time_games_list_empty">還沒有遊戲有遊玩紀錄。</string>
+    <string name="settings_builtin_graphics_header">圖形</string>
+    <string name="settings_builtin_graphics_backend_title">渲染後端</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">%1$s 的選項，所有使用它的平台共用</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">%1$s 在此平台上的算繪器</string>
+    <string name="settings_builtin_gpu_driver_title">GPU 驅動程式</string>
+    <string name="settings_builtin_gpu_driver_subtitle">內建核心使用的 Vulkan 驅動程式</string>
+    <string name="settings_builtin_gpu_driver_global_hint">全域：%1$s</string>
+    <string name="settings_builtin_gpu_driver_system">系統驅動程式</string>
+    <string name="settings_builtin_gpu_driver_missing">找不到驅動程式（正在使用系統驅動程式）</string>
+    <string name="settings_builtin_gpu_driver_install">安裝 %1$s</string>    <string name="settings_builtin_gpu_driver_installing">正在安裝 %1$s...</string>
+    <string name="settings_builtin_gpu_driver_installed">已安裝 %1$s</string>
+    <string name="settings_builtin_gpu_driver_install_failed">無法安裝 %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">%1$s 不支援</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">渲染後端為 Vulkan 時生效</string>
+    <string name="settings_builtin_gpu_driver_reason_device">自訂驅動程式需要 Adreno GPU</string>
 </resources>

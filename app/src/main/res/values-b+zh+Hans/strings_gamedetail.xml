@@ -486,4 +486,19 @@
     <string name="reviews_editor_footer_submit">发布</string>
     <string name="reviews_editor_footer_delete">删除</string>
     <string name="reviews_editor_footer_back">返回</string>
+    <string name="gamedetail_per_game_backend_label">渲染后端</string>
+    <string name="gamedetail_per_game_backend_inherit">继承（%1$s）</string>
+    <string name="gamedetail_per_game_footer_gpu_driver_options">选项</string>
+    <string name="gamedetail_per_game_gpu_driver_install">安装 %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_installing">正在安装 %1$s...</string>
+    <string name="gamedetail_per_game_gpu_driver_installed">已安装 %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_install_failed">无法安装 %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_label">GPU 驱动</string>
+    <string name="gamedetail_per_game_gpu_driver_inherit">继承（%1$s）</string>
+    <string name="gamedetail_per_game_gpu_driver_system">系统驱动</string>
+    <string name="gamedetail_per_game_gpu_driver_missing">驱动缺失（正在使用系统驱动）</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core">%1$s 不支持</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">此核心</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_backend">渲染后端为 Vulkan 时生效</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_device">自定义驱动需要 Adreno GPU</string>
 </resources>

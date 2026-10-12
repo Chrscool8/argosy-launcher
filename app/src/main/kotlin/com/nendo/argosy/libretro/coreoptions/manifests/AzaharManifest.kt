@@ -93,7 +93,7 @@ object AzaharManifest : CoreOptionManifest {
             values = listOf("Auto", "Vulkan", "OpenGL", "Software"),
             defaultValue = "OpenGL",
             coreDefault = "Auto",
-            description = "OpenGL is the only backend the built-in player can present"
+            description = "Selects the renderer; Vulkan needs a device with Vulkan support"
         ),
         CoreOptionDef(
             key = "citra_use_hw_shader",

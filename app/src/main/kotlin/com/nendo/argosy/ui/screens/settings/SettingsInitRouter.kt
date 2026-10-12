@@ -348,6 +348,7 @@ internal fun routeObservePlatforms(vm: SettingsViewModel) {
                     )
                 }
                 routeLoadControllerPorts(vm)
+                routeRefreshBuiltinGraphics(vm)
             }
     }
 }
@@ -920,7 +921,8 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
                     statePath = refreshSettings.customStatePath
                         ?: AppPaths.libretroStatesDir(vm.context.filesDir).absolutePath,
                     isCustomSavePath = refreshSettings.customSavePath != null,
-                    isCustomStatePath = refreshSettings.customStatePath != null
+                    isCustomStatePath = refreshSettings.customStatePath != null,
+                    gpuDriver = refreshSettings.gpuDriver
                 ),
                 builtinControls = BuiltinControlsState(
                     rumbleEnabled = refreshSettings.rumbleEnabled,

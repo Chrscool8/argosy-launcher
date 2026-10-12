@@ -2591,4 +2591,19 @@
     <string name="settings_play_time_devices_list_empty">अभी किसी डिवाइस पर खेल नहीं हुआ।</string>
     <string name="settings_play_time_games_list_empty">अभी कोई गेम नहीं खेला गया।</string>
 
+    <string name="settings_builtin_graphics_header">ग्राफ़िक्स</string>
+    <string name="settings_builtin_graphics_backend_title">बैकएंड</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">%1$s का विकल्प, इसे इस्तेमाल करने वाले हर प्लेटफ़ॉर्म पर लागू</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">इस प्लेटफ़ॉर्म पर %1$s का रेंडरर</string>
+    <string name="settings_builtin_gpu_driver_title">GPU ड्राइवर</string>
+    <string name="settings_builtin_gpu_driver_subtitle">बिल्ट-इन कोर के लिए Vulkan ड्राइवर</string>
+    <string name="settings_builtin_gpu_driver_global_hint">ग्लोबल: %1$s</string>
+    <string name="settings_builtin_gpu_driver_system">सिस्टम ड्राइवर</string>
+    <string name="settings_builtin_gpu_driver_missing">ड्राइवर नहीं मिला (सिस्टम ड्राइवर चालू)</string>
+    <string name="settings_builtin_gpu_driver_install">%1$s इंस्टॉल करें</string>    <string name="settings_builtin_gpu_driver_installing">%1$s इंस्टॉल हो रहा है...</string>
+    <string name="settings_builtin_gpu_driver_installed">%1$s इंस्टॉल हो गया</string>
+    <string name="settings_builtin_gpu_driver_install_failed">%1$s इंस्टॉल नहीं हो सका</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">%1$s में समर्थित नहीं</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">बैकएंड Vulkan होने पर लागू होता है</string>
+    <string name="settings_builtin_gpu_driver_reason_device">कस्टम ड्राइवर के लिए Adreno GPU चाहिए</string>
 </resources>

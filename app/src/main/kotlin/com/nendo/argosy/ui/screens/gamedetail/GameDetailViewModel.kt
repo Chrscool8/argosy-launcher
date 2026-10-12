@@ -1690,6 +1690,23 @@ class GameDetailViewModel @Inject constructor(
         viewModelScope.launch { perGameSettingsDelegate.cycleExtension(currentGameId, direction) }
     }
 
+    fun cyclePerGameGpuDriver(direction: Int) {
+        viewModelScope.launch { perGameSettingsDelegate.cycleGpuDriver(currentGameId, direction) }
+    }
+
+    fun cyclePerGameBackend(direction: Int) {
+        viewModelScope.launch { perGameSettingsDelegate.cycleBackend(currentGameId, direction) }
+    }
+
+    fun openPerGameGpuDriverPicker() = perGameSettingsDelegate.openGpuDriverPicker()
+
+    fun dismissPerGameGpuDriverPicker() = perGameSettingsDelegate.dismissGpuDriverPicker()
+
+    fun selectPerGameGpuDriverEntry(index: Int) {
+        val entry = perGameSettingsDelegate.state.value.gpuDriverPicker.getOrNull(index) ?: return
+        viewModelScope.launch { perGameSettingsDelegate.applyGpuDriverEntry(currentGameId, entry) }
+    }
+
     fun openPerGameMemcardPicker() = perGameSettingsDelegate.openMemcardPicker()
 
     fun dismissPerGameMemcardPicker() = perGameSettingsDelegate.dismissMemcardPicker()
@@ -1722,6 +1739,8 @@ class GameDetailViewModel @Inject constructor(
             PerGameSettingsRow.MEMCARD -> openPerGameMemcardPicker()
             PerGameSettingsRow.DISPLAY_TARGET -> cyclePerGameDisplayTarget(1)
             PerGameSettingsRow.EXTENSION -> cyclePerGameExtension(1)
+            PerGameSettingsRow.BACKEND -> cyclePerGameBackend(1)
+            PerGameSettingsRow.GPU_DRIVER -> openPerGameGpuDriverPicker()
             PerGameSettingsRow.PLATFORM_SETTINGS -> {
                 dismissPerGameSettings()
                 _uiState.value.game?.platformId?.let(onNavigateToPlatformSettings)
@@ -1736,6 +1755,8 @@ class GameDetailViewModel @Inject constructor(
             PerGameSettingsRow.SAVE_PATH -> perGameSettingsDelegate.movePathButton(-direction)
             PerGameSettingsRow.DISPLAY_TARGET -> cyclePerGameDisplayTarget(direction)
             PerGameSettingsRow.EXTENSION -> cyclePerGameExtension(direction)
+            PerGameSettingsRow.BACKEND -> cyclePerGameBackend(direction)
+            PerGameSettingsRow.GPU_DRIVER -> cyclePerGameGpuDriver(direction)
             else -> {}
         }
     }

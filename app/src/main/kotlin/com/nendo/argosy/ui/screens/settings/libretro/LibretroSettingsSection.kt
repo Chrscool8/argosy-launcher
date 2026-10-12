@@ -59,9 +59,13 @@ fun LibretroSettingsSection(
     pickerTokenFor: (LibretroSettingDef) -> Int = { 0 },
     trailingContent: @Composable (() -> Unit)? = null,
     trailingFocusCount: Int = 0,
-    trailingItems: (androidx.compose.foundation.lazy.LazyListScope.() -> Unit)? = null
+    trailingItems: (androidx.compose.foundation.lazy.LazyListScope.() -> Unit)? = null,
+    leadingHeader: String? = null,
+    leadingFocusCount: Int = 0,
+    leadingRow: @Composable (index: Int, isFocused: Boolean) -> Unit = { _, _ -> }
 ) {
     val isPerPlatform = platformSlug != null
+    val leadingListCount = if (leadingFocusCount > 0) leadingFocusCount + 1 else 0
 
     val visibilityState = remember(platformSlug, canEnableBFI, scope) {
         LibretroVisibilityState(platformSlug, canEnableBFI, scope)
@@ -89,30 +93,55 @@ fun LibretroSettingsSection(
 
     val trailingContentOffset = if (trailingContent != null) 1 else 0
 
-    val sections = remember(flatItems, visibleSettings, trailingContentOffset, trailingFocusCount) {
-        val settingSections = buildFlatItemSections(flatItems, visibleSettings)
-        if (trailingFocusCount <= 0) {
-            settingSections
+    val sections = remember(
+        flatItems, visibleSettings, trailingContentOffset, trailingFocusCount, leadingFocusCount
+    ) {
+        val leadingSections = if (leadingFocusCount <= 0) {
+            emptyList()
         } else {
-            settingSections + ListSection(
-                listStartIndex = flatItems.size,
-                listEndIndex = flatItems.size + trailingContentOffset + trailingFocusCount - 1,
-                focusStartIndex = visibleSettings.size,
-                focusEndIndex = visibleSettings.size + trailingFocusCount - 1
+            listOf(
+                ListSection(
+                    listStartIndex = 0,
+                    listEndIndex = leadingListCount - 1,
+                    focusStartIndex = 0,
+                    focusEndIndex = leadingFocusCount - 1
+                )
             )
         }
+        val settingSections = buildFlatItemSections(flatItems, visibleSettings).map {
+            it.copy(
+                listStartIndex = it.listStartIndex + leadingListCount,
+                listEndIndex = it.listEndIndex + leadingListCount,
+                focusStartIndex = it.focusStartIndex + leadingFocusCount,
+                focusEndIndex = it.focusEndIndex + leadingFocusCount
+            )
+        }
+        val trailingSections = if (trailingFocusCount <= 0) {
+            emptyList()
+        } else {
+            listOf(
+                ListSection(
+                    listStartIndex = leadingListCount + flatItems.size,
+                    listEndIndex = leadingListCount + flatItems.size + trailingContentOffset + trailingFocusCount - 1,
+                    focusStartIndex = leadingFocusCount + visibleSettings.size,
+                    focusEndIndex = leadingFocusCount + visibleSettings.size + trailingFocusCount - 1
+                )
+            )
+        }
+        leadingSections + settingSections + trailingSections
     }
 
     SectionFocusedScroll(
         listState = listState,
         focusedIndex = focusedIndex,
         focusToListIndex = { focusIdx ->
-            val setting = visibleSettings.getOrNull(focusIdx)
-            if (setting != null) {
-                flatItems.indexOfFirst { it is LibretroSettingsListItem.Setting && it.def == setting }
-            } else {
-                val trailingIdx = focusIdx - visibleSettings.size
-                flatItems.size + trailingContentOffset + trailingIdx
+            val settingIdx = focusIdx - leadingFocusCount
+            val setting = visibleSettings.getOrNull(settingIdx)
+            when {
+                focusIdx < leadingFocusCount -> 1 + focusIdx
+                setting != null -> leadingListCount +
+                    flatItems.indexOfFirst { it is LibretroSettingsListItem.Setting && it.def == setting }
+                else -> leadingListCount + flatItems.size + trailingContentOffset + settingIdx - visibleSettings.size
             }
         },
         sections = sections
@@ -125,28 +154,26 @@ fun LibretroSettingsSection(
             .padding(Dimens.spacingMd),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
+        if (leadingFocusCount > 0) {
+            item(key = "leading_header") {
+                LibretroSectionHeader(text = leadingHeader.orEmpty(), isFirst = true)
+            }
+            items(leadingFocusCount, key = { "leading_row_$it" }) { index ->
+                leadingRow(index, focusedIndex == index)
+            }
+        }
+
         items(flatItems, key = { it.key }) { item ->
             when (item) {
-                is LibretroSettingsListItem.Header -> {
-                    if (!item.isFirst) {
-                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                    }
-                    Text(
-                        text = LibretroSettingDef.SECTIONS[item.section]
-                            ?.let { stringResource(it) }
-                            ?: item.section,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(
-                            start = Dimens.spacingSm,
-                            top = Dimens.spacingXs,
-                            bottom = Dimens.spacingXs
-                        )
-                    )
-                }
+                is LibretroSettingsListItem.Header -> LibretroSectionHeader(
+                    text = LibretroSettingDef.SECTIONS[item.section]
+                        ?.let { stringResource(it) }
+                        ?: item.section,
+                    isFirst = item.isFirst && leadingFocusCount == 0
+                )
 
                 is LibretroSettingsListItem.Setting -> {
-                    val settingFocusIndex = visibleSettings.indexOf(item.def)
+                    val settingFocusIndex = leadingFocusCount + visibleSettings.indexOf(item.def)
                     LibretroSettingItem(
                         setting = item.def,
                         accessor = accessor,
@@ -168,6 +195,23 @@ fun LibretroSettingsSection(
 
         trailingItems?.invoke(this)
     }
+}
+
+@Composable
+private fun LibretroSectionHeader(text: String, isFirst: Boolean) {
+    if (!isFirst) {
+        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+    }
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(
+            start = Dimens.spacingSm,
+            top = Dimens.spacingXs,
+            bottom = Dimens.spacingXs
+        )
+    )
 }
 
 private sealed class LibretroSettingsListItem(val key: String) {

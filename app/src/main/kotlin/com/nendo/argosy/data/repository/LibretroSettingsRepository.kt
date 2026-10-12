@@ -74,6 +74,9 @@ class LibretroSettingsRepository @Inject constructor(
     suspend fun setBuiltinPortraitPosition(value: String) =
         builtinPrefs.setBuiltinPortraitPosition(value)
 
+    suspend fun setBuiltinGpuDriver(token: String) =
+        builtinPrefs.setBuiltinGpuDriver(token)
+
     suspend fun setBuiltinSkipDuplicateFrames(enabled: Boolean) =
         builtinPrefs.setBuiltinSkipDuplicateFrames(enabled)
 

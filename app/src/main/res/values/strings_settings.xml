@@ -4941,4 +4941,52 @@
     <string name="settings_play_time_platforms_list_empty">No platform has play yet.</string>
     <string name="settings_play_time_devices_list_empty">No device has play yet.</string>
     <string name="settings_play_time_games_list_empty">No game has play yet.</string>
+
+    <!-- ===== Built-in Video: Graphics rows ===== -->
+
+    <!-- Group heading above the Backend and GPU Driver rows in the built-in emulator video
+         settings. Noun: rendering, not artwork. -->
+    <string name="settings_builtin_graphics_header">Graphics</string>
+    <!-- Row title. Noun: the renderer the emulator core draws with (for example OpenGL or
+         Vulkan). -->
+    <string name="settings_builtin_graphics_backend_title">Backend</string>
+    <!-- Second line of the Backend row when the value is the core's own option. %1$s is the
+         emulator core's name, never translated. The value is shared by every platform that runs
+         that core. -->
+    <string name="settings_builtin_graphics_backend_core_subtitle">%1$s option, shared by every platform using it</string>
+    <!-- Second line of the Backend row when the value is kept for this platform only. %1$s is
+         the emulator core's name, never translated. -->
+    <string name="settings_builtin_graphics_backend_platform_subtitle">Renderer %1$s uses on this platform</string>
+    <!-- Graphics API names. Never translated. -->
+    <string name="settings_builtin_graphics_api_opengl" translatable="false">OpenGL</string>
+    <string name="settings_builtin_graphics_api_vulkan" translatable="false">Vulkan</string>
+    <!-- Row title. Noun phrase: the Vulkan graphics driver the built-in cores load. -->
+    <string name="settings_builtin_gpu_driver_title">GPU Driver</string>
+    <!-- Second line of the GPU Driver row in the global context. -->
+    <string name="settings_builtin_gpu_driver_subtitle">Vulkan driver for built-in cores</string>
+    <!-- Second line of the GPU Driver row when this platform overrides it. %1$s is the global
+         value. -->
+    <string name="settings_builtin_gpu_driver_global_hint">Global: %1$s</string>
+    <!-- Value: the driver that ships with the device. -->
+    <string name="settings_builtin_gpu_driver_system">System Driver</string>
+    <!-- Value when the chosen custom driver is no longer installed, so the device's own driver
+         runs instead. -->
+    <string name="settings_builtin_gpu_driver_missing">Missing Driver (System in Use)</string>
+    <!-- A driver name followed by its version. -->
+    <string name="settings_builtin_gpu_driver_named_version" translatable="false">%1$s (%2$s)</string>
+    <!-- Entry in the GPU Driver list. %1$s is a downloaded driver package file name, never
+         translated. Verb. -->
+    <string name="settings_builtin_gpu_driver_install">Install %1$s</string>    <!-- Second line while a driver package unpacks. %1$s is the package file name. -->
+    <string name="settings_builtin_gpu_driver_installing">Installing %1$s...</string>
+    <!-- Notification after a driver installs. %1$s is the driver's name. -->
+    <string name="settings_builtin_gpu_driver_installed">Installed %1$s</string>
+    <!-- Notification when a driver package cannot be unpacked. %1$s is the package file name. -->
+    <string name="settings_builtin_gpu_driver_install_failed">Couldn\'t install %1$s</string>
+    <!-- Second line of a read-only GPU Driver row. %1$s is the emulator core's name, never
+         translated. -->
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">Not supported by %1$s</string>
+    <!-- Second line of a read-only GPU Driver row while the Backend row is not set to Vulkan. -->
+    <string name="settings_builtin_gpu_driver_reason_backend">Applies when Backend is Vulkan</string>
+    <!-- Second line of a read-only GPU Driver row on a device that cannot load custom drivers. -->
+    <string name="settings_builtin_gpu_driver_reason_device">Custom drivers need an Adreno GPU</string>
 </resources>

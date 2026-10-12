@@ -12,6 +12,14 @@ import com.nendo.argosy.ui.screens.settings.libretro.PlatformLibretroSettingsAcc
 import com.nendo.argosy.ui.screens.settings.libretro.isAtSegmentEnd
 import com.nendo.argosy.ui.screens.settings.libretro.isSegmented
 import com.nendo.argosy.ui.screens.settings.libretro.libretroSettingsMaxFocusIndex
+import com.nendo.argosy.ui.screens.settings.BuiltinVideoState
+import com.nendo.argosy.ui.screens.settings.GPU_DRIVER_PICKER_KEY
+import com.nendo.argosy.ui.screens.settings.GRAPHICS_BACKEND_PICKER_KEY
+import com.nendo.argosy.ui.screens.settings.sections.BuiltinGraphicsRow
+import com.nendo.argosy.ui.screens.settings.sections.builtinGpuDriverBlock
+import com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowAtFocusIndex
+import com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowHasOverride
+import com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRows
 import com.nendo.argosy.ui.screens.settings.sections.builtinVideoItemAtFocusIndex
 
 internal class BuiltinVideoSectionInput(
@@ -27,6 +35,7 @@ internal class BuiltinVideoSectionInput(
     override fun onConfirm(): InputResult {
         val state = viewModel.uiState.value
         val videoState = state.builtinVideo
+        builtinGraphicsRowAtFocusIndex(state.focusedIndex, videoState)?.let { return confirmGraphics(it, videoState) }
         val isGlobal = videoState.isGlobalContext
         val platformContext = videoState.currentPlatformContext
         val platformSettings = platformContext?.let { state.platformLibretro.platformSettings[it.platformId] }
@@ -37,7 +46,7 @@ internal class BuiltinVideoSectionInput(
             canEnableBFI = videoState.canEnableBlackFrameInsertion
         )
 
-        val resetAllIndex = maxSettingsIndex + 1
+        val resetAllIndex = builtinGraphicsRows(videoState).size + maxSettingsIndex + 1
         if (!isGlobal && hasAnyOverrides && state.focusedIndex == resetAllIndex) {
             viewModel.resetAllPlatformLibretroSettings()
             return InputResult.HANDLED
@@ -48,6 +57,43 @@ internal class BuiltinVideoSectionInput(
             return confirmGlobal(setting, videoState)
         }
         return confirmPlatform(setting, videoState, platformSettings)
+    }
+
+    private fun confirmGraphics(row: BuiltinGraphicsRow, videoState: BuiltinVideoState): InputResult =
+        when (row) {
+            BuiltinGraphicsRow.BACKEND -> {
+                viewModel.requestEnumPicker(GRAPHICS_BACKEND_PICKER_KEY)
+                InputResult.handled(SoundType.OPEN_MODAL)
+            }
+            BuiltinGraphicsRow.GPU_DRIVER -> if (builtinGpuDriverBlock(videoState) == null) {
+                viewModel.requestEnumPicker(GPU_DRIVER_PICKER_KEY)
+                InputResult.handled(SoundType.OPEN_MODAL)
+            } else {
+                InputResult.handled(SoundType.SILENT)
+            }
+        }
+
+    private fun cycleGraphics(row: BuiltinGraphicsRow, videoState: BuiltinVideoState, direction: Int): InputResult =
+        when (row) {
+            BuiltinGraphicsRow.BACKEND -> {
+                viewModel.cycleGraphicsBackend(direction)
+                InputResult.HANDLED
+            }
+            BuiltinGraphicsRow.GPU_DRIVER -> if (builtinGpuDriverBlock(videoState) == null) {
+                viewModel.cycleGpuDriver(direction)
+                InputResult.HANDLED
+            } else {
+                InputResult.handled(SoundType.BOUNDARY)
+            }
+        }
+
+    private fun resetGraphics(row: BuiltinGraphicsRow, state: SettingsUiState): InputResult {
+        if (!builtinGraphicsRowHasOverride(row, state)) return InputResult.UNHANDLED
+        when (row) {
+            BuiltinGraphicsRow.BACKEND -> viewModel.resetGraphicsBackend()
+            BuiltinGraphicsRow.GPU_DRIVER -> viewModel.resetGpuDriver()
+        }
+        return InputResult.HANDLED
     }
 
     private fun confirmGlobal(
@@ -143,6 +189,7 @@ internal class BuiltinVideoSectionInput(
     private fun resetFocusedSettingOverride(): InputResult {
         val state = viewModel.uiState.value
         if (state.builtinVideo.isGlobalContext) return InputResult.UNHANDLED
+        builtinGraphicsRowAtFocusIndex(state.focusedIndex, state.builtinVideo)?.let { return resetGraphics(it, state) }
         val videoState = state.builtinVideo
         val platformContext = videoState.currentPlatformContext
         val platformSettings = platformContext?.let { state.platformLibretro.platformSettings[it.platformId] }
@@ -179,6 +226,8 @@ internal class BuiltinVideoSectionInput(
 
     private fun cycleSettings(direction: Int): InputResult {
         val state = viewModel.uiState.value
+        builtinGraphicsRowAtFocusIndex(state.focusedIndex, state.builtinVideo)
+            ?.let { return cycleGraphics(it, state.builtinVideo, direction) }
         val setting = builtinVideoItemAtFocusIndex(state.focusedIndex, state.builtinVideo) ?: return InputResult.UNHANDLED
         if (setting.type !is LibretroSettingDef.SettingType.Cycle) return InputResult.UNHANDLED
         if (readerFor(state).isAtSegmentEnd(setting, direction)) return InputResult.handled(SoundType.BOUNDARY)

@@ -563,4 +563,19 @@
     <string name="reviews_editor_footer_submit">Publicar</string>
     <string name="reviews_editor_footer_delete">Eliminar</string>
     <string name="reviews_editor_footer_back">Atrás</string>
+    <string name="gamedetail_per_game_backend_label">Motor de renderizado</string>
+    <string name="gamedetail_per_game_backend_inherit">Heredado (%1$s)</string>
+    <string name="gamedetail_per_game_footer_gpu_driver_options">Opciones</string>
+    <string name="gamedetail_per_game_gpu_driver_install">Instalar %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_installing">Instalando %1$s...</string>
+    <string name="gamedetail_per_game_gpu_driver_installed">%1$s instalado</string>
+    <string name="gamedetail_per_game_gpu_driver_install_failed">No se pudo instalar %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_label">Controlador de GPU</string>
+    <string name="gamedetail_per_game_gpu_driver_inherit">Heredado (%1$s)</string>
+    <string name="gamedetail_per_game_gpu_driver_system">Controlador del sistema</string>
+    <string name="gamedetail_per_game_gpu_driver_missing">Falta el controlador (se usa el del sistema)</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core">No compatible con %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">este núcleo</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_backend">Se aplica cuando el motor de renderizado es Vulkan</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_device">Los controladores personalizados requieren una GPU Adreno</string>
 </resources>

@@ -109,6 +109,12 @@ interface EmulatorConfigDao {
     @Query("UPDATE emulator_configs SET preferredExtension = :extension WHERE gameId = :gameId")
     suspend fun updatePreferredExtensionForGame(gameId: Long, extension: String?)
 
+    @Query("UPDATE emulator_configs SET gpuDriver = :gpuDriver WHERE gameId = :gameId")
+    suspend fun updateGpuDriverForGame(gameId: Long, gpuDriver: String?)
+
+    @Query("UPDATE emulator_configs SET graphicsBackend = :graphicsBackend WHERE gameId = :gameId")
+    suspend fun updateGraphicsBackendForGame(gameId: Long, graphicsBackend: String?)
+
     @Query("SELECT controllerTypes FROM emulator_configs WHERE gameId = :gameId LIMIT 1")
     suspend fun getControllerTypesForGame(gameId: Long): String?
 

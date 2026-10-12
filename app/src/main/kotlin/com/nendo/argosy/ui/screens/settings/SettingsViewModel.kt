@@ -153,6 +153,7 @@ class SettingsViewModel @Inject constructor(
     internal val socialRepository: SocialRepository,
     internal val discordPresenceManager: DiscordPresenceManager,
     internal val coreOptionsRepo: CoreOptionsRepository,
+    internal val vulkanDriverRepository: com.nendo.argosy.data.emulator.VulkanDriverRepository,
     private val playStatsRepo: com.nendo.argosy.data.repository.PlayStatsRepository,
     private val biosRepository: com.nendo.argosy.data.repository.BiosRepository,
     private val savePathValidator: com.nendo.argosy.data.emulator.SavePathValidator,
@@ -883,6 +884,13 @@ class SettingsViewModel @Inject constructor(
     fun cycleBuiltinOverscanCrop(direction: Int) = routeCycleBuiltinOverscanCrop(this, direction)
     fun cycleBuiltinRewindSpeed(direction: Int) = routeCycleBuiltinRewindSpeed(this, direction)
     fun cycleBuiltinRewindBufferDuration(direction: Int) = routeCycleBuiltinRewindBufferDuration(this, direction)
+    fun cycleGraphicsBackend(direction: Int) = routeCycleGraphicsBackend(this, direction)
+    fun selectGraphicsBackend(index: Int) = routeSelectGraphicsBackend(this, index)
+    fun resetGraphicsBackend() = routeResetGraphicsBackend(this)
+    fun cycleGpuDriver(direction: Int) = routeCycleGpuDriver(this, direction)
+    fun setGpuDriver(token: String) = routeSetGpuDriver(this, token)
+    fun resetGpuDriver() = routeResetGpuDriver(this)
+    fun installVulkanDriver(fileName: String) = routeInstallVulkanDriver(this, fileName)
     fun updatePlatformLibretroSetting(setting: LibretroSettingDef, value: String?) = routeUpdatePlatformLibretroSetting(this, setting, value)
     fun resetAllPlatformLibretroSettings() = routeResetAllPlatformLibretroSettings(this)
     fun updatePlatformControlSetting(field: String, value: Boolean?) = routeUpdatePlatformControlSetting(this, field, value)
