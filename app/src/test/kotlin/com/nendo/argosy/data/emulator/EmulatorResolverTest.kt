@@ -165,7 +165,7 @@ class EmulatorResolverTest {
         }
 
     @Test
-    fun `built-in binding is rejected for a platform no bundled core supports so the external emulator owns the save path`() =
+    fun `built-in binding is rejected where no built-in core runs the platform so the external emulator owns the save path`() =
         runTest {
             coEvery { emulatorConfigDao.getDefaultForPlatform(10L) } returns createConfig(
                 platformId = 10L,
@@ -180,6 +180,22 @@ class EmulatorResolverTest {
             val result = resolver.getEmulatorPackageForGame(1L, 10L, "ps2")
 
             assertEquals(nethersx2.packageName, result)
+        }
+
+    @Test
+    fun `built-in binding for ps2 is kept where the built-in core runs ps2`() =
+        runTest {
+            coEvery { emulatorConfigDao.getDefaultForPlatform(10L) } returns createConfig(
+                platformId = 10L,
+                packageName = EmulatorRegistry.BUILTIN_PACKAGE,
+                isDefault = true
+            )
+            every { libretroCoreMgr.isPlatformSupported("ps2") } returns true
+            stubDetectorWith(installedEmulator(builtin), installedEmulator(nethersx2))
+
+            val result = resolver.getEmulatorPackageForGame(1L, 10L, "ps2")
+
+            assertEquals(EmulatorRegistry.BUILTIN_PACKAGE, result)
         }
 
     @Test

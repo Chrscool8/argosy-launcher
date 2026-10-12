@@ -2741,6 +2741,7 @@
     <string name="settings_builtin_gpu_driver_installed">%1$s установлен</string>
     <string name="settings_builtin_gpu_driver_install_failed">Не удалось установить %1$s</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">Не поддерживается в %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s использует системный драйвер</string>
     <string name="settings_builtin_gpu_driver_reason_backend">Действует, когда рендерер Vulkan</string>
     <string name="settings_builtin_gpu_driver_reason_device">Свои драйверы требуют GPU Adreno</string>
 </resources>

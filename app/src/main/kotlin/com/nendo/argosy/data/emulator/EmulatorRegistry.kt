@@ -1159,7 +1159,7 @@ object EmulatorRegistry {
 
     private val recommendedEmulators: Map<String, List<String>> = mapOf(
         "psx" to listOf(BUILTIN_ID, "duckstation", "armsx1", "retroarch", "retroarch_64", "retroarch_32"),
-        "ps2" to listOf("nethersx2", "armsx2_refresh", "armsx2", "psx2", "pcsx2"),
+        "ps2" to listOf(BUILTIN_ID, "nethersx2", "armsx2_refresh", "armsx2", "psx2", "pcsx2"),
         "psp" to listOf(
             BUILTIN_ID, "ppsspp", "ppsspp_gold", "ppsspp_legacy", "retroarch", "retroarch_64", "retroarch_32"
         ),

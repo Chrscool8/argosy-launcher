@@ -562,6 +562,7 @@
     <string name="gamedetail_per_game_gpu_driver_system">Systemtreiber</string>
     <string name="gamedetail_per_game_gpu_driver_missing">Treiber fehlt (Systemtreiber aktiv)</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core">Von %1$s nicht unterstützt</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_system_only">%1$s nutzt den Systemtreiber</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">diesem Kern</string>
     <string name="gamedetail_per_game_gpu_driver_reason_backend">Gilt, wenn das Backend Vulkan ist</string>
     <string name="gamedetail_per_game_gpu_driver_reason_device">Eigene Treiber benötigen eine Adreno-GPU</string>

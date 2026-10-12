@@ -831,6 +831,7 @@ class GameLauncher @Inject constructor(
 
     private suspend fun ps2MemcardGate(gameId: Long, game: GameEntity, emulator: EmulatorDef): LaunchResult? {
         if (game.platformSlug != "ps2") return null
+        if (emulator.launchConfig.isInProcess) return null
         if (emulatorConfigDao.getSelectedMemcardForGame(gameId) != null) return null
         val emulatorId = savePathAuthority.configIdFor(
             SavePathRequest(
@@ -875,11 +876,15 @@ class GameLauncher @Inject constructor(
 
     private suspend fun biosGate(game: GameEntity, emulator: EmulatorDef): LaunchResult? {
         if (!emulator.launchConfig.isInProcess) return null
-        val requirements = mandatoryBios[game.platformSlug.lowercase()] ?: return null
+        val requirements = mandatoryBios[game.platformSlug.lowercase()]
+        val biosDir = BiosPathRegistry.getBuiltinPlatformBiosDir(game.platformSlug)
+        if (requirements == null && biosDir == null) return null
         return try {
             biosRepository.distributeBiosToEmulator(game.platformSlug, EmulatorRegistry.BUILTIN_PACKAGE)
             val systemDir = biosRepository.getLibretroSystemDir()
-            val unmet = requirements.any { group -> group.none { File(systemDir, it).exists() } }
+            val unmetFiles = requirements.orEmpty().any { group -> group.none { File(systemDir, it).exists() } }
+            val unmetDir = biosDir != null && File(systemDir, biosDir).listFiles()?.any { it.isFile } != true
+            val unmet = unmetFiles || unmetDir
             if (unmet) {
                 Logger.warn(TAG, "[Launch] BIOS gate: ${game.platformSlug} missing required firmware")
                 LaunchResult.MissingBios(game.platformSlug)

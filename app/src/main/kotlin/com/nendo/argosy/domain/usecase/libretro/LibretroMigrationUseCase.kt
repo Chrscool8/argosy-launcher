@@ -1,10 +1,12 @@
 package com.nendo.argosy.domain.usecase.libretro
 
 import android.util.Log
+import com.nendo.argosy.data.emulator.EmulatorDetector
 import com.nendo.argosy.data.emulator.EmulatorRegistry
 import com.nendo.argosy.data.local.dao.EmulatorConfigDao
 import com.nendo.argosy.data.local.dao.PlatformDao
 import com.nendo.argosy.data.local.entity.EmulatorConfigEntity
+import com.nendo.argosy.data.platform.PlatformDefinitions
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.libretro.LibretroCoreManager
 import com.nendo.argosy.libretro.LibretroCoreRegistry
@@ -17,8 +19,43 @@ class LibretroMigrationUseCase @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
     private val platformDao: PlatformDao,
     private val emulatorConfigDao: EmulatorConfigDao,
-    private val coreManager: LibretroCoreManager
+    private val coreManager: LibretroCoreManager,
+    private val emulatorDetector: EmulatorDetector
 ) {
+    /**
+     * Pins every PS2 platform that already has games and no stored default to the emulator it
+     * resolved to before the built-in core became the PS2 default, so an existing install keeps
+     * launching where it did. Runs once; an install with no PS2 games yet is never pinned.
+     */
+    suspend fun pinExistingPs2Emulator() {
+        if (preferencesRepository.isPs2StandalonePinDone().first()) return
+        val ps2Platforms = platformDao.getAllPlatforms().filter {
+            it.gameCount > 0 && PlatformDefinitions.getCanonicalSlug(it.slug) == PS2_SLUG
+        }
+        if (ps2Platforms.isNotEmpty()) {
+            if (emulatorDetector.installedEmulators.value.isEmpty()) emulatorDetector.detectEmulators()
+            val previous = emulatorDetector.getPreferredEmulator(PS2_SLUG, builtinEnabled = false)?.def
+            for (platform in ps2Platforms) {
+                if (previous == null) break
+                val existing = emulatorConfigDao.getDefaultForPlatform(platform.id)
+                if (!existing?.packageName.isNullOrEmpty()) continue
+                emulatorConfigDao.insert(
+                    existing?.copy(packageName = previous.packageName, displayName = previous.displayName)
+                        ?: EmulatorConfigEntity(
+                            platformId = platform.id,
+                            gameId = null,
+                            packageName = previous.packageName,
+                            displayName = previous.displayName,
+                            coreName = null,
+                            isDefault = true
+                        )
+                )
+                Log.i(TAG, "Pinned ${platform.slug} (${platform.id}) to ${previous.packageName}")
+            }
+        }
+        preferencesRepository.setPs2StandalonePinDone()
+    }
+
     suspend fun runMigrationIfNeeded(): MigrationResult {
         if (preferencesRepository.isBuiltinMigrationComplete().first()) {
             Log.d(TAG, "Migration already complete, skipping")
@@ -114,6 +151,7 @@ class LibretroMigrationUseCase @Inject constructor(
 
     private companion object {
         val REMOVED_CORE_IDS = setOf("play")
+        const val PS2_SLUG = "ps2"
     }
 }
 

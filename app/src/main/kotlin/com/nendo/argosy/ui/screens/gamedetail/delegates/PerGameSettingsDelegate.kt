@@ -464,7 +464,8 @@ class PerGameSettingsDelegate @Inject constructor(
                 gpuDriverBlock(
                     backendSupportsVulkan = GraphicsBackendRegistry.supportsVulkan(it.backend),
                     backendIsVulkan = it.preferVulkan,
-                    customDriversSupported = it.customDriversSupported
+                    customDriversSupported = it.customDriversSupported,
+                    coreAcceptsCustomDriver = it.coreAcceptsCustomDriver
                 )
             },
             graphicsCoreName = graphics?.coreId?.let { LibretroCoreRegistry.displayNameFor(it) },

@@ -271,6 +271,10 @@ private fun gpuDriverBlockReason(block: GpuDriverBlock, coreName: String?): Stri
         R.string.gamedetail_per_game_gpu_driver_reason_core,
         coreName ?: stringResource(R.string.gamedetail_per_game_gpu_driver_reason_core_unknown)
     )
+    GpuDriverBlock.CORE_SYSTEM_DRIVER_ONLY -> stringResource(
+        R.string.gamedetail_per_game_gpu_driver_reason_core_system_only,
+        coreName ?: stringResource(R.string.gamedetail_per_game_gpu_driver_reason_core_unknown)
+    )
     GpuDriverBlock.BACKEND_NOT_VULKAN -> stringResource(R.string.gamedetail_per_game_gpu_driver_reason_backend)
     GpuDriverBlock.NO_CUSTOM_DRIVERS -> stringResource(R.string.gamedetail_per_game_gpu_driver_reason_device)
 }

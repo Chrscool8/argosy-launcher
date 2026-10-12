@@ -498,6 +498,7 @@
     <string name="gamedetail_per_game_gpu_driver_system">系统驱动</string>
     <string name="gamedetail_per_game_gpu_driver_missing">驱动缺失（正在使用系统驱动）</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core">%1$s 不支持</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_system_only">%1$s 使用系统驱动</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">此核心</string>
     <string name="gamedetail_per_game_gpu_driver_reason_backend">渲染后端为 Vulkan 时生效</string>
     <string name="gamedetail_per_game_gpu_driver_reason_device">自定义驱动需要 Adreno GPU</string>

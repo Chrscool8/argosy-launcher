@@ -151,6 +151,39 @@ class BuiltinGraphicsResolverTest {
     }
 
     @Test
+    fun `ARMSX2 always runs the system driver even when a custom driver is installed and chosen`() = runTest {
+        given(gameBackend = null, gameDriver = GpuDriverToken.custom("turnip"))
+
+        val graphics = resolve("armsx2", listOf(Variable("armsx2_renderer", "Vulkan")))
+
+        assertTrue(graphics.preferVulkan)
+        assertNull(graphics.driver)
+        assertNull(graphics.choice.customDriverId)
+        assertTrue(graphics.choice.fellBackToSystem)
+        assertFalse(graphics.coreAcceptsCustomDriver)
+    }
+
+    @Test
+    fun `a core that accepts custom drivers still loads the chosen one`() = runTest {
+        given(gameBackend = null, gameDriver = GpuDriverToken.custom("turnip"))
+
+        val graphics = resolve("ppsspp", listOf(Variable("ppsspp_backend", "vulkan")))
+
+        assertEquals("turnip", graphics.driver?.id)
+        assertTrue(graphics.coreAcceptsCustomDriver)
+    }
+
+    @Test
+    fun `ARMSX2 on a device without Vulkan swaps the renderer to OpenGL`() = runTest {
+        given(gameBackend = null, vulkanSupported = false)
+
+        val graphics = resolve("armsx2", listOf(Variable("armsx2_renderer", "Vulkan")))
+
+        assertEquals(listOf("armsx2_renderer" to "OpenGL"), graphics.coreVariables.map { it.key to it.value })
+        assertFalse(graphics.preferVulkan)
+    }
+
+    @Test
     fun `a core without a backend never prefers Vulkan and ignores a stored game backend`() = runTest {
         given(gameBackend = "vulkan")
 

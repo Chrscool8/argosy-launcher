@@ -85,6 +85,13 @@ class SaveSyncApiClient @Inject constructor(
         emulatorId: String
     ): PlatformSaveHandler = saveHandlerRegistry.getHandler(config, platformSlug, emulatorId)
 
+    internal suspend fun isSigilRoutedFor(
+        gameId: Long,
+        config: SavePathConfig?,
+        platformSlug: String,
+        emulatorId: String
+    ): Boolean = saveHandlerRegistry.isSigilRoutedFor(gameId, config, platformSlug, emulatorId)
+
     suspend fun resolveEmulatorForGame(game: GameEntity): String? {
         val launchPackage = emulatorResolver.getEmulatorPackageForGame(game.id, game.platformId, game.platformSlug)
         if (launchPackage != null) {

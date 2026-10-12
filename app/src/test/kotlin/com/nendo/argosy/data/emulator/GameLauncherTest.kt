@@ -720,13 +720,10 @@ class GameLauncherTest {
         assertEquals("ps2", (result as LaunchResult.NoEmulator).platformSlug)
     }
 
-    @Test
-    fun `PS2 with built-in config should not launch built-in`() = runTest {
-        val path = romFile("iso")
-        val game = createGame(localPath = path, platformSlug = "ps2")
+    private fun bindPs2ToBuiltin(coreSupportsPs2: Boolean): GameEntity {
+        val game = createGame(localPath = romFile("iso"), platformSlug = "ps2")
         coEvery { gameDao.getById(1L) } returns game
         coEvery { variantResolver.getVariantOptions(game) } returns null
-
         val builtinDef = EmulatorRegistry.getByPackage(EmulatorRegistry.BUILTIN_PACKAGE)!!
         coEvery { emulatorConfigDao.getByGameId(1L) } returns null
         coEvery { emulatorConfigDao.getDefaultForPlatform(10L) } returns createConfig(
@@ -734,25 +731,61 @@ class GameLauncherTest {
             packageName = EmulatorRegistry.BUILTIN_PACKAGE,
             isDefault = true
         )
-
         stubDetectorWith(installedEmulator(builtinDef))
         every { emulatorDetector.getByPackage(EmulatorRegistry.BUILTIN_PACKAGE) } returns builtinDef
+        every { libretroCoreMgr.isPlatformSupported("ps2") } returns coreSupportsPs2
+        return game
+    }
 
-        // The built-in claims support via LibretroCoreRegistry.getSupportedPlatforms().
-        // PS2 is NOT in that set. Currently the resolver does not validate this --
-        // it trusts the DB config. This test documents the current behavior.
-        // If built-in is in the installed list AND the DB says built-in for PS2,
-        // the resolver WILL return built-in. This is a known gap.
+    @Test
+    fun `PS2 bound to the built-in is skipped where no built-in ps2 core runs`() = runTest {
+        bindPs2ToBuiltin(coreSupportsPs2 = false)
+        every { emulatorDetector.getPreferredEmulator("ps2", true) } returns null
+
         val result = launcher.launch(1L)
 
-        // Document current behavior: built-in IS returned (incorrectly).
-        // When a platform-support guard is added, this should become NoEmulator.
-        val isBuiltinLaunch = result is LaunchResult.NoCore || result is LaunchResult.Success
-        val isRejected = result is LaunchResult.NoEmulator
-        assertTrue(
-            "PS2 + built-in config should either be rejected or fail at core lookup, got ${result::class.simpleName}",
-            isBuiltinLaunch || isRejected
+        assertTrue("got ${result::class.simpleName}", result is LaunchResult.NoEmulator)
+    }
+
+    @Test
+    fun `PS2 on the built-in core without a BIOS in pcsx2 bios asks for one`() = runTest {
+        bindPs2ToBuiltin(coreSupportsPs2 = true)
+        every { biosRepository.getLibretroSystemDir() } returns tempFolder.newFolder("system-empty")
+
+        val result = launcher.launch(1L)
+
+        assertTrue("got ${result::class.simpleName}", result is LaunchResult.MissingBios)
+        assertEquals("ps2", (result as LaunchResult.MissingBios).platformSlug)
+        coVerify { biosRepository.distributeBiosToEmulator("ps2", EmulatorRegistry.BUILTIN_PACKAGE) }
+    }
+
+    @Test
+    fun `PS2 on the built-in core passes the BIOS gate with any file name in pcsx2 bios`() = runTest {
+        bindPs2ToBuiltin(coreSupportsPs2 = true)
+        val systemDir = tempFolder.newFolder("system-bios")
+        java.io.File(systemDir, "pcsx2/bios").mkdirs()
+        java.io.File(systemDir, "pcsx2/bios/my dump.bin").writeBytes(byteArrayOf(1))
+        every { biosRepository.getLibretroSystemDir() } returns systemDir
+
+        val result = runCatching { launcher.launch(1L) }.getOrNull()
+
+        assertTrue("got ${result?.let { it::class.simpleName }}", result !is LaunchResult.MissingBios)
+        coVerify { coreSystemDataManager.ensureCoreSystemData(any(), any()) }
+    }
+
+    @Test
+    fun `PS2 on the built-in core never raises the memory card picker`() = runTest {
+        bindPs2ToBuiltin(coreSupportsPs2 = true)
+        every { biosRepository.getLibretroSystemDir() } returns tempFolder.newFolder("system-cards")
+        every { saveHandlerRegistry.listPs2FolderMemcardsForEmulator(any(), any(), any()) } returns listOf(
+            mockk(relaxed = true),
+            mockk(relaxed = true)
         )
+
+        val result = launcher.launch(1L)
+
+        assertTrue("got ${result::class.simpleName}", result !is LaunchResult.SelectMemcard)
+        verify(exactly = 0) { saveHandlerRegistry.listPs2FolderMemcardsForEmulator(any(), any(), any()) }
     }
 
     // -----------------------------------------------------------------------

@@ -575,6 +575,7 @@
     <string name="gamedetail_per_game_gpu_driver_system">Controlador del sistema</string>
     <string name="gamedetail_per_game_gpu_driver_missing">Falta el controlador (se usa el del sistema)</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core">No compatible con %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_system_only">%1$s usa el controlador del sistema</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">este núcleo</string>
     <string name="gamedetail_per_game_gpu_driver_reason_backend">Se aplica cuando el motor de renderizado es Vulkan</string>
     <string name="gamedetail_per_game_gpu_driver_reason_device">Los controladores personalizados requieren una GPU Adreno</string>

@@ -628,6 +628,8 @@ class UserPreferencesRepository @Inject constructor(
     fun getBuiltinCoreSelections(): Flow<Map<String, String>> = builtinPrefs.getBuiltinCoreSelections()
     suspend fun removeBuiltinCoreSelectionsByCore(coreId: String) = builtinPrefs.removeBuiltinCoreSelectionsByCore(coreId)
     fun isBuiltinMigrationComplete(): Flow<Boolean> = builtinPrefs.isBuiltinMigrationComplete()
+    fun isPs2StandalonePinDone(): Flow<Boolean> = builtinPrefs.isPs2StandalonePinDone()
+    suspend fun setPs2StandalonePinDone() = builtinPrefs.setPs2StandalonePinDone()
 
     // --- Session delegates ---
 

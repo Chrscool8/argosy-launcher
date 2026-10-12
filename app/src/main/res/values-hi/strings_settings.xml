@@ -2604,6 +2604,7 @@
     <string name="settings_builtin_gpu_driver_installed">%1$s इंस्टॉल हो गया</string>
     <string name="settings_builtin_gpu_driver_install_failed">%1$s इंस्टॉल नहीं हो सका</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">%1$s में समर्थित नहीं</string>
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s सिस्टम ड्राइवर इस्तेमाल करता है</string>
     <string name="settings_builtin_gpu_driver_reason_backend">बैकएंड Vulkan होने पर लागू होता है</string>
     <string name="settings_builtin_gpu_driver_reason_device">कस्टम ड्राइवर के लिए Adreno GPU चाहिए</string>
 </resources>

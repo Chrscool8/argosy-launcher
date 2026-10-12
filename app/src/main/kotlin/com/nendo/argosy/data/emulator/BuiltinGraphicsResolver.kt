@@ -28,7 +28,8 @@ data class BuiltinGraphics(
     val choice: GpuDriverChoice,
     val driver: InstalledVulkanDriver?,
     val installedDrivers: List<InstalledVulkanDriver>,
-    val customDriversSupported: Boolean
+    val customDriversSupported: Boolean,
+    val coreAcceptsCustomDriver: Boolean
 )
 
 @Singleton
@@ -73,10 +74,11 @@ class BuiltinGraphicsResolver @Inject constructor(
         val inheritedDriver = GpuDriverPrecedence.select(null, platformSettings?.gpuDriver, globalDriver)
         val installed = vulkanDriverRepository.listInstalled()
         val customSupported = vulkanDriverRepository.customDriversSupported()
+        val coreAcceptsCustom = GraphicsBackendRegistry.acceptsCustomVulkanDriver(coreId)
         val choice = GpuDriverPrecedence.resolve(
             requested = GpuDriverPrecedence.select(gameDriver, inheritedDriver, globalDriver),
             installedIds = installed.map { it.id }.toSet(),
-            customDriversSupported = customSupported
+            customDriversSupported = customSupported && coreAcceptsCustom
         )
         return BuiltinGraphics(
             coreId = coreId,
@@ -98,7 +100,8 @@ class BuiltinGraphicsResolver @Inject constructor(
             choice = choice,
             driver = installed.firstOrNull { it.id == choice.customDriverId },
             installedDrivers = installed,
-            customDriversSupported = customSupported
+            customDriversSupported = customSupported,
+            coreAcceptsCustomDriver = coreAcceptsCustom
         )
     }
 

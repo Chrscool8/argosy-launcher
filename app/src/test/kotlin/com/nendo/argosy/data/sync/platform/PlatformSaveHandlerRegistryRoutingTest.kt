@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -105,6 +106,20 @@ class PlatformSaveHandlerRegistryRoutingTest {
         val handler = registry.getHandler(config, "gbc", "argosy")
 
         assertSame(unitHandler, handler)
+    }
+
+    @Test
+    fun `built-in ps2 routes to the unit handler and never to the PS2 folder handler`() {
+        every { sigilHandler.routes(any(), any()) } answers {
+            SigilSaveHandler.layoutFor(firstArg(), secondArg()) != null
+        }
+        val config = SavePathRegistry.getConfigForPlatform("argosy", "ps2")
+        assertNotNull(config)
+
+        val handler = registry.getHandler(config, "ps2", "argosy")
+
+        assertSame(unitHandler, handler)
+        assertNotSame(registry.getFolderHandler("ps2"), handler)
     }
 
     @Test

@@ -56,6 +56,7 @@ fun InstalledVulkanDriver.toOption(): VulkanDriverOption =
 
 enum class GpuDriverBlock {
     CORE_UNSUPPORTED,
+    CORE_SYSTEM_DRIVER_ONLY,
     BACKEND_NOT_VULKAN,
     NO_CUSTOM_DRIVERS
 }
@@ -63,14 +64,17 @@ enum class GpuDriverBlock {
 /**
  * Why the GPU driver row cannot be changed, or null when it can. [backendSupportsVulkan] and
  * [backendIsVulkan] are null where no core is in scope, as in the global context, and only the
- * device check applies there.
+ * device check applies there. [coreAcceptsCustomDriver] is false for a core that always runs on
+ * the system Vulkan driver.
  */
 fun gpuDriverBlock(
     backendSupportsVulkan: Boolean?,
     backendIsVulkan: Boolean?,
-    customDriversSupported: Boolean
+    customDriversSupported: Boolean,
+    coreAcceptsCustomDriver: Boolean = true
 ): GpuDriverBlock? = when {
     backendSupportsVulkan == false -> GpuDriverBlock.CORE_UNSUPPORTED
+    !coreAcceptsCustomDriver -> GpuDriverBlock.CORE_SYSTEM_DRIVER_ONLY
     backendIsVulkan == false -> GpuDriverBlock.BACKEND_NOT_VULKAN
     !customDriversSupported -> GpuDriverBlock.NO_CUSTOM_DRIVERS
     else -> null

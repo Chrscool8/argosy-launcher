@@ -10,7 +10,8 @@ data class GraphicsBackendUi(
     val currentValue: String,
     val isOverridden: Boolean,
     val supportsVulkan: Boolean,
-    val isVulkan: Boolean
+    val isVulkan: Boolean,
+    val acceptsCustomDriver: Boolean
 )
 
 data class BuiltinGraphicsState(

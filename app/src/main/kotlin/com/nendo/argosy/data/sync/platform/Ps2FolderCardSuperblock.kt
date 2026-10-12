@@ -6,6 +6,7 @@ import java.nio.ByteOrder
 internal object Ps2FolderCardSuperblock {
 
     const val SIZE = 0x2000
+    const val FILE_NAME = "_pcsx2_superblock"
 
     private const val MAGIC = "Sony PS2 Memory Card Format "
     private const val VERSION = "1.2.0.0"

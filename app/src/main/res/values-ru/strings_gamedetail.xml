@@ -538,6 +538,7 @@
     <string name="gamedetail_per_game_gpu_driver_system">Системный драйвер</string>
     <string name="gamedetail_per_game_gpu_driver_missing">Драйвер не найден (используется системный)</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core">Не поддерживается в %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_system_only">%1$s использует системный драйвер</string>
     <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">этом ядре</string>
     <string name="gamedetail_per_game_gpu_driver_reason_backend">Действует, когда рендерер Vulkan</string>
     <string name="gamedetail_per_game_gpu_driver_reason_device">Свои драйверы требуют GPU Adreno</string>

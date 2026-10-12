@@ -4985,6 +4985,9 @@
     <!-- Second line of a read-only GPU Driver row. %1$s is the emulator core's name, never
          translated. -->
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">Not supported by %1$s</string>
+    <!-- Second line of a read-only GPU Driver row for a core that always runs on the device's own
+         Vulkan driver. %1$s is the emulator core's name, never translated. -->
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s uses the system driver</string>
     <!-- Second line of a read-only GPU Driver row while the Backend row is not set to Vulkan. -->
     <string name="settings_builtin_gpu_driver_reason_backend">Applies when Backend is Vulkan</string>
     <!-- Second line of a read-only GPU Driver row on a device that cannot load custom drivers. -->

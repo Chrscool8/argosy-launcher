@@ -2,7 +2,10 @@ package com.nendo.argosy.data.emulator
 
 import android.content.Context
 import com.nendo.argosy.BuildConfig
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import java.io.ByteArrayInputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,13 +21,80 @@ class CoreSystemDataManagerTest {
     val tempFolder = TemporaryFolder()
 
     private lateinit var manager: CoreSystemDataManager
+    private lateinit var fetcher: SystemDataFetcher
     private lateinit var systemDir: File
+    private val requestedUrls = mutableListOf<String>()
 
     @Before
     fun setup() {
         val context = mockk<Context>(relaxed = true)
-        manager = CoreSystemDataManager(context)
+        fetcher = mockk()
+        manager = CoreSystemDataManager(context, fetcher)
         systemDir = tempFolder.newFolder("system")
+    }
+
+    private fun serveArmsx2(failing: Set<String> = emptySet()) {
+        every { fetcher.fetch<Any?>(any(), any()) } answers {
+            val url = firstArg<String>()
+            requestedUrls += url
+            if (failing.any { url.endsWith(it) }) throw java.io.IOException("offline")
+            secondArg<(java.io.InputStream) -> Any?>().invoke(ByteArrayInputStream(url.toByteArray()))
+        }
+    }
+
+    private val armsx2Base =
+        "https://raw.githubusercontent.com/ARMSX2/ARMSX2/0076b5c389ea7296331ad2d96193c6e8d5d314fa"
+
+    @Test
+    fun `armsx2 fetches exactly the overrides and the font from the pinned commit`() = runTest {
+        serveArmsx2()
+
+        assertTrue(manager.ensureCoreSystemData("armsx2", systemDir))
+
+        assertEquals(
+            listOf(
+                "$armsx2Base/bin/resources-overlay/armsx2_overrides.yaml",
+                "$armsx2Base/bin/resources/fonts/Roboto-Regular.ttf"
+            ),
+            requestedUrls
+        )
+        val overrides = File(systemDir, "pcsx2/resources/armsx2_overrides.yaml")
+        val font = File(systemDir, "pcsx2/resources/fonts/Roboto-Regular.ttf")
+        assertEquals("$armsx2Base/bin/resources-overlay/armsx2_overrides.yaml", overrides.readText())
+        assertTrue(font.exists())
+        assertFalse(manager.needsSystemData("armsx2", systemDir))
+    }
+
+    @Test
+    fun `armsx2 never writes shaders or a GameIndex`() = runTest {
+        serveArmsx2()
+
+        manager.ensureCoreSystemData("armsx2", systemDir)
+
+        val written = File(systemDir, "pcsx2").walkTopDown().filter { it.isFile }.map { it.name }.toList()
+        assertTrue(written.none { it.contains("GameIndex", ignoreCase = true) })
+        assertTrue(written.none { it.endsWith(".glsl") || it.endsWith(".hlsl") || it.endsWith(".spv") })
+        assertTrue(requestedUrls.none { it.contains("shaders") || it.contains("GameIndex") })
+    }
+
+    @Test
+    fun `a failed armsx2 fetch does not abort the launch and is retried next time`() = runTest {
+        serveArmsx2(failing = setOf("Roboto-Regular.ttf"))
+
+        assertTrue(manager.ensureCoreSystemData("armsx2", systemDir))
+
+        assertTrue(manager.needsSystemData("armsx2", systemDir))
+        assertFalse(File(systemDir, "pcsx2/resources/fonts/Roboto-Regular.ttf.part").exists())
+    }
+
+    @Test
+    fun `armsx2 skips the network once its marker is current`() = runTest {
+        writeMarker("pcsx2/resources", BuildConfig.ARMSX2_SYS_VERSION.toString())
+        serveArmsx2()
+
+        assertTrue(manager.ensureCoreSystemData("armsx2", systemDir))
+
+        assertTrue(requestedUrls.isEmpty())
     }
 
     @Test

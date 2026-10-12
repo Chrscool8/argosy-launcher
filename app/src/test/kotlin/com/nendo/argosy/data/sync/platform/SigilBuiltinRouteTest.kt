@@ -43,7 +43,8 @@ class SigilBuiltinRouteTest {
         retroArchPathResolver = retroArchPathResolver,
         sigilSyncStateDao = mockk(relaxed = true),
         syncPreferencesRepository = mockk(relaxed = true),
-        cartFeatureScanner = mockk(relaxed = true)
+        cartFeatureScanner = mockk(relaxed = true),
+        saveLocator = mockk(relaxed = true)
     )
 
     private fun builtinGame(platformSlug: String, core: String): GameEntity {
@@ -75,6 +76,15 @@ class SigilBuiltinRouteTest {
         assertEquals("azahar", SigilSaveHandler.libretroLayoutFor("n3ds", "azahar", retroArch = false))
         assertEquals("dolphin", SigilSaveHandler.libretroLayoutFor("gc", "dolphin", retroArch = false))
         assertEquals("dolphin", SigilSaveHandler.libretroLayoutFor("ngc", "dolphin", retroArch = false))
+    }
+
+    @Test
+    fun `a core Sigil knows under another name resolves to that layout name and every other keeps its own`() {
+        assertEquals("pcsx2", SigilSaveHandler.libretroLayoutName("armsx2"))
+        assertEquals("mupen64plus_next", SigilSaveHandler.libretroLayoutName("mupen64plus_next_gles3"))
+        assertEquals("mupen64plus_next", SigilSaveHandler.libretroLayoutName("mupen64plus_next_gles2"))
+        assertEquals("pcsx2", SigilSaveHandler.libretroLayoutName("pcsx2"))
+        assertEquals("snes9x", SigilSaveHandler.libretroLayoutName("snes9x"))
     }
 
     @Test

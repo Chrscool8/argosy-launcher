@@ -44,11 +44,16 @@ object GraphicsBackendRegistry {
         GraphicsBackend.CoreOption("mupen64plus_next_gles2", "mupen64plus-rdp-plugin", "parallel"),
         GraphicsBackend.CoreOption("melonds", "melonds_opengl_renderer", null),
         GraphicsBackend.CoreOption("melondsds", "melonds_render_mode", null),
+        GraphicsBackend.CoreOption("armsx2", "armsx2_renderer", "Vulkan"),
         GraphicsBackend.FrontendApi("dolphin"),
         GraphicsBackend.FrontendApi("flycast")
     ).associateBy { it.coreId }
 
+    private val systemVulkanDriverOnlyCores = setOf("armsx2")
+
     fun forCore(coreId: String?): GraphicsBackend? = coreId?.let { backends[it] }
+
+    fun acceptsCustomVulkanDriver(coreId: String?): Boolean = coreId !in systemVulkanDriverOnlyCores
 
     fun supportsVulkan(backend: GraphicsBackend?): Boolean = when (backend) {
         is GraphicsBackend.CoreOption -> backend.vulkanValue != null

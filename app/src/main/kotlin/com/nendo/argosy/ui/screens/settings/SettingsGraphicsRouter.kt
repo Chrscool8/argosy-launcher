@@ -75,7 +75,8 @@ private suspend fun loadBackendUi(
                 currentValue = current,
                 isOverridden = stored != null,
                 supportsVulkan = GraphicsBackendRegistry.supportsVulkan(backend),
-                isVulkan = GraphicsBackendRegistry.isVulkanValue(backend, current)
+                isVulkan = GraphicsBackendRegistry.isVulkanValue(backend, current),
+                acceptsCustomDriver = GraphicsBackendRegistry.acceptsCustomVulkanDriver(backend.coreId)
             )
         }
         is GraphicsBackend.FrontendApi -> {
@@ -88,7 +89,8 @@ private suspend fun loadBackendUi(
                 currentValue = current.orEmpty(),
                 isOverridden = stored != null,
                 supportsVulkan = GraphicsBackendRegistry.supportsVulkan(backend),
-                isVulkan = GraphicsBackendRegistry.isVulkanValue(backend, current)
+                isVulkan = GraphicsBackendRegistry.isVulkanValue(backend, current),
+                acceptsCustomDriver = GraphicsBackendRegistry.acceptsCustomVulkanDriver(backend.coreId)
             )
         }
     }

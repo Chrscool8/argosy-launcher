@@ -7,8 +7,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.zip.ZipInputStream
 import com.nendo.argosy.util.FileNames
 import javax.inject.Inject
@@ -16,12 +14,14 @@ import javax.inject.Singleton
 
 @Singleton
 class CoreSystemDataManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val fetcher: SystemDataFetcher
 ) {
     suspend fun ensureCoreSystemData(coreId: String, systemDir: File): Boolean {
         return when (coreId) {
             "dolphin" -> ensureDolphinSysData(systemDir)
             "ppsspp" -> ensurePpssppSysData(systemDir)
+            "armsx2" -> ensureArmsx2Resources(systemDir)
             else -> true
         }
     }
@@ -35,6 +35,10 @@ class CoreSystemDataManager @Inject constructor(
             "ppsspp" -> isVersionStale(
                 File(systemDir, "$PPSSPP_SYS_PATH/$VERSION_MARKER"),
                 BuildConfig.PPSSPP_SYS_VERSION
+            )
+            "armsx2" -> isVersionStale(
+                File(systemDir, "$ARMSX2_RESOURCES_PATH/$VERSION_MARKER"),
+                BuildConfig.ARMSX2_SYS_VERSION
             )
             else -> false
         }
@@ -96,38 +100,61 @@ class CoreSystemDataManager @Inject constructor(
         true
     }
 
-    private fun downloadAndExtract(url: String, destDir: File) {
-        val connection = URL(url).openConnection() as HttpURLConnection
-        connection.connectTimeout = CONNECT_TIMEOUT_MS
-        connection.readTimeout = READ_TIMEOUT_MS
+    private suspend fun ensureArmsx2Resources(systemDir: File): Boolean = withContext(Dispatchers.IO) {
+        val targetDir = File(systemDir, ARMSX2_RESOURCES_PATH)
+        val versionFile = File(targetDir, VERSION_MARKER)
+        val currentVersion = BuildConfig.ARMSX2_SYS_VERSION
+        if (!isVersionStale(versionFile, currentVersion)) return@withContext true
 
-        try {
-            val responseCode = connection.responseCode
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                throw RuntimeException("HTTP $responseCode from $url")
+        Logger.info(TAG, "Downloading ARMSX2 resources (version $currentVersion)")
+        val fetched = ARMSX2_RESOURCE_FILES.count { (source, target) ->
+            try {
+                downloadFile("$ARMSX2_RAW_BASE/$source", File(targetDir, target))
+                true
+            } catch (e: Exception) {
+                Logger.warn(TAG, "Failed to download ARMSX2 resource $source: ${e.message}")
+                false
             }
+        }
+        if (fetched == ARMSX2_RESOURCE_FILES.size) {
+            versionFile.writeText(currentVersion.toString())
+            Logger.info(TAG, "ARMSX2 resources installed successfully")
+        }
+        true
+    }
 
-            connection.inputStream.use { input ->
-                ZipInputStream(input).use { zip ->
-                    var entry = zip.nextEntry
-                    while (entry != null) {
-                        val outFile = File(destDir, entry.name)
-                        if (!FileNames.isWithin(outFile, destDir)) {
-                            throw SecurityException("Zip entry outside target: ${entry.name}")
-                        }
-                        if (entry.isDirectory) {
-                            outFile.mkdirs()
-                        } else {
-                            outFile.parentFile?.mkdirs()
-                            outFile.outputStream().use { out -> zip.copyTo(out) }
-                        }
-                        zip.closeEntry()
-                        entry = zip.nextEntry
-                    }
-                }
+    private fun downloadFile(url: String, target: File) {
+        target.parentFile?.mkdirs()
+        val partial = File(target.parentFile, "${target.name}.part")
+        try {
+            fetcher.fetch(url) { input -> partial.outputStream().use { out -> input.copyTo(out) } }
+            if (!partial.renameTo(target)) {
+                partial.copyTo(target, overwrite = true)
             }
         } finally {
-            connection.disconnect()
+            partial.delete()
+        }
+    }
+
+    private fun downloadAndExtract(url: String, destDir: File) {
+        fetcher.fetch(url) { input ->
+            ZipInputStream(input).use { zip ->
+                var entry = zip.nextEntry
+                while (entry != null) {
+                    val outFile = File(destDir, entry.name)
+                    if (!FileNames.isWithin(outFile, destDir)) {
+                        throw SecurityException("Zip entry outside target: ${entry.name}")
+                    }
+                    if (entry.isDirectory) {
+                        outFile.mkdirs()
+                    } else {
+                        outFile.parentFile?.mkdirs()
+                        outFile.outputStream().use { out -> zip.copyTo(out) }
+                    }
+                    zip.closeEntry()
+                    entry = zip.nextEntry
+                }
+            }
         }
     }
 
@@ -140,7 +167,14 @@ class CoreSystemDataManager @Inject constructor(
         private const val PPSSPP_SYS_URL =
             "https://buildbot.libretro.com/assets/system/PPSSPP.zip"
         private const val PPSSPP_SYS_PATH = "PPSSPP"
-        private const val CONNECT_TIMEOUT_MS = 30_000
-        private const val READ_TIMEOUT_MS = 60_000
+
+        const val ARMSX2_UPSTREAM_COMMIT = "0076b5c389ea7296331ad2d96193c6e8d5d314fa"
+        const val ARMSX2_RAW_BASE = "https://raw.githubusercontent.com/ARMSX2/ARMSX2/$ARMSX2_UPSTREAM_COMMIT"
+        const val ARMSX2_RESOURCES_PATH = "pcsx2/resources"
+
+        val ARMSX2_RESOURCE_FILES: List<Pair<String, String>> = listOf(
+            "bin/resources-overlay/armsx2_overrides.yaml" to "armsx2_overrides.yaml",
+            "bin/resources/fonts/Roboto-Regular.ttf" to "fonts/Roboto-Regular.ttf"
+        )
     }
 }

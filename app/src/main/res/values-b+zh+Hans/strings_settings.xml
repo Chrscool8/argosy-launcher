@@ -2536,6 +2536,7 @@
     <string name="settings_builtin_gpu_driver_installed">已安装 %1$s</string>
     <string name="settings_builtin_gpu_driver_install_failed">无法安装 %1$s</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">%1$s 不支持</string>
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s 使用系统驱动</string>
     <string name="settings_builtin_gpu_driver_reason_backend">渲染后端为 Vulkan 时生效</string>
     <string name="settings_builtin_gpu_driver_reason_device">自定义驱动需要 Adreno GPU</string>
 </resources>

@@ -144,11 +144,15 @@ stored `localContentHash`, and restore verification.
 - No session watcher runs for a game with no `.gci` yet.
 - On a server whose heartbeat reports `SAVE_SYNC.SNAPSHOTS` (`RomMCapabilities.supportsSnapshots`), standalone Dolphin goes through
   `SigilSaveHandler` (Sigil's `dolphin_standalone` layout, raw cards included), as do the other
-  standalone card and profile emulators. On older servers every one of them keeps its legacy
-  handler and format. While disconnected, the route follows the last snapshot capability the
-  stored server reported (`RomMConnectionManager.snapshotsEnabled`); a server never reached keeps
-  the legacy handler and format. The libretro and built-in GameCube cores build the unit in
-  `GciSaveHandler` on every server.
+  standalone card and profile emulators. On older servers each keeps its legacy handler and
+  format, except a game whose saves sit on a container every game shares (a shared memory card,
+  VMU or backup RAM volume) and on none of its own files: `SigilSaveHandler.route` routes it, built-in
+  or standalone, and its upload and restore go through the Sigil unit (`SigilSaveLocator` reads
+  this from Sigil's layout, `unkeyed` shared files against present members). While disconnected,
+  the route follows the last snapshot capability the stored server reported
+  (`RomMConnectionManager.snapshotsEnabled`); a server never reached keeps the legacy handler and
+  format under the same shared-container exception. The libretro and built-in GameCube cores
+  build the unit in `GciSaveHandler` on every server.
 - Each `save_cache` row records the format of its bytes in `saveFormat` at write time: `neutral`
   for a unit Sigil built, `native` for the files the emulator wrote. An offline-chain push
   (`SnapshotSyncEngine.pushCached`) labels the save with the row's format, and a cache restore

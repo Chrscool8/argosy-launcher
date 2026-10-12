@@ -2613,6 +2613,7 @@
     <string name="settings_builtin_gpu_driver_installed">%1$s installiert</string>
     <string name="settings_builtin_gpu_driver_install_failed">%1$s konnte nicht installiert werden</string>
     <string name="settings_builtin_gpu_driver_reason_core_unsupported">Von %1$s nicht unterstützt</string>
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s nutzt den Systemtreiber</string>
     <string name="settings_builtin_gpu_driver_reason_backend">Gilt, wenn das Backend Vulkan ist</string>
     <string name="settings_builtin_gpu_driver_reason_device">Eigene Treiber benötigen eine Adreno-GPU</string>
 </resources>

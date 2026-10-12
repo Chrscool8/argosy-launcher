@@ -1,5 +1,6 @@
 package com.nendo.argosy.domain.usecase.emulator
 
+import com.nendo.argosy.data.emulator.EmulatorRegistry
 import com.nendo.argosy.data.emulator.EmulatorResolver
 import com.nendo.argosy.data.emulator.EmulatorSettingScope
 import com.nendo.argosy.data.emulator.SavePathConfig
@@ -59,8 +60,9 @@ class ResolveGameEmulatorContextUseCase @Inject constructor(
             ?: effectiveEmulatorId?.let { SavePathRegistry.getConfigForPlatform(it, platformSlug) }
 
         val isPs2 = PlatformDefinitions.getCanonicalSlug(platformSlug) == "ps2"
+        val isBuiltin = effectivePackage == EmulatorRegistry.BUILTIN_PACKAGE
         val memcardCanonicalId =
-            if (isPs2 && effectivePackage != null && effectiveEmulatorId != null) {
+            if (isPs2 && !isBuiltin && effectivePackage != null && effectiveEmulatorId != null) {
                 SavePathRegistry.canonicalConfigId(effectiveEmulatorId, effectivePackage)
             } else {
                 null

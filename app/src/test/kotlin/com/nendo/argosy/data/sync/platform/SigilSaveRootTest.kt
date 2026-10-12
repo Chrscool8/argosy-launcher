@@ -59,4 +59,21 @@ class SigilSaveRootTest {
         assertNull(SigilSaveHandler.layoutFor("retroarch_64", "ps2"))
         assertNull(SigilSaveHandler.layoutFor("argosy", "psx"))
     }
+
+    @Test
+    fun `the built-in ARMSX2 core saves through the libretro pcsx2 layout`() {
+        assertEquals("pcsx2", SigilSaveHandler.libretroLayoutFor("ps2", "armsx2", retroArch = false))
+        assertEquals("pcsx2", SigilSaveHandler.libretroLayoutFor("playstation2", "armsx2", retroArch = false))
+        assertNull(SigilSaveHandler.libretroLayoutFor("ps2", "armsx2", retroArch = true))
+        assertNull(SigilSaveHandler.genericLibretroLayoutFor("ps2", "armsx2"))
+        assertEquals("pcsx2_standalone", SigilSaveHandler.layoutFor("armsx2", "ps2"))
+    }
+
+    @Test
+    fun `the built-in PS2 cards root in pcsx2 memcards under the libretro system directory`() {
+        val system = java.io.File("/data/user/0/com.nendo.argosy/files/libretro/system")
+
+        assertEquals("${system.absolutePath}/pcsx2/memcards", SigilSaveHandler.pcsx2MemcardRoot(system))
+        assertTrue(SigilSaveHandler.isProtectedSavePath("${system.absolutePath}/pcsx2/memcards/Mcd001.ps2"))
+    }
 }

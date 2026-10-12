@@ -200,6 +200,7 @@ class LibretroActivity : ComponentActivity() {
     @Inject lateinit var saveCacheManager: SaveCacheManager
     @Inject lateinit var saveScreenshotCapture: com.nendo.argosy.hardware.SaveScreenshotCapture
     @Inject lateinit var saveUnitResolver: com.nendo.argosy.data.sync.SaveUnitResolver
+    @Inject lateinit var sigilSaveHandler: com.nendo.argosy.data.sync.platform.SigilSaveHandler
     @Inject lateinit var activeSaveRepository: com.nendo.argosy.data.repository.ActiveSaveRepository
     @Inject lateinit var ambientLedManager: AmbientLedManager
     @Inject lateinit var socialRepository: SocialRepository
@@ -803,6 +804,9 @@ class LibretroActivity : ComponentActivity() {
                 publishSessionControls()
             }
         )
+        lifecycleScope.launch(Dispatchers.IO) {
+            saveStateManager.watchCoreSaveFiles(sigilSaveHandler.liveSaveFiles(gameId, EmulatorRegistry.BUILTIN_ID))
+        }
         saveStateManager.adoptLegacySaveIfMissing()
         if (coreName == "genesis_plus_gx" && isSegaCd()) saveStateManager.adoptSharedSegaCdBramIfMissing()
         val restoreResult = kotlinx.coroutines.runBlocking {

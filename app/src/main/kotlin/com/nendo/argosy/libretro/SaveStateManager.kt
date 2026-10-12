@@ -85,13 +85,26 @@ class SaveStateManager(
         return File(savesDir, "$romBaseName.srm")
     }
 
+    @Volatile
     private var writtenSaveBaseline: Map<String, Pair<Long, Long>>? = null
+
+    @Volatile
+    private var coreSaveFiles: List<File> = emptyList()
+
+    /**
+     * Adds [files] the core writes itself, such as a memory card shared by every game, to the
+     * files whose writes count as this game saving. The next check re-seeds its baseline.
+     */
+    fun watchCoreSaveFiles(files: List<File>) {
+        coreSaveFiles = files
+        writtenSaveBaseline = null
+    }
 
     private fun gameSaveFiles(): List<File> {
         val inSavesDir = savesDir.walkTopDown().maxDepth(2)
             .filter { it.isFile && it.name.startsWith(romBaseName) }
             .filterNot { it.extension.lowercase() in IGNORED_SAVE_EXTENSIONS }
-        return (inSavesDir + primarySaveFile).filter { it.isFile }.distinctBy { it.absolutePath }.toList()
+        return (inSavesDir + primarySaveFile + coreSaveFiles).filter { it.isFile }.distinctBy { it.absolutePath }.toList()
     }
 
     private fun fingerprints(): Map<String, Pair<Long, Long>> =

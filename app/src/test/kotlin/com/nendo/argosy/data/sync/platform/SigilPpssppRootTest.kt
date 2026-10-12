@@ -44,7 +44,8 @@ class SigilPpssppRootTest {
         retroArchPathResolver = mockk(relaxed = true),
         sigilSyncStateDao = mockk(relaxed = true),
         syncPreferencesRepository = mockk(relaxed = true),
-        cartFeatureScanner = mockk(relaxed = true)
+        cartFeatureScanner = mockk(relaxed = true),
+        saveLocator = mockk(relaxed = true)
     )
 
     @Before

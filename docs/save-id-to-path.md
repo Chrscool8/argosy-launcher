@@ -166,6 +166,12 @@ archive's root only when that root is the card. Stripping a game-folder-rooted
 archive would empty its contents loose into the card, which no emulator reads;
 a card left in that state by an older build is repaired on the next restore.
 
+The built-in ARMSX2 core never goes through `Ps2FolderHandler`. It saves to the
+two shared file cards `Mcd001.ps2` and `Mcd002.ps2` in
+`<libretro system>/pcsx2/memcards/`, and Sigil collects and restores them under
+its libretro `pcsx2` layout (`armsx2` aliases to `pcsx2`). The core has no
+`pcsx2_shared_memory_cards` option, so the layout's shared default applies.
+
 ### PSP (`PspFolderHandler`)
 
 `save_id` is the 9-character disc id (`ULUS10064`), `FOLDER_PREFIX`. Profile

@@ -48,7 +48,8 @@ fun builtinGpuDriverBlock(state: BuiltinVideoState): GpuDriverBlock? {
     return gpuDriverBlock(
         backendSupportsVulkan = backend?.supportsVulkan ?: false,
         backendIsVulkan = backend?.isVulkan,
-        customDriversSupported = graphics.customDriversSupported
+        customDriversSupported = graphics.customDriversSupported,
+        coreAcceptsCustomDriver = backend?.acceptsCustomDriver ?: true
     )
 }
 
@@ -169,6 +170,8 @@ private fun gpuDriverBlockReason(block: GpuDriverBlock, coreName: String?): Stri
     when (block) {
         GpuDriverBlock.CORE_UNSUPPORTED -> coreName
             ?.let { stringResource(R.string.settings_builtin_gpu_driver_reason_core_unsupported, it) }
+        GpuDriverBlock.CORE_SYSTEM_DRIVER_ONLY -> coreName
+            ?.let { stringResource(R.string.settings_builtin_gpu_driver_reason_core_system_only, it) }
         GpuDriverBlock.BACKEND_NOT_VULKAN -> stringResource(R.string.settings_builtin_gpu_driver_reason_backend)
         GpuDriverBlock.NO_CUSTOM_DRIVERS -> stringResource(R.string.settings_builtin_gpu_driver_reason_device)
     }

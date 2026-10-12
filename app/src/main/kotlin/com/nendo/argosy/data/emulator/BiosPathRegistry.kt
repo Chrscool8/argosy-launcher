@@ -168,6 +168,20 @@ object BiosPathRegistry {
 
     fun getNestedBiosPath(fileName: String): String? = nestedBiosPaths[fileName.lowercase()]
 
+    private val builtinPlatformBiosDirs: Map<String, String> = mapOf(
+        "ps2" to "pcsx2/bios"
+    )
+
+    /**
+     * The folder under the built-in system directory that holds a platform's BIOS, for cores that
+     * identify a BIOS by its content and accept any file name in that folder.
+     */
+    fun getBuiltinPlatformBiosDir(platformSlug: String): String? =
+        builtinPlatformBiosDirs[PlatformDefinitions.getCanonicalSlug(platformSlug)]
+
+    fun getBuiltinPlatformBiosPath(platformSlug: String, fileName: String): String? =
+        getBuiltinPlatformBiosDir(platformSlug)?.let { "$it/$fileName" }
+
     private val platformBiosFiles: Map<String, List<BiosRequirement>> = mapOf(
         "psx" to listOf(
             BiosRequirement("psx", "scph1001.bin", "924e392ed05558ffdb115408c263dccf", "PlayStation NTSC-U BIOS"),

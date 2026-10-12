@@ -73,6 +73,8 @@ sealed class SigilCollect {
 
 class SigilPendingState internal constructor(internal val row: SigilSyncStateEntity)
 
+internal class NativeArrangement(val layout: String, val files: Map<String, ByteArray>, val options: Map<String, String>)
+
 sealed class SigilRestore {
     data object NotRouted : SigilRestore()
     data class Restored(val hardcoreMarker: Boolean) : SigilRestore()
@@ -116,7 +118,8 @@ class SigilSaveHandler @Inject constructor(
     private val retroArchPathResolver: RetroArchPathResolver,
     private val sigilSyncStateDao: SigilSyncStateDao,
     private val syncPreferencesRepository: SyncPreferencesRepository,
-    private val cartFeatureScanner: CartFeatureScanner
+    private val cartFeatureScanner: CartFeatureScanner,
+    private val saveLocator: SigilSaveLocator
 ) : PlatformSaveHandler {
 
     companion object {
@@ -177,7 +180,8 @@ class SigilSaveHandler @Inject constructor(
             "psp" to setOf("ppsspp"),
             "psx" to setOf("mednafen_psx_hw", "pcsx_rearmed"),
             "3ds" to setOf("azahar"),
-            "gc" to setOf("dolphin")
+            "gc" to setOf("dolphin"),
+            "ps2" to setOf("pcsx2")
         )
 
         const val GENERIC_LIBRETRO_LAYOUT = "libretro"
@@ -187,8 +191,16 @@ class SigilSaveHandler @Inject constructor(
 
         private val LIBRETRO_LAYOUT_ALIASES: Map<String, String> = mapOf(
             "mupen64plus_next_gles3" to "mupen64plus_next",
-            "mupen64plus_next_gles2" to "mupen64plus_next"
+            "mupen64plus_next_gles2" to "mupen64plus_next",
+            "armsx2" to "pcsx2"
         )
+
+        private const val PCSX2_LAYOUT = "pcsx2"
+        private const val PCSX2_MEMCARD_DIR = "pcsx2/memcards"
+        private const val PCSX2_STANDALONE_LAYOUT = "pcsx2_standalone"
+        private const val PCSX2_STANDALONE_CARD_DIR = "memcards"
+        private const val PCSX2_DEFAULT_CARD = "Mcd001.ps2"
+        private const val PS2_CARD_SUFFIX = ".ps2"
 
         private const val FLYCAST_LAYOUT = "flycast"
         private const val FLYCAST_PER_CONTENT_VMUS = "reicast_per_content_vmus"
@@ -257,8 +269,14 @@ class SigilSaveHandler @Inject constructor(
             val platform = PlatformDefinitions.getCanonicalSlug(platformSlug)
             val builtinOnly = if (retroArch) emptySet() else BUILTIN_LIBRETRO_LAYOUTS[platform].orEmpty()
             val cores = LIBRETRO_LAYOUTS[platform].orEmpty() + builtinOnly
-            return (LIBRETRO_LAYOUT_ALIASES[core] ?: core).takeIf { it in cores }
+            return libretroLayoutName(core).takeIf { it in cores }
         }
+
+        /**
+         * The name Sigil knows a libretro [core]'s save layout by. Core option overrides stay keyed
+         * by [core] itself.
+         */
+        fun libretroLayoutName(core: String): String = LIBRETRO_LAYOUT_ALIASES[core] ?: core
 
         /**
          * Sigil's generic libretro layout ({stem}.srm and {stem}.rtc) for a [core] that has no layout
@@ -268,8 +286,65 @@ class SigilSaveHandler @Inject constructor(
         fun genericLibretroLayoutFor(platformSlug: String, core: String): String? {
             val platform = PlatformDefinitions.getCanonicalSlug(platformSlug)
             val covered = LIBRETRO_LAYOUTS[platform].orEmpty() + BUILTIN_LIBRETRO_LAYOUTS[platform].orEmpty()
-            return GENERIC_LIBRETRO_LAYOUT.takeUnless { (LIBRETRO_LAYOUT_ALIASES[core] ?: core) in covered }
+            return GENERIC_LIBRETRO_LAYOUT.takeUnless { libretroLayoutName(core) in covered }
         }
+
+        internal fun nativeArrangements(
+            layout: String,
+            subdirs: List<String>,
+            options: Map<String, String>,
+            files: Map<String, ByteArray>
+        ): List<NativeArrangement> {
+            val asTheyAre = (listOf("") + subdirs).map { prefix ->
+                NativeArrangement(layout, if (prefix.isEmpty()) files else files.mapKeys { "$prefix/${it.key}" }, options)
+            }
+            return listOfNotNull(folderCardArrangement(layout, options, files)) + asTheyAre
+        }
+
+        private fun folderCardArrangement(
+            layout: String,
+            options: Map<String, String>,
+            files: Map<String, ByteArray>
+        ): NativeArrangement? {
+            val cardOptions = folderCardOptions(layout, options) ?: return null
+            val entries = folderCardEntries(files) ?: return null
+            val card = "$PCSX2_STANDALONE_CARD_DIR/${cardOptions.getValue(PCSX2_SLOT1_OPTION)}"
+            val laid = entries.mapKeys { "$card/${it.key}" }
+            val superblock = "$card/${Ps2FolderCardSuperblock.FILE_NAME}"
+            val formatted = if (Ps2FolderCardSuperblock.isFormatted(laid[superblock])) {
+                laid
+            } else {
+                laid + (superblock to Ps2FolderCardSuperblock.formatted8Mb())
+            }
+            return NativeArrangement(PCSX2_STANDALONE_LAYOUT, formatted, cardOptions)
+        }
+
+        private fun folderCardOptions(layout: String, options: Map<String, String>): Map<String, String>? =
+            when (layout) {
+                PCSX2_STANDALONE_LAYOUT -> {
+                    val card = options[PCSX2_SLOT1_OPTION]?.takeIf { it.isNotBlank() } ?: PCSX2_DEFAULT_CARD
+                    options + (PCSX2_SLOT1_OPTION to card)
+                }
+                PCSX2_LAYOUT -> mapOf(PCSX2_SLOT1_OPTION to PCSX2_DEFAULT_CARD)
+                else -> null
+            }
+
+        private fun folderCardEntries(files: Map<String, ByteArray>): Map<String, ByteArray>? {
+            if (files.keys.any { '/' !in it }) return null
+            val root = files.keys.map { it.substringBefore('/') }.distinct().singleOrNull()
+            val cardRooted = root != null && (
+                root.endsWith(PS2_CARD_SUFFIX, ignoreCase = true) ||
+                    "$root/${Ps2FolderCardSuperblock.FILE_NAME}" in files
+                )
+            return if (cardRooted) files.mapKeys { it.key.removePrefix("$root/") } else files
+        }
+
+        /**
+         * Where the built-in PS2 core keeps its shared memory cards: `pcsx2/memcards` under the
+         * libretro system directory, not the per-game save directory.
+         */
+        fun pcsx2MemcardRoot(libretroSystemDir: File): String =
+            File(libretroSystemDir, PCSX2_MEMCARD_DIR).absolutePath
 
         fun rootFor(basePath: String, layout: String): String? =
             ROOT_ANCHORS[layout]?.let { rootFor(basePath, it) }
@@ -311,22 +386,64 @@ class SigilSaveHandler @Inject constructor(
     private val fileAccess = FalSigilFileAccess(fal)
 
     /**
-     * Whether saves travel as Sigil units: on a RomM 5.5+ server, and while disconnected from a
-     * server last seen at 5.5+. Older servers, and a server never reached, keep the legacy formats.
+     * Whether every routed save travels as a Sigil unit: on a RomM 5.5+ server, and while
+     * disconnected from a server last seen at 5.5+. Older servers, and a server never reached,
+     * keep the legacy formats for every save [route] does not route.
      */
     fun unitsEnabled(): Boolean = connectionManager.get().snapshotsEnabled()
 
     fun routes(emulatorId: String, platformSlug: String): Boolean =
         unitsEnabled() && layoutFor(emulatorId, platformSlug) != null
 
-    suspend fun route(gameId: Long, emulatorId: String? = null): SigilRoute? =
-        if (unitsEnabled()) resolveRoute(gameId, emulatorId, allowGeneric = false) else null
+    /**
+     * The game's Sigil route for what travels to RomM. While [unitsEnabled] is false it routes only
+     * a game whose saves sit on a container every game shares and on none of its own files, as
+     * [SigilSaveLocation.onSharedContainer] reads the root now.
+     */
+    suspend fun route(gameId: Long, emulatorId: String? = null): SigilRoute? = withContext(Dispatchers.IO) {
+        val resolved = resolveRoute(gameId, emulatorId, allowGeneric = false) ?: return@withContext null
+        resolved.takeIf { unitsEnabled() || savesOnSharedContainer(resolved, gameId) }
+    }
+
+    private suspend fun savesOnSharedContainer(route: SigilRoute, gameId: Long): Boolean {
+        val location = locate(route, gameId) ?: return false
+        if (location.onSharedContainer) {
+            Logger.debug(TAG, "[SaveSync] SIGIL | game $gameId keeps its saves on shared ${location.shared} under ${route.layout}, routing it as a unit")
+        }
+        return location.onSharedContainer
+    }
+
+    private suspend fun locate(route: SigilRoute, gameId: Long): SigilSaveLocation? {
+        if (!fal.isDirectory(route.root)) return null
+        val game = gameDao.getById(gameId) ?: return null
+        fal.prepareSaveAccess(route.root)
+        return saveLocator.locate(route, identity(game, titleIdCandidates(game)), contentName(game))
+    }
+
+    /**
+     * The save root of [gameId]'s libretro route for [emulatorId] when the game's saves sit only
+     * on containers every game shares there, on any server.
+     */
+    suspend fun sharedLibretroRoot(gameId: Long, emulatorId: String?): String? = withContext(Dispatchers.IO) {
+        val route = resolveRoute(gameId, emulatorId, allowGeneric = false)?.takeIf { it.libretro }
+            ?: return@withContext null
+        route.root.takeIf { locate(route, gameId)?.onSharedContainer == true }
+    }
+
+    /**
+     * The files on this device that [gameId]'s saves sit in under its local route for
+     * [emulatorId]: the shared cards or volumes and the game's own files present there.
+     */
+    suspend fun liveSaveFiles(gameId: Long, emulatorId: String?): List<File> = withContext(Dispatchers.IO) {
+        val route = localRoute(gameId, emulatorId) ?: return@withContext emptyList()
+        val location = locate(route, gameId) ?: return@withContext emptyList()
+        (location.shared + location.own).map { File(route.root, it) }
+    }
 
     /**
      * The game's Sigil route whatever server Argosy last reached, for placing saves on this
-     * device. [route] is the same route gated on [unitsEnabled], for what travels to RomM. Only
-     * this route falls back to [GENERIC_LIBRETRO_LAYOUT] for a libretro core with no layout of its
-     * own.
+     * device. [route] is the route for what travels to RomM. Only this route falls back to
+     * [GENERIC_LIBRETRO_LAYOUT] for a libretro core with no layout of its own.
      */
     suspend fun localRoute(gameId: Long, emulatorId: String? = null): SigilRoute? =
         resolveRoute(gameId, emulatorId, allowGeneric = true)
@@ -392,6 +509,7 @@ class SigilSaveHandler @Inject constructor(
         return when {
             sharedVmus -> File(AppPaths.libretroSystemDir(context.filesDir), FLYCAST_SHARED_DIR).absolutePath
             layout == AZAHAR_LAYOUT -> File(builtinSaveBase.forGame(game), AZAHAR_USER_DIR).absolutePath
+            layout == PCSX2_LAYOUT -> pcsx2MemcardRoot(AppPaths.libretroSystemDir(context.filesDir))
             else -> builtinSaveBase.forGame(game)
         }
     }
@@ -404,7 +522,7 @@ class SigilSaveHandler @Inject constructor(
     }
 
     private suspend fun optionsFor(layout: String, gameId: Long, configEmulatorId: String): Map<String, String> {
-        if (layout != "pcsx2_standalone") return emptyMap()
+        if (layout != PCSX2_STANDALONE_LAYOUT) return emptyMap()
         val card = emulatorConfigDao.getSelectedMemcardForGame(gameId)
             ?: emulatorSaveConfigRepository.getByEmulator(configEmulatorId)?.selectedMemcardPath
         val name = card?.trimEnd('/')?.substringAfterLast('/')?.takeIf { it.isNotBlank() }
@@ -563,9 +681,10 @@ class SigilSaveHandler @Inject constructor(
 
     /**
      * Turns a save the emulator of [route] wrote, given as [files] by root-relative path, into its
-     * Sigil unit. The files are laid out under a scratch root, at the save root itself or under one
-     * of the layout's subfolders, and collected there with no sync state; nothing is stored and the
-     * scratch root is deleted.
+     * Sigil unit. The files are laid out under a scratch root, PCSX2 save folders on a folder card
+     * collected under the standalone PS2 layout for either PS2 route, and any save at the save root
+     * itself or under one of the layout's subfolders, and collected there with no sync state;
+     * nothing is stored and the scratch root is deleted.
      */
     suspend fun convertNative(route: SigilRoute, gameId: Long, files: Map<String, ByteArray>): SigilCollect =
         withContext(Dispatchers.IO) {
@@ -574,16 +693,17 @@ class SigilSaveHandler @Inject constructor(
             val ids = titleIdCandidates(game)
             val sigilGame = identity(game, ids)
             var refusal: String? = null
-            for (prefix in listOf("") + Sigil.layoutSubdirs(route.layout)) {
+            val arrangements = nativeArrangements(route.layout, Sigil.layoutSubdirs(route.layout), route.options, files)
+            for (arrangement in arrangements) {
                 val scratch = File(context.cacheDir, "sigil_convert_${System.nanoTime()}")
                 try {
-                    if (!layOut(scratch, prefix, files)) return@withContext SigilCollect.Unreadable("a save file name leaves the save root")
+                    if (!layOut(scratch, arrangement.files)) return@withContext SigilCollect.Unreadable("a save file name leaves the save root")
                     val result = Sigil.collect(
                         game = sigilGame,
-                        core = route.layout,
+                        core = arrangement.layout,
                         contentPath = contentName(game),
                         saveRoot = scratch.absolutePath,
-                        options = route.options,
+                        options = arrangement.options,
                         gameIds = ids,
                         state = null,
                         unmanaged = true,
@@ -605,10 +725,10 @@ class SigilSaveHandler @Inject constructor(
             refusal?.let { SigilCollect.Unreadable(it) } ?: SigilCollect.Absent
         }
 
-    private fun layOut(scratch: File, prefix: String, files: Map<String, ByteArray>): Boolean {
+    private fun layOut(scratch: File, files: Map<String, ByteArray>): Boolean {
         val base = scratch.canonicalFile
         for ((path, bytes) in files) {
-            val target = File(base, if (prefix.isEmpty()) path else "$prefix/$path").canonicalFile
+            val target = File(base, path).canonicalFile
             if (!target.path.startsWith(base.path + File.separator)) return false
             target.parentFile?.mkdirs()
             target.writeBytes(bytes)

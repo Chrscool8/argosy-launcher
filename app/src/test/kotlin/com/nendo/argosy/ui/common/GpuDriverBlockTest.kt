@@ -41,6 +41,22 @@ class GpuDriverBlockTest {
     }
 
     @Test
+    fun `a core that only runs the system driver blocks whatever the backend and device`() {
+        listOf(true to true, true to false).forEach { (supportsVulkan, isVulkan) ->
+            listOf(true, false).forEach { deviceSupports ->
+                assertEquals(
+                    GpuDriverBlock.CORE_SYSTEM_DRIVER_ONLY,
+                    gpuDriverBlock(supportsVulkan, isVulkan, deviceSupports, coreAcceptsCustomDriver = false)
+                )
+            }
+        }
+        assertEquals(
+            GpuDriverBlock.CORE_UNSUPPORTED,
+            gpuDriverBlock(false, null, customDriversSupported = true, coreAcceptsCustomDriver = false)
+        )
+    }
+
+    @Test
     fun `a Vulkan backend is open on a device that loads custom drivers`() {
         assertNull(gpuDriverBlock(true, true, customDriversSupported = true))
         assertEquals(GpuDriverBlock.NO_CUSTOM_DRIVERS, gpuDriverBlock(true, true, customDriversSupported = false))

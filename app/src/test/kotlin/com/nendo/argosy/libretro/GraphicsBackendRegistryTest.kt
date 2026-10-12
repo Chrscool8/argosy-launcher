@@ -16,7 +16,8 @@ class GraphicsBackendRegistryTest {
         "azahar" to ("citra_graphics_api" to "Vulkan"),
         "parallel_n64" to ("parallel-n64-gfxplugin" to "parallel"),
         "mupen64plus_next_gles3" to ("mupen64plus-rdp-plugin" to "parallel"),
-        "mupen64plus_next_gles2" to ("mupen64plus-rdp-plugin" to "parallel")
+        "mupen64plus_next_gles2" to ("mupen64plus-rdp-plugin" to "parallel"),
+        "armsx2" to ("armsx2_renderer" to "Vulkan")
     )
 
     @Test
@@ -29,7 +30,7 @@ class GraphicsBackendRegistryTest {
 
     @Test
     fun `every option backend names a manifest option that offers its Vulkan token`() {
-        LibretroCoreRegistry.getAllCores()
+        LibretroCoreRegistry.coresFor(is64BitProcess = true)
             .mapNotNull { GraphicsBackendRegistry.forCore(it.coreId) as? GraphicsBackend.CoreOption }
             .forEach { backend ->
                 val def = GraphicsBackendRegistry.optionDef(backend)
@@ -98,6 +99,27 @@ class GraphicsBackendRegistryTest {
         )
         assertEquals(software, GraphicsBackendRegistry.withoutVulkan("mednafen_psx_hw", software))
         assertEquals(vulkan, GraphicsBackendRegistry.withoutVulkan("dolphin", vulkan))
+    }
+
+    @Test
+    fun `ARMSX2 sends Vulkan by default and falls back to OpenGL without Vulkan`() {
+        val sent = listOf(Variable("armsx2_renderer", "Vulkan"))
+        val software = listOf(Variable("armsx2_renderer", "Software"))
+
+        assertTrue(GraphicsBackendRegistry.prefersVulkan("armsx2", mapOf("armsx2_renderer" to "Vulkan"), null))
+        assertEquals(
+            listOf("armsx2_renderer" to "OpenGL"),
+            GraphicsBackendRegistry.withoutVulkan("armsx2", sent).map { it.key to it.value }
+        )
+        assertEquals(software, GraphicsBackendRegistry.withoutVulkan("armsx2", software))
+    }
+
+    @Test
+    fun `only ARMSX2 refuses a custom Vulkan driver`() {
+        assertFalse(GraphicsBackendRegistry.acceptsCustomVulkanDriver("armsx2"))
+        listOf("ppsspp", "dolphin", "flycast", "azahar", "mednafen_psx_hw", null).forEach {
+            assertTrue("$it", GraphicsBackendRegistry.acceptsCustomVulkanDriver(it))
+        }
     }
 
     @Test

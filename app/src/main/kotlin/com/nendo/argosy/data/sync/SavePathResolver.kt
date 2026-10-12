@@ -90,7 +90,9 @@ class SavePathResolver @Inject constructor(
         var selectedMemcardForLog: String? = null
         var savePathOverrideForLog: String? = null
         var unreadableSigilRoot: String? = null
-        val result = discoverSavePathInternal(
+        val sharedRoot = gameId?.let { saveHandlerRegistry.sigil.sharedLibretroRoot(it, emulatorId) }
+        if (sharedRoot != null) decision = "sigil-shared"
+        val result = sharedRoot ?: discoverSavePathInternal(
             emulatorId, gameTitle, platformSlug, romPath, cachedSaveId, coreName,
             emulatorPackage, gameId,
             onDecision = { d, selectedCard, override ->
@@ -240,7 +242,7 @@ class SavePathResolver @Inject constructor(
             return@withContext null
         }
 
-        if (gameId != null && saveHandlerRegistry.isSigilRouted(config, platformSlug, emulatorId)) {
+        if (gameId != null && saveHandlerRegistry.isSigilRoutedFor(gameId, config, platformSlug, emulatorId)) {
             val sigil = saveHandlerRegistry.sigil
             val root = sigil.route(gameId, config.emulatorId)?.root
             val collected = if (root != null) sigil.collect(gameId, config.emulatorId) else SigilCollect.NotRouted
@@ -387,7 +389,8 @@ class SavePathResolver @Inject constructor(
         Logger.debug(TAG, "discoverSavePath: searching ${paths.size} paths for '$gameTitle' (romPath=$romPath)")
 
         if (romPath != null) {
-            for (basePath in paths) {
+            val unitRoots = (listOfNotNull(builtinUnitRoot(config, unitLayout, gameId)) + paths).distinct()
+            for (basePath in unitRoots) {
                 unitPrimaryIn(basePath, unitLayout, platformSlug, romPath, gameId)?.let {
                     onDecision("unit", selectedMemcardForLog, savePathOverrideForLog)
                     return@withContext it
@@ -781,6 +784,11 @@ class SavePathResolver @Inject constructor(
         return emulatorSaveConfigRepository.resolveEffectiveSavePath(configId, platformSlug)
     }
 
+    private suspend fun builtinUnitRoot(config: SavePathConfig, unitLayout: String?, gameId: Long?): String? {
+        if (unitLayout == null || gameId == null || config.emulatorId != BUILTIN_ID) return null
+        return saveHandlerRegistry.sigil.localRoute(gameId, BUILTIN_ID)?.root
+    }
+
     private suspend fun builtinSavesDir(config: SavePathConfig, gameId: Long?): String? {
         if (config.emulatorId != BUILTIN_ID) return null
         val game = gameId?.let { gameDao.getById(it) }
@@ -889,7 +897,7 @@ class SavePathResolver @Inject constructor(
                 return null
             }
 
-        if (gameId != null && saveHandlerRegistry.isSigilRouted(config, platformSlug, emulatorId)) {
+        if (gameId != null && saveHandlerRegistry.isSigilRoutedFor(gameId, config, platformSlug, emulatorId)) {
             return saveHandlerRegistry.sigil.route(gameId, config.emulatorId)?.root
         }
 

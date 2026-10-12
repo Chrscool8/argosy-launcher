@@ -69,6 +69,7 @@ android {
         )
         buildConfigField("int", "DOLPHIN_SYS_VERSION", "2")
         buildConfigField("int", "PPSSPP_SYS_VERSION", "1")
+        buildConfigField("int", "ARMSX2_SYS_VERSION", "1")
     }
 
     signingConfigs {

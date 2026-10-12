@@ -31,10 +31,16 @@ object LibretroCoreRegistry {
          * its own save file. Non-zero only for cores that flush from inside retro_run on a
          * timer and never at unload, so pausing or quitting inside the window loses the save.
          */
-        val saveFlushWindowMs: Long = 0L
+        val saveFlushWindowMs: Long = 0L,
+        val requires64BitProcess: Boolean = false
     )
 
-    private val cores = listOf(
+    private val cores: List<CoreInfo> by lazy { coresFor(LibretroBuildbot.processIs64Bit) }
+
+    fun coresFor(is64BitProcess: Boolean): List<CoreInfo> =
+        catalog.filter { is64BitProcess || !it.requires64BitProcess }
+
+    private val catalog = listOf(
         // Nintendo 8-bit
         CoreInfo(
             coreId = "fceumm",
@@ -191,7 +197,15 @@ object LibretroCoreRegistry {
             requiresBios = listOf("scph5501.bin")
         ),
 
-        // Sony PlayStation 2 has no working built-in core on Android; routed to standalone NetherSX2 / PSX2.
+        CoreInfo(
+            coreId = "armsx2",
+            fileName = "armsx2_libretro_android.so",
+            displayName = "ARMSX2",
+            platforms = setOf("ps2"),
+            estimatedSizeBytes = 31_000_000L,
+            isDefault = true,
+            requires64BitProcess = true
+        ),
 
         // Sega Saturn
         CoreInfo(
@@ -591,7 +605,7 @@ object LibretroCoreRegistry {
      * hardware-rendered core. Cores that abort only for particular content are caught by the
      * runtime probe instead, not listed here.
      */
-    private val unsafeSerializeCores = setOf("dolphin", "flycast")
+    private val unsafeSerializeCores = setOf("dolphin", "flycast", "armsx2")
 
     /**
      * Platforms whose only built-in core cannot produce a state at all. `cdi` is here because

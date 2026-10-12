@@ -844,7 +844,9 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
                 effectiveSaveConfigIdMc?.let { vm.emulatorDelegate.getEmulatorSaveConfig(it) }
             } else null
 
-            val folderMemcards = if (config.platform.slug == "ps2" && emulatorId != null) {
+            val folderMemcards = if (
+                config.platform.slug == "ps2" && emulatorId != null && emulatorId != EmulatorRegistry.BUILTIN_ID
+            ) {
                 vm.emulatorDelegate.listPs2FolderMemcardsForEmulator(
                     emulatorId = emulatorId,
                     emulatorPackage = config.effectiveEmulatorPackage

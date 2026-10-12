@@ -983,6 +983,9 @@
     <!-- Shown in place of the value when the row cannot be changed. %1$s is the emulator core's
          name, never translated. -->
     <string name="gamedetail_per_game_gpu_driver_reason_core">Not supported by %1$s</string>
+    <!-- Shown in place of the value for a core that always runs on the device's own Vulkan
+         driver. %1$s is the emulator core's name, never translated. -->
+    <string name="gamedetail_per_game_gpu_driver_reason_core_system_only">%1$s uses the system driver</string>
     <!-- Stands in for the core's name in that line when it is not known. -->
     <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">this core</string>
     <!-- Shown in place of the value while the game's renderer is not Vulkan. "Backend" is the
