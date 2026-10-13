@@ -48,6 +48,7 @@ class FooterHostController {
 }
 
 val LocalFooterHost = staticCompositionLocalOf { FooterHostController() }
+val LocalFooterHostVisible = staticCompositionLocalOf { true }
 
 /** Registers gamepad hints on the app-root guide bar for the lifetime of the calling composable. */
 @Composable
@@ -120,8 +121,9 @@ val FooterHostController.isBarVisible: Boolean
 @Composable
 fun FooterSpacer() {
     val controller = LocalFooterHost.current
+    val isBarVisible = LocalFooterHostVisible.current && controller.isBarVisible
     val height by animateDpAsState(
-        targetValue = if (controller.isBarVisible) Dimens.footerHeight else 0.dp,
+        targetValue = if (isBarVisible) Dimens.footerHeight else 0.dp,
         animationSpec = tween(Motion.durationContent, easing = Motion.argosyEase),
         label = "footer-spacer",
     )

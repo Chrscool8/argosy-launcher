@@ -56,6 +56,7 @@ import com.nendo.argosy.ui.components.revealOnBottomEdgeTouch
 import com.nendo.argosy.ui.components.FooterHost
 import com.nendo.argosy.ui.components.FooterHostController
 import com.nendo.argosy.ui.components.LocalFooterHost
+import com.nendo.argosy.ui.components.LocalFooterHostVisible
 import com.nendo.argosy.ui.components.LocalFrostedBackdrop
 import com.nendo.argosy.ui.components.frostedBackdropSource
 import com.nendo.argosy.ui.components.rememberFrostedBackdrop
@@ -1086,6 +1087,7 @@ fun ArgosyApp(
         LocalXYIconsSwapped provides uiState.xyIconsSwapped,
         LocalSwapStartSelect provides uiState.swapStartSelect,
         LocalFooterHost provides footerHostController,
+        LocalFooterHostVisible provides (!presentationShowsHints && !navRingState.isBarVisible),
         LocalFrostedBackdrop provides frostedBackdrop,
         com.nendo.argosy.ui.common.LocalImageCacheManager provides viewModel.imageCacheManager,
         com.nendo.argosy.ui.components.LocalArtworkScraping provides isScrapingArtwork,
