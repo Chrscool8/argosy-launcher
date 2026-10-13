@@ -24,7 +24,6 @@ class MainActivityPreferencesObserver(
     private val hasWindowFocus: () -> Boolean,
 ) {
 
-    private var previousHomeApps: Set<String>? = null
     private var previousPrimaryColor: Int? = null
     private var previousDualScreenEnabled: Boolean? = null
     private var previousWantScreenCapture: Boolean? = null
@@ -51,15 +50,6 @@ class MainActivityPreferencesObserver(
                 if (prefs.ambientAudioEnabled && hasWindowFocus()) {
                     ambientAudioManager.fadeIn()
                 }
-
-                if (previousHomeApps != null &&
-                    prefs.secondaryHomeApps != previousHomeApps
-                ) {
-                    dualScreenManager.updateHomeApps(
-                        prefs.secondaryHomeApps
-                    )
-                }
-                previousHomeApps = prefs.secondaryHomeApps
 
                 if (prefs.primaryColor != previousPrimaryColor) {
                     sessionStateStore.setPrimaryColor(prefs.primaryColor)

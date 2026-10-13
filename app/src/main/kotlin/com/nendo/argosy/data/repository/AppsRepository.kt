@@ -63,6 +63,7 @@ class AppsRepository @Inject constructor(
             filter,
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
+        trySend(Unit)
 
         awaitClose {
             context.unregisterReceiver(receiver)

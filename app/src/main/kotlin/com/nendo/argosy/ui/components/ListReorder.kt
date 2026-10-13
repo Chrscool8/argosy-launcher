@@ -19,6 +19,15 @@ data class ListReorder<T>(
 ) {
     fun moveBy(items: List<T>, delta: Int): ReorderStep<T> = moveTo(items, heldIndex + delta)
 
+    fun swapTo(targetIndex: Int): ReorderStep<T> {
+        val to = targetIndex.coerceIn(0, backup.lastIndex)
+        val items = backup.toMutableList().apply {
+            this[originIndex] = backup[to]
+            this[to] = backup[originIndex]
+        }.toList()
+        return ReorderStep(items, copy(heldIndex = to), moved = to != heldIndex)
+    }
+
     fun moveTo(items: List<T>, targetIndex: Int): ReorderStep<T> {
         if (heldIndex !in items.indices) return ReorderStep(items, this, moved = false)
         val to = targetIndex.coerceIn(0, items.lastIndex)

@@ -219,6 +219,7 @@ private fun rememberInGameAppBarState(): InGameAppBarState? {
 @Composable
 private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier) {
     val manager = state.manager
+    val reorder by manager.dockReorder.collectAsState()
     var menuPackage by remember { mutableStateOf<String?>(null) }
     var drawerOpen by remember { mutableStateOf(false) }
     var toolsOpen by remember { mutableStateOf(false) }
@@ -237,12 +238,12 @@ private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier
     com.nendo.argosy.ui.components.CompanionAppBar(
         apps = state.apps,
         onAppClick = { manager.launchCompanionApp(it) },
+        reorder = reorder,
+        onReorderStart = { manager.beginDockReorder(it, false) },
+        onReorderTarget = manager::targetDockReorder,
+        onReorderSave = manager::saveDockReorder,
+        onReorderCancel = manager::cancelDockReorder,
         focusedIndex = com.nendo.argosy.ui.components.APP_BAR_NOTHING_FOCUSED,
-        onAppLongPress = if (state.displays.size > 1) {
-            { packageName -> menuPackage = packageName }
-        } else {
-            null
-        },
         onOpenDrawer = { drawerOpen = true },
         focusDisplays = state.displays,
         focusPickerOpen = state.pickerOpen,

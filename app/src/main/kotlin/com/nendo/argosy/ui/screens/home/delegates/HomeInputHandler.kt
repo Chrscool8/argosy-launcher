@@ -28,6 +28,7 @@ interface HomeInputActions {
     fun previousRow()
     fun nextRow()
     fun focusAppBar(): Boolean
+    fun startAppBarReorder(): Boolean
     fun openAppBarAppMenu(): Boolean
     fun moveAppBarAppMenu(delta: Int)
     fun confirmAppBarAppMenu()
@@ -435,10 +436,14 @@ class HomeInputHandler(
     }
 
     private fun customMove(direction: GridDirection2D): InputResult {
-        val moved = when (actions.uiState.value.customGrid.editMode) {
+        val mode = actions.uiState.value.customGrid.editMode
+        val moved = when (mode) {
             TileEditMode.MOVE -> actions.moveFocusedTile(direction)
             TileEditMode.RESIZE -> actions.resizeFocusedTile(direction)
             TileEditMode.NONE -> actions.moveCustomGridFocus(direction)
+        }
+        if (!moved && mode == TileEditMode.NONE && direction == GridDirection2D.DOWN && actions.focusAppBar()) {
+            return InputResult.handled(SoundType.SECTION_CHANGE)
         }
         return if (moved) InputResult.HANDLED else InputResult.handled(SoundType.BOUNDARY)
     }
@@ -689,8 +694,8 @@ class HomeInputHandler(
             }
         }
         if (state.appBarFocused) {
-            return if (actions.openAppBarAppMenu()) {
-                InputResult.handled(SoundType.OPEN_MODAL)
+            return if (actions.startAppBarReorder()) {
+                InputResult.handled(SoundType.TOGGLE)
             } else {
                 InputResult.handled(SoundType.BOUNDARY)
             }

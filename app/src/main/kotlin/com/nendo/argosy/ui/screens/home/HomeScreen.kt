@@ -203,6 +203,12 @@ fun HomeScreen(
     val isAutoGrid = uiState.layoutKind == HomeLayoutKind.AUTO_GRID
     val isCustomGrid = uiState.layoutKind == HomeLayoutKind.CUSTOM_GRID
     val quickNavigation by viewModel.quickNavigationEnabled.collectAsState()
+    val dockReorder by viewModel.dockReorder.collectAsState()
+    com.nendo.argosy.ui.input.ModalInputEffect(
+        active = dockReorder?.controller == true && uiState.appBarFocused,
+        handler = viewModel.dockReorderInputHandler
+    )
+    if (dockReorder?.controller == true) com.nendo.argosy.ui.input.ModalPresenceEffect()
     val rowButtons = if (quickNavigation) InputButton.LT_RT else InputButton.LB_RB
     val scope = rememberCoroutineScope()
     val overflowScrollState = rememberScrollState()
@@ -332,11 +338,13 @@ fun HomeScreen(
                 viewModel.refreshRecentGames()
                 viewModel.republishCompanionDetail()
             }
+            if (event == Lifecycle.Event.ON_STOP) viewModel.cancelAppBarReorder()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         inputDispatcher.subscribeView(inputHandler, forRoute = Screen.ROUTE_HOME)
         viewModel.republishCompanionDetail()
         onDispose {
+            viewModel.cancelAppBarReorder()
             lifecycleOwner.lifecycle.removeObserver(observer)
             viewModel.clearCompanionDetail()
         }
@@ -954,7 +962,32 @@ fun HomeScreen(
                 }
 
                 val focusedGame = uiState.focusedGame
-                if (isCustomGrid) {
+                if (dockReorder?.controller == true) {
+                    FooterHints(
+                        hints = com.nendo.argosy.ui.components.liftedReorderHints(
+                            move = stringResource(R.string.library_apps_hint_move),
+                            cancel = stringResource(R.string.library_apps_hint_cancel),
+                            moveButton = InputButton.DPAD_HORIZONTAL
+                        ),
+                        forced = true,
+                        onHintClick = { button ->
+                            when (button) {
+                                InputButton.A -> viewModel.dockReorderInputHandler.onConfirm()
+                                InputButton.B -> viewModel.dockReorderInputHandler.onBack()
+                                else -> Unit
+                            }
+                        }
+                    )
+                    FooterSpacer()
+                } else if (uiState.appBarFocused) {
+                    FooterHints(
+                        forced = true,
+                        hints = if (uiState.appBarIndex in uiState.homeApps.indices && uiState.homeApps.size > 1) {
+                            listOf(InputButton.A to stringResource(R.string.dock_hint_hold_reorder))
+                        } else emptyList()
+                    )
+                    FooterSpacer()
+                } else if (isCustomGrid) {
                     val grid = uiState.customGrid
                     val gridPageLabel = stringResource(R.string.home_footer_grid_page)
                     val gridFinishedLabel = stringResource(R.string.home_footer_grid_finished)
@@ -1287,19 +1320,17 @@ fun HomeScreen(
             com.nendo.argosy.ui.components.CompanionAppBar(
                 apps = uiState.homeApps,
                 onAppClick = { viewModel.launchTileApp(it) },
+                reorder = dockReorder,
+                onReorderStart = { com.nendo.argosy.DualScreenManagerHolder.instance?.beginDockReorder(it, false) },
+                onReorderTarget = { token, target -> com.nendo.argosy.DualScreenManagerHolder.instance?.targetDockReorder(token, target) },
+                onReorderSave = { com.nendo.argosy.DualScreenManagerHolder.instance?.saveDockReorder(it) },
+                onReorderCancel = { com.nendo.argosy.DualScreenManagerHolder.instance?.cancelDockReorder(it) },
                 focusedIndex = if (uiState.appBarFocused) {
                     uiState.appBarIndex
                 } else {
                     com.nendo.argosy.ui.components.APP_BAR_NOTHING_FOCUSED
                 },
                 onOpenDrawer = { viewModel.openAppDrawer() },
-                onAppLongPress = { packageName ->
-                    val index = uiState.homeApps.indexOf(packageName)
-                    if (index >= 0) {
-                        viewModel.moveAppBarFocus(index - uiState.appBarIndex)
-                        viewModel.openAppBarAppMenu()
-                    }
-                },
                 onKeyboardToggle = {
                     com.nendo.argosy.DualScreenManagerHolder.instance?.toggleUpperKeyboard()
                 },

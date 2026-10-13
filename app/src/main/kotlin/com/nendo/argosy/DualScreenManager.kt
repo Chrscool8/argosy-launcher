@@ -152,6 +152,18 @@ class DualScreenManager(
 
     private var activityContext: Context = context
 
+    private val dockCoordinator = com.nendo.argosy.ui.dualscreen.DockReorderCoordinator(
+        activityIndependentScope, preferencesRepository, appsRepository, sessionStateStore,
+        onAppsChanged = { pins -> eachCompanion { it.onHomeAppsChanged(pins) } },
+        onSaveError = {
+            notificationManager.showError(
+                com.nendo.argosy.core.notification.NotificationText.Res(R.string.dock_reorder_save_failed)
+            )
+        }
+    )
+    val dockReorder: StateFlow<com.nendo.argosy.ui.components.DockReorderSession?> get() = dockCoordinator.session
+    val homeAppsFlow: StateFlow<List<String>> get() = dockCoordinator.apps
+
     private val _isRolesSwapped = MutableStateFlow(initialRolesSwapped)
     val isRolesSwapped: StateFlow<Boolean> = _isRolesSwapped
 
@@ -1722,12 +1734,13 @@ class DualScreenManager(
     }
 
     val homeAppsList: List<String>
-        get() = sessionStateStore.getHomeApps()?.toList() ?: emptyList()
+        get() = homeAppsFlow.value
 
-    val homeAppsFlow: kotlinx.coroutines.flow.Flow<List<String>>
-        get() = preferencesRepository.userPreferences
-            .map { it.secondaryHomeApps.toList() }
-            .distinctUntilChanged()
+    fun beginDockReorder(packageName: String, controller: Boolean): Long? = dockCoordinator.begin(packageName, controller)
+    fun targetDockReorder(token: Long, target: Int) = dockCoordinator.target(token, target)
+    fun moveDockReorder(token: Long, delta: Int) = dockCoordinator.move(token, delta)
+    fun cancelDockReorder(token: Long) = dockCoordinator.cancel(token)
+    fun saveDockReorder(token: Long) = dockCoordinator.save(token)
 
     suspend fun installedAppLabels(): List<Pair<String, String>> =
         appsRepository.getInstalledApps()
@@ -1833,7 +1846,7 @@ class DualScreenManager(
         refocusMain()
     }
 
-    fun onCompanionHomeAppsChanged(apps: Set<String>) {
+    fun onCompanionHomeAppsChanged(apps: List<String>) {
         scope.launch {
             preferencesRepository.setSecondaryHomeApps(apps)
         }
@@ -1944,10 +1957,6 @@ class DualScreenManager(
             }
             val isWizard = sessionStateStore.isWizardActive()
             if (isWizard) eachCompanion { it.onWizardStateChanged(true) }
-            scope.launch {
-                val prefs = preferencesRepository.preferences.first()
-                updateHomeApps(prefs.secondaryHomeApps)
-            }
         }
     }
 
@@ -2028,6 +2037,7 @@ class DualScreenManager(
     }
 
     private fun commitRoleSwap(newSwapped: Boolean) {
+        dockReorder.value?.let { cancelDockReorder(it.token) }
         _isRolesSwapped.value = newSwapped
         sessionStateStore.setRolesSwapped(newSwapped)
         mediaPlayerDisplayId = null
@@ -2266,11 +2276,6 @@ class DualScreenManager(
          * bounded: a swap that feels late is a nuisance, a swap that never happens is a dead button.
          */
         private const val SWAP_PREPARE_TIMEOUT_MS = 400L
-    }
-
-    fun updateHomeApps(homeApps: Set<String>) {
-        sessionStateStore.setHomeApps(homeApps)
-        eachCompanion { it.onHomeAppsChanged(homeApps.toList()) }
     }
 
     fun broadcastSessionCleared() {

@@ -229,6 +229,31 @@ class HomeViewModel @Inject constructor(
     private val achievementRefetchThresholdMs = 5 * 60 * 1000L
     private var currentBorderStyle: BoxArtBorderStyle = BoxArtBorderStyle.SOLID
     private var lastShowsEveryGame: Boolean? = null
+    private var dockControllerToken: Long? = null
+    val dockReorder = DualScreenManagerHolder.instance?.dockReorder
+        ?: MutableStateFlow<com.nendo.argosy.ui.components.DockReorderSession?>(null)
+
+    val dockReorderInputHandler = object : com.nendo.argosy.ui.input.CapturingInputHandler {
+        override fun onLeft(): com.nendo.argosy.ui.input.InputResult {
+            dockControllerToken?.let { DualScreenManagerHolder.instance?.moveDockReorder(it, -1) }
+            return com.nendo.argosy.ui.input.InputResult.HANDLED
+        }
+
+        override fun onRight(): com.nendo.argosy.ui.input.InputResult {
+            dockControllerToken?.let { DualScreenManagerHolder.instance?.moveDockReorder(it, 1) }
+            return com.nendo.argosy.ui.input.InputResult.HANDLED
+        }
+
+        override fun onConfirm(): com.nendo.argosy.ui.input.InputResult {
+            dockControllerToken?.let { DualScreenManagerHolder.instance?.saveDockReorder(it) }
+            return com.nendo.argosy.ui.input.InputResult.handled(com.nendo.argosy.core.input.SoundType.TOGGLE)
+        }
+
+        override fun onBack(): com.nendo.argosy.ui.input.InputResult {
+            cancelAppBarReorder()
+            return com.nendo.argosy.ui.input.InputResult.handled(com.nendo.argosy.core.input.SoundType.BACK)
+        }
+    }
 
     init {
         modalResetSignal.signal.onEach {
@@ -262,6 +287,7 @@ class HomeViewModel @Inject constructor(
             onFavoritesRefreshed = { libraryDelegate.loadFavorites() }
         )
         observeBackgroundSettings()
+        observeDockApps()
         observeGradientChanges()
         observeSyncOverlay()
         observePlatformChanges()
@@ -456,8 +482,7 @@ class HomeViewModel @Inject constructor(
         autoGridConfig = prefs.homeLayout.autoGrid,
         boxArt3d = prefs.homeLayout.boxArt3d,
         customGridConfig = prefs.homeLayout.customGrid,
-        layoutKind = prefs.homeLayout.selected,
-        homeApps = prefs.secondaryHomeApps.toList()
+        layoutKind = prefs.homeLayout.selected
     )
 
     private fun saveCurrentState() {
@@ -895,11 +920,41 @@ class HomeViewModel @Inject constructor(
 
     override fun focusAppBar(): Boolean {
         if (!appBarIsDrawn()) return false
-        _uiState.update { it.copy(appBarFocused = true, appBarIndex = 0) }
+        _uiState.update { it.copy(appBarFocused = true, appBarIndex = it.appBarIndex.coerceIn(-1, it.homeApps.size)) }
         return true
     }
 
+    override fun startAppBarReorder(): Boolean {
+        val state = _uiState.value
+        val packageName = state.homeApps.getOrNull(state.appBarIndex) ?: return false
+        val token = DualScreenManagerHolder.instance?.beginDockReorder(packageName, controller = true) ?: return false
+        dockControllerToken = token
+        return true
+    }
+
+    fun cancelAppBarReorder() {
+        val token = dockControllerToken ?: return
+        val session = dockReorder.value?.takeIf { it.token == token }
+        DualScreenManagerHolder.instance?.cancelDockReorder(token)
+        session?.let {
+            _uiState.update { state -> state.copy(appBarIndex = state.homeApps.indexOf(it.heldPackage).coerceAtLeast(0)) }
+        }
+        dockControllerToken = null
+    }
+
+    private fun observeDockApps() {
+        val manager = DualScreenManagerHolder.instance ?: return
+        combine(manager.homeAppsFlow, manager.dockReorder) { apps, session -> apps to session }
+            .onEach { (apps, session) ->
+                if (session?.token != dockControllerToken) dockControllerToken = null
+                _uiState.update { state ->
+                    state.withDockApps(apps, session?.takeIf { it.controller }?.heldPackage)
+                }
+            }.launchIn(viewModelScope)
+    }
+
     override fun releaseAppBar() {
+        cancelAppBarReorder()
         _uiState.update { it.copy(appBarFocused = false, appBarToolsOpen = false) }
     }
 
@@ -909,6 +964,7 @@ class HomeViewModel @Inject constructor(
     }
 
     override fun activateAppBarSlot() {
+        if (dockReorder.value != null) return
         if (!appBarIsDrawn()) {
             releaseAppBar()
             return

@@ -1,17 +1,20 @@
 package com.nendo.argosy.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,7 +34,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -47,6 +52,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick as semanticClick
 import androidx.compose.ui.semantics.onLongClick as semanticLongClick
@@ -91,6 +99,11 @@ fun CompanionAppBar(
     modifier: Modifier = Modifier,
     focusedIndex: Int = APP_BAR_NOTHING_FOCUSED,
     onAppLongPress: ((String) -> Unit)? = null,
+    reorder: DockReorderSession? = null,
+    onReorderStart: ((String) -> Long?)? = null,
+    onReorderTarget: (Long, Int) -> Unit = { _, _ -> },
+    onReorderSave: (Long) -> Unit = {},
+    onReorderCancel: (Long) -> Unit = {},
     onOpenDrawer: () -> Unit = {},
     onKeyboardToggle: (() -> Unit)? = null,
     focusDisplays: List<DisplayFocusTarget> = emptyList(),
@@ -121,6 +134,55 @@ fun CompanionAppBar(
         val slot = maxOf(minimumTouchTarget, appIconSize)
         val gap = Dimens.spacingSm
         val padding = Dimens.spacingMd
+        val ringOutset = Dimens.spacingXs
+        val density = LocalDensity.current
+        val drag = rememberDockDragReorderState(
+            listState, with(density) { padding.toPx() },
+            onStart = { onReorderStart?.invoke(it) },
+            onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel
+        )
+        LaunchedEffect(reorder?.token) { drag.reconcile(reorder) }
+        var previousApps by remember { mutableStateOf(apps) }
+        var wasEditing by remember { mutableStateOf(reorder != null) }
+        SideEffect {
+            if (previousApps != apps && (reorder != null || wasEditing)) {
+                listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
+            }
+            previousApps = apps
+            wasEditing = reorder != null
+        }
+        val leftLabel = stringResource(R.string.dock_reorder_move_left)
+        val rightLabel = stringResource(R.string.dock_reorder_move_right)
+        val saveLabel = stringResource(R.string.reorder_hint_done)
+        val cancelLabel = stringResource(R.string.library_apps_hint_cancel)
+        val dockLabel = stringResource(R.string.dock_accessibility_label)
+        val reorderActions = key("dock-actions") {
+            if (reorder != null && !reorder.saving) {
+                buildList {
+                    if (reorder.targetIndex > 0) add(CustomAccessibilityAction(leftLabel) {
+                        listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
+                        onReorderTarget(reorder.token, reorder.targetIndex - 1)
+                        true
+                    })
+                    if (reorder.targetIndex < reorder.visiblePackages.lastIndex) add(CustomAccessibilityAction(rightLabel) {
+                        listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
+                        onReorderTarget(reorder.token, reorder.targetIndex + 1)
+                        true
+                    })
+                    add(CustomAccessibilityAction(saveLabel) { onReorderSave(reorder.token); true })
+                    add(CustomAccessibilityAction(cancelLabel) { onReorderCancel(reorder.token); true })
+                }
+            } else emptyList()
+        }
+        LaunchedEffect(reorder?.targetIndex, drag.accessiblePackage) {
+            if (drag.accessiblePackage != null && reorder != null) {
+                val layout = listState.layoutInfo
+                val item = layout.visibleItemsInfo.firstOrNull { it.index == reorder.targetIndex }
+                if (item == null || item.offset < layout.viewportStartOffset || item.offset + item.size > layout.viewportEndOffset) {
+                    listState.animateScrollToItem(reorder.targetIndex)
+                }
+            }
+        }
         val height = slot + gap * 2
         val caretRotation by animateFloatAsState(
             targetValue = if (toolsOpen) 180f else 0f,
@@ -128,8 +190,15 @@ fun CompanionAppBar(
             label = "dock-caret"
         )
 
-        LaunchedEffect(focusedIndex, apps.size) {
-            if (focusedIndex in apps.indices) listState.animateScrollToItem(focusedIndex)
+        LaunchedEffect(focusedIndex, apps.size, reorder?.controller) {
+            if (reorder?.controller != false && focusedIndex in apps.indices) {
+                val layout = listState.layoutInfo
+                val item = layout.visibleItemsInfo.firstOrNull { it.index == focusedIndex }
+                if (reorder == null || item == null || item.offset < layout.viewportStartOffset ||
+                    item.offset + item.size > layout.viewportEndOffset) {
+                    listState.animateScrollToItem(focusedIndex)
+                }
+            }
         }
 
         BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
@@ -151,7 +220,7 @@ fun CompanionAppBar(
                     .padding(horizontal = widths.padding.dp, vertical = gap),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                DockControl(slot, focusedIndex == APP_BAR_DRAWER_INDEX, onClick = onOpenDrawer) { tint ->
+                DockControl(slot, focusedIndex == APP_BAR_DRAWER_INDEX, onClick = { if (reorder == null) onOpenDrawer() }) { tint ->
                     Icon(
                         Icons.Default.Apps,
                         stringResource(R.string.dual_home_hint_app_bar_all_apps),
@@ -161,21 +230,39 @@ fun CompanionAppBar(
                 }
                 Spacer(Modifier.width(widths.groupGap.dp))
                 if (apps.isNotEmpty()) {
-                    LazyRow(
-                        state = listState,
-                        modifier = Modifier.width(widths.appsWidth.dp)
-                            .horizontalEdgeFade(listState, fadeWidth = padding),
-                        horizontalArrangement = Arrangement.spacedBy(gap),
-                        userScrollEnabled = widths.appsWidth <
-                            apps.size * slot.value + (apps.size - 1) * gap.value
+                    Box(
+                        Modifier.width(widths.appsWidth.dp)
+                            .height(slot)
+                            .semantics { contentDescription = dockLabel; customActions = reorderActions }
+                            .let { if (onReorderStart != null) it.dockDragContainer(drag) else it }
                     ) {
-                        itemsIndexed(apps, key = { _, app -> app }) { index, app ->
-                            CompanionAppItem(
-                                packageName = app,
-                                isFocused = index == focusedIndex,
-                                onClick = { onAppClick(app) },
-                                onLongPress = onAppLongPress?.let { press -> { press(app) } }
-                            )
+                        LazyRow(
+                            state = listState,
+                            modifier = Modifier.requiredSize(widths.appsWidth.dp + ringOutset * 2, slot + ringOutset * 2)
+                                .horizontalEdgeFade(listState, fadeWidth = padding),
+                            contentPadding = PaddingValues(ringOutset),
+                            horizontalArrangement = Arrangement.spacedBy(gap),
+                            userScrollEnabled = reorder == null && widths.appsWidth <
+                                apps.size * slot.value + (apps.size - 1) * gap.value
+                        ) {
+                            itemsIndexed(apps, key = { _, app -> app }) { index, app ->
+                                CompanionAppItem(
+                                    packageName = app,
+                                    isFocused = if (reorder != null) app == reorder.heldPackage else index == focusedIndex,
+                                    onClick = { if (reorder == null && drag.draggingPackage == null) onAppClick(app) },
+                                    onLongPress = if (onReorderStart == null) onAppLongPress?.let { press -> { press(app) } } else null,
+                                    onSemanticReorder = if (onReorderStart != null) ({ drag.startAccessible(app) }) else null,
+                                    reorderActions = if (reorder?.heldPackage == app) reorderActions else emptyList(),
+                                    modifier = Modifier
+                                        .animateItem(
+                                            fadeInSpec = null,
+                                            placementSpec = if (drag.draggingPackage == app) snap() else
+                                                tween(Motion.durationSlide, easing = Motion.argosyEase),
+                                            fadeOutSpec = null
+                                        )
+                                        .dockDraggedItem(drag, app, reorder?.heldPackage == app)
+                                )
+                            }
                         }
                     }
                     Spacer(Modifier.width(widths.groupGap.dp))
@@ -185,6 +272,7 @@ fun CompanionAppBar(
                         slot,
                         focusedIndex == apps.size || toolsOpen,
                         onClick = {
+                            if (reorder != null) return@DockControl
                             showToolFocus = false
                             if (toolsOpen && focusPickerOpen) onFocusPickerToggle?.invoke()
                             onToolsToggle()
@@ -442,10 +530,14 @@ internal fun CompanionAppItem(
     packageName: String,
     isFocused: Boolean = false,
     onClick: () -> Unit,
-    onLongPress: (() -> Unit)? = null
+    onLongPress: (() -> Unit)? = null,
+    onSemanticReorder: (() -> Boolean)? = null,
+    reorderActions: List<CustomAccessibilityAction> = emptyList(),
+    modifier: Modifier = Modifier
 ) {
+    val reorderLabel = stringResource(R.string.library_apps_menu_reorder)
     Box(
-        modifier = Modifier.size(maxOf(minimumTouchTarget, Dimens.iconXl))
+        modifier = modifier.size(maxOf(minimumTouchTarget, Dimens.iconXl))
             .let { base ->
                 if (onLongPress == null) base.touchOnly(onClick)
                 else base.touchOnly(onClick = onClick, onLongPress = onLongPress)
@@ -453,23 +545,32 @@ internal fun CompanionAppItem(
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 semanticClick { onClick(); true }
-                if (onLongPress != null) semanticLongClick { onLongPress(); true }
+                if (onSemanticReorder != null) semanticLongClick(label = reorderLabel) { onSemanticReorder() }
+                else if (onLongPress != null) semanticLongClick { onLongPress(); true }
+                customActions = reorderActions
             },
         contentAlignment = Alignment.Center
     ) {
-        AsyncImage(
-            model = AppIconData(packageName),
-            contentDescription = packageName,
+        Box(
             modifier = Modifier
-                .size(Dimens.iconXl)
+                .requiredSize(Dimens.iconXl + Dimens.spacingXs * 2)
                 .argosyFocusIndicators(
                     focused = isFocused,
                     indicators = FocusIndicators.Ring,
+                    ringColor = MaterialTheme.colorScheme.primary,
                     shape = CircleShape
-                )
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface),
-            contentScale = ContentScale.Fit
-        )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = AppIconData(packageName),
+                contentDescription = packageName,
+                modifier = Modifier
+                    .size(Dimens.iconXl)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface),
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
