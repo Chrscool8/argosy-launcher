@@ -352,7 +352,8 @@ private fun CinematicShowcase(
     val availableHeight = (viewportHeight - bottom - gutter * 2).coerceAtLeast(zero)
     val availableWidth = (viewportWidth - gutter * 2).coerceAtLeast(zero)
     val textDirection = LocalLayoutDirection.current
-    val items = detail.stats?.let { showcaseRailItems(it, style, journeyShown = false) }.orEmpty()
+    val journey = rememberJourney(detail.stats, style)
+    val items = detail.stats?.let { showcaseRailItems(it, style, journeyShown = journey != null) }.orEmpty()
     val developer = items.firstOrNull { it.first == PresentationStat.DEVELOPER }?.second?.text
     val rows = if (detail.stats == null) {
         listOf(RailGroup.FACTS to detail.facts.map { RailItem(null, null, it.value) })
@@ -402,11 +403,16 @@ private fun CinematicShowcase(
                         ShowcaseRailRow(row.second)
                     }
                 }
+                journey?.let {
+                    item(key = "journey") {
+                        Box(Modifier.padding(top = Dimens.spacingMd)) {
+                            ShowcaseJourneyBar(journey = it)
+                        }
+                    }
+                }
                 if (friends.isNotEmpty()) {
                     item(key = "friends") {
-                        Box(Modifier.padding(top = Dimens.spacingMd)) {
-                            FriendsActivityBadge(friends = friends, textColor = theme.textPrimary)
-                        }
+                        ShowcaseFriendsPill(friends = friends, modifier = Modifier.padding(top = Dimens.spacingMd))
                     }
                 }
             }
@@ -680,6 +686,19 @@ private fun ShowcaseImage(
     )
 }
 
+@Composable
+private fun ShowcaseFriendsPill(friends: List<FriendActivity>, modifier: Modifier = Modifier) {
+    val theme = LocalArgosyTheme.current
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .background(theme.surfaceBase.copy(alpha = PILL_ALPHA))
+            .padding(horizontal = Dimens.spacingMd, vertical = Dimens.spacingXs)
+    ) {
+        FriendsActivityBadge(friends = friends, textColor = theme.textPrimary)
+    }
+}
+
 private data class RailItem(val icon: ImageVector?, val tint: Color?, val text: String)
 
 private enum class RailGroup { FACTS, RATINGS, PROGRESS }
@@ -828,7 +847,34 @@ private fun DividedFlow(
     }
 }
 
+private data class Journey(val fraction: Float, val played: String, val mainStory: String)
+
+@Composable
+private fun rememberJourney(stats: CompanionGameStats?, style: PresentationStyle): Journey? {
+    stats ?: return null
+    if (!style.shows(PresentationStat.PLAY_TIME) || !style.shows(PresentationStat.TIME_TO_BEAT)) return null
+    val mainSec = stats.timeToBeatMainSec?.takeIf { it > 0 } ?: return null
+    if (stats.playTimeMinutes <= 0) return null
+    val context = LocalContext.current
+    val mainStory = formatTimeToBeat(context, mainSec) ?: return null
+    return Journey(
+        fraction = (stats.playTimeMinutes * SECONDS_PER_MINUTE / mainSec.toFloat()).coerceIn(0f, 1f),
+        played = formatPlayTime(context, stats.playTimeMinutes),
+        mainStory = mainStory
+    )
+}
+
 private const val SECONDS_PER_MINUTE = 60f
+
+@Composable
+private fun ShowcaseJourneyBar(journey: Journey) {
+    ShowcaseProgressBar(
+        fraction = journey.fraction,
+        color = LocalArgosyTheme.current.focusAccent,
+        label = stringResource(R.string.dual_showcase_progress_main, journey.played, journey.mainStory),
+        icon = Icons.Default.SportsEsports
+    )
+}
 
 @Composable
 private fun ShowcaseProgressBar(fraction: Float, color: Color, label: String, icon: ImageVector) {

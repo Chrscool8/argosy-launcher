@@ -113,7 +113,7 @@
     <string name="gamedetail_chip_play_time_label">Temps de jeu</string>
 
     <string name="gamedetail_chip_rating_value">%1$d/10</string>
-    <string name="gamedetail_chip_rating_unset">Non défini</string>
+    <string name="gamedetail_chip_rating_unset">N/D</string>
     <string name="gamedetail_chip_community_rating_value">%1$d%%</string>
 
     <string name="gamedetail_chip_play_time_minutes">%1$dm</string>
@@ -563,4 +563,20 @@
     <string name="reviews_editor_footer_submit">Publier</string>
     <string name="reviews_editor_footer_delete">Supprimer</string>
     <string name="reviews_editor_footer_back">Retour</string>
+    <string name="gamedetail_per_game_backend_label">Moteur de rendu</string>
+    <string name="gamedetail_per_game_backend_inherit">Hérité (%1$s)</string>
+    <string name="gamedetail_per_game_footer_gpu_driver_options">Options</string>
+    <string name="gamedetail_per_game_gpu_driver_install">Installer %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_installing">Installation de %1$s...</string>
+    <string name="gamedetail_per_game_gpu_driver_installed">%1$s installé</string>
+    <string name="gamedetail_per_game_gpu_driver_install_failed">Impossible d\'installer %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_label">Pilote GPU</string>
+    <string name="gamedetail_per_game_gpu_driver_inherit">Hérité (%1$s)</string>
+    <string name="gamedetail_per_game_gpu_driver_system">Pilote système</string>
+    <string name="gamedetail_per_game_gpu_driver_missing">Pilote absent (pilote système utilisé)</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core">Non pris en charge par %1$s</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_system_only">%1$s utilise le pilote système</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">ce cœur</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_backend">S\'applique quand le moteur de rendu est Vulkan</string>
+    <string name="gamedetail_per_game_gpu_driver_reason_device">Les pilotes personnalisés exigent un GPU Adreno</string>
 </resources>

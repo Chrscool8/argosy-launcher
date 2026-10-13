@@ -5,6 +5,7 @@ import com.nendo.argosy.ui.input.InputHandler
 import com.nendo.argosy.ui.input.InputResult
 import com.nendo.argosy.ui.screens.settings.sections.input.BoxArtSectionInput
 import com.nendo.argosy.ui.screens.settings.sections.input.BuiltinControlsSectionInput
+import com.nendo.argosy.ui.screens.settings.sections.input.BuiltinSavesSectionInput
 import com.nendo.argosy.ui.screens.settings.sections.input.BuiltinVideoSectionInput
 import com.nendo.argosy.ui.screens.settings.sections.input.EmulatorsSectionInput
 import com.nendo.argosy.ui.screens.settings.sections.input.FrameSectionInput
@@ -49,6 +50,7 @@ class SettingsInputHandler(
         put(SettingsSection.PLATFORMS, EmulatorsSectionInput(viewModel))
         put(SettingsSection.PLATFORM_DETAIL, PlatformDetailSectionInput(viewModel))
         put(SettingsSection.BUILTIN_CONTROLS, BuiltinControlsSectionInput(viewModel))
+        put(SettingsSection.BUILTIN_SAVES, BuiltinSavesSectionInput(viewModel))
         put(SettingsSection.BOX_ART, BoxArtSectionInput(viewModel))
         put(SettingsSection.INTERFACE, InterfaceSectionInput(viewModel))
         put(SettingsSection.DISPLAYS, DisplaysSectionInput(viewModel))

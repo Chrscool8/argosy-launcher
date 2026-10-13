@@ -79,7 +79,7 @@ class SaveCacheManagerRestoreTest {
         every { fal.getTransformedFile(any()) } answers { File(firstArg<String>()) }
         every { saveArchiver.unzipSingleFolder(any(), any()) } returns false
 
-        val ok = manager.restoreSave(cacheId = 1L, targetPath = "/restricted/path/target")
+        val ok = manager.restoreSave(cacheId = 1L, targetPath = "/restricted/path/target", targetEmulatorId = "eden")
 
         assertFalse("Restore must report failure when unzip returns false", ok)
         cacheFile.delete()
@@ -94,7 +94,7 @@ class SaveCacheManagerRestoreTest {
         every { saveArchiver.readBytesWithoutTrailer(any()) } returns null
         every { fal.copyFile(any(), any()) } returns false
 
-        val ok = manager.restoreSave(cacheId = 2L, targetPath = "/restricted/path/target.sav")
+        val ok = manager.restoreSave(cacheId = 2L, targetPath = "/restricted/path/target.sav", targetEmulatorId = "eden")
 
         assertFalse("Restore must report failure when copyFile returns false", ok)
         cacheFile.delete()
@@ -122,10 +122,38 @@ class SaveCacheManagerRestoreTest {
         every { saveArchiver.unzipToFolder(any(), any()) } returns true
         val target = File(tempDir, "memcards/Shared.ps2")
 
-        manager.restoreSave(cacheId = 3L, targetPath = target.absolutePath)
+        manager.restoreSave(cacheId = 3L, targetPath = target.absolutePath, targetEmulatorId = "nethersx2")
 
         io.mockk.verify(exactly = 1) { folderHandler.ensureContainerPrepared(target) }
         cacheFile.delete()
+    }
+
+    @Test
+    fun `placing a save for a game with no RomM id creates no sync row`() = runTest {
+        val target = File(tempDir, "placed.srm").apply { writeBytes(byteArrayOf(1)) }
+        coEvery { saveSyncDao.getByGameEmulatorAndChannel(any(), any(), any(), any()) } returns null
+        coEvery { gameDao.getById(100L) } returns com.nendo.argosy.data.local.entity.GameEntity(
+            id = 100L,
+            title = "Local Game",
+            sortTitle = "local game",
+            platformId = 1L,
+            platformSlug = "snes",
+            rommId = null,
+            igdbId = null,
+            localPath = null,
+            source = com.nendo.argosy.data.model.GameSource.LOCAL_ONLY
+        )
+        every { fal.isDirectory(target.absolutePath) } returns false
+        every { fal.lastModified(target.absolutePath) } returns 1_700_000_000_000L
+
+        manager.recordPlacement(
+            entity(cachePath = "placed.srm").copy(channelName = SaveSyncApiClient.AUTOSAVE_SLOT_NAME),
+            target.absolutePath,
+            "retroarch",
+            secureSaves = false
+        )
+
+        io.mockk.coVerify(exactly = 0) { saveSyncDao.upsert(any()) }
     }
 
     private fun entity(cachePath: String): SaveCacheEntity = SaveCacheEntity(

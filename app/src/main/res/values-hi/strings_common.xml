@@ -236,11 +236,11 @@
 
     <string name="ui_save_conflict_title">सेव कॉन्फ्लिक्ट</string>
     <string name="ui_save_conflict_default_slot">डिफ़ॉल्ट सेव</string>
-    <string name="ui_save_conflict_message">सर्वर पर एक नई सेव मौजूद है। ओवरराइट करने पर यह आपकी लोकल सेव से बदल जाएगी।</string>
+    <string name="ui_save_conflict_message">सर्वर पर एक नई सेव मौजूद है। अपलोड करने पर आपकी लोकल सेव सबसे नई बन जाएगी, और सर्वर की कॉपी बनी रहेगी।</string>
     <string name="ui_save_conflict_source_local">लोकल</string>
     <string name="ui_save_conflict_source_server">सर्वर</string>
     <string name="ui_save_conflict_skip">सिंक छोड़ें</string>
-    <string name="ui_save_conflict_overwrite">ओवरराइट करें</string>
+    <string name="ui_save_conflict_overwrite">अपलोड करें</string>
     <string name="ui_save_conflict_hardcore_title">हार्डकोर सेव बदलें?</string>
     <string name="ui_save_conflict_hardcore_message">इस चैनल की मौजूदा सेव हार्डकोर मोड में बनी थी। यह सेव रखने पर वह मौजूदा सेव की जगह ले लेगी। हार्डकोर सेव इतिहास में बनी रहेगी।</string>
     <string name="ui_save_conflict_hardcore_replace">बदलें</string>
@@ -706,14 +706,14 @@
     <string name="ui_sync_overlay_post_session_title">सेव कॉन्फ्लिक्ट</string>
     <string name="ui_sync_overlay_post_session_subject">\"%1$s\" -- %2$s</string>
     <string name="ui_sync_overlay_post_session_default_slot">डिफ़ॉल्ट सेव</string>
-    <string name="ui_sync_overlay_post_session_message">सर्वर पर एक नई सेव मौजूद है। ओवरराइट करने पर यह आपकी लोकल सेव से बदल जाएगी।</string>
+    <string name="ui_sync_overlay_post_session_message">सर्वर पर एक नई सेव मौजूद है। अपलोड करने पर आपकी लोकल सेव सबसे नई बन जाएगी, और सर्वर की कॉपी बनी रहेगी।</string>
     <string name="ui_sync_overlay_post_session_local">लोकल</string>
     <string name="ui_sync_overlay_post_session_server">सर्वर</string>
     <string name="ui_sync_overlay_post_session_server_named">सर्वर (%1$s)</string>
     <string name="ui_sync_overlay_post_session_skip">सिंक छोड़ें</string>
     <string name="ui_sync_overlay_post_session_skip_subtitle">अपनी लोकल सेव रखें, अपलोड न करें</string>
-    <string name="ui_sync_overlay_post_session_overwrite">सर्वर ओवरराइट करें</string>
-    <string name="ui_sync_overlay_post_session_overwrite_subtitle">सर्वर सेव को अपने लोकल वर्शन से बदलें</string>
+    <string name="ui_sync_overlay_post_session_overwrite">लोकल सेव अपलोड करें</string>
+    <string name="ui_sync_overlay_post_session_overwrite_subtitle">आपकी लोकल सेव सबसे नई बन जाएगी। सर्वर की कॉपी बनी रहेगी।</string>
     <string name="ui_sync_overlay_legacy_status">सिंक हो रहा है...</string>
 
     <!-- Quick menu (ui/quickmenu) -->
@@ -758,10 +758,8 @@
     <string name="ui_file_browser_permission_footer_back">वापस</string>
     <string name="ui_file_browser_error_unreadable">डायरेक्टरी एक्सेस नहीं हो सकी</string>
     <string name="ui_file_browser_empty_folder">खाली फ़ोल्डर</string>
-    <string name="ui_file_browser_footer_select_file">फ़ाइल चुनें</string>
-    <string name="ui_file_browser_footer_select_file_or_folder">फ़ाइल चुनें</string>
-    <string name="ui_file_browser_footer_open_folder">खोलें</string>
-    <string name="ui_file_browser_footer_back">वापस</string>
+    <string name="ui_file_browser_action_use_folder">यह फ़ोल्डर इस्तेमाल करें</string>
+    <string name="ui_file_browser_action_new_folder">नया फ़ोल्डर</string>
     <string name="ui_file_browser_footer_new_folder">नया फ़ोल्डर</string>
     <string name="ui_file_browser_footer_use_folder">फ़ोल्डर इस्तेमाल करें</string>
     <string name="ui_file_browser_new_folder_title">नया फ़ोल्डर</string>

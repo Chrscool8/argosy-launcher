@@ -51,6 +51,8 @@ class BackgroundConflictInputHandlerTest {
             GamepadEvent.NextTrigger,
             GamepadEvent.LeftStickClick,
             GamepadEvent.RightStickClick,
+            GamepadEvent.RightStickUp,
+            GamepadEvent.RightStickDown,
             GamepadEvent.Select,
             GamepadEvent.LongConfirm
         )

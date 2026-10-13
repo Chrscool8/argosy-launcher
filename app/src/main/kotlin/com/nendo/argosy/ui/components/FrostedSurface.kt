@@ -67,10 +67,13 @@ fun rememberFrostedBackdrop(): FrostedBackdrop {
 }
 
 /**
- * Background-only capture, shared by frosted surfaces on the same display.
+ * Records this content as the backdrop that frosted surfaces under [LocalFrostedBackdrop]
+ * blur. The content must not contain a surface reading the same [backdrop]. Inert below
+ * Android 12, where frosted surfaces draw their fill alone.
  */
 @Composable
 fun Modifier.frostedBackdropSource(backdrop: FrostedBackdrop): Modifier {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return this
     val view = LocalView.current
     DisposableEffect(backdrop) {
         onDispose { backdrop.ready = false }
@@ -95,13 +98,11 @@ fun frostedSurfaceColor(): Color = if (LocalLauncherTheme.current.isDarkTheme) {
     ColorTokens.Domain.FrostedSurface.light
 }
 
-val minimumTouchTarget: Dp get() = ComponentDefaults.FrostedSurface.minimumTouchTargetDp.dp
+val minimumTouchTarget: Dp
+    @Composable get() = ComponentDefaults.FrostedSurface.minimumTouchTargetDp.dp * LocalUiScale.current.scale
 
 val frostedVisualChromeHeight: Dp
     @Composable get() = ComponentDefaults.FrostedSurface.chromeHeightDp.dp * LocalUiScale.current.scale
-
-val frostedChromeHeight: Dp
-    @Composable get() = maxOf(minimumTouchTarget, frostedVisualChromeHeight)
 
 @Composable
 internal fun chromeTextStyle(style: TextStyle, baseline: TextStyle, fontSize: TextUnit): TextStyle {

@@ -117,6 +117,14 @@ public class LibretroDroid {
     public static native void reset();
 
     public static native void setRumbleEnabled(boolean enabled);
+
+    public static native void setVulkanConfig(
+        boolean preferVulkan,
+        String driverDirectory,
+        String driverLibrary,
+        String hookDirectory,
+        String scratchDirectory
+    );
     public static native void setFrameSpeed(int speed);
     public static native void setAudioEnabled(boolean enabled);
     public static native void setPitchPreservationEnabled(boolean enabled);

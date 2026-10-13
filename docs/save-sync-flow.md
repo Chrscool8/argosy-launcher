@@ -43,7 +43,7 @@ save" on its own, and more than ten choosers exist: `getActiveRow`, `getMostRece
 `getNewestIdInChannelForOwner`, `getLatestHardcoreSave`, the server slot's newest
 `updatedAt` in pre-launch, `selectServerSaveForChannel` in `analyzeChannel`, the newest per
 channel in `forceSaveCheck` and `SaveUploader`, `getPlaceableForOwner` in account switch,
-`crossEmulatorMigrateIfNeeded`'s newest-by-`cachedAt`, and `activateSlot`'s newest-by-timestamp.
+and `activateSlot`'s newest-by-timestamp.
 The seam is strict per channel; `getMostRecentSave` falls back across channels, so the layers
 can disagree about the same game.
 
@@ -116,12 +116,11 @@ dialog sets only `activeSaveApplied`; bulk upserts in `forceSaveCheck` and
 | `SaveDownloader.downloadSave` | yes, not GCI | not cache-hit, not GCI | yes | cache-hit only | yes | yes | yes | yes |
 | `SaveDownloader.downloadSaveById` | no | no | no | no | no | no | no | no |
 | `resolveHardcoreConflict` downgrade | no | n/a | no | no | yes | no | partial | no |
-| `crossEmulatorMigrateIfNeeded` | if a file exists | no | yes | logged only | backup only | no | no | no |
+| `CrossEmulatorSaveMigrator` | rollback before every overwrite | skips hardcore | Sigil restore, else `reconcileDisk` | no | rollback, or the adopted version | adopt only | anchor (Secure Saves off) | no |
 
 `RestoreCachedSaveUseCase` deletes the live save before writing and before a server fetch, so a
 failure leaves no save. `downloadSaveById`'s GameCube branch ignores the target path, returns
-success on failure, and does not check the save's game code. `crossEmulatorMigrateIfNeeded`
-runs before every synced launch and picks the newest cache row across all accounts.
+success on failure, and does not check the save's game code.
 
 ### Hashing the disk is done four ways
 
@@ -129,8 +128,8 @@ runs before every synced launch and picks the newest cache row across all accoun
 `hashArchiveRoots` (the last defines the cached archive's hash). PS2's save path is the whole
 card directory while the archive holds only one game's folders, so every caller of
 `calculateLocalSaveHash` on PS2 hashes the whole card and can never match: `analyzeChannel`,
-`localMovedSinceUpload` (always reports "moved"), `crossEmulatorMigrateIfNeeded`,
-`ReconcileEffectApplier`, the downloader's stored `localContentHash`, and restore verification.
+`localMovedSinceUpload` (always reports "moved"), `ReconcileEffectApplier`, the downloader's
+stored `localContentHash`, and restore verification.
 
 ### GameCube does not follow its spec
 
@@ -145,17 +144,22 @@ card directory while the archive holds only one game's folders, so every caller 
 - No session watcher runs for a game with no `.gci` yet.
 - On a server whose heartbeat reports `SAVE_SYNC.SNAPSHOTS` (`RomMCapabilities.supportsSnapshots`), standalone Dolphin goes through
   `SigilSaveHandler` (Sigil's `dolphin_standalone` layout, raw cards included), as do the other
-  standalone card and profile emulators. On older servers every one of them keeps its legacy
-  handler and format. While disconnected, the route follows the last snapshot capability the
-  stored server reported (`RomMConnectionManager.snapshotsEnabled`); a server never reached keeps
-  the legacy handler and format. The libretro and built-in GameCube cores build the unit in
-  `GciSaveHandler` on every server.
+  standalone card and profile emulators. On older servers each keeps its legacy handler and
+  format, except a game whose saves sit on a container every game shares (a shared memory card,
+  VMU or backup RAM volume) and on none of its own files: `SigilSaveHandler.route` routes it, built-in
+  or standalone, and its upload and restore go through the Sigil unit (`SigilSaveLocator` reads
+  this from Sigil's layout, `unkeyed` shared files against present members). While disconnected,
+  the route follows the last snapshot capability the stored server reported
+  (`RomMConnectionManager.snapshotsEnabled`); a server never reached keeps the legacy handler and
+  format under the same shared-container exception. The libretro and built-in GameCube cores
+  build the unit in `GciSaveHandler` on every server.
 - Each `save_cache` row records the format of its bytes in `saveFormat` at write time: `neutral`
   for a unit Sigil built, `native` for the files the emulator wrote. An offline-chain push
   (`SnapshotSyncEngine.pushCached`) labels the save with the row's format, and a cache restore
   (`SaveCacheManager.restoreSave`, `restoreThroughSigil`) hands only a non-native row to Sigil, so
-  neither depends on the route at the time it runs. A `neutral` row that no Sigil layout covers at
-  restore time (after a move to an older server, a sign-out, or an emulator change) is refused and
+  neither depends on the route at the time it runs. A `neutral` row restores through
+  `SigilSaveHandler.localRoute`, so it still restores after a move to an older server or a
+  sign-out. A `neutral` row no local route covers (after an emulator change) is refused and
   nothing is written; a Sigil unit is never placed as raw files. A null `saveFormat` marks a row written before
   schema 206, or a server download whose format the server did not report: a push treats it as
   `native`, a restore follows the live route.
@@ -193,7 +197,8 @@ card directory while the archive holds only one game's folders, so every caller 
 `launchSimple` (disc and variant pickers, new casual and new hardcore), core-crash relaunch and
 netplay joins never run pre-launch sync. A PS2 memory card picked in the picker is set after
 pre-launch sync already resolved the old card. A deep link's `channel` parameter is dropped
-before launch.
+before launch. Every one of them runs the cross-emulator migration (below), which needs no
+server.
 
 ### Dead code
 
@@ -407,8 +412,9 @@ against live data (`GET /api/saves`, negotiate no-op twice) before the next phas
    (Secure Saves on) or adopt and sync (off), then a negotiate scoped to the game decides the
    server half with honest inputs. Argosy's own timestamp checks are removed. The pinned rule
    applies. Done when F-Zero GX launches clean twice and negotiate answers no-op twice.
-   Built as: `SaveSyncOrchestrator.checkDiskAgainstActive` (a disk with no save gets the active
-   version placed at the constructed path, which replaces `crossEmulatorMigrateIfNeeded`);
+   Built as: `SaveSyncOrchestrator.checkDiskAgainstActive` for an active version the launching
+   emulator wrote (a disk with no save gets it placed at the constructed path); an active version
+   from another emulator is left to `CrossEmulatorSaveMigrator`, which has already run;
    `NegotiateInventory` reports each slot's active cached version (the last transfer's server
    hash and stamp when it is unchanged, its own hash and cache time when it is new) and reports
    the disk only for the slot in play; pre-launch, the Scan and the background worker all ask
@@ -425,6 +431,59 @@ against live data (`GET /api/saves`, negotiate no-op twice) before the next phas
    waiter; the reconcile applier never marks a slot awaiting a decision as server-newer unless
    an auto-resolve rule chose the server; Delete Download keeps every cached save and state the
    server does not hold.
+
+## Cross-emulator save migration
+
+`CrossEmulatorSaveMigrator.migrateBeforeLaunch` is the one owner of putting a game's active save
+into an emulator other than the one that wrote it. `LaunchWithSyncUseCase.invokeWithProgress`
+runs it before the sync preamble, outside the pre-launch budget and whether or not RomM is
+reachable, the game has a `rommId` or sync is on. `LaunchGameUseCase` runs it for every other
+fresh launch (`launchSimple`, the disc, variant and memory-card pickers, netplay joins, the
+social screen); `GameLaunchDelegate.launchGame` passes `savesPrepared` so it runs once.
+
+- Trigger: the active `save_cache` row's `emulatorId` differs from the emulator
+  `EmulatorResolver` resolves for the launch. Hardcore active or newest rows and `state_`
+  channels are left alone. The row carries no core, so a core change under one emulator is not
+  a trigger.
+- Routes come from `SigilSaveHandler.localRoute`, independent of the server's unit support. A
+  built-in or RetroArch core with no layout of its own on the platform (in neither
+  `LIBRETRO_LAYOUTS` nor `BUILTIN_LIBRETRO_LAYOUTS`) gets Sigil's generic `libretro` layout
+  (`{stem}.srm`, `{stem}.rtc`), rooted at the built-in save base or at the save folder RetroArch
+  resolves for the real core. The generic layout is local only: `route()`, which decides what
+  travels to RomM, never returns it. A built-in-only core gets no generic route under RetroArch.
+  Two routes with the same layout and root are the same save and need nothing.
+- A pair with no route on either side, or a generic route paired with a layout of its own, is
+  placed the way a launch placed it before Sigil (`SaveSyncOrchestrator.reconcileDisk`): an empty
+  target gets the active save at the constructed path; a target already holding it is kept; a
+  differing target is adopted with Secure Saves off and backed up then overwritten with it on.
+- The target is read with `SigilSaveHandler.probe` (a collect against the stored sync state that
+  stores nothing). A target that already holds the active save, or is unchanged since Argosy
+  recorded the active save's hash for it, is left as it is.
+- Secure Saves on: the target's save is cached with `cacheAsRollback`, then the active save is
+  placed. Secure Saves off: a target changed since Argosy's anchor for (target root, target
+  emulator) is adopted as a new dirty version under the target emulator and nothing is written;
+  an unchanged target gets the rollback and the placement; a target with no anchor is adopted.
+  The anchor is the Sigil sync state for the root, else the `save_ownership` hash for the root
+  and emulator. A target save another account owns is never adopted. An empty
+  target is placed into in either mode.
+- Between two routes, placement goes through Sigil. A `neutral` row is restored straight into the target route.
+  A `native` (or untagged) row is laid out under a scratch root in the source layout, collected
+  there with no sync state, and that unit is restored into the target. The scratch root leaves no
+  ownership, anchor, sync or `sigil_sync_state` row. Sigil's restore replaces only this game's
+  entries in a shared container. The anchor and ownership are then recorded under the target
+  emulator (`SaveCacheManager.recordPlacement`).
+- A native row Sigil finds nothing in, or whose restore Sigil refuses as `UNSUPPORTED_FORMAT`,
+  is placed through `reconcileDisk` when it is a single file, and only into a save path with the
+  same extension.
+- Unreadable target, any other Sigil refusal (`CONFLICT`, `NO_SPACE`, `NO_TARGET`, `AMBIGUOUS`,
+  `DAMAGED`, `EXISTS`, I/O), a failed rollback, or a placement without Sigil that failed: nothing
+  more is written, the launch continues and the active row stays for the next launch.
+- Notices: a placement, an adoption, a target already holding the save and a same-layout pair
+  are logged only. A save that reached the target by no path gets one notice naming the reason,
+  once per active `save_cache` row (`SyncPreferencesRepository.markSaveMigrationNoticeShown`);
+  later launches with the same active row log it.
+- `checkDiskAgainstActive` returns `Untouched` for an active row from another emulator, and the
+  built-in SRAM restore (`SaveStateManager`) loads the save on disk instead of writing such a row.
 
 ## Critic defects folded into revision 2
 

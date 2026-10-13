@@ -220,9 +220,9 @@ class SaveDownloader @Inject constructor(
         }
 
         val config = SavePathRegistry.getConfigForPlatform(resolvedEmulatorId, game.platformSlug)
-        val sigilHandler = client.getHandler(config, game.platformSlug, resolvedEmulatorId) as? SigilSaveHandler
-        val sigilRoot = sigilHandler?.route(gameId, resolvedEmulatorId)?.root
-        if (sigilHandler != null && sigilRoot == null) {
+        val sigilRouted = client.isSigilRoutedFor(gameId, config, game.platformSlug, resolvedEmulatorId)
+        val sigilRoot = if (sigilRouted) sigilSaveHandler.route(gameId, resolvedEmulatorId)?.root else null
+        if (sigilRouted && sigilRoot == null) {
             Logger.warn(TAG, "[SaveSync] DOWNLOAD gameId=$gameId | No save root for $resolvedEmulatorId")
             return@withContext SaveSyncResult.NoSaveFound
         }
@@ -344,7 +344,7 @@ class SaveDownloader @Inject constructor(
                     Logger.error(TAG, "[SaveSync] DOWNLOAD gameId=$gameId | Backup failed before cache-hit restore")
                     return@withContext SaveSyncResult.Error("Failed to backup existing save before restore")
                 }
-                val restored = saveCacheManager.get().restoreSave(cachedMatch.id, preDownloadTargetPath)
+                val restored = saveCacheManager.get().restoreSave(cachedMatch.id, preDownloadTargetPath, resolvedEmulatorId)
                 if (!restored) {
                     Logger.warn(TAG, "[SaveSync] DOWNLOAD gameId=$gameId | restoreSave failed, falling through to network download")
                 } else {
@@ -525,7 +525,7 @@ class SaveDownloader @Inject constructor(
                     coreName = preferredCore,
                     basePathOverride = overrideBaseFor(config, game.platformSlug)
                 )
-                val handler = client.getHandler(config, game.platformSlug, resolvedEmulatorId)
+                val handler = if (sigilRoot != null) sigilSaveHandler else client.getHandler(config, game.platformSlug, resolvedEmulatorId)
                 fal.prepareSaveAccess(targetPath)
                 val result = handler.extractDownload(tempZipFile, saveContext)
                 if (!result.success) {

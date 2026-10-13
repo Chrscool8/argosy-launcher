@@ -2,7 +2,6 @@ package com.nendo.argosy.ui.screens.firstrun
 
 import android.Manifest
 import android.os.Build
-import android.os.Environment
 import android.content.pm.PackageManager
 import android.provider.Settings
 import androidx.annotation.StringRes
@@ -35,6 +34,7 @@ import com.nendo.argosy.ui.components.PLATFORM_HEADER_SEARCH
 import com.nendo.argosy.ui.components.PLATFORM_HEADER_SORT
 import com.nendo.argosy.util.PermissionHelper
 import com.nendo.argosy.util.PlatformFilterLogic
+import com.nendo.argosy.util.StorageAccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -255,14 +255,8 @@ class FirstRunViewModel @Inject constructor(
     }
 
     fun skipCorePrompt() {
-        val hadMissingCores = _uiState.value.missingCoreCount > 0
         _uiState.update { state ->
             state.copy(currentStep = FirstRunStep.COMPLETE, focusedIndex = 0)
-        }
-        if (hadMissingCores) {
-            viewModelScope.launch {
-                preferencesRepository.setBuiltinLibretroEnabled(false)
-            }
         }
     }
 
@@ -906,11 +900,7 @@ class FirstRunViewModel @Inject constructor(
     }
 
     fun refreshAllPermissions() {
-        val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            true
-        }
+        val hasStorage = StorageAccess.isGranted(application)
         val hasNotification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 application,

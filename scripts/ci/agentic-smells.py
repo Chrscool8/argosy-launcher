@@ -120,7 +120,11 @@ def evaluate_comments(added, root):
 
 def evaluate_stability(added, root):
     stability_checks = load_ci_module("stability_checks")
-    return evaluate_module(stability_checks, stability_checks.stability_findings, added, root)
+    service_checks = load_ci_module("service_stability_checks")
+    return (
+        evaluate_module(stability_checks, stability_checks.stability_findings, added, root)
+        + evaluate_module(service_checks, service_checks.findings, added, root)
+    )
 
 
 def evaluate_module(module, run, added, root):

@@ -215,6 +215,14 @@ interface SaveCacheDao {
     """)
     suspend fun getMostRecent(gameId: Long, ownerUserId: Long?): SaveCacheEntity?
 
+    @Query("""
+        SELECT * FROM save_cache
+        WHERE gameId = :gameId AND isRollback = 0
+          AND (ownerUserId IS NULL OR ownerUserId = :ownerUserId)
+        ORDER BY cachedAt DESC LIMIT 1
+    """)
+    suspend fun getMostRecentNonRollback(gameId: Long, ownerUserId: Long?): SaveCacheEntity?
+
     @Query("SELECT * FROM save_cache WHERE gameId = :gameId AND cachedAt = :timestamp LIMIT 1")
     suspend fun getByTimestamp(gameId: Long, timestamp: Long): SaveCacheEntity?
 

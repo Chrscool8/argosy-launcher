@@ -74,6 +74,7 @@ class SavePathResolverDiscoveryTest {
         every { context.filesDir } returns tempDir
         every { context.cacheDir } returns File(tempDir, "cache").apply { mkdirs() }
         coEvery { emulatorSaveConfigDao.getByEmulator(any()) } returns null
+        coEvery { saveHandlerRegistry.sigil.sharedLibretroRoot(any(), any()) } returns null
         coEvery { emulatorConfigDao.getSavePathForGame(any()) } returns null
         every { switchSaveHandler.isValidTitleId(any()) } answers {
             val s = firstArg<String>()
@@ -131,6 +132,84 @@ class SavePathResolverDiscoveryTest {
 
         assertNotNull(path)
         assertTrue("Expected a USA/Card A target, got $path", path!!.endsWith("/USA/Card A/01-GZLE.gci"))
+    }
+
+    @Test
+    fun `built-in ARMSX2 looks for its unit under the memory card root its Sigil route uses`() = runTest {
+        stubBuiltinSettings()
+        val memcards = File(tempDir, "libretro/system/pcsx2/memcards").apply { mkdirs() }
+        val ownCard = File(memcards, "BASLUS-20642.ps2").apply { writeBytes(byteArrayOf(5)) }
+        val rom = File(tempDir, "roms/Champions of Norrath (USA).chd").apply {
+            parentFile?.mkdirs()
+            writeBytes(byteArrayOf(1))
+        }
+        val game = GameEntity(
+            id = 1L, title = "Champions of Norrath", sortTitle = "champions of norrath", platformId = 2L,
+            platformSlug = "ps2", rommId = 7L, igdbId = null, localPath = rom.absolutePath,
+            source = GameSource.ROMM_SYNCED
+        )
+        coEvery { gameDao.getById(1L) } returns game
+        val sigil = mockk<com.nendo.argosy.data.sync.platform.SigilSaveHandler>(relaxed = true)
+        every { saveHandlerRegistry.sigil } returns sigil
+        coEvery { sigil.route(any(), any()) } returns null
+        coEvery { sigil.sharedLibretroRoot(any(), any()) } returns null
+        coEvery { sigil.localRoute(1L, "argosy") } returns
+            com.nendo.argosy.data.sync.platform.SigilRoute("pcsx2", memcards.absolutePath, null, null, libretro = true)
+        val unit = com.nendo.sigil.SigilSaveUnit(
+            "key", com.nendo.sigil.SigilSaveUnit.Shape.Single.code,
+            listOf(com.nendo.sigil.SigilSaveMember("BASLUS-20642.ps2", "BASLUS-20642.ps2", 0, true)),
+            emptyList(), emptyList(), "BASLUS-20642.ps2", "", ""
+        )
+        coEvery {
+            saveUnitResolver.resolve(memcards.absolutePath, "armsx2", "ps2", rom.name, game, false)
+        } returns ResolvedSaveUnit(memcards.absolutePath, "pcsx2", unit)
+
+        val result = resolver.discoverSavePath(
+            emulatorId = "argosy",
+            gameTitle = game.title,
+            platformSlug = "ps2",
+            romPath = rom.absolutePath,
+            coreName = "armsx2",
+            gameId = 1L,
+        )
+
+        assertEquals(ownCard.absolutePath, result)
+        coVerify(exactly = 1) { saveUnitResolver.resolve(memcards.absolutePath, "armsx2", "ps2", rom.name, game, false) }
+    }
+
+    @Test
+    fun `a built-in game whose saves sit on shared cards resolves to the card root, not a stale rom-named save`() = runTest {
+        stubBuiltinSettings()
+        val savesDir = File(tempDir, "libretro/saves").apply { mkdirs() }
+        File(savesDir, "Champions of Norrath (USA).srm").writeBytes(ByteArray(64) { 4 })
+        val memcards = File(tempDir, "libretro/system/pcsx2/memcards").apply { mkdirs() }
+        File(memcards, "Mcd001.ps2").writeBytes(ByteArray(64) { 5 })
+        coEvery { saveHandlerRegistry.sigil.sharedLibretroRoot(1L, "argosy") } returns memcards.absolutePath
+
+        val result = resolver.discoverSavePath(
+            emulatorId = "argosy",
+            gameTitle = "Champions of Norrath",
+            platformSlug = "ps2",
+            romPath = "/roms/Champions of Norrath (USA).chd",
+            coreName = "armsx2",
+            gameId = 1L,
+        )
+
+        assertEquals(memcards.absolutePath, result)
+    }
+
+    @Test
+    fun `a standalone emulator never asks for a shared libretro root`() = runTest {
+        val sigil = saveHandlerRegistry.sigil
+        resolver.discoverSavePath(
+            emulatorId = "nethersx2",
+            gameTitle = "Champions of Norrath",
+            platformSlug = "ps2",
+            romPath = "/roms/Champions of Norrath (USA).chd",
+            gameId = 1L,
+        )
+
+        coVerify(exactly = 0) { sigil.sharedLibretroRoot(any(), any()) }
     }
 
     @Test
@@ -765,6 +844,26 @@ class SavePathResolverDiscoveryTest {
 
         assertEquals(memcardDir, folderShapedResult)
         assertNotEquals(memcardDir, fileShapedResult)
+    }
+
+    @Test
+    fun `a Sigil save root that cannot be read is reported unreadable, not absent`() = runTest {
+        val root = File(tempDir, "Android/data/org.ppsspp.ppsspp/files").apply { mkdirs() }.absolutePath
+        val sigil = mockk<com.nendo.argosy.data.sync.platform.SigilSaveHandler>()
+        coEvery { saveHandlerRegistry.isSigilRoutedFor(1L, any(), "psp", "ppsspp") } returns true
+        every { saveHandlerRegistry.sigil } returns sigil
+        coEvery { sigil.route(1L, any()) } returns
+            com.nendo.argosy.data.sync.platform.SigilRoute("ppsspp_standalone", root, null, null)
+        coEvery { sigil.sharedLibretroRoot(any(), any()) } returns null
+        coEvery { sigil.collect(1L, any(), any()) } returns
+            com.nendo.argosy.data.sync.platform.SigilCollect.Unreadable("permission denied")
+
+        val lookup = resolver.discoverSavePathChecked(
+            emulatorId = "ppsspp", gameTitle = "Lunar", platformSlug = "psp",
+            romPath = "/roms/lunar.iso", gameId = 1L,
+        )
+
+        assertEquals(SaveLookup.Unreadable(root), lookup)
     }
 
     private fun rommGame(): GameEntity = GameEntity(

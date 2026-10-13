@@ -22,6 +22,9 @@ private const val PPSSPP_PKG = "org.ppsspp.ppsspp"
 private const val PPSSPP_ROOT = "/storage/emulated/0/Android/data/org.ppsspp.ppsspp"
 private const val PPSSPP_OWN = "$PPSSPP_ROOT/files/PSP/SAVEDATA"
 private const val PPSSPP_SHARED = "/storage/emulated/0/PSP/SAVEDATA"
+private const val PPSSPP_SHARED_INI = "/storage/emulated/0/PSP/SYSTEM/ppsspp.ini"
+private const val SD_STICK = "/storage/75D7-DC5F/PSP/SAVEDATA"
+private const val SD_STICK_INI = "/storage/75D7-DC5F/PSP/SYSTEM/ppsspp.ini"
 
 class SavePathAuthorityTest {
 
@@ -59,6 +62,11 @@ class SavePathAuthorityTest {
                 lastModified = 0
             )
         }
+    }
+
+    private fun ini(path: String, modifiedAt: Long) {
+        every { fal.exists(path) } returns true
+        every { fal.lastModified(path) } returns modifiedAt
     }
 
     private fun unlistable(path: String) {
@@ -242,6 +250,117 @@ class SavePathAuthorityTest {
 
         dirs(PPSSPP_ROOT, "files")
         assertTrue(auth.resolve(psp).preferredReadable)
+    }
+
+    @Test
+    fun `the live ppsspp stick on a second storage root beats a stale first root with saves`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK, PPSSPP_OWN))
+        nothingStored()
+        dirs(PPSSPP_SHARED, "ULUS10064DATA00")
+        dirs(SD_STICK)
+        ini(SD_STICK_INI, 100L)
+
+        assertEquals(SD_STICK, auth.ensureEvaluatedDefault(psp))
+        coVerify { saveConfigRepo.setEvaluatedSavePath("ppsspp", SD_STICK) }
+    }
+
+    @Test
+    fun `the stick with the newest ppsspp config wins when two hold one`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK))
+        nothingStored()
+        dirs(PPSSPP_SHARED)
+        dirs(SD_STICK)
+        ini(PPSSPP_SHARED_INI, 100L)
+        ini(SD_STICK_INI, 200L)
+
+        assertEquals(SD_STICK, auth.ensureEvaluatedDefault(psp))
+    }
+
+    @Test
+    fun `an older config on the later stick loses to a newer one on the first`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK))
+        nothingStored()
+        dirs(PPSSPP_SHARED)
+        dirs(SD_STICK, "ULUS10064DATA00")
+        ini(PPSSPP_SHARED_INI, 200L)
+        ini(SD_STICK_INI, 100L)
+
+        assertEquals(PPSSPP_SHARED, auth.ensureEvaluatedDefault(psp))
+    }
+
+    @Test
+    fun `with nothing stored, the registry default shown is the live ppsspp stick`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK, PPSSPP_OWN))
+        nothingStored()
+        dirs(PPSSPP_SHARED, "ULUS10064DATA00")
+        ini(SD_STICK_INI, 100L)
+
+        val resolution = auth.resolve(psp)
+
+        assertEquals(SavePathSource.REGISTRY_DEFAULT, resolution.source)
+        assertEquals(SD_STICK, resolution.basePath)
+    }
+
+    @Test
+    fun `a stale evaluated ppsspp folder moves to the live stick`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK, PPSSPP_OWN))
+        coEvery { saveConfigRepo.resolveUserSavePath(any(), any()) } returns null
+        coEvery { saveConfigRepo.resolveEvaluatedSavePath("ppsspp") } returns PPSSPP_SHARED
+        dirs(PPSSPP_SHARED, "ULUS10064DATA00")
+        ini(SD_STICK_INI, 100L)
+
+        val resolution = auth.resolve(psp)
+
+        assertEquals(SavePathSource.EVALUATED_DEFAULT, resolution.source)
+        assertEquals(SD_STICK, resolution.basePath)
+        coVerify { saveConfigRepo.setEvaluatedSavePath("ppsspp", SD_STICK) }
+    }
+
+    @Test
+    fun `session start moves a stale evaluated ppsspp folder to the live stick`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK, PPSSPP_OWN))
+        coEvery { saveConfigRepo.resolveUserSavePath(any(), any()) } returns null
+        coEvery { saveConfigRepo.resolveEvaluatedSavePath("ppsspp") } returns PPSSPP_SHARED
+        dirs(PPSSPP_SHARED, "ULUS10064DATA00")
+        ini(SD_STICK_INI, 100L)
+
+        assertEquals(SD_STICK, auth.ensureEvaluatedDefault(psp))
+        coVerify { saveConfigRepo.setEvaluatedSavePath("ppsspp", SD_STICK) }
+    }
+
+    @Test
+    fun `an evaluated folder that is the live stick is not rewritten`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK))
+        coEvery { saveConfigRepo.resolveUserSavePath(any(), any()) } returns null
+        coEvery { saveConfigRepo.resolveEvaluatedSavePath("ppsspp") } returns SD_STICK
+        ini(SD_STICK_INI, 100L)
+
+        assertEquals(SD_STICK, auth.resolve(psp).basePath)
+        coVerify(exactly = 0) { saveConfigRepo.setEvaluatedSavePath(any(), any()) }
+    }
+
+    @Test
+    fun `a user ppsspp folder is never moved to the live stick`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK))
+        coEvery { saveConfigRepo.resolveUserSavePath("ppsspp", "psp") } returns PPSSPP_SHARED
+        ini(SD_STICK_INI, 100L)
+
+        val resolution = auth.resolve(psp)
+
+        assertEquals(SavePathSource.USER_OVERRIDE, resolution.source)
+        assertEquals(PPSSPP_SHARED, resolution.basePath)
+        assertNull(auth.ensureEvaluatedDefault(psp))
+        coVerify(exactly = 0) { saveConfigRepo.setEvaluatedSavePath(any(), any()) }
+    }
+
+    @Test
+    fun `with no ppsspp config anywhere the first folder with saves still wins`() = runTest {
+        val auth = authority(listOf(PPSSPP_SHARED, SD_STICK))
+        nothingStored()
+        dirs(PPSSPP_SHARED, "ULUS10064DATA00")
+        dirs(SD_STICK)
+
+        assertEquals(PPSSPP_SHARED, auth.ensureEvaluatedDefault(psp))
     }
 
     @Test

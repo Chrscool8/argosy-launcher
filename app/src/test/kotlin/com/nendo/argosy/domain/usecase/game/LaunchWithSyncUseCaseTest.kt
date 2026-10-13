@@ -13,6 +13,7 @@ import com.nendo.argosy.data.repository.PreLaunchSyncResult
 import com.nendo.argosy.data.repository.SaveSyncRepository
 import com.nendo.argosy.data.repository.SaveSyncResult
 import com.nendo.argosy.data.repository.SiblingGroupRepository
+import com.nendo.argosy.data.sync.CrossEmulatorSaveMigrator
 import com.nendo.argosy.domain.model.SyncProgress
 import com.nendo.argosy.domain.usecase.state.PreLaunchStateSyncUseCase
 import io.mockk.coEvery
@@ -44,6 +45,7 @@ class LaunchWithSyncUseCaseTest {
     private val stateCacheManager = mockk<com.nendo.argosy.data.repository.StateCacheManager>(relaxed = true)
     private val effectiveLibretroSettingsResolver =
         mockk<com.nendo.argosy.data.preferences.EffectiveLibretroSettingsResolver>(relaxed = true)
+    private val migrator = mockk<CrossEmulatorSaveMigrator>(relaxed = true)
 
     private lateinit var useCase: LaunchWithSyncUseCase
 
@@ -80,7 +82,8 @@ class LaunchWithSyncUseCaseTest {
             mockk<com.nendo.argosy.domain.usecase.state.SyncStatesOnSessionEndUseCase>(relaxed = true),
             siblingGroupRepository,
             stateCacheManager,
-            effectiveLibretroSettingsResolver
+            effectiveLibretroSettingsResolver,
+            migrator
         )
 
         every { preferencesRepository.userPreferences } returns MutableStateFlow(UserPreferences(saveSyncEnabled = true))
@@ -376,5 +379,35 @@ class LaunchWithSyncUseCaseTest {
         io.mockk.coVerify(exactly = 0) {
             saveSyncRepository.preLaunchSyncForGame(any(), any(), any(), any(), any())
         }
+    }
+
+    @Test
+    fun `the cross-emulator migration runs before the pre-launch sync`() = runTest {
+        coEvery {
+            saveSyncRepository.preLaunchSyncForGame(gameId, rommId, emulatorId, channelName = null, secureSaves = true)
+        } returns PreLaunchSyncResult.LocalIsNewer
+
+        useCase.invokeWithProgress(gameId).toList()
+
+        io.mockk.coVerifyOrder {
+            migrator.migrateBeforeLaunch(gameId)
+            saveSyncRepository.preLaunchSyncForGame(gameId, rommId, emulatorId, null, true)
+        }
+    }
+
+    @Test
+    fun `the cross-emulator migration runs without RomM, a rommId, sync enabled or the pre-launch sync`() = runTest {
+        coEvery { romMRepository.isReachable() } returns false
+        coEvery { gameDao.getById(gameId) } returns game.copy(rommId = null)
+
+        useCase.invokeWithProgress(gameId).toList()
+        coEvery { gameDao.getById(gameId) } returns game
+        useCase.invokeWithProgress(gameId).toList()
+        every { preferencesRepository.userPreferences } returns MutableStateFlow(UserPreferences(saveSyncEnabled = false))
+        useCase.invokeWithProgress(gameId).toList()
+        useCase.invokeWithProgress(gameId, skipPreLaunchSync = true).toList()
+
+        io.mockk.coVerify(exactly = 4) { migrator.migrateBeforeLaunch(gameId) }
+        io.mockk.coVerify(exactly = 0) { saveSyncRepository.preLaunchSyncForGame(any(), any(), any(), any(), any()) }
     }
 }

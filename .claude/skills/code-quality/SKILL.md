@@ -209,8 +209,12 @@ this way while quiet screens worked. Rules:
 ### Compose Stability Contract (NON-NEGOTIABLE)
 `app/compose_stability_config.conf` declares four packages stable to the Compose
 compiler: `data.model.**`, `data.local.entity.**`, `domain.model.**` and `ui.**`.
-It also declares two single classes,
-`core.game.AchievementUi` and `hardware.CompanionInGameState`. This is what keeps cold compiles at ~4 min instead of 1h+ (StabilityInferencer
+It also names single in-repo classes: `core.game.AchievementUi`,
+`hardware.CompanionInGameState`, and services passed into composables (`RomMRepository`,
+`SaveSyncRepository`, `SaveCacheManager`, `PlaySessionTracker`, `SnapshotSyncRouter`). A
+named class keeps only fixed public references (val Flows and functions);
+`scripts/ci/service_stability_checks.py` fails a public `var`, mutable collection or
+snapshot state on one. Add an in-repo class only when it meets that shape. This is what keeps cold compiles at ~4 min instead of 1h+ (StabilityInferencer
 recursion), but the compiler NO LONGER VERIFIES stability for covered classes -- we
 promise it. A violation does not crash or warn; it silently skips recompositions and
 the UI goes stale. Rules for ALL new/edited code in covered packages and classes:
@@ -254,7 +258,10 @@ interface InputHandler {
     fun onSelect(): InputResult = InputResult.UNHANDLED
     fun onLeftStickClick(): InputResult = InputResult.UNHANDLED
     fun onRightStickClick(): InputResult = InputResult.UNHANDLED
+    fun onRightStickUp(): InputResult = InputResult.UNHANDLED
+    fun onRightStickDown(): InputResult = InputResult.UNHANDLED
     fun onLongConfirm(): InputResult = InputResult.UNHANDLED
+    fun onLongSelect(): InputResult = InputResult.UNHANDLED
 }
 ```
 
@@ -267,6 +274,7 @@ enum class InputButton {
     A, B, X, Y,
     DPAD, DPAD_UP, DPAD_DOWN, DPAD_LEFT, DPAD_RIGHT, DPAD_HORIZONTAL, DPAD_VERTICAL,
     LB, RB, LB_RB, LT, RT, LT_RT,
+    RIGHT_STICK_VERTICAL,
     START, SELECT
 }
 ```

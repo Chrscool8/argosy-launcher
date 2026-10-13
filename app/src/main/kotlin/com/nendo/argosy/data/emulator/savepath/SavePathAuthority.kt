@@ -179,8 +179,11 @@ open class SavePathAuthority @Inject constructor(
             return resolution(config, configId, override, SavePathSource.USER_OVERRIDE, request)
         }
 
-        val preferred = candidatePaths(config, request.emulatorPackage).firstOrNull()
-        val evaluated = configId?.let { emulatorSaveConfigRepository.resolveEvaluatedSavePath(it) }
+        val candidates = candidatePaths(config, request.emulatorPackage)
+        val preferred = PpssppMemoryStick.liveSaveData(config, candidates, fal) ?: candidates.firstOrNull()
+        val evaluated = configId
+            ?.let { emulatorSaveConfigRepository.resolveEvaluatedSavePath(it) }
+            ?.let { followLiveStick(config, it, candidates) }
         if (evaluated != null) {
             val preferredReadable = preferred == null || preferred == evaluated || isReadable(preferred)
             return resolution(
@@ -192,35 +195,33 @@ open class SavePathAuthority @Inject constructor(
     }
 
     /**
-     * Settles which packaged folder [request] uses when the user has chosen none, and remembers
-     * the answer. Meant for session start, the one moment the emulator is known to be installed
-     * and its folders are about to be written.
-     *
-     * The candidates are tried in registry order, and existing saves outrank the preference:
-     * the first folder that exists and holds entries wins, then the first that exists, then the
-     * first Argosy can read at all. An emulator pointed at the shared folder therefore keeps its
-     * saves there instead of being handed an empty folder it never writes to. When nothing can be
-     * seen nothing is written and the next session looks again. Once written, the choice holds
-     * until the user resets it: a folder that later becomes unreadable is reported as unreadable,
-     * never swapped for another.
-     *
-     * Only folder-based layouts on external storage take part. Internal layouts have one folder
-     * and RetroArch's own configuration decides its layout.
+     * The folder an external folder-based emulator writes to when the user has chosen none:
+     * the live PPSSPP memory stick, else the first candidate holding entries, existing, then
+     * readable. The choice is stored and held, except that PPSSPP follows its live stick.
      */
     suspend fun ensureEvaluatedDefault(request: SavePathRequest): String? {
         val config = configFor(request) ?: return null
         if (!config.usesFolderBasedSaves || config.usesInternalStorage || isRetroArchManaged(config)) return null
         val configId = config.emulatorId
         if (emulatorSaveConfigRepository.resolveUserSavePath(configId, request.platformSlug) != null) return null
-        emulatorSaveConfigRepository.resolveEvaluatedSavePath(configId)?.let { return it }
-
         val candidates = candidatePaths(config, request.emulatorPackage)
-        val chosen = candidates.firstOrNull { isReadable(it) && holdsEntries(it) }
+        emulatorSaveConfigRepository.resolveEvaluatedSavePath(configId)
+            ?.let { return followLiveStick(config, it, candidates) }
+
+        val chosen = PpssppMemoryStick.liveSaveData(config, candidates, fal)
+            ?: candidates.firstOrNull { isReadable(it) && holdsEntries(it) }
             ?: candidates.firstOrNull { isReadable(it) && fal.exists(it) }
             ?: candidates.firstOrNull { isReadable(it) }
             ?: return null
         emulatorSaveConfigRepository.setEvaluatedSavePath(configId, chosen)
         return chosen
+    }
+
+    private suspend fun followLiveStick(config: SavePathConfig, evaluated: String, candidates: List<String>): String {
+        val live = PpssppMemoryStick.liveSaveData(config, listOf(evaluated) + candidates, fal)
+        if (live == null || live == evaluated.trimEnd('/')) return evaluated
+        emulatorSaveConfigRepository.setEvaluatedSavePath(config.emulatorId, live)
+        return live
     }
 
     protected open fun candidatePaths(

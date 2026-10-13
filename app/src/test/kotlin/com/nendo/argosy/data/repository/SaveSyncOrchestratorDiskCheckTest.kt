@@ -92,7 +92,7 @@ class SaveSyncOrchestratorDiskCheckTest {
         } returns SaveLookup.Found(savePath)
         coEvery { saveCacheManager.calculateLocalSaveHash(savePath, gameId, emulatorId) } returns "disk"
         coEvery { saveCacheManager.cacheAsRollback(any(), any(), any()) } returns SaveCacheManager.CacheResult.Created(0L, ROLLBACK_ID)
-        coEvery { saveCacheManager.restoreSave(any(), any()) } returns true
+        coEvery { saveCacheManager.restoreSave(any(), any(), any()) } returns true
         coEvery { apiClient.clearSavesBeforeRestore(any(), any(), any(), any()) } returns true
         coEvery { saveCacheDao.getAllByGameChannelAndHash(any(), any(), any(), any()) } returns emptyList()
         coEvery { ownership.claim(any(), any()) } returns SaveClaim.Unowned
@@ -107,7 +107,7 @@ class SaveSyncOrchestratorDiskCheckTest {
         coVerifyOrder {
             saveCacheManager.cacheAsRollback(gameId, emulatorId, savePath)
             apiClient.clearSavesBeforeRestore(savePath, "snes", any(), any())
-            saveCacheManager.restoreSave(active.id, savePath)
+            saveCacheManager.restoreSave(active.id, savePath, emulatorId)
         }
     }
 
@@ -116,16 +116,16 @@ class SaveSyncOrchestratorDiskCheckTest {
         coEvery { saveCacheManager.cacheAsRollback(any(), any(), any()) } returns SaveCacheManager.CacheResult.Failed
 
         assertEquals(SaveSyncOrchestrator.DiskCheck.Failed, check(secureSaves = true))
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
         coVerify(exactly = 0) { apiClient.clearSavesBeforeRestore(any(), any(), any(), any()) }
     }
 
     @Test
     fun `a restore that fails after the clear puts the disk save back from its backup`() = runTest {
-        coEvery { saveCacheManager.restoreSave(active.id, savePath) } returns false
+        coEvery { saveCacheManager.restoreSave(active.id, savePath, emulatorId) } returns false
 
         assertEquals(SaveSyncOrchestrator.DiskCheck.Failed, check(secureSaves = true))
-        coVerify { saveCacheManager.restoreSave(ROLLBACK_ID, savePath) }
+        coVerify { saveCacheManager.restoreSave(ROLLBACK_ID, savePath, emulatorId) }
     }
 
     @Test
@@ -133,8 +133,8 @@ class SaveSyncOrchestratorDiskCheckTest {
         coEvery { apiClient.clearSavesBeforeRestore(any(), any(), any(), any()) } returns false
 
         assertEquals(SaveSyncOrchestrator.DiskCheck.Failed, check(secureSaves = true))
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(active.id, any()) }
-        coVerify { saveCacheManager.restoreSave(ROLLBACK_ID, savePath) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(active.id, any(), any()) }
+        coVerify { saveCacheManager.restoreSave(ROLLBACK_ID, savePath, emulatorId) }
     }
 
     @Test
@@ -143,7 +143,7 @@ class SaveSyncOrchestratorDiskCheckTest {
         coVerify {
             saveCacheManager.cacheCurrentSave(gameId, emulatorId, savePath, null, any(), any(), any(), any(), any(), true, any(), any())
         }
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
     }
 
     @Test
@@ -154,7 +154,7 @@ class SaveSyncOrchestratorDiskCheckTest {
         )
 
         assertEquals(SaveSyncOrchestrator.DiskCheck.Matches, check(secureSaves = true))
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
         coVerify(exactly = 0) { saveCacheManager.cacheAsRollback(any(), any(), any()) }
     }
 
@@ -165,7 +165,7 @@ class SaveSyncOrchestratorDiskCheckTest {
 
         assertEquals(SaveSyncOrchestrator.DiskCheck.Adopted, check(secureSaves = true))
         coVerify { activeSaveRepository.activateCache(gameId, 61L) }
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
     }
 
     @Test
@@ -177,8 +177,35 @@ class SaveSyncOrchestratorDiskCheckTest {
         coEvery { savePathResolver.constructSavePath(any(), any(), any(), any(), any(), any(), any(), any()) } returns constructed
 
         assertEquals(SaveSyncOrchestrator.DiskCheck.Restored, check(secureSaves = false))
-        coVerify(exactly = 1) { saveCacheManager.restoreSave(active.id, constructed) }
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(active.id, match { "{" in it }) }
+        coVerify(exactly = 1) { saveCacheManager.restoreSave(active.id, constructed, emulatorId) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(active.id, match { "{" in it }, any()) }
+    }
+
+    @Test
+    fun `an active version from another emulator is left to the cross-emulator migrator`() = runTest {
+        coEvery { activeSaveRepository.getActiveRow(gameId) } returns active.copy(emulatorId = "duckstation")
+        coEvery {
+            savePathResolver.discoverSavePathChecked(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns SaveLookup.Absent
+        coEvery { savePathResolver.constructSavePath(any(), any(), any(), any(), any(), any(), any(), any()) } returns
+            "/storage/emulated/0/RetroArch/saves/game.srm"
+
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Untouched, check(secureSaves = false))
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Untouched, check(secureSaves = true))
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.cacheAsRollback(any(), any(), any()) }
+    }
+
+    @Test
+    fun `an active version from another emulator never overwrites or adopts a differing disk`() = runTest {
+        coEvery { activeSaveRepository.getActiveRow(gameId) } returns active.copy(emulatorId = "duckstation")
+
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Untouched, check(secureSaves = true))
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Untouched, check(secureSaves = false))
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            saveCacheManager.cacheCurrentSave(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
     }
 
     @Test
@@ -186,7 +213,63 @@ class SaveSyncOrchestratorDiskCheckTest {
         coEvery { activeSaveRepository.getActiveRow(gameId) } returns active.copy(isHardcore = true)
 
         assertEquals(SaveSyncOrchestrator.DiskCheck.Untouched, check(secureSaves = true))
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
+    }
+
+    private suspend fun placeFromOtherEmulator(secureSaves: Boolean, expectedExtension: String? = null) =
+        orchestrator.reconcileDisk(
+            gameDao.getById(gameId)!!, emulatorId, "autosave", active.copy(emulatorId = "snes9x_standalone"),
+            secureSaves, owner, expectedExtension
+        )
+
+    @Test
+    fun `a save from an unrouted emulator is placed into an empty target`() = runTest {
+        coEvery {
+            savePathResolver.discoverSavePathChecked(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns SaveLookup.Absent
+        val constructed = "/storage/emulated/0/RetroArch/saves/Snes9x/game.srm"
+        coEvery { savePathResolver.constructSavePath(any(), any(), any(), any(), any(), any(), any(), any()) } returns constructed
+
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Restored, placeFromOtherEmulator(secureSaves = true))
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Restored, placeFromOtherEmulator(secureSaves = false))
+        coVerify(exactly = 2) { saveCacheManager.restoreSave(active.id, constructed, emulatorId) }
+    }
+
+    @Test
+    fun `Secure Saves on backs up a differing target and overwrites it with a save from an unrouted emulator`() = runTest {
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Restored, placeFromOtherEmulator(secureSaves = true))
+        coVerifyOrder {
+            saveCacheManager.cacheAsRollback(gameId, emulatorId, savePath)
+            saveCacheManager.restoreSave(active.id, savePath, emulatorId)
+        }
+    }
+
+    @Test
+    fun `Secure Saves off adopts a differing target instead of overwriting it with a save from an unrouted emulator`() = runTest {
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Adopted, placeFromOtherEmulator(secureSaves = false))
+        coVerify {
+            saveCacheManager.cacheCurrentSave(gameId, emulatorId, savePath, "autosave", any(), any(), any(), any(), any(), true, any(), any())
+        }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a save path of another shape than the cached file is never written`() = runTest {
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Failed, placeFromOtherEmulator(secureSaves = true, expectedExtension = "sav"))
+        coEvery {
+            savePathResolver.discoverSavePathChecked(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns SaveLookup.Absent
+        coEvery { savePathResolver.constructSavePath(any(), any(), any(), any(), any(), any(), any(), any()) } returns "/saves/game.srm"
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Failed, placeFromOtherEmulator(secureSaves = false, expectedExtension = "sav"))
+
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.cacheAsRollback(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a save path of the cached file's shape is written`() = runTest {
+        assertEquals(SaveSyncOrchestrator.DiskCheck.Restored, placeFromOtherEmulator(secureSaves = true, expectedExtension = "srm"))
+        coVerify(exactly = 1) { saveCacheManager.restoreSave(active.id, savePath, emulatorId) }
     }
 
     private companion object {

@@ -109,6 +109,7 @@ class GameLauncher @Inject constructor(
     private val biosRepository: BiosRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val coreOptionResolver: CoreOptionResolver,
+    private val builtinGraphicsResolver: BuiltinGraphicsResolver,
     private val coreSystemDataManager: CoreSystemDataManager,
     private val gameFileDao: GameFileDao,
     private val emulatorSaveConfigRepository: com.nendo.argosy.data.repository.EmulatorSaveConfigRepository,
@@ -708,13 +709,29 @@ class GameLauncher @Inject constructor(
             return null
         }
 
-        val coreVariables = coreOptionResolver.resolveVariables(
+        val resolvedVariables = coreOptionResolver.resolveVariables(
             coreName,
             gameId = game.id.takeIf { game.perGameSettingsEnabled }
         )
 
-        Logger.info(TAG, "[BuiltIn] Launching: rom=${romFile.name}, core=$coreName, romSize=${romFile.length()}b, coreVars=${coreVariables.size}")
+        Logger.info(TAG, "[BuiltIn] Launching: rom=${romFile.name}, core=$coreName, romSize=${romFile.length()}b, coreVars=${resolvedVariables.size}")
         val builtinSettings = userPreferencesRepository.getBuiltinEmulatorSettings().first()
+        val graphics = builtinGraphicsResolver.resolve(
+            gameId = game.id,
+            platformId = game.platformId,
+            coreId = coreName,
+            resolvedVariables = resolvedVariables.toList(),
+            globalDriver = builtinSettings.gpuDriver
+        )
+        val coreVariables = graphics.coreVariables
+        val vulkanDriver = graphics.driver.takeIf { graphics.preferVulkan }
+        Logger.info(TAG, buildString {
+            append("[BuiltIn] Graphics: backend=${graphics.backendValue}, preferVulkan=${graphics.preferVulkan}")
+            if (graphics.preferVulkan) {
+                append(", driver=${vulkanDriver?.id ?: GpuDriverToken.SYSTEM}")
+                if (graphics.choice.fellBackToSystem) append(" (requested ${graphics.choice.requested})")
+            }
+        })
         val platformLibretroOverride = platformLibretroSettingsDao.getByPlatformId(game.platformId)
         val effectiveSavePath = builtinSaveBase.forGame(game, romFile.absolutePath)
         val effectiveStatePath = libretroStatePathResolver
@@ -741,6 +758,11 @@ class GameLauncher @Inject constructor(
             putExtra(LibretroActivity.EXTRA_CORE_NAME, coreName)
             putExtra(LibretroActivity.EXTRA_CORE_VAR_KEYS, coreVariables.map { it.key }.toTypedArray())
             putExtra(LibretroActivity.EXTRA_CORE_VAR_VALUES, coreVariables.map { it.value }.toTypedArray())
+            putExtra(LibretroActivity.EXTRA_PREFER_VULKAN, graphics.preferVulkan)
+            vulkanDriver?.let {
+                putExtra(LibretroActivity.EXTRA_VULKAN_DRIVER_DIR, it.directory.absolutePath)
+                putExtra(LibretroActivity.EXTRA_VULKAN_DRIVER_LIBRARY, it.libraryName)
+            }
             effectiveSavePath?.let { putExtra(LibretroActivity.EXTRA_SAVES_DIR, it) }
             putExtra(LibretroActivity.EXTRA_STATES_DIR, effectiveStatePath)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -809,6 +831,7 @@ class GameLauncher @Inject constructor(
 
     private suspend fun ps2MemcardGate(gameId: Long, game: GameEntity, emulator: EmulatorDef): LaunchResult? {
         if (game.platformSlug != "ps2") return null
+        if (emulator.launchConfig.isInProcess) return null
         if (emulatorConfigDao.getSelectedMemcardForGame(gameId) != null) return null
         val emulatorId = savePathAuthority.configIdFor(
             SavePathRequest(
@@ -853,11 +876,15 @@ class GameLauncher @Inject constructor(
 
     private suspend fun biosGate(game: GameEntity, emulator: EmulatorDef): LaunchResult? {
         if (!emulator.launchConfig.isInProcess) return null
-        val requirements = mandatoryBios[game.platformSlug.lowercase()] ?: return null
+        val requirements = mandatoryBios[game.platformSlug.lowercase()]
+        val biosDir = BiosPathRegistry.getBuiltinPlatformBiosDir(game.platformSlug)
+        if (requirements == null && biosDir == null) return null
         return try {
             biosRepository.distributeBiosToEmulator(game.platformSlug, EmulatorRegistry.BUILTIN_PACKAGE)
             val systemDir = biosRepository.getLibretroSystemDir()
-            val unmet = requirements.any { group -> group.none { File(systemDir, it).exists() } }
+            val unmetFiles = requirements.orEmpty().any { group -> group.none { File(systemDir, it).exists() } }
+            val unmetDir = biosDir != null && File(systemDir, biosDir).listFiles()?.any { it.isFile } != true
+            val unmet = unmetFiles || unmetDir
             if (unmet) {
                 Logger.warn(TAG, "[Launch] BIOS gate: ${game.platformSlug} missing required firmware")
                 LaunchResult.MissingBios(game.platformSlug)

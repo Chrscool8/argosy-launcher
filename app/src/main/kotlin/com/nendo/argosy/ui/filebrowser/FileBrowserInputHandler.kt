@@ -7,8 +7,7 @@ import com.nendo.argosy.ui.input.InputResult
 class FileBrowserInputHandler(
     private val viewModel: FileBrowserViewModel,
     private val onDismiss: () -> Unit,
-    private val onRequestPermission: () -> Unit,
-    private val onUseCurrentFolder: () -> Unit
+    private val onRequestPermission: () -> Unit
 ) : InputHandler {
 
     override fun onUp(): InputResult {
@@ -48,12 +47,12 @@ class FileBrowserInputHandler(
     }
 
     override fun onContextMenu(): InputResult {
-        onUseCurrentFolder()
+        viewModel.performAction(FileBrowserAction.USE_FOLDER)
         return InputResult.HANDLED
     }
 
     override fun onSecondaryAction(): InputResult {
-        viewModel.showCreateFolderDialog()
+        viewModel.performAction(FileBrowserAction.NEW_FOLDER)
         return InputResult.HANDLED
     }
 }

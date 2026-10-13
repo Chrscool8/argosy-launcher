@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.nendo.argosy.R
 import com.nendo.argosy.data.preferences.ThemeMode
+import com.nendo.argosy.ui.components.CyclePreference
 import com.nendo.argosy.ui.components.HueSliderPreference
 import com.nendo.argosy.ui.components.NavigationPreference
 import com.nendo.argosy.ui.components.SegmentedPreference
@@ -49,6 +50,7 @@ internal sealed class ThemeItem(val key: String, val section: String) {
 
     data object Backdrop : ThemeItem("backdrop", "identity")
     data object Fonts : ThemeItem("fonts", "identity")
+    data object IconPack : ThemeItem("iconPack", "identity")
 
     companion object {
         private val AppearanceHeader =
@@ -62,7 +64,7 @@ internal sealed class ThemeItem(val key: String, val section: String) {
                 AppearanceHeader,
                 Mode, AccentColor, AccentFooter, SecondaryColor, TintBleed,
                 IdentitySpacer, IdentityHeader,
-                Backdrop, Fonts
+                Backdrop, Fonts, IconPack
             )
     }
 }
@@ -205,8 +207,43 @@ fun ThemeSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                 isFocused = isFocused(item),
                 onClick = { openFrom(item) { viewModel.navigateToThemeFonts() } }
             )
+
+            ThemeItem.IconPack -> IconPackRow(
+                uiState = uiState,
+                isFocused = isFocused(item),
+                onCycle = { direction -> openFrom(item) { viewModel.cycleIconPack(direction) } },
+                onSelect = { packageName -> viewModel.setIconPack(packageName) }
+            )
         }
     }
+}
+
+@Composable
+private fun IconPackRow(
+    uiState: SettingsUiState,
+    isFocused: Boolean,
+    onCycle: (Int) -> Unit,
+    onSelect: (String?) -> Unit
+) {
+    val display = uiState.display
+    val labels = listOf(stringResource(R.string.settings_theme_icon_pack_system)) +
+        display.iconPacks.map { it.label }
+    val subtitle = if (display.iconPacks.isEmpty()) {
+        stringResource(R.string.settings_theme_icon_pack_subtitle_none)
+    } else {
+        stringResource(R.string.settings_theme_icon_pack_subtitle)
+    }
+    CyclePreference(
+        title = stringResource(R.string.settings_theme_icon_pack_title),
+        subtitle = subtitle,
+        value = labels[display.selectedIconPackIndex],
+        isFocused = isFocused,
+        onClick = { onCycle(1) },
+        onPrev = { onCycle(-1) },
+        options = labels.takeIf { it.size > 1 },
+        onSelect = { index -> onSelect(display.iconPackOptions.getOrNull(index)) },
+        pickerRequestToken = if (uiState.enumPickerKey == ThemeItem.IconPack.key) uiState.enumPickerToken else 0
+    )
 }
 
 private fun fontsSubtitle(

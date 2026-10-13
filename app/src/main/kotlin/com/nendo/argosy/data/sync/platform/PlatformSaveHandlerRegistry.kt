@@ -65,7 +65,8 @@ class PlatformSaveHandlerRegistry @Inject constructor(
      * Resolve the handler for a save dispatch. Order matches the legacy `when` in
      * [com.nendo.argosy.data.repository.SaveSyncApiClient.getHandler]: RetroArch first by
      * emulator id, then GCI by config, then platform-keyed folder handlers, finally the
-     * fallback file-based default.
+     * fallback file-based default. A built-in core whose config is not folder-based takes the
+     * unit handler ahead of the platform-keyed folder handlers.
      */
     fun getHandler(
         config: SavePathConfig?,
@@ -82,6 +83,7 @@ class PlatformSaveHandlerRegistry @Inject constructor(
         if (emulatorId in RETROARCH_EMULATOR_IDS) return unitSaveHandler
         if (canonical == "switch") return switchSaveHandler
         if (canonical == "dreamcast") return dreamcastSaveHandler
+        if (emulatorId in UNIT_EMULATOR_IDS && config != null) return unitSaveHandler
         folderHandlers[canonical]?.let { return it }
         if (emulatorId in UNIT_EMULATOR_IDS) return unitSaveHandler
         return defaultSaveHandler
@@ -89,6 +91,29 @@ class PlatformSaveHandlerRegistry @Inject constructor(
 
     fun isSigilRouted(config: SavePathConfig?, platformSlug: String, emulatorId: String): Boolean =
         sigilSaveHandler.routes(config?.emulatorId ?: emulatorId, platformSlug)
+
+    /**
+     * [isSigilRouted] for one game, also true for any standalone emulator route
+     * [SigilSaveHandler.route] gives the game. A libretro route never counts.
+     */
+    suspend fun isSigilRoutedFor(gameId: Long, config: SavePathConfig?, platformSlug: String, emulatorId: String): Boolean =
+        isSigilRouted(config, platformSlug, emulatorId) ||
+            sigilSaveHandler.route(gameId, config?.emulatorId ?: emulatorId)?.libretro == false
+
+    /**
+     * [getHandler] for one game: the Sigil handler wherever [isSigilRoutedFor] routes the game.
+     */
+    suspend fun getHandlerFor(
+        gameId: Long,
+        config: SavePathConfig?,
+        platformSlug: String,
+        emulatorId: String
+    ): PlatformSaveHandler =
+        if (isSigilRoutedFor(gameId, config, platformSlug, emulatorId)) {
+            sigilSaveHandler
+        } else {
+            getHandler(config, platformSlug, emulatorId)
+        }
 
     val sigil: SigilSaveHandler get() = sigilSaveHandler
 
@@ -783,7 +808,7 @@ private class Ps2FolderHandler(
     companion object {
         private const val TAG = "Ps2FolderHandler"
         private const val CARD_SUFFIX = ".ps2"
-        private const val SUPERBLOCK_FILE = "_pcsx2_superblock"
+        private const val SUPERBLOCK_FILE = Ps2FolderCardSuperblock.FILE_NAME
         private val REGION_PREFIXED = Regex("^B[AEI][A-Z]{4}")
         private val BARE_SERIAL = Regex("^([A-Z]{4})(\\d+.*)$")
     }

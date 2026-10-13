@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import com.nendo.argosy.data.wallpaper.LockScreenScenes
@@ -16,6 +15,7 @@ import com.nendo.argosy.hardware.ScreenCaptureManager
 import com.nendo.argosy.ui.screens.settings.PermissionsState
 import com.nendo.argosy.data.preferences.DisplayPreferencesRepository
 import com.nendo.argosy.util.PermissionHelper
+import com.nendo.argosy.util.StorageAccess
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.CoroutineScope
@@ -49,11 +49,7 @@ class PermissionsSettingsDelegate @Inject constructor(
     }
 
     fun refreshPermissions() {
-        val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            true
-        }
+        val hasStorage = StorageAccess.isGranted(application)
         val hasUsageStats = permissionHelper.hasUsageStatsPermission(application)
         val hasNotification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
@@ -100,16 +96,6 @@ class PermissionsSettingsDelegate @Inject constructor(
     fun hasScreenCapturePermission(): Boolean = screenCaptureManager.hasPermission.value
 
     fun isScreenCaptureRelevant(): Boolean = ledController.isAvailable
-
-    fun openStorageSettings() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                data = Uri.parse("package:${application.packageName}")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            application.startActivity(intent)
-        }
-    }
 
     fun openUsageStatsSettings() {
         permissionHelper.openUsageStatsSettings(application)

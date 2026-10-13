@@ -107,6 +107,10 @@
     <string name="settings_theme_backdrop_subtitle_off">Aus</string>
     <string name="settings_theme_fonts_title">Schriftarten</string>
     <string name="settings_theme_fonts_subtitle_default">Standard</string>
+    <string name="settings_theme_icon_pack_title">Icon-Paket</string>
+    <string name="settings_theme_icon_pack_subtitle">Ersetzt App-Symbole durch ein installiertes Icon-Paket</string>
+    <string name="settings_theme_icon_pack_subtitle_none">Keine Icon-Pakete installiert</string>
+    <string name="settings_theme_icon_pack_system">System-Symbole</string>
 
     <!-- ===== Interface section ===== -->
 
@@ -267,6 +271,7 @@
     <string name="settings_presentation_scrim_blur">Unschärfe</string>
     <string name="settings_presentation_scrim_none">Keine</string>
     <string name="settings_presentation_scrim_strength_title">Stärke der Abdunkelung</string>
+    <string name="settings_presentation_background_blur_title">Hintergrundunschärfe</string>
     <string name="settings_presentation_art_title">Cover</string>
     <string name="settings_presentation_art_cover">Cover</string>
     <string name="settings_presentation_art_box_3d">3D-Box</string>
@@ -1357,9 +1362,11 @@
     <string name="settings_builtin_architecture_title">Architektur</string>
 
     <string name="settings_builtin_video_title">A/V &amp; Leistung</string>
-    <string name="settings_builtin_video_subtitle">Shader, Anzeige, Leistung, Speichern</string>
+    <string name="settings_builtin_video_subtitle">Shader, Anzeige, Leistung</string>
     <string name="settings_builtin_controls_title">Steuerung</string>
     <string name="settings_builtin_controls_subtitle">Rumble, Eingabezuordnung, Hotkeys</string>
+    <string name="settings_builtin_saves_title">Spielstände</string>
+    <string name="settings_builtin_saves_subtitle">Savestates, Server-Spielstände, Ordner</string>
 
     <string name="settings_builtin_cores_title">Cores verwalten</string>
     <string name="settings_builtin_cores_subtitle">%1$d von %2$d Cores installiert</string>
@@ -1625,9 +1632,11 @@
     <string name="settings_platform_launch_args_title">Startparameter</string>
     <string name="settings_platform_launch_args_subtitle">Anpassen, wie Argosy diesen Emulator startet</string>
     <string name="settings_platform_builtin_video_title">Integrierte A/V &amp; Leistung</string>
-    <string name="settings_platform_builtin_video_subtitle">Overrides für Anzeige, Leistung und Speichern</string>
+    <string name="settings_platform_builtin_video_subtitle">Overrides für Anzeige und Leistung</string>
     <string name="settings_platform_builtin_controls_title">Integrierte Steuerung</string>
     <string name="settings_platform_builtin_controls_subtitle">Overrides für Rumble, Stick-Zuordnung</string>
+    <string name="settings_platform_builtin_saves_title">Integrierte Spielstände</string>
+    <string name="settings_platform_builtin_saves_subtitle">Overrides für Savestates und Ordner</string>
     <string name="settings_platform_core_options_title">Core-Optionen</string>
     <string name="settings_platform_core_options_subtitle">Core-Einstellungen für diese Plattform</string>
 
@@ -2120,13 +2129,12 @@
     <!-- ===== Controller order modal (Settings > components > ControllerOrderModal) ===== -->
 
     <string name="settings_controller_order_title">Controller-Reihenfolge</string>
-    <string name="settings_controller_order_subtitle">Beliebige Taste drücken, um einen Controller zuzuweisen</string>
-    <string name="settings_controller_order_hint_confirm">Bestätigen</string>
-    <string name="settings_controller_order_hint_unregister_back">Entfernen/Zurück</string>
+    <string name="settings_controller_order_subtitle">Drücke eine Taste an einem Controller, um ihn zu finden.</string>
+    <string name="settings_controller_order_hint_clear_all">Alle löschen</string>
     <string name="settings_controller_order_default_name">Controller</string>
     <string name="settings_controller_order_slot_label">P%1$d</string>
-    <string name="settings_controller_order_slot_pressing">Drücken…</string>
-    <string name="settings_controller_order_slot_empty">Leer</string>
+    <string name="settings_controller_order_seat_none">Keiner</string>
+    <string name="settings_controller_order_empty">Keine Controller verbunden</string>
 
     <!-- ===== Grip controller modal (Settings > components > GripControllerModal) ===== -->
 
@@ -2596,5 +2604,22 @@
     <string name="settings_play_time_platforms_list_empty">Noch keine Plattform mit Spielzeit.</string>
     <string name="settings_play_time_devices_list_empty">Noch kein Gerät mit Spielzeit.</string>
     <string name="settings_play_time_games_list_empty">Noch kein Spiel mit Spielzeit.</string>
+    <string name="settings_builtin_graphics_header">Grafik</string>
+    <string name="settings_builtin_graphics_backend_title">Backend</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">Option von %1$s, gilt für jede Plattform damit</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">Renderer von %1$s auf dieser Plattform</string>
+    <string name="settings_builtin_gpu_driver_title">GPU-Treiber</string>
+    <string name="settings_builtin_gpu_driver_subtitle">Vulkan-Treiber für integrierte Kerne</string>
+    <string name="settings_builtin_gpu_driver_global_hint">Global: %1$s</string>
+    <string name="settings_builtin_gpu_driver_system">Systemtreiber</string>
+    <string name="settings_builtin_gpu_driver_missing">Treiber fehlt (Systemtreiber aktiv)</string>
+    <string name="settings_builtin_gpu_driver_install">%1$s installieren</string>
+    <string name="settings_builtin_gpu_driver_installing">%1$s wird installiert...</string>
+    <string name="settings_builtin_gpu_driver_installed">%1$s installiert</string>
+    <string name="settings_builtin_gpu_driver_install_failed">%1$s konnte nicht installiert werden</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">Von %1$s nicht unterstützt</string>
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s nutzt den Systemtreiber</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">Gilt, wenn das Backend Vulkan ist</string>
+    <string name="settings_builtin_gpu_driver_reason_device">Eigene Treiber benötigen eine Adreno-GPU</string>
 </resources>
 

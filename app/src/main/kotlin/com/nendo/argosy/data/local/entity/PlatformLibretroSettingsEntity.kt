@@ -50,7 +50,9 @@ data class PlatformLibretroSettingsEntity(
     val frameOffsetX: Float? = null,
     val frameOffsetY: Float? = null,
     val frameZoom: Float? = null,
-    val preferNewerServerSave: Boolean? = null
+    val preferNewerServerSave: Boolean? = null,
+    val graphicsApi: String? = null,
+    val gpuDriver: String? = null
 ) {
     fun hasAnyOverrides(): Boolean =
         hasAnyVideoOverrides() || hasAnyControlOverrides() || hasAnyPathOverrides() || hasAnySavingOverrides()
@@ -79,7 +81,9 @@ data class PlatformLibretroSettingsEntity(
         audioVolume != null ||
         rewindSpeed != null ||
         rewindBufferDuration != null ||
-        vsync != null
+        vsync != null ||
+        graphicsApi != null ||
+        gpuDriver != null
 
     fun hasAnyControlOverrides(): Boolean =
         analogAsDpad != null || dpadAsAnalog != null || rumbleEnabled != null

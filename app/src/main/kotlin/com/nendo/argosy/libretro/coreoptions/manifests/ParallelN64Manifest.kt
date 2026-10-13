@@ -255,7 +255,8 @@ object ParallelN64Manifest : CoreOptionManifest {
             key = "parallel-n64-gfxplugin",
             displayName = "GFX Plugin",
             values = listOf("gliden64", "glide64", "gln64", "rice", "angrylion", "parallel"),
-            defaultValue = "gliden64",
+            defaultValue = "parallel",
+            coreDefault = "gliden64",
             description = "Selects the graphics rendering plugin"
         ),
         CoreOptionDef(

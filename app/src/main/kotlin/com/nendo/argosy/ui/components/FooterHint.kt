@@ -71,6 +71,7 @@ enum class InputButton {
     A, B, X, Y,
     DPAD, DPAD_UP, DPAD_DOWN, DPAD_LEFT, DPAD_RIGHT, DPAD_HORIZONTAL, DPAD_VERTICAL,
     LB, RB, LB_RB, LT, RT, LT_RT,
+    RIGHT_STICK_VERTICAL,
     START, SELECT
 }
 
@@ -81,7 +82,8 @@ private fun InputButton.category(): HintCategory = when (this) {
     InputButton.DPAD_LEFT, InputButton.DPAD_RIGHT,
     InputButton.DPAD_HORIZONTAL, InputButton.DPAD_VERTICAL -> HintCategory.DPAD
     InputButton.LB, InputButton.RB, InputButton.LB_RB -> HintCategory.BUMPER
-    InputButton.LT, InputButton.RT, InputButton.LT_RT, InputButton.START, InputButton.SELECT -> HintCategory.SHOULDER_MENU
+    InputButton.LT, InputButton.RT, InputButton.LT_RT, InputButton.RIGHT_STICK_VERTICAL,
+    InputButton.START, InputButton.SELECT -> HintCategory.SHOULDER_MENU
     InputButton.A, InputButton.B, InputButton.X, InputButton.Y -> HintCategory.FACE
 }
 
@@ -112,6 +114,7 @@ fun InputButton.toPainter(): Painter? {
         InputButton.LT -> InputIcons.TriggerLeft
         InputButton.RT -> InputIcons.TriggerRight
         InputButton.LT_RT -> null
+        InputButton.RIGHT_STICK_VERTICAL -> InputIcons.RightStickVertical
         InputButton.START -> if (swapStartSelect) InputIcons.Options else InputIcons.Menu
         InputButton.SELECT -> if (swapStartSelect) InputIcons.Menu else InputIcons.Options
     }
@@ -290,7 +293,7 @@ private fun InputButton.faceButtonPriority(): Int = when (this) {
 private fun InputButton.hidePriority(): Int = when (this) {
     InputButton.X, InputButton.Y -> 4
     InputButton.LB, InputButton.RB, InputButton.LB_RB,
-    InputButton.LT, InputButton.RT, InputButton.LT_RT -> 3
+    InputButton.LT, InputButton.RT, InputButton.LT_RT, InputButton.RIGHT_STICK_VERTICAL -> 3
     InputButton.START, InputButton.SELECT -> 2
     InputButton.A, InputButton.B -> 1
     else -> 0
@@ -370,7 +373,7 @@ fun FooterBar(
             .fillMaxWidth()
             .onSizeChanged { measuredWidth = it.width }
             .footerCollapse(collapseProgress)
-            .heightIn(min = frostedChromeHeight)
+            .heightIn(min = Dimens.footerHeight)
             .frostedSurface(
                 shape = RectangleShape,
                 color = backgroundColor
@@ -444,7 +447,7 @@ fun FooterBarWithState(
             .fillMaxWidth()
             .onSizeChanged { measuredWidth = it.width }
             .footerCollapse(collapseProgress)
-            .heightIn(min = frostedChromeHeight)
+            .heightIn(min = Dimens.footerHeight)
             .frostedSurface(
                 shape = RectangleShape,
                 color = backgroundColor
@@ -535,7 +538,7 @@ fun SubtleFooterBar(
             .fillMaxWidth()
             .onSizeChanged { measuredWidth = it.width }
             .footerCollapse(collapseProgress)
-            .heightIn(min = frostedChromeHeight)
+            .heightIn(min = Dimens.footerHeight)
             .frostedSurface(
                 shape = RectangleShape,
                 color = backgroundColor

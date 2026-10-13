@@ -110,9 +110,9 @@
     <string name="firstrun_core_prompt_explainer">Они включают встроенную эмуляцию без необходимости в отдельных приложениях-эмуляторах.</string>
     <string name="firstrun_core_prompt_all_installed">Все ядра для выбранных платформ уже установлены.</string>
     <string name="firstrun_core_prompt_button_download">Скачать ядра</string>
-    <string name="firstrun_core_prompt_button_skip">Пропустить (отключить встроенный эмулятор)</string>
+    <string name="firstrun_core_prompt_button_skip">Пропустить</string>
     <string name="firstrun_core_prompt_button_continue">Продолжить</string>
-    <string name="firstrun_core_prompt_note_skip">Пропуск отключит встроенный эмулятор. Вы сможете включить его и скачать ядра позже в настройках.</string>
+    <string name="firstrun_core_prompt_note_skip">Каждое ядро скачивается при первом запуске игры, которой оно нужно. Ядра также можно скачать позже в настройках.</string>
 
     <string name="firstrun_core_download_title">Загрузка ядер эмулятора</string>
     <string name="firstrun_core_download_none_needed">Для выбранных платформ ядра не нужны</string>

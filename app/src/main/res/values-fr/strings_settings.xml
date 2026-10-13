@@ -95,10 +95,14 @@
     <string name="settings_theme_accent_footer_subtitle">Utiliser la couleur d\'accent pour le fond du pied de page</string>
     <string name="settings_theme_tint_bleed_title">Teinte de surface</string>
 
-    <string name="settings_theme_backdrop_title">Fond de surface</string>
+    <string name="settings_theme_backdrop_title">Arrière-plan</string>
     <string name="settings_theme_backdrop_subtitle_off">Désactivé</string>
     <string name="settings_theme_fonts_title">Polices</string>
     <string name="settings_theme_fonts_subtitle_default">Par défaut</string>
+    <string name="settings_theme_icon_pack_title">Pack d\'icônes</string>
+    <string name="settings_theme_icon_pack_subtitle">Remplace les icônes des applications par un pack installé</string>
+    <string name="settings_theme_icon_pack_subtitle_none">Aucun pack d\'icônes installé</string>
+    <string name="settings_theme_icon_pack_system">Icônes du système</string>
 
     <!-- ===== Section Interface ===== -->
 
@@ -260,6 +264,7 @@
     <string name="settings_presentation_scrim_blur">Flou</string>
     <string name="settings_presentation_scrim_none">Aucun</string>
     <string name="settings_presentation_scrim_strength_title">Intensité du voile</string>
+    <string name="settings_presentation_background_blur_title">Flou de l\'arrière-plan</string>
     <string name="settings_presentation_art_title">Jaquette</string>
     <string name="settings_presentation_art_cover">Jaquette</string>
     <string name="settings_presentation_art_box_3d">Boîtier 3D</string>
@@ -625,12 +630,12 @@
     <string name="settings_about_version_romm_value">v%1$s</string>
     <string name="settings_about_licenses_label">Licences</string>
 
-    <!-- ===== Section Fond de surface ===== -->
+    <!-- ===== Section Arrière-plan ===== -->
 
     <string name="settings_backdrop_section_pattern">Motif</string>
     <string name="settings_backdrop_section_layers">Calques</string>
 
-    <string name="settings_backdrop_enabled_title">Fond de surface</string>
+    <string name="settings_backdrop_enabled_title">Arrière-plan</string>
     <string name="settings_backdrop_enabled_subtitle">Motif en mosaïque derrière les menus et l\'écran compagnon</string>
 
     <string name="settings_backdrop_preset_title">Motif</string>
@@ -1386,9 +1391,11 @@
     <string name="settings_builtin_architecture_title">Architecture</string>
 
     <string name="settings_builtin_video_title">A/V &amp; Performances</string>
-    <string name="settings_builtin_video_subtitle">Shaders, affichage, performances, sauvegarde</string>
+    <string name="settings_builtin_video_subtitle">Shaders, affichage, performances</string>
     <string name="settings_builtin_controls_title">Contrôles</string>
     <string name="settings_builtin_controls_subtitle">Vibration, mappage des entrées, raccourcis</string>
+    <string name="settings_builtin_saves_title">Sauvegardes</string>
+    <string name="settings_builtin_saves_subtitle">États de sauvegarde, sauvegardes serveur, dossiers</string>
 
     <string name="settings_builtin_cores_title">Gérer les cores</string>
     <string name="settings_builtin_cores_subtitle">%1$d cores installés sur %2$d</string>
@@ -1660,9 +1667,11 @@
     <string name="settings_platform_launch_args_title">Arguments de lancement</string>
     <string name="settings_platform_launch_args_subtitle">Personnaliser la façon dont Argosy lance cet émulateur</string>
     <string name="settings_platform_builtin_video_title">A/V &amp; performances intégrées</string>
-    <string name="settings_platform_builtin_video_subtitle">Remplacements d\'affichage, de performances et de sauvegarde</string>
+    <string name="settings_platform_builtin_video_subtitle">Remplacements d\'affichage et de performances</string>
     <string name="settings_platform_builtin_controls_title">Contrôles intégrés</string>
     <string name="settings_platform_builtin_controls_subtitle">Remplacements de vibration et de mappage des sticks</string>
+    <string name="settings_platform_builtin_saves_title">Sauvegardes intégrées</string>
+    <string name="settings_platform_builtin_saves_subtitle">Remplacements des états de sauvegarde et des dossiers</string>
     <string name="settings_platform_core_options_title">Options du core</string>
     <string name="settings_platform_core_options_subtitle">Paramètres par core pour cette plateforme</string>
 
@@ -2164,13 +2173,12 @@
     <!-- ===== Fenetre d'ordre des manettes ===== -->
 
     <string name="settings_controller_order_title">Ordre des manettes</string>
-    <string name="settings_controller_order_subtitle">Appuyez sur un bouton pour assigner une manette</string>
-    <string name="settings_controller_order_hint_confirm">Confirmer</string>
-    <string name="settings_controller_order_hint_unregister_back">Désinscrire/Retour</string>
+    <string name="settings_controller_order_subtitle">Appuyez sur un bouton d\'une manette pour la trouver.</string>
+    <string name="settings_controller_order_hint_clear_all">Tout effacer</string>
     <string name="settings_controller_order_default_name">Manette</string>
     <string name="settings_controller_order_slot_label">J%1$d</string>
-    <string name="settings_controller_order_slot_pressing">Appuyez...</string>
-    <string name="settings_controller_order_slot_empty">Vide</string>
+    <string name="settings_controller_order_seat_none">Aucune</string>
+    <string name="settings_controller_order_empty">Aucune manette connectée</string>
 
     <!-- ===== Fenetre du grip manette ===== -->
 
@@ -2655,4 +2663,21 @@
     <string name="settings_play_time_devices_list_empty">Aucun appareil n\'a encore de temps de jeu.</string>
     <string name="settings_play_time_games_list_empty">Aucun jeu n\'a encore de temps de jeu.</string>
 
+    <string name="settings_builtin_graphics_header">Graphismes</string>
+    <string name="settings_builtin_graphics_backend_title">Moteur de rendu</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">Option de %1$s, commune à toutes les plateformes qui l\'utilisent</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">Rendu utilisé par %1$s sur cette plateforme</string>
+    <string name="settings_builtin_gpu_driver_title">Pilote GPU</string>
+    <string name="settings_builtin_gpu_driver_subtitle">Pilote Vulkan des cœurs intégrés</string>
+    <string name="settings_builtin_gpu_driver_global_hint">Global : %1$s</string>
+    <string name="settings_builtin_gpu_driver_system">Pilote système</string>
+    <string name="settings_builtin_gpu_driver_missing">Pilote absent (pilote système utilisé)</string>
+    <string name="settings_builtin_gpu_driver_install">Installer %1$s</string>
+    <string name="settings_builtin_gpu_driver_installing">Installation de %1$s...</string>
+    <string name="settings_builtin_gpu_driver_installed">%1$s installé</string>
+    <string name="settings_builtin_gpu_driver_install_failed">Impossible d\'installer %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">Non pris en charge par %1$s</string>
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s utilise le pilote système</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">S\'applique quand le moteur de rendu est Vulkan</string>
+    <string name="settings_builtin_gpu_driver_reason_device">Les pilotes personnalisés exigent un GPU Adreno</string>
 </resources>

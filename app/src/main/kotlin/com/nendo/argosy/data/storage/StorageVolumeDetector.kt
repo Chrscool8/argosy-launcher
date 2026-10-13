@@ -64,6 +64,14 @@ class StorageVolumeDetector @Inject constructor(
         return volumes
     }
 
+    fun volumeRootPaths(): List<String> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return emptyList()
+        val storageManager = context.getSystemService(Context.STORAGE_SERVICE) as? StorageManager ?: return emptyList()
+        return storageManager.storageVolumes
+            .mapNotNull { getVolumePath(it) }
+            .filter { File(it).canRead() }
+    }
+
     private fun createInternalStorageVolume(path: String): AppStorageVolume {
         val stats = getStorageStats(path)
         return AppStorageVolume(

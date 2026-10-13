@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Environment
 import androidx.core.content.ContextCompat
 import com.nendo.argosy.data.cache.ImageCacheManager
 import com.nendo.argosy.data.repository.PlatformRepository
@@ -31,6 +30,7 @@ import com.nendo.argosy.ui.components.PLATFORM_HEADER_SEARCH
 import com.nendo.argosy.ui.components.PLATFORM_HEADER_SORT
 import com.nendo.argosy.util.Logger
 import com.nendo.argosy.util.PlatformFilterLogic
+import com.nendo.argosy.util.StorageAccess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -162,13 +162,7 @@ class SyncSettingsDelegate @Inject constructor(
         }
     }
 
-    fun checkStoragePermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            true
-        }
-    }
+    fun checkStoragePermission(): Boolean = StorageAccess.isGranted(application)
 
     fun checkNotificationPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

@@ -2,15 +2,13 @@ package com.nendo.argosy.data.platform
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 data class LaunchableApp(
     val packageName: String,
-    val displayName: String,
-    val icon: Drawable?
+    val displayName: String
 )
 
 @Singleton
@@ -34,8 +32,7 @@ class InstalledAppResolver @Inject constructor(
             .map { info ->
                 LaunchableApp(
                     packageName = info.activityInfo.applicationInfo.packageName,
-                    displayName = info.loadLabel(pm).toString(),
-                    icon = runCatching { info.loadIcon(pm) }.getOrNull()
+                    displayName = info.loadLabel(pm).toString()
                 )
             }
             .sortedBy { it.displayName.lowercase() }

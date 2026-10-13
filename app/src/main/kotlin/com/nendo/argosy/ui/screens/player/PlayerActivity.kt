@@ -296,6 +296,8 @@ class PlayerActivity : ComponentActivity() {
         GamepadEvent.Select -> inputHandler.onSelect()
         GamepadEvent.LeftStickClick -> inputHandler.onLeftStickClick()
         GamepadEvent.RightStickClick -> inputHandler.onRightStickClick()
+        GamepadEvent.RightStickUp -> inputHandler.onRightStickUp()
+        GamepadEvent.RightStickDown -> inputHandler.onRightStickDown()
         GamepadEvent.LongConfirm -> inputHandler.onLongConfirm()
         GamepadEvent.LongSelect -> inputHandler.onLongSelect()
         GamepadEvent.Home -> InputResult.UNHANDLED

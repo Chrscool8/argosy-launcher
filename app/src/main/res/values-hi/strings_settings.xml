@@ -93,10 +93,14 @@
     <string name="settings_theme_accent_footer_subtitle">फ़ुटर बैकग्राउंड के लिए एक्सेंट कलर का उपयोग करें</string>
     <string name="settings_theme_tint_bleed_title">सरफ़ेस टिंट</string>
 
-    <string name="settings_theme_backdrop_title">सरफ़ेस बैकड्रॉप</string>
+    <string name="settings_theme_backdrop_title">बैकड्रॉप</string>
     <string name="settings_theme_backdrop_subtitle_off">बंद</string>
     <string name="settings_theme_fonts_title">फ़ॉन्ट</string>
     <string name="settings_theme_fonts_subtitle_default">डिफ़ॉल्ट</string>
+    <string name="settings_theme_icon_pack_title">आइकन पैक</string>
+    <string name="settings_theme_icon_pack_subtitle">ऐप आइकन को इंस्टॉल किए गए आइकन पैक से बदलें</string>
+    <string name="settings_theme_icon_pack_subtitle_none">कोई आइकन पैक इंस्टॉल नहीं है</string>
+    <string name="settings_theme_icon_pack_system">सिस्टम आइकन</string>
 
     <!-- ===== Interface section ===== -->
 
@@ -257,6 +261,7 @@
     <string name="settings_presentation_scrim_blur">धुंधला</string>
     <string name="settings_presentation_scrim_none">कोई नहीं</string>
     <string name="settings_presentation_scrim_strength_title">छाया की तीव्रता</string>
+    <string name="settings_presentation_background_blur_title">पृष्ठभूमि ब्लर</string>
     <string name="settings_presentation_art_title">कवर आर्ट</string>
     <string name="settings_presentation_art_cover">कवर</string>
     <string name="settings_presentation_art_box_3d">3D बॉक्स</string>
@@ -617,7 +622,7 @@
     <string name="settings_backdrop_section_pattern">पैटर्न</string>
     <string name="settings_backdrop_section_layers">लेयर</string>
 
-    <string name="settings_backdrop_enabled_title">सरफ़ेस बैकड्रॉप</string>
+    <string name="settings_backdrop_enabled_title">बैकड्रॉप</string>
     <string name="settings_backdrop_enabled_subtitle">मेनू और कम्पैनियन स्क्रीन के पीछे टाइल किया गया पैटर्न</string>
 
     <string name="settings_backdrop_preset_title">पैटर्न</string>
@@ -1347,9 +1352,11 @@
     <string name="settings_builtin_architecture_title">आर्किटेक्चर</string>
 
     <string name="settings_builtin_video_title">A/V और परफ़ॉर्मेंस</string>
-    <string name="settings_builtin_video_subtitle">शेडर, डिस्प्ले, परफ़ॉर्मेंस, सेविंग</string>
+    <string name="settings_builtin_video_subtitle">शेडर, डिस्प्ले, परफ़ॉर्मेंस</string>
     <string name="settings_builtin_controls_title">कंट्रोल्स</string>
     <string name="settings_builtin_controls_subtitle">रम्बल, इनपुट मैपिंग, हॉटकी</string>
+    <string name="settings_builtin_saves_title">सेव</string>
+    <string name="settings_builtin_saves_subtitle">सेव स्टेट, सर्वर सेव, फ़ोल्डर</string>
 
     <string name="settings_builtin_cores_title">कोर मैनेज करें</string>
     <string name="settings_builtin_cores_subtitle">%2$d में से %1$d कोर इंस्टॉल हैं</string>
@@ -1615,9 +1622,11 @@
     <string name="settings_platform_launch_args_title">लॉन्च आर्ग्स</string>
     <string name="settings_platform_launch_args_subtitle">Argosy इस एमुलेटर को कैसे लॉन्च करता है, यह कस्टमाइज़ करें</string>
     <string name="settings_platform_builtin_video_title">बिल्ट-इन A/V और परफ़ॉर्मेंस</string>
-    <string name="settings_platform_builtin_video_subtitle">डिस्प्ले, परफ़ॉर्मेंस और सेविंग ओवरराइड</string>
+    <string name="settings_platform_builtin_video_subtitle">डिस्प्ले और परफ़ॉर्मेंस ओवरराइड</string>
     <string name="settings_platform_builtin_controls_title">बिल्ट-इन कंट्रोल्स</string>
     <string name="settings_platform_builtin_controls_subtitle">रम्बल, स्टिक मैपिंग ओवरराइड</string>
+    <string name="settings_platform_builtin_saves_title">बिल्ट-इन सेव</string>
+    <string name="settings_platform_builtin_saves_subtitle">सेव स्टेट और फ़ोल्डर ओवरराइड</string>
     <string name="settings_platform_core_options_title">कोर विकल्प</string>
     <string name="settings_platform_core_options_subtitle">इस प्लेटफ़ॉर्म के लिए प्रति-कोर सेटिंग्स</string>
 
@@ -2110,13 +2119,12 @@
     <!-- ===== Controller order modal (Settings > components > ControllerOrderModal) ===== -->
 
     <string name="settings_controller_order_title">कंट्रोलर क्रम</string>
-    <string name="settings_controller_order_subtitle">कंट्रोलर असाइन करने के लिए कोई भी बटन दबाएँ</string>
-    <string name="settings_controller_order_hint_confirm">पुष्टि करें</string>
-    <string name="settings_controller_order_hint_unregister_back">अनरजिस्टर/वापस</string>
+    <string name="settings_controller_order_subtitle">कंट्रोलर खोजने के लिए उस पर कोई बटन दबाएँ।</string>
+    <string name="settings_controller_order_hint_clear_all">सभी हटाएँ</string>
     <string name="settings_controller_order_default_name">कंट्रोलर</string>
     <string name="settings_controller_order_slot_label">P%1$d</string>
-    <string name="settings_controller_order_slot_pressing">दबाएँ...</string>
-    <string name="settings_controller_order_slot_empty">खाली</string>
+    <string name="settings_controller_order_seat_none">कोई नहीं</string>
+    <string name="settings_controller_order_empty">कोई कंट्रोलर कनेक्ट नहीं है</string>
 
     <!-- ===== Grip controller modal (Settings > components > GripControllerModal) ===== -->
 
@@ -2587,4 +2595,21 @@
     <string name="settings_play_time_devices_list_empty">अभी किसी डिवाइस पर खेल नहीं हुआ।</string>
     <string name="settings_play_time_games_list_empty">अभी कोई गेम नहीं खेला गया।</string>
 
+    <string name="settings_builtin_graphics_header">ग्राफ़िक्स</string>
+    <string name="settings_builtin_graphics_backend_title">बैकएंड</string>
+    <string name="settings_builtin_graphics_backend_core_subtitle">%1$s का विकल्प, इसे इस्तेमाल करने वाले हर प्लेटफ़ॉर्म पर लागू</string>
+    <string name="settings_builtin_graphics_backend_platform_subtitle">इस प्लेटफ़ॉर्म पर %1$s का रेंडरर</string>
+    <string name="settings_builtin_gpu_driver_title">GPU ड्राइवर</string>
+    <string name="settings_builtin_gpu_driver_subtitle">बिल्ट-इन कोर के लिए Vulkan ड्राइवर</string>
+    <string name="settings_builtin_gpu_driver_global_hint">ग्लोबल: %1$s</string>
+    <string name="settings_builtin_gpu_driver_system">सिस्टम ड्राइवर</string>
+    <string name="settings_builtin_gpu_driver_missing">ड्राइवर नहीं मिला (सिस्टम ड्राइवर चालू)</string>
+    <string name="settings_builtin_gpu_driver_install">%1$s इंस्टॉल करें</string>
+    <string name="settings_builtin_gpu_driver_installing">%1$s इंस्टॉल हो रहा है...</string>
+    <string name="settings_builtin_gpu_driver_installed">%1$s इंस्टॉल हो गया</string>
+    <string name="settings_builtin_gpu_driver_install_failed">%1$s इंस्टॉल नहीं हो सका</string>
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">%1$s में समर्थित नहीं</string>
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s सिस्टम ड्राइवर इस्तेमाल करता है</string>
+    <string name="settings_builtin_gpu_driver_reason_backend">बैकएंड Vulkan होने पर लागू होता है</string>
+    <string name="settings_builtin_gpu_driver_reason_device">कस्टम ड्राइवर के लिए Adreno GPU चाहिए</string>
 </resources>

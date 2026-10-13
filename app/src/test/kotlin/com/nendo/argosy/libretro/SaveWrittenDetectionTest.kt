@@ -88,6 +88,22 @@ class SaveWrittenDetectionTest {
     }
 
     @Test
+    fun `a shared memory card the core writes is reported once it is watched`() {
+        val card = File(tempFolder.root, "system/pcsx2/memcards/Mcd001.ps2")
+        card.writeSave { (it % 3).toByte() }
+        val mgr = manager()
+        mgr.seedWrittenSaves()
+        mgr.watchCoreSaveFiles(listOf(card))
+
+        assertFalse(mgr.takeNewlyWrittenSaves())
+        val before = card.lastModified()
+        card.writeSave { (it % 9).toByte() }
+        card.setLastModified(before + 10_000)
+
+        assertTrue(mgr.takeNewlyWrittenSaves())
+    }
+
+    @Test
     fun `a card already present at the baseline is not reported`() {
         File(saves, "Crash.0.mcr").writeSave { (it % 7).toByte() }
         val mgr = manager()

@@ -95,6 +95,8 @@ add_library(libretrodroid SHARED
         core.cpp
         video.h
         video.cpp
+        vulkan/vulkanbackend.h
+        vulkan/vulkanbackend.cpp
         immersivemode.h
         immersivemode.cpp
         backgroundframe.h
@@ -172,8 +174,19 @@ target_link_options(libretrodroid PRIVATE "-Wl,-z,max-page-size=16384")
 # add lib dependencies
 target_link_libraries(libretrodroid
                       android
-                      log 
+                      log
                       EGL
                       oboe
                       GLESv3
+                      nativewindow
+                      mediandk
 )
+
+if(ANDROID_ABI STREQUAL "arm64-v8a")
+    add_subdirectory(libadrenotools)
+    target_link_libraries(libretrodroid adrenotools)
+    target_compile_definitions(libretrodroid PRIVATE LIBRETRODROID_ADRENOTOOLS)
+    foreach(hook hook_impl main_hook file_redirect_hook gsl_alloc_hook)
+        target_link_options(${hook} PRIVATE "-Wl,-z,max-page-size=16384")
+    endforeach()
+endif()

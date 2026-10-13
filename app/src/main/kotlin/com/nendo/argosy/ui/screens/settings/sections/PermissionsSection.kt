@@ -85,7 +85,7 @@ internal fun permissionsItemAt(focusIndex: Int, permissions: PermissionsState): 
 
 internal fun PermissionsItem.confirm(viewModel: SettingsViewModel) {
     when (this) {
-        PermissionsItem.StorageAccess -> viewModel.openStorageSettings()
+        PermissionsItem.StorageAccess -> viewModel.requestStoragePermission()
         PermissionsItem.UsageStats -> viewModel.openUsageStatsSettings()
         PermissionsItem.Notifications -> viewModel.openNotificationSettings()
         PermissionsItem.WriteSettings -> viewModel.openWriteSettings()

@@ -73,6 +73,7 @@ object SettingsBackupKeys {
         SettingsBackupKey("use_accent_color_footer", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("compact_footer", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("lock_screen_art", SettingsBackupType.BOOLEAN),
+        SettingsBackupKey("icon_pack", SettingsBackupType.STRING),
         SettingsBackupKey("system_icon_position", SettingsBackupType.STRING),
         SettingsBackupKey("system_icon_padding", SettingsBackupType.STRING),
         SettingsBackupKey("platform_indicator_style", SettingsBackupType.STRING),
@@ -122,6 +123,7 @@ object SettingsBackupKeys {
     private val HOME_AND_LIBRARY = listOf(
         SettingsBackupKey("home_layout_config", SettingsBackupType.STRING),
         SettingsBackupKey("presentation_style", SettingsBackupType.STRING),
+        SettingsBackupKey("presentation_background_blur", SettingsBackupType.INT),
         SettingsBackupKey("default_view", SettingsBackupType.STRING),
         SettingsBackupKey("installed_only_home", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("show_status_clock", SettingsBackupType.BOOLEAN),

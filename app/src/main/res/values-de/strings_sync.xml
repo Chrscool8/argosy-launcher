@@ -80,6 +80,18 @@
     <string name="sync_session_save_upload_failed">Upload fehlgeschlagen</string>
     <string name="sync_session_save_upload_failed_subtitle">%1$s: %2$s</string>
     <string name="sync_session_save_upload_failed_name_fallback">Spielstand</string>
+    <string name="sync_migration_refused_title">Spielstand für %1$s konnte nicht übertragen werden</string>
+    <string name="sync_migration_refused_no_route">Argosy kann Spielstände zwischen diesen beiden Emulatoren nicht umwandeln</string>
+    <string name="sync_migration_refused_unreadable">Der Speicherordner des Emulators ist nicht lesbar</string>
+    <string name="sync_migration_refused_backup_failed">Der vorhandene Spielstand konnte nicht zuerst gesichert werden</string>
+    <string name="sync_migration_refused_conflict">Die Speicherdateien haben sich beim Schreiben geändert</string>
+    <string name="sync_migration_refused_no_space">Die Speicherkarte ist voll</string>
+    <string name="sync_migration_refused_no_target">Der Emulator hat noch keinen Platz für diesen Spielstand</string>
+    <string name="sync_migration_refused_ambiguous">Mehr als eine Speicherkarte oder ein Profil könnte diesen Spielstand aufnehmen</string>
+    <string name="sync_migration_refused_damaged">Eine Speicherdatei im Ordner des Emulators ist beschädigt</string>
+    <string name="sync_migration_refused_unsupported_format">Das Format dieses Spielstands kann nicht umgewandelt werden</string>
+    <string name="sync_migration_refused_exists">Im Speicherordner des Emulators ist kein freier Name für diesen Spielstand</string>
+    <string name="sync_migration_refused_io">Die Speicherdateien konnten nicht geschrieben werden</string>
 
     <plurals name="sync_conflict_pending_title">
         <item quantity="one">%1$d Spielstand braucht Ihre Aufmerksamkeit</item>

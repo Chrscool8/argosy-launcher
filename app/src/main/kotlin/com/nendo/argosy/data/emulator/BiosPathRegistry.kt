@@ -168,6 +168,35 @@ object BiosPathRegistry {
 
     fun getNestedBiosPath(fileName: String): String? = nestedBiosPaths[fileName.lowercase()]
 
+    private val builtinPlatformBiosDirs: Map<String, String> = mapOf(
+        "ps2" to "pcsx2/bios"
+    )
+
+    /**
+     * The folder under the built-in system directory that holds a platform's BIOS, for cores that
+     * identify a BIOS by its content and accept any file name in that folder.
+     */
+    fun getBuiltinPlatformBiosDir(platformSlug: String): String? =
+        builtinPlatformBiosDirs[PlatformDefinitions.getCanonicalSlug(platformSlug)]
+
+    fun getBuiltinPlatformBiosPath(platformSlug: String, fileName: String): String? =
+        getBuiltinPlatformBiosDir(platformSlug)?.let { "$it/$fileName" }
+
+    /**
+     * The path, relative to an emulator's system directory, that a firmware file is copied to for
+     * an emulator that looks BIOS up by exact name. [builtinPlatformSlug] is set only for the
+     * built-in libretro system directory; [md5Hash] is read only when no name rule applies.
+     */
+    fun exactSystemFileName(
+        fileName: String,
+        builtinPlatformSlug: String?,
+        md5Hash: () -> String?
+    ): String =
+        builtinPlatformSlug?.let { getBuiltinPlatformBiosPath(it, fileName) }
+            ?: getNestedBiosPath(fileName)
+            ?: getRetroArchBiosName(md5Hash())
+            ?: fileName
+
     private val platformBiosFiles: Map<String, List<BiosRequirement>> = mapOf(
         "psx" to listOf(
             BiosRequirement("psx", "scph1001.bin", "924e392ed05558ffdb115408c263dccf", "PlayStation NTSC-U BIOS"),
@@ -480,7 +509,8 @@ object BiosPathRegistry {
         "dev.eden.eden_emulator.relWithDebInfo",
         "dev.eden.eden_emulator.debug",
         "dev.legacy.eden",
-        "org.eden.emulator"
+        "org.eden.emulator",
+        "dev.igawa6.edenduo"
     )
 
     fun getEdenDataPath(packageName: String): String {

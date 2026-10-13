@@ -12,6 +12,7 @@ import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -48,7 +49,7 @@ class ControllerPortResolverTest {
         assertEquals(1, resolver.getPort(builtIn))
         assertEquals(0, resolver.getPort(external))
         assertEquals(1, resolver.getPort(builtIn))
-        assertEquals(id(external), resolver.claimedPortFor0())
+        assertEquals(id(external), resolver.playerOneControllerId())
         assertEquals(listOf(id(builtIn) to 1, id(external) to 0), claims)
     }
 
@@ -57,7 +58,7 @@ class ControllerPortResolverTest {
         connected(builtIn)
 
         assertEquals(0, resolver.getPort(builtIn))
-        assertEquals(id(builtIn), resolver.claimedPortFor0())
+        assertEquals(id(builtIn), resolver.playerOneControllerId())
     }
 
     @Test
@@ -78,9 +79,9 @@ class ControllerPortResolverTest {
         connected(builtIn)
         resolver.releaseDisconnected(setOf(id(builtIn)))
 
-        assertNull(resolver.claimedPortFor0())
+        assertNull(resolver.playerOneControllerId())
         assertEquals(0, resolver.getPort(builtIn))
-        assertEquals(id(builtIn), resolver.claimedPortFor0())
+        assertEquals(id(builtIn), resolver.playerOneControllerId())
         assertEquals(id(builtIn) to 0, claims.last())
     }
 
@@ -94,7 +95,7 @@ class ControllerPortResolverTest {
         connected(builtIn, secondExternal)
         resolver.releaseDisconnected(setOf(id(builtIn), id(secondExternal)))
 
-        assertNull(resolver.claimedPortFor0())
+        assertNull(resolver.playerOneControllerId())
         assertEquals(1, resolver.getPort(builtIn))
         assertEquals(2, resolver.getPort(secondExternal))
     }
@@ -125,6 +126,85 @@ class ControllerPortResolverTest {
         resolver.releaseDisconnected(setOf(id(builtIn)))
 
         assertEquals(1, resolver.getPort(builtIn))
+    }
+
+    @Test
+    fun `docked launch pad takes player one from a saved built-in pad`() {
+        connected(builtIn, external)
+        resolver.setLaunchPad(id(external), isDocked = true)
+        resolver.setControllerOrder(listOf(order(builtIn, 0)))
+
+        assertEquals(0, resolver.getPort(external))
+        assertEquals(1, resolver.getPort(builtIn))
+        assertEquals(id(external), resolver.playerOneControllerId())
+    }
+
+    @Test
+    fun `docked launch pad takes player one from a built-in pad that claimed it`() {
+        connected(builtIn, external)
+        resolver.setControllerOrder(listOf(order(external, 1)))
+        resolver.setLaunchPad(id(external), isDocked = true)
+
+        assertEquals(1, resolver.getPort(builtIn))
+        assertEquals(0, resolver.getPort(external))
+        assertEquals(id(external), resolver.playerOneControllerId())
+        assertEquals(listOf(id(builtIn) to 1), claims)
+    }
+
+    @Test
+    fun `docked launch pad moves the built-in pad past ports already taken`() {
+        connected(builtIn, external, secondExternal)
+        resolver.setControllerOrder(listOf(order(builtIn, 0), order(secondExternal, 1)))
+        resolver.setLaunchPad(id(external), isDocked = true)
+
+        assertEquals(0, resolver.getPort(external))
+        assertEquals(1, resolver.getPort(secondExternal))
+        assertEquals(2, resolver.getPort(builtIn))
+    }
+
+    @Test
+    fun `undocked launch pad leaves the saved built-in pad on player one`() {
+        connected(builtIn, external)
+        resolver.setLaunchPad(id(external), isDocked = false)
+        resolver.setControllerOrder(listOf(order(builtIn, 0)))
+
+        assertEquals(0, resolver.getPort(builtIn))
+        assertEquals(1, resolver.getPort(external))
+        assertEquals(id(builtIn), resolver.playerOneControllerId())
+    }
+
+    @Test
+    fun `docked launch from the built-in pad changes nothing`() {
+        connected(builtIn, external)
+        resolver.setLaunchPad(id(builtIn), isDocked = true)
+        resolver.setControllerOrder(listOf(order(builtIn, 0)))
+
+        assertEquals(0, resolver.getPort(builtIn))
+        assertEquals(1, resolver.getPort(external))
+    }
+
+    @Test
+    fun `docked launch pad already on player one keeps every seat`() {
+        connected(builtIn, external)
+        resolver.setLaunchPad(id(external), isDocked = true)
+        resolver.setControllerOrder(listOf(order(external, 0), order(builtIn, 1)))
+
+        assertEquals(0, resolver.getPort(external))
+        assertEquals(1, resolver.getPort(builtIn))
+    }
+
+    @Test
+    fun `docked launch pad seat leaves the saved order intact`() {
+        connected(builtIn, external)
+        resolver.setControllerOrder(listOf(order(builtIn, 0)))
+        resolver.setLaunchPad(id(external), isDocked = true)
+        assertEquals(0, resolver.getPort(external))
+
+        resolver.setLaunchPad(id(external), isDocked = false)
+
+        assertEquals(0, resolver.getPort(builtIn))
+        assertEquals(1, resolver.getPort(external))
+        assertTrue(claims.none { it.first == id(builtIn) })
     }
 
     private fun connected(vararg devices: InputDevice) {

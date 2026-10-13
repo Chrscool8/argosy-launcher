@@ -34,8 +34,8 @@ android {
         applicationId = "com.nendo.argosy"
         minSdk = 26
         targetSdk = 35
-        versionCode = 354
-        versionName = "2.20.5"
+        versionCode = 355
+        versionName = "2.21.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -69,6 +69,7 @@ android {
         )
         buildConfigField("int", "DOLPHIN_SYS_VERSION", "2")
         buildConfigField("int", "PPSSPP_SYS_VERSION", "1")
+        buildConfigField("int", "ARMSX2_SYS_VERSION", "1")
     }
 
     signingConfigs {
@@ -144,6 +145,9 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+        }
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
 

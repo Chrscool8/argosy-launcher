@@ -498,15 +498,15 @@
     <!-- Shown beside the game's name when the save belongs to no named slot. -->
     <string name="ui_save_conflict_default_slot">Default Save</string>
     <!-- Body of that prompt. -->
-    <string name="ui_save_conflict_message">The server has a newer save. Overwriting will replace it with your local save.</string>
+    <string name="ui_save_conflict_message">The server has a newer save. Uploading makes your local save the newest, and the server copy is kept.</string>
     <!-- Row naming the copy on this device. Adjective. -->
     <string name="ui_save_conflict_source_local">Local</string>
     <!-- Row naming the copy on the server. Noun. -->
     <string name="ui_save_conflict_source_server">Server</string>
     <!-- Button leaving both copies alone. Verb phrase. -->
     <string name="ui_save_conflict_skip">Skip Sync</string>
-    <!-- Button replacing the server's copy. Verb. -->
-    <string name="ui_save_conflict_overwrite">Overwrite</string>
+    <!-- Button uploading this device's copy as the newest save. The server's copy is kept. Verb. -->
+    <string name="ui_save_conflict_overwrite">Upload</string>
     <!-- Heading of the prompt shown when a save made outside RetroAchievements hardcore mode would
          replace a channel's hardcore save on the server. -->
     <string name="ui_save_conflict_hardcore_title">Replace a hardcore save?</string>
@@ -1475,7 +1475,7 @@
     <!-- Stands in for the slot's name when the game has none. -->
     <string name="ui_sync_overlay_post_session_default_slot">Default Save</string>
     <!-- Body under that line. -->
-    <string name="ui_sync_overlay_post_session_message">The server has a newer save. Overwriting will replace it with your local save.</string>
+    <string name="ui_sync_overlay_post_session_message">The server has a newer save. Uploading makes your local save the newest, and the server copy is kept.</string>
     <!-- Label under the timestamp of the copy on this device. Adjective. -->
     <string name="ui_sync_overlay_post_session_local">Local</string>
     <!-- Label under the timestamp of the copy on the server. Noun. -->
@@ -1487,10 +1487,11 @@
     <string name="ui_sync_overlay_post_session_skip">Skip Sync</string>
     <!-- Second line under that choice. -->
     <string name="ui_sync_overlay_post_session_skip_subtitle">Keep your local save, do not upload</string>
-    <!-- Choice replacing the server's copy. Verb phrase. -->
-    <string name="ui_sync_overlay_post_session_overwrite">Overwrite Server</string>
+    <!-- Choice uploading this device's copy as the newest save. The server's copy is kept.
+         Verb phrase; "Save" is the noun. -->
+    <string name="ui_sync_overlay_post_session_overwrite">Upload Local Save</string>
     <!-- Second line under that choice. -->
-    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Replace the server save with your local version</string>
+    <string name="ui_sync_overlay_post_session_overwrite_subtitle">Your local save becomes the newest. The server copy is kept.</string>
     <!-- Status on the older sync overlay while a sync is running. -->
     <string name="ui_sync_overlay_legacy_status">Syncing...</string>
 
@@ -1580,14 +1581,12 @@
     <string name="ui_file_browser_error_unreadable">Cannot access directory</string>
     <!-- Shown when a folder holds nothing. Adjective phrase describing the folder. -->
     <string name="ui_file_browser_empty_folder">Empty folder</string>
-    <!-- Footer hint while picking a file. Verb phrase: takes the file under the cursor. -->
-    <string name="ui_file_browser_footer_select_file">Select File</string>
-    <!-- Footer hint while either a file or a folder will do. Verb phrase. -->
-    <string name="ui_file_browser_footer_select_file_or_folder">Select File</string>
-    <!-- Footer hint while picking a folder. Verb: steps into the folder under the cursor. -->
-    <string name="ui_file_browser_footer_open_folder">Open</string>
-    <!-- Footer hint in the browser. Verb: leaves it. -->
-    <string name="ui_file_browser_footer_back">Back</string>
+    <!-- Row pinned at the top of the browser's list. Verb phrase: takes the folder currently
+         open as the answer. -->
+    <string name="ui_file_browser_action_use_folder">Use this folder</string>
+    <!-- Row pinned at the top of the browser's list. Noun phrase: makes a folder inside the one
+         currently open. -->
+    <string name="ui_file_browser_action_new_folder">New folder</string>
     <!-- Footer hint in the browser. Noun phrase: makes a folder here. -->
     <string name="ui_file_browser_footer_new_folder">New Folder</string>
     <!-- Footer hint in the browser. Verb phrase: takes the folder currently open. -->

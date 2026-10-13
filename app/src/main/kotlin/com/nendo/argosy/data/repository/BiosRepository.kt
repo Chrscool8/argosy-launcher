@@ -504,12 +504,12 @@ class BiosRepository @Inject constructor(
 
     private suspend fun cleanupDistributedCopies(platformSlug: String) {
         val firmwareFiles = firmwareDao.getByPlatformSlug(platformSlug)
-        val emulators = BiosPathRegistry.getUnpromptedEmulatorsForPlatform(
-            PlatformDefinitions.getCanonicalSlug(platformSlug)
-        )
+        val canonicalSlug = PlatformDefinitions.getCanonicalSlug(platformSlug)
+        val emulators = BiosPathRegistry.getUnpromptedEmulatorsForPlatform(canonicalSlug)
 
         for (config in emulators) {
-            val dirs = if (config.emulatorId == EmulatorRegistry.BUILTIN_PACKAGE) {
+            val isBuiltin = config.emulatorId == EmulatorRegistry.BUILTIN_PACKAGE
+            val dirs = if (isBuiltin) {
                 listOf(getLibretroSystemDir())
             } else {
                 config.defaultPaths.map { File(it) }
@@ -525,6 +525,9 @@ class BiosRepository @Inject constructor(
                         BiosPathRegistry.getNestedBiosPath(firmware.fileName)?.let { nested ->
                             deleteDistributedCopy(File(dir, nested), firmware)
                         }
+                        BiosPathRegistry.getBuiltinPlatformBiosPath(canonicalSlug, firmware.fileName)
+                            ?.takeIf { isBuiltin }
+                            ?.let { deleteDistributedCopy(File(dir, it), firmware) }
                         firmware.md5Hash?.let { md5 ->
                             BiosPathRegistry.getRetroArchBiosName(md5)?.let { raName ->
                                 deleteDistributedCopy(File(dir, raName), firmware)
@@ -549,11 +552,12 @@ class BiosRepository @Inject constructor(
         val downloaded = firmwareDao.getByPlatformSlug(platformSlug).filter { it.localPath != null }
         if (downloaded.isEmpty()) return@withContext 0
 
+        val isBuiltin = emulatorId == EmulatorRegistry.BUILTIN_PACKAGE
         val requiresExactFilenames = emulatorId.startsWith("retroarch") ||
             emulatorId == "melonds" ||
-            emulatorId == EmulatorRegistry.BUILTIN_PACKAGE
+            isBuiltin
 
-        val targetPaths = if (emulatorId == EmulatorRegistry.BUILTIN_PACKAGE) {
+        val targetPaths = if (isBuiltin) {
             listOf(getLibretroSystemDir().absolutePath)
         } else {
             config.defaultPaths
@@ -573,11 +577,10 @@ class BiosRepository @Inject constructor(
                 if (firmware.fileName.startsWith(".")) continue
 
                 val targetFileName = if (requiresExactFilenames) {
-                    BiosPathRegistry.getNestedBiosPath(firmware.fileName)
-                        ?: run {
-                            val md5 = firmware.md5Hash ?: calculateMd5(sourceFile)
-                            BiosPathRegistry.getRetroArchBiosName(md5) ?: firmware.fileName
-                        }
+                    BiosPathRegistry.exactSystemFileName(
+                        fileName = firmware.fileName,
+                        builtinPlatformSlug = canonicalSlug.takeIf { isBuiltin }
+                    ) { firmware.md5Hash ?: calculateMd5(sourceFile) }
                 } else {
                     config.targetNameFor(firmware.fileName)
                 }

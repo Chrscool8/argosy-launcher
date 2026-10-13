@@ -578,6 +578,7 @@ class MainActivity : ComponentActivity() {
 
         if (!dualScreenManager.claimInput(event)) return true
         if (dualScreenManager.swappedIsGameActive.value && !isOverlayFocused && isGameOnOtherDisplay()) {
+            gamepadInputHandler.releaseRightStick()
             val emulatorDispatcher = dualScreenManager.emulatorMotionDispatcher
             if (emulatorDispatcher != null) {
                 return emulatorDispatcher(event)
@@ -586,6 +587,12 @@ class MainActivity : ComponentActivity() {
         }
 
         if (gamepadInputHandler.handleMotionEvent(event)) return true
+
+        if (dualScreenManager.companionHoldsPrimary.value && !isOverlayFocused) {
+            gamepadInputHandler.releaseRightStick()
+        } else {
+            gamepadInputHandler.processRightStickMotion(event)
+        }
 
         val stickEvent = gamepadInputHandler.processStickMotion(event)
         if (stickEvent != null) {
@@ -645,6 +652,7 @@ class MainActivity : ComponentActivity() {
                 gamepadInputHandler.blockInputFor(200)
             }
         } else {
+            gamepadInputHandler.releaseRightStick()
             if (::dualScreenManager.isInitialized &&
                 displayAffinityHelper.hasSecondaryDisplay &&
                 !dualScreenManager.isRolesSwapped.value

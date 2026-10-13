@@ -39,7 +39,7 @@ class DockReorderCoordinatorTest {
 
         init {
             every { repository.userPreferences } returns (initialPreferences ?: prefs)
-            every { apps.packageChanges } returns packages.map { Unit }
+            every { apps.packageChanges } returns packages.map { "" }
             every { cache.getHomeApps() } returns original
             coEvery { apps.getInstalledApps(true) } coAnswers {
                 available.map { InstalledApp(it, it, false, false) }

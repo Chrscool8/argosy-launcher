@@ -3,8 +3,6 @@ package com.nendo.argosy.ui.screens.settings.sections
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -487,14 +485,7 @@ fun SteamSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                         title = stringResource(R.string.settings_steam_storage_note_title),
                         subtitle = stringResource(R.string.settings_steam_storage_note_subtitle),
                         isFocused = false,
-                        onClick = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                val intent = Intent(
-                                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
-                                ).apply { data = Uri.parse("package:${context.packageName}") }
-                                context.startActivity(intent)
-                            }
-                        }
+                        onClick = { viewModel.requestStoragePermission() }
                     )
                 }
 

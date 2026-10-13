@@ -80,6 +80,7 @@ import com.nendo.argosy.ui.screens.settings.sections.steamMaxFocusIndex
 import com.nendo.argosy.ui.screens.settings.sections.boxArtMaxFocusIndex
 import com.nendo.argosy.ui.screens.settings.sections.builtinControlsMaxFocusIndex
 import com.nendo.argosy.ui.screens.settings.sections.builtinVideoMaxFocusIndex
+import com.nendo.argosy.ui.screens.settings.sections.builtinSavesMaxFocusIndex
 import com.nendo.argosy.ui.screens.settings.sections.navigationMaxFocusIndex
 import com.nendo.argosy.ui.screens.settings.sections.displaysMaxFocusIndex
 import com.nendo.argosy.ui.screens.settings.sections.screensMaxFocusIndex
@@ -295,10 +296,11 @@ internal fun routeConfirm(vm: SettingsViewModel): InputResult {
         SettingsSection.ABOUT -> routeAboutConfirm(vm, state)
         SettingsSection.BUILTIN_VIDEO -> InputResult.HANDLED
         SettingsSection.BUILTIN_CONTROLS -> InputResult.HANDLED
+        SettingsSection.BUILTIN_SAVES -> InputResult.HANDLED
         SettingsSection.SHADER_STACK -> InputResult.HANDLED
         SettingsSection.FRAME_PICKER -> routeFramePickerConfirm(vm, state)
         SettingsSection.CORE_MANAGEMENT -> {
-            vm.selectCoreForPlatform()
+            vm.confirmCoreManagement()
             InputResult.HANDLED
         }
         SettingsSection.CORE_OPTIONS -> InputResult.HANDLED
@@ -752,8 +754,8 @@ private fun routeDisplaysConfirm(vm: SettingsViewModel, state: SettingsUiState):
 private fun routePresentationConfirm(vm: SettingsViewModel, state: SettingsUiState): InputResult {
     val style = state.display.presentationStyle
     return when (val item = presentationItemAtFocusIndex(state.focusedIndex, style)) {
-        PresentationItem.Layout, PresentationItem.Scrim, PresentationItem.Art ->
-            InputResult.handled(SoundType.SILENT)
+        PresentationItem.Layout, PresentationItem.Scrim, PresentationItem.Art,
+        PresentationItem.BackgroundBlur -> InputResult.handled(SoundType.SILENT)
         is PresentationItem.Stat -> {
             vm.setPresentationStyle(style.withStat(item.stat, !style.shows(item.stat)))
             InputResult.handled(SoundType.TOGGLE)
@@ -778,6 +780,11 @@ private fun routeThemeConfirm(vm: SettingsViewModel, state: SettingsUiState): In
         ThemeItem.AccentFooter -> vm.setUseAccentColorFooter(!state.display.useAccentColorFooter)
         ThemeItem.Backdrop -> vm.navigateToThemeBackdrop()
         ThemeItem.Fonts -> vm.navigateToThemeFonts()
+        ThemeItem.IconPack -> {
+            if (state.display.iconPacks.isEmpty()) return InputResult.handled(SoundType.SILENT)
+            vm.requestEnumPicker(ThemeItem.IconPack.key)
+            return InputResult.handled(SoundType.OPEN_MODAL)
+        }
         else -> {}
     }
     return InputResult.HANDLED
@@ -1357,7 +1364,8 @@ private fun computeMaxFocusIndex(
     SettingsSection.PLATFORM_DETAIL -> platformDetailMaxFocusIndex(state)
     SettingsSection.BUILTIN_VIDEO -> builtinVideoMaxFocusIndex(state.builtinVideo, state.platformLibretro.platformSettings)
     SettingsSection.BUILTIN_CONTROLS -> builtinControlsMaxFocusIndex(state.builtinControls)
-    SettingsSection.CORE_MANAGEMENT -> coreManagementMaxFocusIndex(state.coreManagement.platforms)
+    SettingsSection.BUILTIN_SAVES -> builtinSavesMaxFocusIndex(state.builtinVideo, state.platformLibretro.platformSettings)
+    SettingsSection.CORE_MANAGEMENT -> coreManagementMaxFocusIndex(state.coreManagement)
     SettingsSection.CORE_OPTIONS -> com.nendo.argosy.ui.screens.settings.sections.coreOptionsMaxFocusIndex(state.coreOptions)
     SettingsSection.SHADER_STACK -> com.nendo.argosy.ui.screens.settings.sections.shaderStackMaxFocusIndex(vm.shaderChainManager.shaderStack)
     SettingsSection.FRAME_PICKER -> com.nendo.argosy.ui.screens.settings.sections.framePickerMaxFocusIndex(vm.getFrameRegistry())
@@ -1406,6 +1414,7 @@ private fun routePlatformDetailConfirm(vm: SettingsViewModel, state: SettingsUiS
         PlatformDetailItem.LaunchArgs -> vm.openLaunchArgsModal(config.platform.id)
         PlatformDetailItem.BuiltinVideo -> vm.navigateToBuiltinVideoForPlatform(state.platformDetail.platformIndex)
         PlatformDetailItem.BuiltinControls -> vm.navigateToBuiltinControlsForPlatform(state.platformDetail.platformIndex)
+        PlatformDetailItem.BuiltinSaves -> vm.navigateToBuiltinSavesForPlatform(state.platformDetail.platformIndex)
         PlatformDetailItem.BuiltinCoreOptions -> vm.navigateToCoreOptionsForPlatform()
         PlatformDetailItem.ClearArtCache -> vm.clearPlatformArtCache(config.platform.slug)
         PlatformDetailItem.ScanFiles -> vm.scanFilesForPlatform(config.platform.id)
@@ -1443,6 +1452,7 @@ private fun routeBuiltinEmulatorConfirm(vm: SettingsViewModel, state: SettingsUi
         BuiltinEmulatorItem.ARCHITECTURE, BuiltinEmulatorItem.HUD_CORNER -> return InputResult.handled(SoundType.SILENT)
         BuiltinEmulatorItem.VIDEO -> if (builtinEnabled) vm.navigateToBuiltinVideo()
         BuiltinEmulatorItem.CONTROLS -> if (builtinEnabled) vm.navigateToBuiltinControls()
+        BuiltinEmulatorItem.SAVES -> if (builtinEnabled) vm.navigateToBuiltinSaves()
         BuiltinEmulatorItem.CORE_MANAGEMENT -> if (builtinEnabled) vm.navigateToCoreManagement()
         BuiltinEmulatorItem.CORE_OPTIONS -> if (builtinEnabled) vm.navigateToCoreOptions()
         BuiltinEmulatorItem.TWO_COLUMN ->

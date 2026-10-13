@@ -363,9 +363,10 @@
 
     <!-- Score inside a rating or difficulty chip. %1$d is the user's score, out of ten. -->
     <string name="gamedetail_chip_rating_value">%1$d/10</string>
-    <!-- Drawn inside a rating or difficulty chip the user has not scored yet. Short adjective
-         phrase: no score has been given, not an error. -->
-    <string name="gamedetail_chip_rating_unset">Not set</string>
+    <!-- Drawn inside a rating or difficulty chip the user has not scored yet, in the slot that
+         otherwise holds "8/10". Use the locale's standard short "not available" abbreviation so
+         it fits one line: no score has been given, not an error. -->
+    <string name="gamedetail_chip_rating_unset">N/A</string>
     <!-- Score inside the community rating chip. %1$d is the share of players who liked the game, as
          a whole number out of a hundred. -->
     <string name="gamedetail_chip_community_rating_value">%1$d%%</string>
@@ -952,6 +953,46 @@
     <!-- Stands in for the platform's choice in that value when the platform has not set one.
          Adjective: the launcher picks by itself. -->
     <string name="gamedetail_per_game_extension_inherit_auto">Auto</string>
+    <!-- Row label in per-game settings for games on a built-in emulator core. Noun: the renderer
+         the core draws this game with (for example OpenGL or Vulkan). -->
+    <string name="gamedetail_per_game_backend_label">Backend</string>
+    <!-- Value beside that row when the game follows the platform's renderer. %1$s is that
+         renderer's name. -->
+    <string name="gamedetail_per_game_backend_inherit">Inherit (%1$s)</string>
+    <!-- Footer hint on the GPU Driver row. Verb: opens the list of drivers. -->
+    <string name="gamedetail_per_game_footer_gpu_driver_options">Options</string>
+    <!-- Entry in the GPU Driver list. %1$s is a downloaded driver package file name, never
+         translated. Verb. -->
+    <string name="gamedetail_per_game_gpu_driver_install">Install %1$s</string>
+    <!-- Value while a driver package unpacks. %1$s is the package file name. -->
+    <string name="gamedetail_per_game_gpu_driver_installing">Installing %1$s...</string>
+    <!-- Notification after a driver installs. %1$s is the driver's name. -->
+    <string name="gamedetail_per_game_gpu_driver_installed">Installed %1$s</string>
+    <!-- Notification when a driver package cannot be unpacked. %1$s is the package file name. -->
+    <string name="gamedetail_per_game_gpu_driver_install_failed">Couldn\'t install %1$s</string>
+    <!-- Row label in per-game settings for games on a built-in emulator core. Noun phrase: the
+         Vulkan graphics driver this game loads. -->
+    <string name="gamedetail_per_game_gpu_driver_label">GPU Driver</string>
+    <!-- Value beside that row when the game follows the platform's choice. %1$s is that choice. -->
+    <string name="gamedetail_per_game_gpu_driver_inherit">Inherit (%1$s)</string>
+    <!-- Value: the driver that ships with the device. -->
+    <string name="gamedetail_per_game_gpu_driver_system">System Driver</string>
+    <!-- Value when the chosen custom driver is no longer installed, so the device's own driver
+         runs instead. -->
+    <string name="gamedetail_per_game_gpu_driver_missing">Missing Driver (System in Use)</string>
+    <!-- Shown in place of the value when the row cannot be changed. %1$s is the emulator core's
+         name, never translated. -->
+    <string name="gamedetail_per_game_gpu_driver_reason_core">Not supported by %1$s</string>
+    <!-- Shown in place of the value for a core that always runs on the device's own Vulkan
+         driver. %1$s is the emulator core's name, never translated. -->
+    <string name="gamedetail_per_game_gpu_driver_reason_core_system_only">%1$s uses the system driver</string>
+    <!-- Stands in for the core's name in that line when it is not known. -->
+    <string name="gamedetail_per_game_gpu_driver_reason_core_unknown">this core</string>
+    <!-- Shown in place of the value while the game's renderer is not Vulkan. "Backend" is the
+         renderer setting in the built-in emulator video settings. -->
+    <string name="gamedetail_per_game_gpu_driver_reason_backend">Applies when Backend is Vulkan</string>
+    <!-- Shown in place of the value on a device that cannot load custom drivers. -->
+    <string name="gamedetail_per_game_gpu_driver_reason_device">Custom drivers need an Adreno GPU</string>
     <!-- Last row of per-game settings. Noun phrase: opens the settings shared by every game on this
          platform. -->
     <string name="gamedetail_per_game_platform_settings">Platform Settings</string>

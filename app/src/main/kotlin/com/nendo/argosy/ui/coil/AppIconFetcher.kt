@@ -12,6 +12,7 @@ import coil.fetch.DrawableResult
 import coil.fetch.FetchResult
 import coil.fetch.Fetcher
 import coil.request.Options
+import com.nendo.argosy.data.iconpack.IconPackRepository
 
 private const val TAG = "AppIconFetcher"
 private const val ICON_SIZE = 192
@@ -20,14 +21,16 @@ data class AppIconData(val packageName: String)
 
 class AppIconFetcher(
     private val data: AppIconData,
-    private val packageManager: PackageManager
+    private val packageManager: PackageManager,
+    private val iconPacks: IconPackRepository
 ) : Fetcher {
 
     @Suppress("SwallowedException")
     override suspend fun fetch(): FetchResult? {
         return try {
             val appInfo = packageManager.getApplicationInfo(data.packageName, 0)
-            val drawable = packageManager.getApplicationIcon(appInfo)
+            val drawable = iconPacks.iconFor(data.packageName)
+                ?: packageManager.getApplicationIcon(appInfo)
             val safeDrawable = ensureValidDrawable(drawable)
             DrawableResult(
                 drawable = safeDrawable,
@@ -64,13 +67,14 @@ class AppIconFetcher(
     }
 
     class Factory(
-        private val packageManager: PackageManager
+        private val packageManager: PackageManager,
+        private val iconPacks: IconPackRepository
     ) : Fetcher.Factory<AppIconData> {
 
         override fun create(
             data: AppIconData,
             options: Options,
             imageLoader: ImageLoader
-        ): Fetcher = AppIconFetcher(data, packageManager)
+        ): Fetcher = AppIconFetcher(data, packageManager, iconPacks)
     }
 }

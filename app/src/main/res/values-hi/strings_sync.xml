@@ -95,6 +95,18 @@
     <string name="sync_session_save_upload_failed">अपलोड विफल</string>
     <string name="sync_session_save_upload_failed_subtitle">%1$s: %2$s</string>
     <string name="sync_session_save_upload_failed_name_fallback">सेव</string>
+    <string name="sync_migration_refused_title">%1$s का सेव नहीं ले जाया जा सका</string>
+    <string name="sync_migration_refused_no_route">Argosy इन दोनों एमुलेटर के बीच सेव नहीं बदल सकता</string>
+    <string name="sync_migration_refused_unreadable">एमुलेटर का सेव फ़ोल्डर पढ़ा नहीं जा सकता</string>
+    <string name="sync_migration_refused_backup_failed">पहले से मौजूद सेव का बैकअप नहीं लिया जा सका</string>
+    <string name="sync_migration_refused_conflict">लिखते समय सेव फ़ाइलें बदल गईं</string>
+    <string name="sync_migration_refused_no_space">मेमोरी कार्ड भरा हुआ है</string>
+    <string name="sync_migration_refused_no_target">एमुलेटर में अभी इस सेव के लिए कोई जगह नहीं है</string>
+    <string name="sync_migration_refused_ambiguous">एक से ज़्यादा मेमोरी कार्ड या प्रोफ़ाइल यह सेव ले सकते हैं</string>
+    <string name="sync_migration_refused_damaged">एमुलेटर के फ़ोल्डर में एक सेव फ़ाइल खराब है</string>
+    <string name="sync_migration_refused_unsupported_format">इस सेव का फ़ॉर्मैट बदला नहीं जा सकता</string>
+    <string name="sync_migration_refused_exists">एमुलेटर के सेव फ़ोल्डर में इस सेव के लिए कोई खाली नाम नहीं है</string>
+    <string name="sync_migration_refused_io">सेव फ़ाइलें लिखी नहीं जा सकीं</string>
 
     <!-- In-app notice about saves waiting for the user to choose between two versions. -->
 

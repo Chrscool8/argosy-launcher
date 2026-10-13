@@ -55,6 +55,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.nendo.argosy.libretro.frame.FrameRegistry
 import androidx.compose.ui.text.input.KeyboardType
+import com.nendo.argosy.ui.common.rememberStorageAccessRequest
 import com.nendo.argosy.ui.components.CustomTileMenuModal
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.FooterSpacer
@@ -105,6 +106,7 @@ import com.nendo.argosy.ui.screens.settings.sections.platformDetailItemAtFocusIn
 import com.nendo.argosy.ui.screens.settings.sections.FrameSection
 import com.nendo.argosy.ui.screens.settings.sections.BuiltinVideoSection
 import com.nendo.argosy.ui.screens.settings.sections.BuiltinControlsSection
+import com.nendo.argosy.ui.screens.settings.sections.BuiltinSavesSection
 import com.nendo.argosy.ui.screens.settings.sections.CoreManagementSection
 import com.nendo.argosy.ui.screens.settings.sections.CoreOptionItem
 import com.nendo.argosy.ui.screens.settings.sections.CoreOptionsSection
@@ -146,6 +148,7 @@ import com.nendo.argosy.ui.screens.settings.sections.ThemeSoundsItem
 import com.nendo.argosy.ui.screens.settings.sections.ThemeSoundsLayoutState
 import com.nendo.argosy.ui.screens.settings.sections.ThemeSoundsSection
 import com.nendo.argosy.ui.screens.settings.sections.themeSoundsItemAtFocusIndex
+import com.nendo.argosy.ui.screens.settings.sections.input.builtinSavesFocusedOverrideResettable
 import com.nendo.argosy.ui.screens.settings.sections.input.focusedBuiltinFolderRow
 import com.nendo.argosy.ui.screens.settings.sections.isResettableFolder
 import com.nendo.argosy.ui.screens.settings.sections.themeMusicItemAtFocusIndex
@@ -338,15 +341,13 @@ fun SettingsScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.requestStoragePermissionEvent.collect {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                    data = Uri.parse("package:${context.packageName}")
-                }
-                context.startActivity(intent)
-            }
-        }
+    val requestStorageAccess = rememberStorageAccessRequest(onResult = {
+        viewModel.checkStoragePermission()
+        viewModel.refreshPermissions()
+    })
+
+    LaunchedEffect(requestStorageAccess) {
+        viewModel.requestStoragePermissionEvent.collect { requestStorageAccess() }
     }
 
     LaunchedEffect(Unit) {
@@ -553,6 +554,7 @@ fun SettingsScreen(
             when (target) {
                 BuiltinNavigationTarget.VIDEO_SETTINGS -> viewModel.navigateToSection(SettingsSection.BUILTIN_VIDEO)
                 BuiltinNavigationTarget.CONTROLS_SETTINGS -> viewModel.navigateToSection(SettingsSection.BUILTIN_CONTROLS)
+                BuiltinNavigationTarget.SAVES_SETTINGS -> viewModel.navigateToSection(SettingsSection.BUILTIN_SAVES)
                 BuiltinNavigationTarget.CORE_MANAGEMENT -> {
                     viewModel.loadCoreManagementState()
                     viewModel.navigateToSection(SettingsSection.CORE_MANAGEMENT)
@@ -605,8 +607,7 @@ fun SettingsScreen(
                 uiState.currentSection != SettingsSection.FRAME_PICKER) {
                 SettingsHeader(
                     title = settingsSectionTitle(uiState),
-                    rightContent = if ((uiState.currentSection == SettingsSection.BUILTIN_VIDEO ||
-                        uiState.currentSection == SettingsSection.BUILTIN_CONTROLS) &&
+                    rightContent = if (uiState.currentSection in BUILTIN_PLATFORM_CONTEXT_SECTIONS &&
                         uiState.builtinVideo.availablePlatforms.isNotEmpty()) {
                         {
                             val globalContextLabel = stringResource(R.string.settings_shell_header_context_global)
@@ -697,6 +698,7 @@ fun SettingsScreen(
                     )
                     SettingsSection.BUILTIN_VIDEO -> BuiltinVideoSection(uiState, viewModel)
                     SettingsSection.BUILTIN_CONTROLS -> BuiltinControlsSection(uiState, viewModel)
+                    SettingsSection.BUILTIN_SAVES -> BuiltinSavesSection(uiState, viewModel)
                     SettingsSection.CORE_MANAGEMENT -> CoreManagementSection(uiState, viewModel)
                     SettingsSection.CORE_OPTIONS -> CoreOptionsSection(uiState, viewModel)
                     SettingsSection.BIOS -> BiosSection(uiState, viewModel)
@@ -1481,6 +1483,7 @@ private fun settingsSectionTitle(uiState: SettingsUiState): String = when (uiSta
     }
     SettingsSection.BUILTIN_VIDEO -> stringResource(R.string.settings_shell_header_builtin_video)
     SettingsSection.BUILTIN_CONTROLS -> stringResource(R.string.settings_shell_header_builtin_controls)
+    SettingsSection.BUILTIN_SAVES -> stringResource(R.string.settings_shell_header_builtin_saves)
     SettingsSection.CORE_MANAGEMENT -> stringResource(R.string.settings_shell_header_core_management)
     SettingsSection.CORE_OPTIONS -> stringResource(R.string.settings_shell_header_core_options)
     SettingsSection.BIOS -> stringResource(R.string.settings_shell_header_bios)
@@ -1805,6 +1808,7 @@ private fun SettingsFooter(
     val updateHint = stringResource(R.string.settings_shell_footer_update)
     val resetBuiltinVideoOverrideHint = stringResource(R.string.settings_shell_footer_reset_builtinvideo_override)
     val resetBuiltinControlsOverrideHint = stringResource(R.string.settings_shell_footer_reset_builtincontrols_override)
+    val resetBuiltinSavesOverrideHint = stringResource(R.string.settings_shell_footer_reset_builtinsaves_override)
     val backHint = stringResource(R.string.settings_shell_footer_back)
     val unassignShortcutHint = stringResource(R.string.settings_shell_footer_unassign_shortcut)
 
@@ -1839,14 +1843,16 @@ private fun SettingsFooter(
             }
             add(InputButton.SELECT to addShaderStackHint)
         }
-        if ((uiState.currentSection == SettingsSection.BUILTIN_VIDEO ||
-            uiState.currentSection == SettingsSection.BUILTIN_CONTROLS) &&
+        if (uiState.currentSection in BUILTIN_PLATFORM_CONTEXT_SECTIONS &&
             uiState.builtinVideo.availablePlatforms.isNotEmpty()) {
             add(InputButton.LB_RB to platformBuiltinHint)
         }
-        if (uiState.currentSection == SettingsSection.BUILTIN_VIDEO &&
-            focusedBuiltinFolderRow(uiState)?.resettable == true) {
-            add(InputButton.Y to resetToDefaultBuiltinVideoHint)
+        if (uiState.currentSection == SettingsSection.BUILTIN_SAVES) {
+            if (focusedBuiltinFolderRow(uiState)?.resettable == true) {
+                add(InputButton.Y to resetToDefaultBuiltinVideoHint)
+            } else if (builtinSavesFocusedOverrideResettable(uiState)) {
+                add(InputButton.Y to resetBuiltinSavesOverrideHint)
+            }
         }
         if (customFrameFocused) {
             add(InputButton.Y to removeFrameHint)
@@ -1987,7 +1993,8 @@ private fun SettingsFooter(
             }
             val aLabel = when (focusedItem) {
                 is PlatformDetailItem.SyncToggle, is PlatformDetailItem.LegacyMode -> toggleLabelHint
-                is PlatformDetailItem.BuiltinVideo, is PlatformDetailItem.BuiltinControls, is PlatformDetailItem.BuiltinCoreOptions -> openLabelHint
+                is PlatformDetailItem.BuiltinVideo, is PlatformDetailItem.BuiltinControls,
+                is PlatformDetailItem.BuiltinSaves, is PlatformDetailItem.BuiltinCoreOptions -> openLabelHint
                 else -> selectLabelHint
             }
             add(InputButton.A to aLabel)
@@ -2023,7 +2030,21 @@ private fun SettingsFooter(
                 }
             }
         }
-        if (uiState.currentSection == SettingsSection.BUILTIN_VIDEO && !uiState.builtinVideo.isGlobalContext) {
+        val focusedGraphicsRow = if (uiState.currentSection == SettingsSection.BUILTIN_VIDEO) {
+            com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowAtFocusIndex(
+                uiState.focusedIndex, uiState.builtinVideo
+            )
+        } else {
+            null
+        }
+        if (focusedGraphicsRow != null && !uiState.builtinVideo.isGlobalContext &&
+            com.nendo.argosy.ui.screens.settings.sections.builtinGraphicsRowHasOverride(focusedGraphicsRow, uiState)
+        ) {
+            add(InputButton.Y to resetBuiltinVideoOverrideHint)
+        }
+        if (uiState.currentSection == SettingsSection.BUILTIN_VIDEO && !uiState.builtinVideo.isGlobalContext &&
+            focusedGraphicsRow == null
+        ) {
             val platformContext = uiState.builtinVideo.currentPlatformContext
             val platformSettings = platformContext?.let { uiState.platformLibretro.platformSettings[it.platformId] }
             val currentSetting = com.nendo.argosy.ui.screens.settings.sections.builtinVideoItemAtFocusIndex(

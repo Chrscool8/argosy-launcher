@@ -57,6 +57,16 @@
     <string name="settings_shell_coremanagement_download_required_desc">需要下载</string>
     <string name="settings_shell_coremanagement_netplay_tag">联机对战</string>
     <string name="settings_shell_coremanagement_update_tag">更新</string>
+    <plurals name="settings_shell_coremanagement_update_all_title">
+        <item quantity="other">更新全部 %d 个核心</item>
+    </plurals>
+    <string name="settings_shell_coremanagement_update_all_subtitle">下载每个待更新核心的最新版本</string>
+    <string name="settings_shell_coremanagement_update_all_starting">正在开始&#8230;</string>
+    <string name="settings_shell_coremanagement_update_all_progress">正在更新%1$s (%2$d/%3$d)</string>
+    <plurals name="settings_shell_coremanagement_update_all_failed">
+        <item quantity="other">%d 个核心更新失败</item>
+    </plurals>
+    <string name="settings_shell_coremanagement_update_builds">%1$s：已安装 %2$s -> 可用 %3$s</string>
 
     <!-- ===== BuiltinVideoSection: per-platform save/state path rows ===== -->
 
@@ -109,6 +119,7 @@
     <string name="settings_shell_header_platform_detail_fallback">平台</string>
     <string name="settings_shell_header_builtin_video">内置音视频与性能</string>
     <string name="settings_shell_header_builtin_controls">内置控制</string>
+    <string name="settings_shell_header_builtin_saves">内置存档</string>
     <string name="settings_shell_header_core_management">管理核心</string>
     <string name="settings_shell_header_core_options">核心选项</string>
     <string name="settings_shell_header_bios">BIOS文件</string>
@@ -328,6 +339,7 @@
     <string name="settings_shell_footer_update">更新</string>
     <string name="settings_shell_footer_reset_builtinvideo_override">重置</string>
     <string name="settings_shell_footer_reset_builtincontrols_override">重置</string>
+    <string name="settings_shell_footer_reset_builtinsaves_override">重置</string>
     <string name="settings_shell_footer_back">返回</string>
     <string name="settings_shell_footer_unassign_shortcut">取消分配</string>
 
@@ -416,6 +428,15 @@
     <string name="settings_shell_router_core_downloaded_subtitle">核心现已可用</string>
     <string name="settings_shell_router_core_download_failed_title">下载失败</string>
     <string name="settings_shell_router_core_download_failed_fallback">未知错误</string>
+    <string name="settings_shell_router_cannot_update_all_offline">离线状态下无法更新核心</string>
+    <string name="settings_shell_router_cores_updating_title">正在更新核心</string>
+    <plurals name="settings_shell_router_cores_updated_title">
+        <item quantity="other">已更新 %d 个核心</item>
+    </plurals>
+    <plurals name="settings_shell_router_cores_update_failed_title">
+        <item quantity="other">%d 个核心更新失败</item>
+    </plurals>
+    <string name="settings_shell_router_cores_update_error_title">核心更新已中止</string>
 
     <!-- ===== Routers: SettingsAboutRouter ===== -->
 

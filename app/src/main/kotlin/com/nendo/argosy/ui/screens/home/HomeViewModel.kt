@@ -1721,7 +1721,7 @@ class HomeViewModel @Inject constructor(
 
     override fun openAppDrawer() {
         if (_uiState.value.appDrawer != null) return
-        _uiState.update { it.copy(appDrawer = AppDrawerState()) }
+        _uiState.update { it.copy(appDrawer = AppDrawerState(), appBarToolsOpen = false) }
         viewModelScope.launch {
             val apps = appsRepository.getInstalledApps()
                 .map { com.nendo.argosy.ui.components.AppDrawerEntry(it.packageName, it.label) }

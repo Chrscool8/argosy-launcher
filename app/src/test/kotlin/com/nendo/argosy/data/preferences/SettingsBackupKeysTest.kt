@@ -44,11 +44,11 @@ class SettingsBackupKeysTest {
     )
 
     private val oneShotAndVersionMarkers = setOf(
-        "builtin_migration_v2", "first_run_complete", "save_sync_local_rekey_done",
+        "builtin_migration_v2", "builtin_ps2_standalone_pin_done", "first_run_complete", "save_sync_local_rekey_done",
         "save_path_cache_purged", "per_account_prefs_adopted_by", "last_seen_version",
         "last_integrity_check_time", "romm_play_session_backfill_done",
         "sibling_split_repair_finished", "sibling_pick_seeded_owners", "sibling_full_pass_done",
-        "variant_file_cleanup_done", "sibling_config_carry_over_done"
+        "variant_file_cleanup_done", "sibling_config_carry_over_done", "save_migration_notices_shown"
     )
 
     private val liveSessionState = setOf(
@@ -78,7 +78,7 @@ class SettingsBackupKeysTest {
         "ambient_led_screen_enabled", "ambient_led_transition_ms", "display_role_override",
         "dual_screen_enabled", "dual_screen_input_focus", "screen_dimmer_enabled",
         "screen_dimmer_level", "screen_dimmer_timeout_minutes", "ui_scale",
-        "builtin_architecture_override", "grip_auto_controllers",
+        "builtin_architecture_override", "builtin_gpu_driver", "grip_auto_controllers",
         "screen_layouts", "lock_screen_art_applied", "live_wallpaper_offered"
     )
 

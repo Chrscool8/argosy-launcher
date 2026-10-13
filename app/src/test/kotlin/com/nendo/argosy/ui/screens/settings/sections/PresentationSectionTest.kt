@@ -76,6 +76,17 @@ class PresentationSectionTest {
     }
 
     @Test
+    fun `background blur shows only under the gradient shade and is not a style change`() {
+        val gradient = PresentationStyle(scrim = PresentationScrim.GRADIENT)
+
+        assertTrue(PresentationItem.BackgroundBlur.visibleWhen(gradient))
+        PresentationScrim.entries.filter { it != PresentationScrim.GRADIENT }.forEach { scrim ->
+            assertFalse(PresentationItem.BackgroundBlur.visibleWhen(PresentationStyle(scrim = scrim)))
+        }
+        assertNull(adjustPresentationItem(gradient, PresentationItem.BackgroundBlur, 1))
+    }
+
+    @Test
     fun `the layout row steps and stops at both ends`() {
         val first = PresentationStyle(layout = PresentationLayout.CINEMATIC)
         val last = PresentationStyle(layout = PresentationLayout.LOGO)

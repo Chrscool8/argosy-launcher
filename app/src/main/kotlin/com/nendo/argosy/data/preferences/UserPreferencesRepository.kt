@@ -125,9 +125,11 @@ class UserPreferencesRepository @Inject constructor(
             homeBackgroundMode = display.homeBackgroundMode,
             homeLayout = display.homeLayout,
             presentationStyle = display.presentationStyle,
+            presentationBackgroundBlur = display.presentationBackgroundBlur,
             useAccentColorFooter = display.useAccentColorFooter,
             compactFooter = display.compactFooter,
             lockScreenArt = display.lockScreenArt,
+            iconPack = display.iconPack,
             hiddenApps = app.hiddenApps,
             secondaryHomeApps = app.secondaryHomeApps,
             visibleSystemApps = app.visibleSystemApps,
@@ -339,9 +341,11 @@ class UserPreferencesRepository @Inject constructor(
         displayPrefs.setHomeLayout(settings)
     suspend fun setPresentationStyle(style: com.nendo.argosy.domain.model.PresentationStyle) =
         displayPrefs.setPresentationStyle(style)
+    suspend fun setPresentationBackgroundBlur(blur: Int) = displayPrefs.setPresentationBackgroundBlur(blur)
     suspend fun setUseAccentColorFooter(use: Boolean) = displayPrefs.setUseAccentColorFooter(use)
     suspend fun setCompactFooter(enabled: Boolean) = displayPrefs.setCompactFooter(enabled)
     suspend fun setLockScreenArt(enabled: Boolean) = displayPrefs.setLockScreenArt(enabled)
+    suspend fun setIconPack(packageName: String?) = displayPrefs.setIconPack(packageName)
     suspend fun setGripAutoControllers(
         controllers: com.nendo.argosy.domain.model.GripAutoControllers
     ) = displayPrefs.setGripAutoControllers(controllers)
@@ -629,6 +633,8 @@ class UserPreferencesRepository @Inject constructor(
     fun getBuiltinCoreSelections(): Flow<Map<String, String>> = builtinPrefs.getBuiltinCoreSelections()
     suspend fun removeBuiltinCoreSelectionsByCore(coreId: String) = builtinPrefs.removeBuiltinCoreSelectionsByCore(coreId)
     fun isBuiltinMigrationComplete(): Flow<Boolean> = builtinPrefs.isBuiltinMigrationComplete()
+    fun isPs2StandalonePinDone(): Flow<Boolean> = builtinPrefs.isPs2StandalonePinDone()
+    suspend fun setPs2StandalonePinDone() = builtinPrefs.setPs2StandalonePinDone()
 
     // --- Session delegates ---
 
@@ -688,6 +694,7 @@ data class BuiltinEmulatorSettings(
     val customSavePath: String? = null,
     val customStatePath: String? = null,
     val architectureOverride: String? = null,
+    val gpuDriver: String = com.nendo.argosy.data.emulator.GpuDriverToken.SYSTEM,
     val showTouchControlsWhenNoGamepad: Boolean = true,
     val touchControlsOpacityLandscape: Float = 0.45f,
     val touchControlsOpacityPortrait: Float = 1.0f,
@@ -872,9 +879,11 @@ data class UserPreferences(
         com.nendo.argosy.domain.model.HomeLayoutSettings(),
     val presentationStyle: com.nendo.argosy.domain.model.PresentationStyle =
         com.nendo.argosy.domain.model.PresentationStyle(),
+    val presentationBackgroundBlur: Int = 0,
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
+    val iconPack: String? = null,
     val fileLoggingEnabled: Boolean = false,
     val fileLoggingPath: String? = null,
     val fileLogLevel: LogLevel = LogLevel.INFO,

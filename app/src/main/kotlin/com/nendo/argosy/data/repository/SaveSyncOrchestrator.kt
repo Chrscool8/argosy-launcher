@@ -216,26 +216,14 @@ class SaveSyncOrchestrator @Inject constructor(
         processedWholePaths: MutableSet<String>? = null
     ): RefreshOutcome = withContext(Dispatchers.IO) {
         val channel = channelName ?: SaveSyncApiClient.AUTOSAVE_SLOT_NAME
-        if (STATE_CHANNEL_PATTERN.containsMatchIn(channel)) return@withContext RefreshOutcome.Unchanged
+        if (isStateChannel(channel)) return@withContext RefreshOutcome.Unchanged
         if (game.localPath == null) return@withContext RefreshOutcome.Unchanged
         if (saveCacheDao.getMostRecent(game.id, syncPreferencesRepository.getRommUserId())?.isHardcore == true) {
             Logger.debug(TAG, "[SaveSync] REFRESH gameId=${game.id} | latest cache is hardcore, skipping on-system derivation")
             return@withContext RefreshOutcome.Unchanged
         }
 
-        val client = apiClient.get()
-        val emulatorPackage = emulatorResolver.getEmulatorPackageForGame(game.id, game.platformId, game.platformSlug)
-        val coreName = client.resolveCoreForGame(game, emulatorId)
-        val savePath = when (val lookup = savePathResolver.discoverSavePathChecked(
-            emulatorId = emulatorId,
-            gameTitle = game.title,
-            platformSlug = game.platformSlug,
-            romPath = game.localPath,
-            cachedSaveId = game.saveId ?: game.titleId,
-            coreName = coreName,
-            emulatorPackage = emulatorPackage,
-            gameId = game.id
-        )) {
+        val savePath = when (val lookup = lookupSystemSave(game, emulatorId)) {
             is SaveLookup.Found -> lookup.path
             SaveLookup.Absent -> return@withContext RefreshOutcome.Unchanged
             is SaveLookup.Unreadable -> {
@@ -290,6 +278,22 @@ class SaveSyncOrchestrator @Inject constructor(
         Logger.debug(TAG, "[SaveSync] REFRESH gameId=${game.id} channel=$channel | on-system save newer than anchor=$anchor, caching as dirty")
         if (cacheSystemSave(game.id, emulatorId, savePath, channelName)) RefreshOutcome.Dirtied else RefreshOutcome.Unchanged
     }
+
+    /**
+     * Where [emulatorId] keeps [game]'s save on this device, found, absent or unreadable. A null
+     * [coreName] is resolved the way the launch resolves it.
+     */
+    suspend fun lookupSystemSave(game: GameEntity, emulatorId: String, coreName: String? = null): SaveLookup =
+        savePathResolver.discoverSavePathChecked(
+            emulatorId = emulatorId,
+            gameTitle = game.title,
+            platformSlug = game.platformSlug,
+            romPath = game.localPath,
+            cachedSaveId = game.saveId ?: game.titleId,
+            coreName = coreName ?: apiClient.get().resolveCoreForGame(game, emulatorId),
+            emulatorPackage = emulatorResolver.getEmulatorPackageForGame(game.id, game.platformId, game.platformSlug),
+            gameId = game.id
+        )
 
     private suspend fun scanFolderSave(game: GameEntity, savePath: String): SystemSaveScan? {
         val handler = saveHandlerRegistry.getFolderHandler(game.platformSlug)
@@ -350,7 +354,7 @@ class SaveSyncOrchestrator @Inject constructor(
         ownerUserId: Long?
     ): DiskCheck = withContext(Dispatchers.IO) {
         val channel = channelName ?: SaveSyncApiClient.AUTOSAVE_SLOT_NAME
-        if (STATE_CHANNEL_PATTERN.containsMatchIn(channel) || game.localPath == null) {
+        if (isStateChannel(channel) || game.localPath == null) {
             return@withContext DiskCheck.Untouched
         }
         val active = activeSaveRepository.getActiveRow(game.id)
@@ -358,20 +362,31 @@ class SaveSyncOrchestrator @Inject constructor(
             Logger.debug(TAG, "[SaveSync] DISK gameId=${game.id} | hardcore save in play, leaving the disk to the hardcore gate")
             return@withContext DiskCheck.Untouched
         }
+        if (active != null && active.emulatorId != emulatorId) {
+            Logger.debug(TAG, "[SaveSync] DISK gameId=${game.id} | active cache id=${active.id} belongs to emulator=${active.emulatorId}, not $emulatorId; the cross-emulator migrator owns it")
+            return@withContext DiskCheck.Untouched
+        }
+        reconcileDisk(game, emulatorId, channelName, active, secureSaves, ownerUserId, expectedExtension = null)
+    }
 
+    /**
+     * The disk check against [active] for [emulatorId], whichever emulator wrote [active]. A
+     * non-null [expectedExtension] writes nothing to a save path with another extension.
+     */
+    suspend fun reconcileDisk(
+        game: GameEntity,
+        emulatorId: String,
+        channelName: String?,
+        active: SaveCacheEntity?,
+        secureSaves: Boolean,
+        ownerUserId: Long?,
+        expectedExtension: String?
+    ): DiskCheck = withContext(Dispatchers.IO) {
+        val channel = channelName ?: SaveSyncApiClient.AUTOSAVE_SLOT_NAME
         val client = apiClient.get()
         val coreName = client.resolveCoreForGame(game, emulatorId)
         val cacheManager = saveCacheManager.get()
-        val savePath = when (val lookup = savePathResolver.discoverSavePathChecked(
-            emulatorId = emulatorId,
-            gameTitle = game.title,
-            platformSlug = game.platformSlug,
-            romPath = game.localPath,
-            cachedSaveId = game.saveId ?: game.titleId,
-            coreName = coreName,
-            emulatorPackage = emulatorResolver.getEmulatorPackageForGame(game.id, game.platformId, game.platformSlug),
-            gameId = game.id
-        )) {
+        val savePath = when (val lookup = lookupSystemSave(game, emulatorId, coreName)) {
             is SaveLookup.Found -> lookup.path
             SaveLookup.Absent -> {
                 if (active == null) return@withContext DiskCheck.Untouched
@@ -384,8 +399,9 @@ class SaveSyncOrchestrator @Inject constructor(
                     cachedSaveId = game.saveId ?: game.titleId,
                     gameId = game.id
                 ) ?: return@withContext DiskCheck.Untouched
-                Logger.info(TAG, "[SaveSync] DISK gameId=${game.id} | no save on disk for emulator=$emulatorId, placing active cache id=${active.id} (from emulator=${active.emulatorId}) | path=$target")
-                return@withContext if (cacheManager.restoreSave(active.id, target)) DiskCheck.Restored else DiskCheck.Failed
+                if (!hasExtension(target, expectedExtension)) return@withContext DiskCheck.Failed
+                Logger.info(TAG, "[SaveSync] DISK gameId=${game.id} | no save on disk for emulator=$emulatorId, placing active cache id=${active.id} | path=$target")
+                return@withContext if (cacheManager.restoreSave(active.id, target, emulatorId)) DiskCheck.Restored else DiskCheck.Failed
             }
             is SaveLookup.Unreadable -> {
                 saveAccessNotices.record(lookup.dirPath, emulatorId)
@@ -425,6 +441,7 @@ class SaveSyncOrchestrator @Inject constructor(
             return@withContext DiskCheck.Adopted
         }
 
+        if (!hasExtension(savePath, expectedExtension)) return@withContext DiskCheck.Failed
         Logger.info(TAG, "[SaveSync] DISK gameId=${game.id} | disk differs from active cache id=${active.id}, restoring it (Secure Saves on) | path=$savePath")
         withContext(NonCancellable) {
             val rollbackId = when (val rollback = cacheManager.cacheAsRollback(game.id, emulatorId, savePath)) {
@@ -434,9 +451,9 @@ class SaveSyncOrchestrator @Inject constructor(
             }
             val roots = cacheManager.archiveRootNames(active.id)
             val placed = client.clearSavesBeforeRestore(savePath, game.platformSlug, game.saveId ?: game.titleId, roots) &&
-                cacheManager.restoreSave(active.id, savePath)
+                cacheManager.restoreSave(active.id, savePath, emulatorId)
             if (!placed) {
-                val putBack = cacheManager.restoreSave(rollbackId, savePath)
+                val putBack = cacheManager.restoreSave(rollbackId, savePath, emulatorId)
                 Logger.error(TAG, "[SaveSync] DISK gameId=${game.id} | restore of cache id=${active.id} failed; disk save put back from rollback id=$rollbackId ok=$putBack")
                 return@withContext DiskCheck.Failed
             }
@@ -446,6 +463,15 @@ class SaveSyncOrchestrator @Inject constructor(
             }
             DiskCheck.Restored
         }
+    }
+
+    private fun hasExtension(path: String, expectedExtension: String?): Boolean {
+        if (expectedExtension == null) return true
+        val matches = File(path).extension.equals(expectedExtension, ignoreCase = true)
+        if (!matches) {
+            Logger.info(TAG, "[SaveSync] DISK | save path $path is not a .$expectedExtension file, writing nothing")
+        }
+        return matches
     }
 
     private suspend fun cacheSystemSave(
@@ -699,5 +725,7 @@ class SaveSyncOrchestrator @Inject constructor(
     companion object {
         private const val TAG = "SaveSyncOrchestrator"
         private val STATE_CHANNEL_PATTERN = Regex("""^state_""", RegexOption.IGNORE_CASE)
+
+        fun isStateChannel(channel: String): Boolean = STATE_CHANNEL_PATTERN.containsMatchIn(channel)
     }
 }

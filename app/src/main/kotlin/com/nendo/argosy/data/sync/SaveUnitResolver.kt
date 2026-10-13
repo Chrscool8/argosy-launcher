@@ -6,6 +6,7 @@ import com.nendo.argosy.data.local.dao.EmulatorConfigDao
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.storage.FileAccessLayer
 import com.nendo.argosy.data.sync.platform.PlatformSaveHandlerRegistry
+import com.nendo.argosy.data.sync.platform.SigilSaveHandler
 import com.nendo.argosy.libretro.coreoptions.CoreOptionResolver
 import com.nendo.argosy.util.Logger
 import com.nendo.sigil.Sigil
@@ -89,20 +90,21 @@ class SaveUnitResolver @Inject constructor(
         hash: Boolean
     ): ResolvedSaveUnit? = withContext(Dispatchers.IO) {
         if (fal.exists(root) && !fal.isDirectory(root)) return@withContext null
-        val listing = if (fal.exists(root)) listRoot(root, layout) else emptyList()
+        val sigilLayout = SigilSaveHandler.libretroLayoutName(layout)
+        val listing = if (fal.exists(root)) listRoot(root, sigilLayout) else emptyList()
         val options = optionsFor(layout, game?.id)
         val identity = persisted(platformSlug, game, game?.let { cartFeatureScanner.featuresFor(it) } ?: 0)
         val unit = runCatching {
-            val located = Sigil.locateSaves(identity, layout, contentName, listing = listing, options = options)
+            val located = Sigil.locateSaves(identity, sigilLayout, contentName, listing = listing, options = options)
             if (hash) Sigil.hashSaves(located, root, FalSigilFileAccess(fal)) else located
         }.getOrElse { return@withContext null }
         Logger.debug(
             TAG,
-            "[SaveSync] UNIT | root=$root layout=$layout content=$contentName shape=${unit.shape} " +
+            "[SaveSync] UNIT | root=$root layout=$sigilLayout content=$contentName shape=${unit.shape} " +
                 "members=${unit.members.map { it.path }} expected=${unit.expected.map { it.path }} " +
                 "unkeyed=${unit.unkeyed} hash=${unit.contentHash}"
         )
-        ResolvedSaveUnit(root, layout, unit)
+        ResolvedSaveUnit(root, sigilLayout, unit)
     }
 
     /**
@@ -136,13 +138,14 @@ class SaveUnitResolver @Inject constructor(
         game: GameEntity?,
         options: Map<String, String>
     ): Map<String, SigilSaveMember> {
-        val subdirs = Sigil.layoutSubdirs(layout)
+        val sigilLayout = SigilSaveHandler.libretroLayoutName(layout)
+        val subdirs = Sigil.layoutSubdirs(sigilLayout)
         val candidates = entries.flatMap { entry ->
             listOf(entry) + subdirs.map { "$it/$entry" }
         }
         val identity = persisted(platformSlug, game, game?.saveFeatures ?: 0)
         val unit = runCatching {
-            Sigil.locateSaves(identity, layout, contentName, listing = candidates, options = options)
+            Sigil.locateSaves(identity, sigilLayout, contentName, listing = candidates, options = options)
         }.getOrElse { return emptyMap() }
         return entries.mapNotNull { entry -> unit.members.firstOrNull { it.entry == entry }?.let { entry to it } }.toMap()
     }

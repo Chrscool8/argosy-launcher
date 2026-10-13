@@ -80,6 +80,18 @@
     <string name="sync_session_save_upload_failed">Ошибка отправки</string>
     <string name="sync_session_save_upload_failed_subtitle">%1$s: %2$s</string>
     <string name="sync_session_save_upload_failed_name_fallback">Сохранение</string>
+    <string name="sync_migration_refused_title">Не удалось перенести сохранение %1$s</string>
+    <string name="sync_migration_refused_no_route">Argosy не умеет преобразовывать сохранения между этими эмуляторами</string>
+    <string name="sync_migration_refused_unreadable">Папка сохранений эмулятора недоступна для чтения</string>
+    <string name="sync_migration_refused_backup_failed">Не удалось сначала сделать копию уже имеющегося сохранения</string>
+    <string name="sync_migration_refused_conflict">Файлы сохранения изменились во время записи</string>
+    <string name="sync_migration_refused_no_space">Карта памяти заполнена</string>
+    <string name="sync_migration_refused_no_target">У эмулятора пока нет места для этого сохранения</string>
+    <string name="sync_migration_refused_ambiguous">Это сохранение может принять больше одной карты памяти или профиля</string>
+    <string name="sync_migration_refused_damaged">Файл сохранения в папке эмулятора повреждён</string>
+    <string name="sync_migration_refused_unsupported_format">Формат этого сохранения нельзя преобразовать</string>
+    <string name="sync_migration_refused_exists">В папке сохранений эмулятора нет свободного имени для этого сохранения</string>
+    <string name="sync_migration_refused_io">Не удалось записать файлы сохранения</string>
 
     <plurals name="sync_conflict_pending_title">
         <item quantity="one">%1$d сохранение требует вашего внимания</item>

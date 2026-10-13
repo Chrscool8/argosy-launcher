@@ -4197,6 +4197,20 @@ object Migration_208_209 : Migration(208, 209) {
     }
 }
 
+object Migration_209_210 : Migration(209, 210) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `platform_libretro_settings` ADD COLUMN `graphicsApi` TEXT")
+        db.execSQL("ALTER TABLE `platform_libretro_settings` ADD COLUMN `gpuDriver` TEXT")
+        db.execSQL("ALTER TABLE `emulator_configs` ADD COLUMN `gpuDriver` TEXT")
+    }
+}
+
+object Migration_210_211 : Migration(210, 211) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `emulator_configs` ADD COLUMN `graphicsBackend` TEXT")
+    }
+}
+
 object Migration_203_204 : Migration(203, 204) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(

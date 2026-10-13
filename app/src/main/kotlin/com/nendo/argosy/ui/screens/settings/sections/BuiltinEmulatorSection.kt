@@ -31,6 +31,7 @@ internal enum class BuiltinEmulatorItem {
     ARCHITECTURE,
     VIDEO,
     CONTROLS,
+    SAVES,
     CORE_MANAGEMENT,
     CORE_OPTIONS,
     TWO_COLUMN,
@@ -103,6 +104,17 @@ fun BuiltinEmulatorSection(
                     onClick = {
                         viewModel.setFocusIndex(BuiltinEmulatorItem.CONTROLS.focusIndex)
                         viewModel.navigateToBuiltinControls()
+                    }
+                )
+            }
+            item(key = "builtin_saves") {
+                ActionPreference(
+                    title = stringResource(R.string.settings_builtin_saves_title),
+                    subtitle = stringResource(R.string.settings_builtin_saves_subtitle),
+                    isFocused = uiState.focusedIndex == BuiltinEmulatorItem.SAVES.focusIndex,
+                    onClick = {
+                        viewModel.setFocusIndex(BuiltinEmulatorItem.SAVES.focusIndex)
+                        viewModel.navigateToBuiltinSaves()
                     }
                 )
             }

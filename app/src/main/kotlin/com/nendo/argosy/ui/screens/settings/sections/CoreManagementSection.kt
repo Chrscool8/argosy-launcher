@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,13 +32,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nendo.argosy.R
+import com.nendo.argosy.ui.components.ActionPreference
 import com.nendo.argosy.ui.components.FocusedScroll
 import com.nendo.argosy.ui.theme.LocalLauncherTheme
 import com.nendo.argosy.ui.screens.settings.CoreChipState
+import com.nendo.argosy.ui.screens.settings.CoreManagementState
+import com.nendo.argosy.ui.screens.settings.CoreUpdateBuilds
 import com.nendo.argosy.ui.screens.settings.PlatformCoreRow
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
@@ -46,17 +52,28 @@ import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
 import com.nendo.argosy.ui.theme.generated.ColorTokens
 import com.nendo.argosy.ui.util.clickableNoFocus
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.format.FormatStyle
+import java.util.Locale
 
 internal sealed class CoreManagementItem(val key: String) {
-    val isFocusable: Boolean get() = this is Platform
+    val isFocusable: Boolean get() = this !is Header
 
+    data object UpdateAll : CoreManagementItem("update_all")
     data object Header : CoreManagementItem("header")
     data class Platform(val row: PlatformCoreRow) : CoreManagementItem(row.platformSlug)
 }
 
-private fun buildCoreManagementItems(platforms: List<PlatformCoreRow>): List<CoreManagementItem> =
+private fun buildCoreManagementItems(
+    platforms: List<PlatformCoreRow>,
+    showUpdateAll: Boolean
+): List<CoreManagementItem> =
     buildList {
-        add(CoreManagementItem.Header)
+        if (showUpdateAll) add(CoreManagementItem.UpdateAll)
+        if (platforms.isNotEmpty()) add(CoreManagementItem.Header)
         for (platform in platforms) {
             add(CoreManagementItem.Platform(platform))
         }
@@ -72,27 +89,33 @@ private fun createCoreManagementLayout(items: List<CoreManagementItem>) =
 internal data class CoreManagementLayoutInfo(
     val layout: SettingsLayout<CoreManagementItem, Unit>,
     val items: List<CoreManagementItem>
-)
+) {
+    fun focusIndexOfKey(key: String): Int? =
+        layout.focusableItems(Unit).indexOfFirst { it.key == key }.takeIf { it >= 0 }
+}
 
 internal fun createCoreManagementLayoutInfo(
-    platforms: List<PlatformCoreRow>
+    platforms: List<PlatformCoreRow>,
+    showUpdateAll: Boolean
 ): CoreManagementLayoutInfo {
-    val items = buildCoreManagementItems(platforms)
+    val items = buildCoreManagementItems(platforms, showUpdateAll)
     return CoreManagementLayoutInfo(createCoreManagementLayout(items), items)
 }
 
-internal fun coreManagementMaxFocusIndex(platforms: List<PlatformCoreRow>): Int {
-    val items = buildCoreManagementItems(platforms)
-    return createCoreManagementLayout(items).maxFocusIndex(Unit)
-}
+internal fun createCoreManagementLayoutInfo(state: CoreManagementState): CoreManagementLayoutInfo =
+    createCoreManagementLayoutInfo(state.platforms, state.showUpdateAll)
+
+internal fun coreManagementMaxFocusIndex(state: CoreManagementState): Int =
+    createCoreManagementLayoutInfo(state).layout.maxFocusIndex(Unit)
 
 internal fun coreManagementItemAtFocusIndex(
     index: Int,
-    platforms: List<PlatformCoreRow>
-): CoreManagementItem? {
-    val items = buildCoreManagementItems(platforms)
-    return createCoreManagementLayout(items).itemAtFocusIndex(index, Unit)
-}
+    state: CoreManagementState
+): CoreManagementItem? =
+    createCoreManagementLayoutInfo(state).layout.itemAtFocusIndex(index, Unit)
+
+internal fun coreManagementFocusedPlatform(state: CoreManagementState): PlatformCoreRow? =
+    (coreManagementItemAtFocusIndex(state.focusedRowIndex, state) as? CoreManagementItem.Platform)?.row
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -103,16 +126,16 @@ fun CoreManagementSection(
     val listState = rememberLazyListState()
     val coreState = uiState.coreManagement
 
-    val layoutInfo = remember(coreState.platforms) {
-        createCoreManagementLayoutInfo(coreState.platforms)
+    val layoutInfo = remember(coreState.platforms, coreState.showUpdateAll) {
+        createCoreManagementLayoutInfo(coreState.platforms, coreState.showUpdateAll)
     }
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = layoutInfo.layout.focusToListIndex(coreState.focusedPlatformIndex, Unit)
+        focusedIndex = layoutInfo.layout.focusToListIndex(coreState.focusedRowIndex, Unit)
     )
 
-    if (coreState.platforms.isEmpty()) {
+    if (coreState.platforms.isEmpty() && !coreState.showUpdateAll) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -137,6 +160,13 @@ fun CoreManagementSection(
     ) {
         items(visibleItems.size, key = { visibleItems[it].key }) { index ->
             when (val item = visibleItems[index]) {
+                CoreManagementItem.UpdateAll -> {
+                    UpdateAllCoresRow(
+                        coreState = coreState,
+                        isFocused = layoutInfo.layout.focusIndexOf(item, Unit) == coreState.focusedRowIndex,
+                        onClick = { viewModel.updateAllCores() }
+                    )
+                }
                 CoreManagementItem.Header -> {
                     Text(
                         text = stringResource(R.string.settings_shell_coremanagement_header),
@@ -147,7 +177,7 @@ fun CoreManagementSection(
                 }
                 is CoreManagementItem.Platform -> {
                     val platformFocusIndex = layoutInfo.layout.focusIndexOf(item, Unit)
-                    val isPlatformFocused = platformFocusIndex == coreState.focusedPlatformIndex
+                    val isPlatformFocused = platformFocusIndex == coreState.focusedRowIndex
 
                     PlatformCoreRowItem(
                         platform = item.row,
@@ -218,8 +248,93 @@ private fun PlatformCoreRowItem(
                 )
             }
         }
+
+        platform.cores.forEach { core ->
+            val builds = core.pendingUpdate
+            if (core.isInstalled && builds != null) {
+                CoreUpdateBuildsLine(coreName = core.displayName, builds = builds)
+            }
+        }
     }
 }
+
+@Composable
+private fun CoreUpdateBuildsLine(coreName: String, builds: CoreUpdateBuilds) {
+    val locale = LocalConfiguration.current.locales[0]
+    val installed = remember(builds.installedVersion, locale) {
+        formatCoreBuildStamp(builds.installedVersion, ZoneId.systemDefault(), locale)
+    }
+    val available = remember(builds.latestVersion, locale) {
+        formatCoreBuildStamp(builds.latestVersion, ZoneId.systemDefault(), locale)
+    }
+    Text(
+        text = stringResource(
+            R.string.settings_shell_coremanagement_update_builds,
+            coreName,
+            installed,
+            available
+        ),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = Dimens.spacingXs)
+    )
+}
+
+@Composable
+private fun UpdateAllCoresRow(
+    coreState: CoreManagementState,
+    isFocused: Boolean,
+    onClick: () -> Unit
+) {
+    val progress = coreState.bulkUpdate
+    val currentCoreName = progress?.coreName
+    val title = pluralStringResource(
+        R.plurals.settings_shell_coremanagement_update_all_title,
+        coreState.pendingUpdateCount,
+        coreState.pendingUpdateCount
+    )
+    val subtitle = when {
+        progress != null && currentCoreName != null -> stringResource(
+            R.string.settings_shell_coremanagement_update_all_progress,
+            currentCoreName,
+            progress.position,
+            progress.total
+        )
+        progress != null -> stringResource(R.string.settings_shell_coremanagement_update_all_starting)
+        coreState.bulkUpdateFailedCount > 0 -> pluralStringResource(
+            R.plurals.settings_shell_coremanagement_update_all_failed,
+            coreState.bulkUpdateFailedCount,
+            coreState.bulkUpdateFailedCount
+        )
+        else -> stringResource(R.string.settings_shell_coremanagement_update_all_subtitle)
+    }
+    ActionPreference(
+        title = title,
+        subtitle = subtitle,
+        isFocused = isFocused,
+        icon = Icons.Default.Sync,
+        iconTint = if (progress == null && coreState.bulkUpdateFailedCount > 0) {
+            LocalArgosyTheme.current.destructive
+        } else {
+            null
+        },
+        isEnabled = progress == null,
+        spinIcon = progress != null,
+        onClick = onClick
+    )
+}
+
+internal fun formatCoreBuildStamp(raw: String, zone: ZoneId, locale: Locale): String =
+    try {
+        ZonedDateTime.parse(raw, DateTimeFormatter.RFC_1123_DATE_TIME)
+            .withZoneSameInstant(zone)
+            .format(
+                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+                    .withLocale(locale)
+            )
+    } catch (_: DateTimeParseException) {
+        raw
+    }
 
 @Composable
 private fun CoreChip(

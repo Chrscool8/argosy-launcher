@@ -82,7 +82,7 @@ class RestoreCachedSaveServerCachingTest {
         coEvery { saveSyncRepository.clearSavesBeforeRestore(any(), any(), any(), any()) } returns true
         coEvery { saveSyncRepository.downloadToCache(serverSaveId, gameId, null) } returns downloadedCacheId
         coEvery { saveCacheManager.protectBeforeOverwrite(any(), any(), any()) } returns true
-        coEvery { saveCacheManager.restoreSave(any(), any()) } returns true
+        coEvery { saveCacheManager.restoreSave(any(), any(), any()) } returns true
     }
 
     @Test
@@ -94,7 +94,7 @@ class RestoreCachedSaveServerCachingTest {
             saveSyncRepository.downloadToCache(serverSaveId, gameId, null)
             saveCacheManager.protectBeforeOverwrite(gameId, "vbam", targetPath)
             saveSyncRepository.clearSavesBeforeRestore(targetPath, any(), any(), any())
-            saveCacheManager.restoreSave(downloadedCacheId, targetPath)
+            saveCacheManager.restoreSave(downloadedCacheId, targetPath, "vbam")
             activeSaveRepository.activateCache(gameId, downloadedCacheId)
         }
     }
@@ -111,7 +111,7 @@ class RestoreCachedSaveServerCachingTest {
         )
         coVerify(exactly = 0) { saveCacheManager.protectBeforeOverwrite(any(), any(), any()) }
         coVerify(exactly = 0) { saveSyncRepository.clearSavesBeforeRestore(any(), any(), any(), any()) }
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
     }
 
     @Test
@@ -125,7 +125,7 @@ class RestoreCachedSaveServerCachingTest {
             result
         )
         coVerify(exactly = 0) { saveSyncRepository.clearSavesBeforeRestore(any(), any(), any(), any()) }
-        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any()) }
+        coVerify(exactly = 0) { saveCacheManager.restoreSave(any(), any(), any()) }
     }
 
     @Test
@@ -133,7 +133,7 @@ class RestoreCachedSaveServerCachingTest {
         useCase(localEntry(), gameId, emulatorId = "vbam", syncToServer = false)
 
         coVerify(exactly = 0) { saveSyncRepository.downloadToCache(any(), any(), any()) }
-        coVerify(exactly = 1) { saveCacheManager.restoreSave(localCacheId, targetPath) }
+        coVerify(exactly = 1) { saveCacheManager.restoreSave(localCacheId, targetPath, "vbam") }
         coVerify(exactly = 1) { activeSaveRepository.activateCache(gameId, localCacheId) }
     }
 }

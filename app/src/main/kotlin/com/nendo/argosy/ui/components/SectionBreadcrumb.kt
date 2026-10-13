@@ -83,7 +83,7 @@ fun SectionBreadcrumb(
     val fadeWidth = Dimens.spacingMd
     val uiScale = LocalUiScale.current.scale
     val navigationMaxWidth = ComponentDefaults.FrostedSurface.navigationMaxWidthDp.dp * uiScale
-    val navigationSlotWidth = minimumTouchTarget * uiScale
+    val navigationSlotWidth = minimumTouchTarget
     val navigationHeight = frostedVisualChromeHeight
     val selectedTextStyle = chromeTextStyle(
         MaterialTheme.typography.titleMedium,

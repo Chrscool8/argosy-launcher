@@ -5,10 +5,13 @@ import com.nendo.argosy.data.emulator.SavePathConfig
 import com.nendo.argosy.data.emulator.SavePathRegistry
 import com.nendo.argosy.data.storage.FileAccessLayer
 import com.nendo.argosy.data.sync.SaveArchiver
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -108,6 +111,20 @@ class PlatformSaveHandlerRegistryRoutingTest {
     }
 
     @Test
+    fun `built-in ps2 routes to the unit handler and never to the PS2 folder handler`() {
+        every { sigilHandler.routes(any(), any()) } answers {
+            SigilSaveHandler.layoutFor(firstArg(), secondArg()) != null
+        }
+        val config = SavePathRegistry.getConfigForPlatform("argosy", "ps2")
+        assertNotNull(config)
+
+        val handler = registry.getHandler(config, "ps2", "argosy")
+
+        assertSame(unitHandler, handler)
+        assertNotSame(registry.getFolderHandler("ps2"), handler)
+    }
+
+    @Test
     fun `standalone file save keeps the default handler`() {
         val config = SavePathRegistry.getConfigForPlatform("pizza_boy_gb", "gb")
         val handler = registry.getHandler(config, "gb", "pizza_boy_gb")
@@ -154,6 +171,27 @@ class PlatformSaveHandlerRegistryRoutingTest {
             val config = SavePathRegistry.getConfigForPlatform(emulator, platform)
             assertSame("$emulator on $platform", sigilHandler, registry.getHandler(config, platform, emulator))
         }
+    }
+
+    @Test
+    fun `a game Sigil routes through a standalone route takes the Sigil handler before RomM 5_5`() = runTest {
+        every { sigilHandler.routes(any(), any()) } returns false
+        coEvery { sigilHandler.route(7L, any()) } returns
+            SigilRoute("pcsx2", "/sdcard/NetherSX2/memcards", null, null, libretro = false)
+        val config = SavePathRegistry.getConfigForPlatform("nethersx2", "ps2")
+
+        assertSame(sigilHandler, registry.getHandlerFor(7L, config, "ps2", "nethersx2"))
+        assertSame(registry.getFolderHandler("ps2"), registry.getHandler(config, "ps2", "nethersx2"))
+    }
+
+    @Test
+    fun `a libretro Sigil route keeps the game-agnostic handler`() = runTest {
+        every { sigilHandler.routes(any(), any()) } returns false
+        coEvery { sigilHandler.route(7L, any()) } returns
+            SigilRoute("pcsx2", "/data/system/pcsx2/memcards", null, null, libretro = true)
+        val config = SavePathRegistry.getConfigForPlatform("argosy", "ps2")
+
+        assertSame(registry.getHandler(config, "ps2", "argosy"), registry.getHandlerFor(7L, config, "ps2", "argosy"))
     }
 
     @Test

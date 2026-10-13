@@ -120,6 +120,7 @@ enum class SettingsSection {
     BUILTIN_EMULATOR,
     BUILTIN_VIDEO,
     BUILTIN_CONTROLS,
+    BUILTIN_SAVES,
     SHADER_STACK,
     FRAME_PICKER,
     CORE_MANAGEMENT,
@@ -259,11 +260,14 @@ data class DisplayState(
         com.nendo.argosy.domain.model.HomeLayoutSettings(),
     val presentationStyle: com.nendo.argosy.domain.model.PresentationStyle =
         com.nendo.argosy.domain.model.PresentationStyle(),
+    val presentationBackgroundBlur: Int = 0,
     val box3dCapableGames: Int = 0,
     val libraryBoxArt3d: Boolean = false,
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
+    val iconPack: String? = null,
+    val iconPacks: List<com.nendo.argosy.data.model.IconPack> = emptyList(),
     val boxArtShape: BoxArtShape = BoxArtShape.STANDARD,
     val boxArtCornerRadius: BoxArtCornerRadius = BoxArtCornerRadius.MEDIUM,
     val boxArtBorderThickness: BoxArtBorderThickness = BoxArtBorderThickness.MEDIUM,
@@ -326,6 +330,12 @@ data class DisplayState(
 ) {
     val secondaryDisplayUnsupported: Boolean
         get() = dualScreenEnabled && hasPhysicalSecondaryDisplay && !hasSecondaryDisplay
+
+    val iconPackOptions: List<String?>
+        get() = listOf<String?>(null) + iconPacks.map { it.packageName }
+
+    val selectedIconPackIndex: Int
+        get() = iconPackOptions.indexOf(iconPack).coerceAtLeast(0)
 }
 
 data class ScreenAssignment(
@@ -671,7 +681,9 @@ data class BuiltinVideoState(
     val isCustomSavePath: Boolean = false,
     val isCustomStatePath: Boolean = false,
     val platformContextIndex: Int = 0,
-    val availablePlatforms: List<PlatformContext> = emptyList()
+    val availablePlatforms: List<PlatformContext> = emptyList(),
+    val gpuDriver: String = com.nendo.argosy.data.emulator.GpuDriverToken.SYSTEM,
+    val graphics: BuiltinGraphicsState = BuiltinGraphicsState()
 ) {
     val canEnableBlackFrameInsertion: Boolean get() = displayRefreshRate >= 120f
     val isGlobalContext: Boolean get() = platformContextIndex == 0
@@ -762,13 +774,26 @@ enum class CoreChipStatus {
     ACTIVE
 }
 
+data class CoreUpdateBuilds(
+    val installedVersion: String,
+    val latestVersion: String
+)
+
 data class CoreChipState(
     val coreId: String,
     val displayName: String,
     val isInstalled: Boolean,
     val isActive: Boolean,
     val netplaySupported: Boolean = false,
-    val updateAvailable: Boolean = false
+    val pendingUpdate: CoreUpdateBuilds? = null
+) {
+    val updateAvailable: Boolean get() = pendingUpdate != null
+}
+
+data class CoreBulkUpdateProgress(
+    val coreName: String? = null,
+    val position: Int = 0,
+    val total: Int = 0
 )
 
 data class PlatformCoreRow(
@@ -782,14 +807,16 @@ data class PlatformCoreRow(
 
 data class CoreManagementState(
     val platforms: List<PlatformCoreRow> = emptyList(),
-    val focusedPlatformIndex: Int = 0,
+    val focusedRowIndex: Int = 0,
     val focusedCoreIndex: Int = 0,
     val isOnline: Boolean = false,
     val isDownloading: Boolean = false,
-    val downloadingCoreId: String? = null
+    val downloadingCoreId: String? = null,
+    val pendingUpdateCount: Int = 0,
+    val bulkUpdate: CoreBulkUpdateProgress? = null,
+    val bulkUpdateFailedCount: Int = 0
 ) {
-    val focusedPlatform: PlatformCoreRow? get() = platforms.getOrNull(focusedPlatformIndex)
-    val focusedCore: CoreChipState? get() = focusedPlatform?.cores?.getOrNull(focusedCoreIndex)
+    val showUpdateAll: Boolean get() = pendingUpdateCount > 0 || bulkUpdate != null
 }
 
 data class CoreOptionsCoreContext(

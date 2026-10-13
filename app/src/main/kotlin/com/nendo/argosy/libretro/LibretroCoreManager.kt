@@ -18,7 +18,6 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
-import java.time.Duration
 import java.time.Instant
 import java.util.zip.ZipInputStream
 import javax.inject.Inject
@@ -119,9 +118,6 @@ class LibretroCoreManager @Inject constructor(
             core.fileName in downloadedFiles || File(nativeLibDir, "lib${core.fileName}").exists()
         }
     }
-
-    suspend fun getCoreIdsWithUpdatesAvailable(): Set<String> =
-        coreVersionDao.getWithUpdatesAvailable().map { it.coreId }.toSet()
 
     fun getMissingCoresForPlatforms(platformSlugs: Set<String>): List<LibretroCoreRegistry.CoreInfo> {
         val neededCores = platformSlugs.mapNotNull { LibretroCoreRegistry.getDefaultCoreForPlatform(it) }
@@ -420,83 +416,69 @@ class LibretroCoreManager @Inject constructor(
 
     fun getCoresDir(): File = downloadedCoresDir
 
-    suspend fun checkAndUpdateCoresIfDue() {
-        val all = coreVersionDao.getAll()
-        if (all.isEmpty()) return
-
-        val lastCheck = all.mapNotNull { it.lastCheckedAt }.maxOrNull()
-        val dayAgo = Instant.now().minus(Duration.ofHours(24))
-        if (lastCheck != null && lastCheck.isAfter(dayAgo)) {
-            Log.d(TAG, "Core update check skipped (last check: $lastCheck)")
-            return
+    suspend fun getPendingCoreUpdates(): List<PendingCoreUpdate> =
+        withContext(Dispatchers.IO) {
+            coreVersionDao.getWithUpdatesAvailable().mapNotNull(::pendingUpdateOf)
         }
 
-        Log.i(TAG, "Checking for core updates...")
-        val outdated = checkForCoreUpdates()
-        if (outdated.isEmpty()) {
-            Log.i(TAG, "All cores up to date")
-            return
-        }
-
-        Log.i(TAG, "${outdated.size} core(s) have updates available, downloading...")
-        val updated = updateInstalledCores()
-        Log.i(TAG, "Updated $updated core(s)")
-    }
-
-    suspend fun checkForCoreUpdates(): List<CoreVersionEntity> {
-        val installed = coreVersionDao.getAll()
-        if (installed.isEmpty()) return emptyList()
-
-        val updated = mutableListOf<CoreVersionEntity>()
-        for (core in installed) {
-            try {
-                val coreInfo = LibretroCoreRegistry.getCoreById(core.coreId) ?: continue
-                val zipUrl = "${LibretroBuildbot.baseUrl}/${coreInfo.fileName}.zip"
-                val latestVersion = headLastModified(zipUrl) ?: continue
-                val needsUpdate = core.installedVersion != latestVersion
-                coreVersionDao.updateVersionCheck(
-                    core.coreId, latestVersion, Instant.now(), needsUpdate
-                )
-                if (needsUpdate) {
-                    updated.add(core.copy(latestVersion = latestVersion, updateAvailable = true))
+    /**
+     * Downloads the latest build of every core [getPendingCoreUpdates] reports, one at a time.
+     * [onCoreStarted] receives each core with its 1-based position and the total before its
+     * download begins.
+     */
+    suspend fun updateInstalledCores(
+        onCoreStarted: (core: LibretroCoreRegistry.CoreInfo, position: Int, total: Int) -> Unit
+    ): CoreBulkUpdateResult {
+        val pending = getPendingCoreUpdates().map { it.coreInfo }
+        val updated = mutableListOf<LibretroCoreRegistry.CoreInfo>()
+        val failed = mutableListOf<LibretroCoreRegistry.CoreInfo>()
+        pending.forEachIndexed { index, coreInfo ->
+            onCoreStarted(coreInfo, index + 1, pending.size)
+            downloadCore(coreInfo).fold(
+                onSuccess = { updated += coreInfo },
+                onFailure = { error ->
+                    Log.w(TAG, "Bulk update failed for ${coreInfo.coreId}: ${error.message}")
+                    failed += coreInfo
                 }
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to check update for ${core.coreId}: ${e.message}")
-            }
+            )
         }
-        return updated
+        return CoreBulkUpdateResult(updated = updated, failed = failed)
     }
 
-    suspend fun updateInstalledCores(): Int {
-        val outdated = coreVersionDao.getWithUpdatesAvailable()
-        var count = 0
-        for (core in outdated) {
-            val coreInfo = LibretroCoreRegistry.getCoreById(core.coreId) ?: continue
-            val result = downloadCore(coreInfo)
-            if (result.isSuccess) count++
-        }
-        return count
-    }
+    companion object {
+        /**
+         * The one rule for whether [latestVersion] is an update over [installedVersion]: both are
+         * known, they differ, and [latestVersion] is not the build the user rolled back from.
+         */
+        fun isUpdateAvailable(
+            installedVersion: String?,
+            latestVersion: String?,
+            blockedVersion: String?
+        ): Boolean =
+            installedVersion != null &&
+                latestVersion != null &&
+                installedVersion != latestVersion &&
+                latestVersion != blockedVersion
 
-    private suspend fun headLastModified(urlString: String): String? = withContext(Dispatchers.IO) {
-        try {
-            val url = URL(urlString)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "HEAD"
-            connection.connectTimeout = 10_000
-            connection.readTimeout = 10_000
-            try {
-                connection.connect()
-                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                    connection.getHeaderField("Last-Modified")
-                } else {
-                    null
-                }
-            } finally {
-                connection.disconnect()
+        fun pendingUpdateOf(row: CoreVersionEntity): PendingCoreUpdate? {
+            val installed = row.installedVersion ?: return null
+            val latest = row.latestVersion ?: return null
+            if (!row.updateAvailable || !isUpdateAvailable(installed, latest, row.blockedVersion)) {
+                return null
             }
-        } catch (e: Exception) {
-            null
+            val coreInfo = LibretroCoreRegistry.getCoreById(row.coreId) ?: return null
+            return PendingCoreUpdate(coreInfo, installedVersion = installed, latestVersion = latest)
         }
     }
 }
+
+data class PendingCoreUpdate(
+    val coreInfo: LibretroCoreRegistry.CoreInfo,
+    val installedVersion: String,
+    val latestVersion: String
+)
+
+data class CoreBulkUpdateResult(
+    val updated: List<LibretroCoreRegistry.CoreInfo>,
+    val failed: List<LibretroCoreRegistry.CoreInfo>
+)

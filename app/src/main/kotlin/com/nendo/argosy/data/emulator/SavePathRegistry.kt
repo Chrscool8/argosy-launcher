@@ -317,6 +317,15 @@ object SavePathRegistry {
             usesFolderBasedSaves = true,
             usesPackageTemplate = true
         ),
+        "eden_duo" to SavePathConfig(
+            emulatorId = "eden_duo",
+            defaultPaths = listOf(
+                "{extStorage}/Android/data/{package}/files/nand/user/save"
+            ),
+            saveExtensions = listOf("*"),
+            usesFolderBasedSaves = true,
+            usesPackageTemplate = true
+        ),
         "lemon" to SavePathConfig(
             emulatorId = "lemon",
             defaultPaths = listOf(
@@ -476,12 +485,6 @@ object SavePathRegistry {
             supported = true
         ),
 
-        /**
-         * PPSSPP's Android setup makes the user create or choose a memory stick folder, with its
-         * own `Android/data` directory offered only as "skip for now", so the shared `PSP` folder
-         * is the expected layout and the private one the exception. `SavePathAuthority` settles
-         * which one holds saves once, at session start; the order here only breaks ties.
-         */
         "ppsspp" to SavePathConfig(
             emulatorId = "ppsspp",
             defaultPaths = listOf(
@@ -761,6 +764,7 @@ object SavePathRegistry {
         "org.dolphinemu.mmjr" to "dolphin_mmjr",
         "org.dolphinemu.handheld" to "dolphin",
         "com.joeyos.dolphinemu" to "dolphin",
+        "dev.igawa6.edenduo" to "eden_duo",
         "com.retroarch" to "retroarch",
         "com.retroarch.aarch64" to "retroarch_64",
         "com.retroarch.ra32" to "retroarch_32",

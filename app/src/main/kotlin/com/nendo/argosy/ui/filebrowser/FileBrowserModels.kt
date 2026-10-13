@@ -24,6 +24,11 @@ enum class FileBrowserMode {
     FILE_OR_FOLDER_SELECTION
 }
 
+enum class FileBrowserAction {
+    USE_FOLDER,
+    NEW_FOLDER
+}
+
 data class FileFilter(
     val extensions: Set<String> = emptySet(),
     val mimeTypes: Set<String> = emptySet()
@@ -64,5 +69,29 @@ data class FileBrowserState(
     val showCreateFolderDialog: Boolean = false,
     val newFolderName: String = "",
     @StringRes val createFolderErrorRes: Int? = null
-)
+) {
+    val actions: List<FileBrowserAction>
+        get() = when {
+            currentPath.isEmpty() -> emptyList()
+            mode == FileBrowserMode.FOLDER_SELECTION ->
+                listOf(FileBrowserAction.USE_FOLDER, FileBrowserAction.NEW_FOLDER)
+            mode == FileBrowserMode.FILE_OR_FOLDER_SELECTION -> listOf(FileBrowserAction.USE_FOLDER)
+            else -> emptyList()
+        }
+
+    val firstEntryIndex: Int
+        get() = if (entries.isEmpty()) 0 else actions.size
+
+    val focusedAction: FileBrowserAction?
+        get() = actions.getOrNull(fileFocusIndex)
+
+    val focusedEntry: FileEntry?
+        get() = entries.getOrNull(fileFocusIndex - actions.size)
+
+    fun withFileFocusMoved(delta: Int): FileBrowserState {
+        val rowCount = actions.size + entries.size
+        if (rowCount == 0) return this
+        return copy(fileFocusIndex = (fileFocusIndex + delta).mod(rowCount))
+    }
+}
 

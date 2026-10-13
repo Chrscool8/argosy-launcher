@@ -276,8 +276,8 @@
     <!-- Row title. Noun phrase: how much of the accent colour bleeds into panels and cards. -->
     <string name="settings_theme_tint_bleed_title">Surface Tint</string>
 
-    <!-- Row opening the settings for the pattern drawn behind panels. Noun phrase. -->
-    <string name="settings_theme_backdrop_title">Surface Backdrop</string>
+    <!-- Row opening the settings for the pattern drawn behind full screens. Noun phrase. -->
+    <string name="settings_theme_backdrop_title">Backdrop</string>
     <!-- Second line of that row when no pattern is drawn. Adverb. -->
     <string name="settings_theme_backdrop_subtitle_off">Off</string>
     <!-- Row opening the typeface settings. Noun, plural. -->
@@ -285,6 +285,15 @@
     <!-- Second line of that row, standing in for a typeface the user has not changed. Adjective
          used as a noun. -->
     <string name="settings_theme_fonts_subtitle_default">Default</string>
+    <!-- Row title. Noun phrase: a separately installed app that supplies replacement app icons,
+         in the sense used by Android launchers. -->
+    <string name="settings_theme_icon_pack_title">Icon Pack</string>
+    <!-- Second line of that row when at least one icon pack is installed. -->
+    <string name="settings_theme_icon_pack_subtitle">Replaces app icons with an installed icon pack</string>
+    <!-- Second line of that row when no icon pack is installed. -->
+    <string name="settings_theme_icon_pack_subtitle_none">No icon packs installed</string>
+    <!-- Value of that row meaning each app keeps the icon it ships with. Noun phrase. -->
+    <string name="settings_theme_icon_pack_system">System Icons</string>
 
     <!-- ===== Interface section ===== -->
 
@@ -546,6 +555,8 @@
     <string name="settings_presentation_scrim_none">None</string>
     <!-- Row setting how dark that shade is at its darkest, in percent. -->
     <string name="settings_presentation_scrim_strength_title">Shade Strength</string>
+    <!-- Row setting how strongly the game's background art is blurred behind a gradient shade. -->
+    <string name="settings_presentation_background_blur_title">Background Blur</string>
     <!-- Row choosing the artwork drawn beside the game's details. -->
     <string name="settings_presentation_art_title">Cover Art</string>
     <!-- Values of that row: the flat cover, the cover drawn as a 3D box, or the title alone. -->
@@ -1207,8 +1218,8 @@
     <!-- Heading over the rows that add extra drawing on top of that shape. Noun, plural. -->
     <string name="settings_backdrop_section_layers">Layers</string>
 
-    <!-- Row title. Noun phrase: the pattern drawn behind panels. -->
-    <string name="settings_backdrop_enabled_title">Surface Backdrop</string>
+    <!-- Row title. Noun phrase: the pattern drawn behind full screens. -->
+    <string name="settings_backdrop_enabled_title">Backdrop</string>
     <!-- Second line of that row. "Companion screen" is the second display. -->
     <string name="settings_backdrop_enabled_subtitle">Tiled pattern behind menus and the companion screen</string>
 
@@ -2564,12 +2575,17 @@
     <!-- Row opening the picture and sound settings. "A/V" is short for audio and video. -->
     <string name="settings_builtin_video_title">A/V &amp; Performance</string>
     <!-- Second line of that row, listing what is inside. "Shader" is a picture filter. -->
-    <string name="settings_builtin_video_subtitle">Shaders, display, performance, saving</string>
+    <string name="settings_builtin_video_subtitle">Shaders, display, performance</string>
     <!-- Row opening the input settings. Noun, plural. -->
     <string name="settings_builtin_controls_title">Controls</string>
     <!-- Second line of that row, listing what is inside. "Rumble" is controller vibration and a
          "hotkey" a button shortcut. -->
     <string name="settings_builtin_controls_subtitle">Rumble, input mapping, hotkeys</string>
+    <!-- Row opening the save settings. "Saves" is a noun, plural: saved games, not the verb. -->
+    <string name="settings_builtin_saves_title">Saves</string>
+    <!-- Second line of that row, listing what is inside. A "save state" is a snapshot of the
+         running game; "folders" are where save files and save states are stored. -->
+    <string name="settings_builtin_saves_subtitle">Save states, server saves, folders</string>
 
     <!-- Row opening the list of emulation engines. Verb phrase. -->
     <string name="settings_builtin_cores_title">Manage Cores</string>
@@ -3069,11 +3085,15 @@
     <!-- Row opening this console's picture and sound overrides. "A/V" is audio and video. -->
     <string name="settings_platform_builtin_video_title">Built-in A/V &amp; Performance</string>
     <!-- Second line of that row. -->
-    <string name="settings_platform_builtin_video_subtitle">Display, performance, and saving overrides</string>
+    <string name="settings_platform_builtin_video_subtitle">Display and performance overrides</string>
     <!-- Row opening this console's input overrides. Noun, plural. -->
     <string name="settings_platform_builtin_controls_title">Built-in Controls</string>
     <!-- Second line of that row. "Rumble" is controller vibration. -->
     <string name="settings_platform_builtin_controls_subtitle">Rumble, stick mapping overrides</string>
+    <!-- Row opening this console's save overrides. "Saves" is a noun, plural: saved games. -->
+    <string name="settings_platform_builtin_saves_title">Built-in Saves</string>
+    <!-- Second line of that row. A "save state" is a snapshot of the running game. -->
+    <string name="settings_platform_builtin_saves_subtitle">Save state and folder overrides</string>
     <!-- Row opening the engine's own settings. Noun phrase, plural. -->
     <string name="settings_platform_core_options_title">Core Options</string>
     <!-- Second line of that row. -->
@@ -4045,21 +4065,19 @@
 
     <!-- Modal title. Noun phrase: assigning controllers to player ports. -->
     <string name="settings_controller_order_title">Controller Order</string>
-    <!-- Modal subtitle. -->
-    <string name="settings_controller_order_subtitle">Press any button to assign a controller</string>
-    <!-- Footer hint. A commits the current assignments. -->
-    <string name="settings_controller_order_hint_confirm">Confirm</string>
-    <!-- Footer hint. B on an assigned slot clears it; on an empty slot it dismisses the
-         modal. -->
-    <string name="settings_controller_order_hint_unregister_back">Unregister/Back</string>
+    <!-- Modal subtitle. Each connected controller has a row; pressing a button on a controller
+         moves the highlight to that controller's row. -->
+    <string name="settings_controller_order_subtitle">Press a button on any controller to find it.</string>
+    <!-- Footer hint. Removes every controller's player seat. -->
+    <string name="settings_controller_order_hint_clear_all">Clear all</string>
     <!-- Fallback name for a controller that reports no name of its own. -->
     <string name="settings_controller_order_default_name">Controller</string>
-    <!-- Label under a player-port slot. %1$d is the port number (1-4). -->
+    <!-- Seat option for a player port. %1$d is the port number (1-4). -->
     <string name="settings_controller_order_slot_label">P%1$d</string>
-    <!-- Shown under the active slot while waiting for a controller button press. -->
-    <string name="settings_controller_order_slot_pressing">Press...</string>
-    <!-- Shown under a slot with no controller assigned. -->
-    <string name="settings_controller_order_slot_empty">Empty</string>
+    <!-- Seat option meaning the controller plays as no player. -->
+    <string name="settings_controller_order_seat_none">None</string>
+    <!-- Shown in place of the rows when no controller is connected. -->
+    <string name="settings_controller_order_empty">No controllers connected</string>
 
     <!-- ===== Grip controller modal (Settings > components > GripControllerModal) =====
          "Grip" is a controller attachment that clips onto the device; the UI shifts to make
@@ -4932,4 +4950,56 @@
     <string name="settings_play_time_platforms_list_empty">No platform has play yet.</string>
     <string name="settings_play_time_devices_list_empty">No device has play yet.</string>
     <string name="settings_play_time_games_list_empty">No game has play yet.</string>
+
+    <!-- ===== Built-in Video: Graphics rows ===== -->
+
+    <!-- Group heading above the Backend and GPU Driver rows in the built-in emulator video
+         settings. Noun: rendering, not artwork. -->
+    <string name="settings_builtin_graphics_header">Graphics</string>
+    <!-- Row title. Noun: the renderer the emulator core draws with (for example OpenGL or
+         Vulkan). -->
+    <string name="settings_builtin_graphics_backend_title">Backend</string>
+    <!-- Second line of the Backend row when the value is the core's own option. %1$s is the
+         emulator core's name, never translated. The value is shared by every platform that runs
+         that core. -->
+    <string name="settings_builtin_graphics_backend_core_subtitle">%1$s option, shared by every platform using it</string>
+    <!-- Second line of the Backend row when the value is kept for this platform only. %1$s is
+         the emulator core's name, never translated. -->
+    <string name="settings_builtin_graphics_backend_platform_subtitle">Renderer %1$s uses on this platform</string>
+    <!-- Graphics API names. Never translated. -->
+    <string name="settings_builtin_graphics_api_opengl" translatable="false">OpenGL</string>
+    <string name="settings_builtin_graphics_api_vulkan" translatable="false">Vulkan</string>
+    <!-- Row title. Noun phrase: the Vulkan graphics driver the built-in cores load. -->
+    <string name="settings_builtin_gpu_driver_title">GPU Driver</string>
+    <!-- Second line of the GPU Driver row in the global context. -->
+    <string name="settings_builtin_gpu_driver_subtitle">Vulkan driver for built-in cores</string>
+    <!-- Second line of the GPU Driver row when this platform overrides it. %1$s is the global
+         value. -->
+    <string name="settings_builtin_gpu_driver_global_hint">Global: %1$s</string>
+    <!-- Value: the driver that ships with the device. -->
+    <string name="settings_builtin_gpu_driver_system">System Driver</string>
+    <!-- Value when the chosen custom driver is no longer installed, so the device's own driver
+         runs instead. -->
+    <string name="settings_builtin_gpu_driver_missing">Missing Driver (System in Use)</string>
+    <!-- A driver name followed by its version. -->
+    <string name="settings_builtin_gpu_driver_named_version" translatable="false">%1$s (%2$s)</string>
+    <!-- Entry in the GPU Driver list. %1$s is a downloaded driver package file name, never
+         translated. Verb. -->
+    <string name="settings_builtin_gpu_driver_install">Install %1$s</string>
+    <!-- Second line while a driver package unpacks. %1$s is the package file name. -->
+    <string name="settings_builtin_gpu_driver_installing">Installing %1$s...</string>
+    <!-- Notification after a driver installs. %1$s is the driver's name. -->
+    <string name="settings_builtin_gpu_driver_installed">Installed %1$s</string>
+    <!-- Notification when a driver package cannot be unpacked. %1$s is the package file name. -->
+    <string name="settings_builtin_gpu_driver_install_failed">Couldn\'t install %1$s</string>
+    <!-- Second line of a read-only GPU Driver row. %1$s is the emulator core's name, never
+         translated. -->
+    <string name="settings_builtin_gpu_driver_reason_core_unsupported">Not supported by %1$s</string>
+    <!-- Second line of a read-only GPU Driver row for a core that always runs on the device's own
+         Vulkan driver. %1$s is the emulator core's name, never translated. -->
+    <string name="settings_builtin_gpu_driver_reason_core_system_only">%1$s uses the system driver</string>
+    <!-- Second line of a read-only GPU Driver row while the Backend row is not set to Vulkan. -->
+    <string name="settings_builtin_gpu_driver_reason_backend">Applies when Backend is Vulkan</string>
+    <!-- Second line of a read-only GPU Driver row on a device that cannot load custom drivers. -->
+    <string name="settings_builtin_gpu_driver_reason_device">Custom drivers need an Adreno GPU</string>
 </resources>

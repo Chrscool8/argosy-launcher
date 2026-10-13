@@ -95,9 +95,9 @@
     <string name="firstrun_core_prompt_explainer">這些核心可讓您使用內建模擬功能，不需要額外安裝其他模擬器應用程式。</string>
     <string name="firstrun_core_prompt_all_installed">您選擇的平台所需的核心皆已安裝。</string>
     <string name="firstrun_core_prompt_button_download">下載核心</string>
-    <string name="firstrun_core_prompt_button_skip">略過（停用內建模擬器）</string>
+    <string name="firstrun_core_prompt_button_skip">略過</string>
     <string name="firstrun_core_prompt_button_continue">繼續</string>
-    <string name="firstrun_core_prompt_note_skip">略過將停用內建模擬器，您可以稍後於設定中重新啟用並下載核心。</string>
+    <string name="firstrun_core_prompt_note_skip">首次啟動需要某個核心的遊戲時，會自動下載該核心。您也可以稍後於設定中下載核心。</string>
 
     <string name="firstrun_core_download_title">正在下載模擬器核心</string>
     <string name="firstrun_core_download_none_needed">所選平台不需要任何核心</string>

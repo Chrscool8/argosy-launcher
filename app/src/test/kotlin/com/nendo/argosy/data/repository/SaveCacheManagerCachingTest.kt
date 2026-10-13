@@ -337,6 +337,28 @@ class SaveCacheManagerCachingTest {
     }
 
     @Test
+    fun `caching under the legacy default channel anchors the autosave sync row`() = runTest {
+        coEvery { syncPreferencesRepository.isSecureSaves() } returns false
+        val save = File(tempDir, "game.srm").apply { writeBytes(ByteArray(256) { 5 }) }
+        val autosaveRow = com.nendo.argosy.data.local.entity.SaveSyncEntity(
+            id = 42L, gameId = 1L, rommId = 3L, emulatorId = "retroarch",
+            channelName = SaveSyncApiClient.AUTOSAVE_SLOT_NAME,
+            syncStatus = com.nendo.argosy.data.local.entity.SaveSyncEntity.STATUS_SYNCED
+        )
+        coEvery { saveSyncDao.getByGameEmulatorAndChannel(any(), any(), any(), any()) } returns null
+        coEvery {
+            saveSyncDao.getByGameEmulatorAndChannel(1L, "retroarch", SaveSyncApiClient.AUTOSAVE_SLOT_NAME, any())
+        } returns autosaveRow
+
+        manager.cacheCurrentSave(
+            gameId = 1L, emulatorId = "retroarch", savePath = save.absolutePath,
+            channelName = SaveSyncApiClient.DEFAULT_SAVE_NAME,
+        )
+
+        coVerify(exactly = 1) { saveSyncDao.upsert(match { it.id == 42L && it.localUpdatedAt != null }) }
+    }
+
+    @Test
     fun `skipDuplicateCheck bypasses the hash lookup`() = runTest {
         val save = File(tempDir, "game.srm").apply { writeBytes(ByteArray(512)) }
 
@@ -529,7 +551,7 @@ class SaveCacheManagerCachingTest {
         )
         val card = File(tempDir, "GC/USA/Card A").apply { mkdirs() }
 
-        assertTrue(manager.restoreSave(36L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath))
+        assertTrue(manager.restoreSave(36L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath, "argosy"))
         assertEquals(members.map { it.name }.sorted(), card.list()?.sorted())
     }
 
@@ -587,7 +609,7 @@ class SaveCacheManagerCachingTest {
         val card = File(tempDir, "GC/USA/Card A").apply { mkdirs() }
         File(card, "8P-GFZE-f_zero.dat.gci").apply { mkdirs() }.resolve("blocker").writeBytes(byteArrayOf(0))
 
-        assertFalse(manager.restoreSave(37L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath))
+        assertFalse(manager.restoreSave(37L, File(card, "8P-GFZE-fzc.dat.gci").absolutePath, "argosy"))
     }
 
     @Test

@@ -120,9 +120,9 @@
     <string name="firstrun_core_prompt_explainer">ये बिना अलग एमुलेटर ऐप के बिल्ट-इन एमुलेशन को सक्षम करते हैं।</string>
     <string name="firstrun_core_prompt_all_installed">आपके चुने प्लेटफ़ॉर्म के लिए सभी कोर पहले से इंस्टॉल्ड हैं।</string>
     <string name="firstrun_core_prompt_button_download">कोर डाउनलोड करें</string>
-    <string name="firstrun_core_prompt_button_skip">छोड़ें (बिल्ट-इन एमुलेटर बंद करें)</string>
+    <string name="firstrun_core_prompt_button_skip">छोड़ें</string>
     <string name="firstrun_core_prompt_button_continue">जारी रखें</string>
-    <string name="firstrun_core_prompt_note_skip">छोड़ने पर बिल्ट-इन एमुलेटर बंद हो जाता है। आप इसे बाद में सेटिंग्स से फिर से सक्षम कर सकते हैं और कोर डाउनलोड कर सकते हैं।</string>
+    <string name="firstrun_core_prompt_note_skip">हर कोर उस गेम को पहली बार चलाने पर डाउनलोड होता है जिसे उसकी ज़रूरत है। आप बाद में सेटिंग्स से भी कोर डाउनलोड कर सकते हैं।</string>
 
     <!-- ===== Step 9: downloading the cores ===== -->
 

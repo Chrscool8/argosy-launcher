@@ -22,8 +22,8 @@ interface CoreVersionDao {
     @Query("SELECT * FROM core_versions")
     fun observeAll(): Flow<List<CoreVersionEntity>>
 
-    @Query("SELECT COUNT(*) FROM core_versions WHERE updateAvailable = 1")
-    fun observeUpdateCount(): Flow<Int>
+    @Query("SELECT * FROM core_versions WHERE updateAvailable = 1")
+    fun observeWithUpdatesAvailable(): Flow<List<CoreVersionEntity>>
 
     @Upsert
     suspend fun upsert(coreVersion: CoreVersionEntity)

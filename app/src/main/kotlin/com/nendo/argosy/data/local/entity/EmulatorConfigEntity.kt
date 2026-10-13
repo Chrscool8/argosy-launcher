@@ -42,5 +42,7 @@ data class EmulatorConfigEntity(
     val displayTarget: String? = null,
     val savePath: String? = null,
     val selectedMemcardPath: String? = null,
-    val controllerTypes: String? = null
+    val controllerTypes: String? = null,
+    val gpuDriver: String? = null,
+    val graphicsBackend: String? = null
 )

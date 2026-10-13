@@ -930,6 +930,10 @@ private fun GameDetailModals(
             onMemcardClick = viewModel::openPerGameMemcardPicker,
             onCycleDisplayTarget = viewModel::cyclePerGameDisplayTarget,
             onCycleExtension = viewModel::cyclePerGameExtension,
+            onCycleBackend = viewModel::cyclePerGameBackend,
+            onOpenGpuDriverPicker = viewModel::openPerGameGpuDriverPicker,
+            onSelectGpuDriverEntry = viewModel::selectPerGameGpuDriverEntry,
+            onDismissGpuDriverPicker = viewModel::dismissPerGameGpuDriverPicker,
             onPlatformSettings = {
                 viewModel.dismissPerGameSettings()
                 onNavigateToPlatformSettings(game.platformId)

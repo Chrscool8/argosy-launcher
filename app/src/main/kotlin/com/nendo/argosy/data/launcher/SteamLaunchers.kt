@@ -9,7 +9,8 @@ object SteamLaunchers {
         GameHubLiteAntutuLauncher,
         GameHubLiteLudashiLauncher,
         GameHubLitePubgLauncher,
-        GameNativeLauncher
+        GameNativeLauncher,
+        DroidDeckLauncher
     )
 
     private val gameHubVariants: List<SteamLauncher> = listOf(
@@ -37,6 +38,7 @@ object SteamLaunchers {
     sealed class MarkOption(val launcherPackage: String, val displayName: String) {
         object GameNative : MarkOption(GameNativeLauncher.packageName, GameNativeLauncher.displayName)
         class GameHub(launcherPackage: String) : MarkOption(launcherPackage, "GameHub")
+        object DroidDeck : MarkOption(DroidDeckLauncher.packageName, DroidDeckLauncher.displayName)
     }
 
     fun getMarkOptions(context: Context): List<MarkOption> = buildList {
@@ -44,6 +46,7 @@ object SteamLaunchers {
         gameHubVariants.firstOrNull { it.isInstalled(context) }?.let {
             add(MarkOption.GameHub(it.packageName))
         }
+        if (DroidDeckLauncher.isInstalled(context)) add(MarkOption.DroidDeck)
     }
 
     /** Resolve a stored launcher package back to a user-friendly group label. */

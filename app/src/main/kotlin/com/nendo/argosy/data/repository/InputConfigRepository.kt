@@ -66,21 +66,33 @@ class InputConfigRepository @Inject constructor(
     suspend fun getControllerOrder(): List<ControllerOrderEntity> =
         controllerOrderDao.getAll()
 
-    suspend fun assignControllerToPort(port: Int, device: InputDevice) = withContext(Dispatchers.IO) {
-        val controllerId = getControllerId(device)
-        Logger.info(TAG, "Assigning ${device.name} to port $port")
-
-        controllerOrderDao.deleteByControllerId(controllerId)
-
-        controllerOrderDao.upsert(
-            ControllerOrderEntity(
-                port = port,
-                controllerId = controllerId,
-                controllerName = device.name ?: "Unknown Controller",
-                assignedAt = Instant.now()
+    /**
+     * Seats a controller on [port], or unseats it when [port] is null. A controller already on
+     * [port] takes the seat the moved controller left, or no seat if it had none.
+     */
+    suspend fun seatController(controllerId: String, controllerName: String, port: Int?) =
+        withContext(Dispatchers.IO) {
+            val previousPort = controllerOrderDao.getByControllerId(controllerId)?.port
+            if (previousPort == port) return@withContext
+            Logger.info(TAG, "Seating $controllerName on port $port (was $previousPort)")
+            controllerOrderDao.deleteByControllerId(controllerId)
+            if (port == null) return@withContext
+            val displaced = controllerOrderDao.getByPort(port)
+            if (displaced != null) {
+                controllerOrderDao.deleteByPort(port)
+                if (previousPort != null) {
+                    controllerOrderDao.upsert(displaced.copy(port = previousPort, assignedAt = Instant.now()))
+                }
+            }
+            controllerOrderDao.upsert(
+                ControllerOrderEntity(
+                    port = port,
+                    controllerId = controllerId,
+                    controllerName = controllerName,
+                    assignedAt = Instant.now()
+                )
             )
-        )
-    }
+        }
 
     suspend fun clearControllerOrder() = withContext(Dispatchers.IO) {
         Logger.info(TAG, "Clearing all controller assignments")

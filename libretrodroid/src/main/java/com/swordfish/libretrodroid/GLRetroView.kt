@@ -239,6 +239,13 @@ class GLRetroView(
 
     override fun onCreate(owner: LifecycleOwner) = catchExceptions {
         lifecycle = owner.lifecycle
+        LibretroDroid.setVulkanConfig(
+            data.preferVulkan,
+            data.vulkanDriver?.directory,
+            data.vulkanDriver?.libraryName,
+            context.applicationInfo.nativeLibraryDir,
+            context.cacheDir.absolutePath
+        )
         LibretroDroid.create(
             openGLESVersion,
             data.coreFilePath,
@@ -731,10 +738,11 @@ class GLRetroView(
             latch.countDown()
         }
 
-        if (!latch.awaitUninterruptibly(GL_THREAD_OP_TIMEOUT_MS)) {
-            Log.w(TAG_LOG, "runOnGLThread: GL thread did not drain within ${GL_THREAD_OP_TIMEOUT_MS}ms")
+        check(latch.awaitUninterruptibly(GL_THREAD_OP_TIMEOUT_MS)) {
+            "runOnGLThread: GL thread did not drain within ${GL_THREAD_OP_TIMEOUT_MS}ms"
         }
-        return result!!
+        @Suppress("UNCHECKED_CAST")
+        return result as T
     }
 
     private fun runOnGLThreadVoid(block: () -> Unit) {

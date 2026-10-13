@@ -85,13 +85,26 @@ class SaveStateManager(
         return File(savesDir, "$romBaseName.srm")
     }
 
+    @Volatile
     private var writtenSaveBaseline: Map<String, Pair<Long, Long>>? = null
+
+    @Volatile
+    private var coreSaveFiles: List<File> = emptyList()
+
+    /**
+     * Adds [files] the core writes itself, such as a memory card shared by every game, to the
+     * files whose writes count as this game saving. The next check re-seeds its baseline.
+     */
+    fun watchCoreSaveFiles(files: List<File>) {
+        coreSaveFiles = files
+        writtenSaveBaseline = null
+    }
 
     private fun gameSaveFiles(): List<File> {
         val inSavesDir = savesDir.walkTopDown().maxDepth(2)
             .filter { it.isFile && it.name.startsWith(romBaseName) }
             .filterNot { it.extension.lowercase() in IGNORED_SAVE_EXTENSIONS }
-        return (inSavesDir + primarySaveFile).filter { it.isFile }.distinctBy { it.absolutePath }.toList()
+        return (inSavesDir + primarySaveFile + coreSaveFiles).filter { it.isFile }.distinctBy { it.absolutePath }.toList()
     }
 
     private fun fingerprints(): Map<String, Pair<Long, Long>> =
@@ -289,29 +302,7 @@ class SaveStateManager(
         return when (launchMode) {
             LaunchMode.NEW_HARDCORE, LaunchMode.NEW_CASUAL -> {
                 Log.d(TAG, "New game mode - starting fresh (no save)")
-                val sramFile = primarySaveFile
-                val members = saveCacheManager.unitMemberPaths(gameId, EmulatorRegistry.BUILTIN_ID, sramFile.absolutePath)
-                if (sramFile.exists()) {
-                    val result = saveCacheManager.cacheAsRollback(
-                        gameId,
-                        EmulatorRegistry.BUILTIN_ID,
-                        sramFile.absolutePath
-                    )
-                    when (result) {
-                        is SaveCacheManager.CacheResult.Created ->
-                            Log.d(TAG, "Created rollback backup before fresh start")
-                        is SaveCacheManager.CacheResult.Duplicate ->
-                            Log.d(TAG, "Rollback skipped - identical save already cached")
-                        is SaveCacheManager.CacheResult.Failed ->
-                            Log.w(TAG, "Failed to create rollback backup")
-                    }
-                    sramFile.delete()
-                    Log.d(TAG, "Deleted existing save file for fresh start")
-                }
-                members.filter { it != sramFile.absolutePath }.forEach { path ->
-                    val removed = File(path).delete()
-                    Log.d(TAG, "Fresh start removed unit member | path=$path removed=$removed")
-                }
+                clearSaveForFreshStart()
                 deleteAllStates()
                 RestoreResult(null)
             }
@@ -366,15 +357,56 @@ class SaveStateManager(
         Log.i(TAG, "[SRAM] unit members ${if (ok) "placed" else "NOT placed"} | cache=${entity.id}")
     }
 
+    private suspend fun clearSaveForFreshStart() {
+        val sramFile = primarySaveFile
+        val members = saveCacheManager.unitMemberPaths(gameId, EmulatorRegistry.BUILTIN_ID, sramFile.absolutePath)
+        if (sramFile.exists()) {
+            val result = saveCacheManager.cacheAsRollback(
+                gameId,
+                EmulatorRegistry.BUILTIN_ID,
+                sramFile.absolutePath
+            )
+            when (result) {
+                is SaveCacheManager.CacheResult.Created ->
+                    Log.d(TAG, "Created rollback backup before fresh start")
+                is SaveCacheManager.CacheResult.Duplicate ->
+                    Log.d(TAG, "Rollback skipped - identical save already cached")
+                is SaveCacheManager.CacheResult.Failed ->
+                    Log.w(TAG, "Failed to create rollback backup")
+            }
+            sramFile.delete()
+            Log.d(TAG, "Deleted existing save file for fresh start")
+        }
+        members.filter { it != sramFile.absolutePath }.forEach { path ->
+            val removed = File(path).delete()
+            Log.d(TAG, "Fresh start removed unit member | path=$path removed=$removed")
+        }
+    }
+
     private suspend fun restoreResumeSave(activeSave: SaveCacheEntity?): RestoreResult {
+        val chosenChannel = channelName
         val targetSave = if (activeSave != null) {
             Log.d(TAG, "RESUME: Using active save cacheId=${activeSave.id} channel='${activeSave.channelName}'")
             activeSave
+        } else if (chosenChannel != null) {
+            val latestInChannel = saveCacheManager.getMostRecentInChannel(gameId, chosenChannel)
+            if (latestInChannel == null) {
+                Log.d(TAG, "RESUME: Active slot '$chosenChannel' has no saves - starting it blank")
+                clearSaveForFreshStart()
+                return RestoreResult(null)
+            }
+            Log.d(TAG, "RESUME: No active row, using latest in slot '$chosenChannel' cacheId=${latestInChannel.id}")
+            latestInChannel
         } else {
             Log.d(TAG, "RESUME: No active save, looking for most recent save overall")
             saveCacheManager.getMostRecentSave(gameId)
         }
 
+        if (targetSave != null && !isBuiltinSave(targetSave)) {
+            val bytes = primarySaveFile.takeIf { it.exists() }?.readBytes()
+            Log.i(TAG, "RESUME: cache=${targetSave.id} was written by ${targetSave.emulatorId}; using the save the launch placed on disk (${bytes?.size ?: -1} bytes)")
+            return RestoreResult(coreBytes(bytes))
+        }
         if (targetSave != null) {
             var switchToHardcore = false
             if (targetSave.isHardcore) {
@@ -405,6 +437,9 @@ class SaveStateManager(
     }
 
     private fun coreBytes(bytes: ByteArray?): ByteArray? = if (coreOwnsPrimary) null else bytes
+
+    private fun isBuiltinSave(entity: SaveCacheEntity): Boolean =
+        entity.emulatorId == EmulatorRegistry.BUILTIN_ID || entity.emulatorId == EmulatorRegistry.LEGACY_BUILTIN_ID
 
     @Synchronized
     fun saveSram(retroView: GLRetroView) {

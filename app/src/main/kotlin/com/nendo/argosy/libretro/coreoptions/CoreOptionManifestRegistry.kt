@@ -26,6 +26,7 @@ import com.nendo.argosy.libretro.coreoptions.manifests.PcsxRearmedManifest
 import com.nendo.argosy.libretro.coreoptions.manifests.PpssppManifest
 import com.nendo.argosy.libretro.coreoptions.manifests.Snes9xManifest
 import com.nendo.argosy.libretro.coreoptions.manifests.A5200Manifest
+import com.nendo.argosy.libretro.coreoptions.manifests.Armsx2Manifest
 import com.nendo.argosy.libretro.coreoptions.manifests.AzaharManifest
 import com.nendo.argosy.libretro.coreoptions.manifests.BluemxManifest
 import com.nendo.argosy.libretro.coreoptions.manifests.Cap32Manifest
@@ -75,6 +76,7 @@ object CoreOptionManifestRegistry {
         put(MelondsDsManifest.coreId, MelondsDsManifest)
         put(AzaharManifest.coreId, AzaharManifest)
         put(PpssppManifest.coreId, PpssppManifest)
+        put(Armsx2Manifest.coreId, Armsx2Manifest)
         put(MednafenVbManifest.coreId, MednafenVbManifest)
         put(MednafenWswanManifest.coreId, MednafenWswanManifest)
         put(MednafenNgpManifest.coreId, MednafenNgpManifest)

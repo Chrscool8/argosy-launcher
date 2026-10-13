@@ -1,266 +1,157 @@
 package com.nendo.argosy.ui.screens.settings.components
 
-import android.view.InputDevice
 import android.view.KeyEvent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import com.nendo.argosy.ui.util.clickableNoFocus
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Gamepad
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import com.nendo.argosy.R
-import com.nendo.argosy.core.input.actsAsGamepad
-import com.nendo.argosy.data.local.entity.ControllerOrderEntity
+import com.nendo.argosy.core.input.isPhysicalGamepad
+import com.nendo.argosy.libretro.ControllerPortResolver
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.components.Modal
+import com.nendo.argosy.ui.components.animateScrollToItemCentered
 import com.nendo.argosy.ui.input.LocalGamepadInputHandler
+import com.nendo.argosy.ui.primitives.FocusIndicators
+import com.nendo.argosy.ui.primitives.SegmentedControl
+import com.nendo.argosy.ui.primitives.argosyFocusIndicators
+import com.nendo.argosy.ui.primitives.segmentedInlineWidth
 import com.nendo.argosy.ui.theme.Dimens
-import com.nendo.argosy.ui.theme.LocalArgosyTheme
-
-data class AssignedController(
-    val controllerId: String,
-    val controllerName: String,
-    val device: InputDevice
-)
+import com.nendo.argosy.ui.util.clickableNoFocus
 
 @Composable
 fun ControllerOrderModal(
-    existingOrder: List<ControllerOrderEntity>,
-    onAssign: (port: Int, device: InputDevice) -> Unit,
-    onClearAll: () -> Unit,
+    controller: ControllerSeatController,
     onDismiss: () -> Unit
 ) {
-    val assignments = remember {
-        mutableStateMapOf<Int, AssignedController>().apply {
-            existingOrder.forEach { entity ->
-                val device = findDeviceByControllerId(entity.controllerId)
-                if (device != null) {
-                    put(entity.port, AssignedController(
-                        controllerId = entity.controllerId,
-                        controllerName = entity.controllerName,
-                        device = device
-                    ))
-                }
-            }
-        }
-    }
-    var activeSlot by remember { mutableIntStateOf(findFirstEmptySlot(assignments)) }
-
+    val state by controller.state.collectAsState()
     val gamepadInputHandler = LocalGamepadInputHandler.current
-    val defaultControllerName = stringResource(R.string.settings_controller_order_default_name)
+    val currentOnDismiss = rememberUpdatedState(onDismiss)
 
-    DisposableEffect(gamepadInputHandler, defaultControllerName) {
+    DisposableEffect(gamepadInputHandler, controller) {
         val listener: (KeyEvent) -> Boolean = { event ->
             if (event.action == KeyEvent.ACTION_DOWN) {
-                val device = event.device
-                val controllerId = device?.let { getControllerId(it) }
-                val registeredPort = controllerId?.let { id ->
-                    assignments.entries.find { it.value.controllerId == id }?.key
-                }
-
-                when (event.keyCode) {
-                    KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK -> {
-                        if (registeredPort != null) {
-                            assignments.remove(registeredPort)
-                            activeSlot = findFirstEmptySlot(assignments)
-                        } else {
-                            onDismiss()
-                        }
-                    }
-                    KeyEvent.KEYCODE_BUTTON_A -> {
-                        if (assignments.isNotEmpty()) {
-                            onDismiss()
-                        }
-                    }
-                    else -> {
-                        if (registeredPort == null &&
-                            device != null &&
-                            isGamepadDevice(device) &&
-                            isGamepadButton(event.keyCode) &&
-                            activeSlot < 4
-                        ) {
-                            assignments[activeSlot] = AssignedController(
-                                controllerId = controllerId!!,
-                                controllerName = device.name ?: defaultControllerName,
-                                device = device
-                            )
-                            onAssign(activeSlot, device)
-                            activeSlot = findFirstEmptySlot(assignments)
-                        }
-                    }
-                }
+                val pressingPad = event.device
+                    ?.takeIf { it.isPhysicalGamepad() }
+                    ?.let(ControllerPortResolver::getControllerId)
+                val gamepadEvent = gamepadInputHandler?.mapKeyToEvent(event.keyCode)
+                if (controller.onPadPress(gamepadEvent, pressingPad)) currentOnDismiss.value()
             }
             true
         }
-
         gamepadInputHandler?.setRawKeyEventListener(listener)
+        onDispose { gamepadInputHandler?.setRawKeyEventListener(null) }
+    }
 
-        onDispose {
-            gamepadInputHandler?.setRawKeyEventListener(null)
+    val seatLabels = SEAT_OPTIONS.map { port ->
+        if (port == null) {
+            stringResource(R.string.settings_controller_order_seat_none)
+        } else {
+            stringResource(R.string.settings_controller_order_slot_label, port + 1)
         }
+    }
+    val defaultName = stringResource(R.string.settings_controller_order_default_name)
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(state.focusedIndex, state.rows.size) {
+        if (state.rows.isNotEmpty()) listState.animateScrollToItemCentered(state.focusedIndex)
     }
 
     Modal(
         title = stringResource(R.string.settings_controller_order_title),
         subtitle = stringResource(R.string.settings_controller_order_subtitle),
-        baseWidth = 500.dp,
+        baseWidth = Dimens.modalWidthLg,
         onDismiss = onDismiss,
         footerHints = listOf(
-            InputButton.A to stringResource(R.string.settings_controller_order_hint_confirm),
-            InputButton.B to stringResource(R.string.settings_controller_order_hint_unregister_back)
+            InputButton.Y to stringResource(R.string.settings_controller_order_hint_clear_all)
         ),
+        inlineFooterHints = true,
         onFooterHintClick = { button ->
-            when (button) {
-                InputButton.A -> if (assignments.isNotEmpty()) onDismiss()
-                InputButton.B -> onDismiss()
-                else -> {}
-            }
+            if (button == InputButton.Y) controller.clearAll()
         }
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
-        ) {
-            for (port in 0 until 4) {
-                ControllerSlot(
-                    port = port,
-                    assignment = assignments[port],
-                    isActive = port == activeSlot,
-                    onClick = { activeSlot = port },
-                    modifier = Modifier.weight(1f)
-                )
+        if (state.rows.isEmpty()) {
+            Text(
+                text = stringResource(R.string.settings_controller_order_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spacingXs)
+            ) {
+                itemsIndexed(state.rows, key = { _, row -> row.controllerId }) { index, row ->
+                    ControllerSeatRow(
+                        name = row.name ?: defaultName,
+                        seatLabels = seatLabels,
+                        selectedIndex = SEAT_OPTIONS.indexOf(row.port),
+                        isFocused = index == state.focusedIndex,
+                        onFocus = { controller.focusRow(index) },
+                        onSelectSeat = { option -> controller.setSeat(index, SEAT_OPTIONS[option]) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ControllerSlot(
-    port: Int,
-    assignment: AssignedController?,
-    isActive: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+private fun ControllerSeatRow(
+    name: String,
+    seatLabels: List<String>,
+    selectedIndex: Int,
+    isFocused: Boolean,
+    onFocus: () -> Unit,
+    onSelectSeat: (Int) -> Unit
 ) {
-    val theme = LocalArgosyTheme.current
-    val backgroundColor = when {
-        isActive -> theme.focusAccent.copy(alpha = 0.15f)
-        assignment != null -> MaterialTheme.colorScheme.surfaceVariant
-        else -> Color.Transparent
-    }
-    val borderColor = when {
-        isActive -> theme.focusAccent
-        else -> MaterialTheme.colorScheme.outlineVariant
-    }
-    val contentColor = when {
-        isActive -> lerp(theme.focusAccent, Color.White, 0.45f)
-        assignment != null -> MaterialTheme.colorScheme.onSurfaceVariant
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-    }
-
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(Dimens.radiusMd))
-            .background(backgroundColor)
-            .border(1.dp, borderColor, RoundedCornerShape(Dimens.radiusMd))
-            .clickableNoFocus(onClick = onClick)
-            .padding(Dimens.spacingMd),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = Dimens.menuRowHeightLg)
+            .argosyFocusIndicators(
+                focused = isFocused,
+                indicators = FocusIndicators.ListRow,
+                shape = RoundedCornerShape(Dimens.radiusMd)
+            )
+            .clickableNoFocus(onClick = onFocus)
+            .padding(horizontal = Dimens.spacingMd, vertical = Dimens.spacingXs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    if (assignment != null) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.2f),
-                    CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            if (assignment != null) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            } else {
-                Text(
-                    text = "${port + 1}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = contentColor
-                )
-            }
-        }
-
         Text(
-            text = stringResource(R.string.settings_controller_order_slot_label, port + 1),
-            style = MaterialTheme.typography.labelLarge,
-            color = contentColor
+            text = name,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
-
-        Text(
-            text = when {
-                assignment != null -> assignment.controllerName.take(12)
-                isActive -> stringResource(R.string.settings_controller_order_slot_pressing)
-                else -> stringResource(R.string.settings_controller_order_slot_empty)
-            },
-            style = MaterialTheme.typography.bodySmall,
-            color = contentColor.copy(alpha = 0.7f),
-            maxLines = 1
+        SegmentedControl(
+            options = seatLabels,
+            selectedIndex = selectedIndex,
+            onSelect = onSelectSeat,
+            focused = isFocused,
+            modifier = Modifier.width(segmentedInlineWidth(seatLabels))
         )
     }
 }
-
-private fun findFirstEmptySlot(assignments: Map<Int, AssignedController>): Int {
-    for (i in 0 until 4) {
-        if (!assignments.containsKey(i)) return i
-    }
-    return 4
-}
-
-private fun getControllerId(device: InputDevice): String {
-    return "${device.vendorId}:${device.productId}:${device.descriptor}"
-}
-
-private fun findDeviceByControllerId(controllerId: String): InputDevice? {
-    val deviceIds = InputDevice.getDeviceIds()
-    for (deviceId in deviceIds) {
-        val device = InputDevice.getDevice(deviceId) ?: continue
-        if (getControllerId(device) == controllerId) {
-            return device
-        }
-    }
-    return null
-}
-
-private fun isGamepadDevice(device: InputDevice): Boolean = device.actsAsGamepad()
-
-private fun isGamepadButton(keyCode: Int): Boolean =
-    keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode != KeyEvent.KEYCODE_HOME

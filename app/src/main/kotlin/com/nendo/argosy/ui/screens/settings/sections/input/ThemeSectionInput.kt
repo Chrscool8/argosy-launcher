@@ -71,6 +71,11 @@ internal class ThemeSectionInput(
                 viewModel.setUseAccentColorFooter(direction > 0)
                 return InputResult.HANDLED
             }
+            ThemeItem.IconPack -> {
+                if (state.display.iconPacks.isEmpty()) return InputResult.handled(SoundType.BOUNDARY)
+                viewModel.cycleIconPack(direction)
+                return InputResult.HANDLED
+            }
             else -> {}
         }
         return InputResult.UNHANDLED

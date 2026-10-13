@@ -521,6 +521,17 @@ class DisplaySettingsDelegate @Inject constructor(
         scope.launch { preferencesRepository.setPresentationStyle(style) }
     }
 
+    fun adjustPresentationBackgroundBlur(scope: CoroutineScope, delta: Int) {
+        val current = _state.value.presentationBackgroundBlur
+        val newValue = (current + delta).coerceIn(0, 100)
+        if (newValue != current) {
+            scope.launch {
+                preferencesRepository.setPresentationBackgroundBlur(newValue)
+                _state.update { it.copy(presentationBackgroundBlur = newValue) }
+            }
+        }
+    }
+
     fun setUseAccentColorFooter(scope: CoroutineScope, use: Boolean) {
         scope.launch {
             preferencesRepository.setUseAccentColorFooter(use)
@@ -540,6 +551,19 @@ class DisplaySettingsDelegate @Inject constructor(
             preferencesRepository.setLockScreenArt(enabled)
             _state.update { it.copy(lockScreenArt = enabled) }
         }
+    }
+
+    fun setIconPack(scope: CoroutineScope, packageName: String?) {
+        scope.launch {
+            preferencesRepository.setIconPack(packageName)
+            _state.update { it.copy(iconPack = packageName) }
+        }
+    }
+
+    fun cycleIconPack(scope: CoroutineScope, direction: Int) {
+        val state = _state.value
+        val options = state.iconPackOptions
+        setIconPack(scope, options[(state.selectedIconPackIndex + direction).mod(options.size)])
     }
 
     fun showGripControllerModal() {

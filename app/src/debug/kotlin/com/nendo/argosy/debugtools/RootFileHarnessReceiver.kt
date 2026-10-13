@@ -15,7 +15,8 @@ import java.security.MessageDigest
 /**
  * Debug-only proof harness for root-tier save backup and restore. Trigger with
  * `adb shell am broadcast -n com.nendo.argosy.debug/com.nendo.argosy.debugtools.RootFileHarnessReceiver`
- * and `--es op stat|backup|restore|regroup` plus `--es path`, `--es name`, `--es group`.
+ * and `--es op stat|backup|restore|regroup|mode|delete|stacks` plus `--es path`, `--es name`, `--es group`.
+ * `stacks` writes this process's native thread stacks to the harness result file.
  */
 class RootFileHarnessReceiver : BroadcastReceiver() {
 
@@ -49,6 +50,7 @@ class RootFileHarnessReceiver : BroadcastReceiver() {
                     "regroup" -> regroup(work, path ?: return@launch, group ?: return@launch)
                     "mode" -> runRoot(work, "p=${q(path ?: return@launch)}\nchmod ${q(mode ?: return@launch)} \"\$p\" && ls -lnd \"\$p\"")
                     "delete" -> runRoot(work, "p=${q(path ?: return@launch)}\nrm -f \"\$p\" && echo deleted; ls -ln \"\$(dirname \"\$p\")\"")
+                    "stacks" -> runRoot(work, "debuggerd -b ${android.os.Process.myPid()}", echoOutput = false)
                     else -> Log.w(TAG, "unknown op $op")
                 }
             } catch (e: Exception) {
@@ -117,7 +119,7 @@ class RootFileHarnessReceiver : BroadcastReceiver() {
 
     private fun q(value: String): String = "'" + value.replace("'", "'\\''") + "'"
 
-    private fun runRoot(work: File, body: String) {
+    private fun runRoot(work: File, body: String, echoOutput: Boolean = true) {
         val script = File(work, SCRIPT_NAME).apply { writeText(body + "\n") }
         script.setReadable(true, false)
         val output = File(work, OUTPUT_NAME).apply { delete() }
@@ -125,8 +127,8 @@ class RootFileHarnessReceiver : BroadcastReceiver() {
         val wrapper = File(work, WRAPPER_NAME).apply { writeText(command + "\n") }
         wrapper.setReadable(true, false)
         val exit = PServerExecutor.execute("sh ${wrapper.absolutePath}").getOrNull()
-        Log.i(TAG, "exit=$exit")
-        if (output.canRead()) output.readLines().forEach { Log.i(TAG, "  $it") }
+        Log.i(TAG, "exit=$exit output=${output.absolutePath}")
+        if (echoOutput && output.canRead()) output.readLines().forEach { Log.i(TAG, "  $it") }
     }
 
     private fun md5(file: File): String =

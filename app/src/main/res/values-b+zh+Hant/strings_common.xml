@@ -230,11 +230,11 @@
 
     <string name="ui_save_conflict_title">存檔衝突</string>
     <string name="ui_save_conflict_default_slot">預設存檔</string>
-    <string name="ui_save_conflict_message">伺服器上有較新的存檔，覆寫將會以本機存檔取代它。</string>
+    <string name="ui_save_conflict_message">伺服器上有較新的存檔，上傳後，本機存檔將成為最新存檔，伺服器上的副本會保留。</string>
     <string name="ui_save_conflict_source_local">本機</string>
     <string name="ui_save_conflict_source_server">伺服器</string>
     <string name="ui_save_conflict_skip">略過同步</string>
-    <string name="ui_save_conflict_overwrite">覆寫</string>
+    <string name="ui_save_conflict_overwrite">上傳</string>
     <string name="ui_save_conflict_hardcore_title">要取代硬核存檔嗎？</string>
     <string name="ui_save_conflict_hardcore_message">此存檔槽目前的存檔是在硬核模式下建立的。若保留此存檔，它將取代硬核存檔成為目前存檔。硬核存檔仍會保留在歷史記錄中。</string>
     <string name="ui_save_conflict_hardcore_replace">取代</string>
@@ -692,14 +692,14 @@
     <string name="ui_sync_overlay_post_session_title">存檔衝突</string>
     <string name="ui_sync_overlay_post_session_subject">「%1$s」—%2$s</string>
     <string name="ui_sync_overlay_post_session_default_slot">預設存檔</string>
-    <string name="ui_sync_overlay_post_session_message">伺服器上有較新的存檔，覆寫將會以本機存檔取代它。</string>
+    <string name="ui_sync_overlay_post_session_message">伺服器上有較新的存檔，上傳後，本機存檔將成為最新存檔，伺服器上的副本會保留。</string>
     <string name="ui_sync_overlay_post_session_local">本機</string>
     <string name="ui_sync_overlay_post_session_server">伺服器</string>
     <string name="ui_sync_overlay_post_session_server_named">伺服器（%1$s）</string>
     <string name="ui_sync_overlay_post_session_skip">略過同步</string>
     <string name="ui_sync_overlay_post_session_skip_subtitle">保留本機存檔，不上傳</string>
-    <string name="ui_sync_overlay_post_session_overwrite">覆寫伺服器</string>
-    <string name="ui_sync_overlay_post_session_overwrite_subtitle">以本機版本取代伺服器存檔</string>
+    <string name="ui_sync_overlay_post_session_overwrite">上傳本機存檔</string>
+    <string name="ui_sync_overlay_post_session_overwrite_subtitle">本機存檔將成為最新存檔，伺服器上的副本會保留。</string>
     <string name="ui_sync_overlay_legacy_status">同步中...</string>
 
     <!-- Quick menu (ui/quickmenu) -->
@@ -744,10 +744,8 @@
     <string name="ui_file_browser_permission_footer_back">返回</string>
     <string name="ui_file_browser_error_unreadable">無法存取目錄</string>
     <string name="ui_file_browser_empty_folder">空白資料夾</string>
-    <string name="ui_file_browser_footer_select_file">選擇檔案</string>
-    <string name="ui_file_browser_footer_select_file_or_folder">選擇檔案</string>
-    <string name="ui_file_browser_footer_open_folder">開啟</string>
-    <string name="ui_file_browser_footer_back">返回</string>
+    <string name="ui_file_browser_action_use_folder">使用此資料夾</string>
+    <string name="ui_file_browser_action_new_folder">新增資料夾</string>
     <string name="ui_file_browser_footer_new_folder">新增資料夾</string>
     <string name="ui_file_browser_footer_use_folder">使用此資料夾</string>
     <string name="ui_file_browser_new_folder_title">新增資料夾</string>
