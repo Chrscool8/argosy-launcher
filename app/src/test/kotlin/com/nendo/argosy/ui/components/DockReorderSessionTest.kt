@@ -9,20 +9,21 @@ class DockReorderSessionTest {
     fun `visible targets skip missing pins without shifting crossed icons`() {
         val session = DockReorderSession.lift(1, true, listOf("a", "missing", "b", "c"),
             listOf("a", "b", "c"), "a")!!
-        val moved = session.move(1).move(1)
+        val moved = session.target(1).target(2)
 
         assertEquals(listOf("c", "missing", "b", "a"), moved.order)
         assertEquals(2, moved.targetIndex)
         assertEquals("a", moved.heldPackage)
-        assertEquals(listOf("b", "missing", "a", "c"), moved.move(-1).order)
-        assertEquals(session.order, moved.move(-1).move(-1).order)
-        assertEquals(moved, moved.move(1))
+        assertEquals(listOf("b", "missing", "a", "c"), moved.target(1).order)
+        assertEquals(session.order, moved.target(1).target(-1).order)
+        assertEquals(moved, moved.target(99))
     }
 
     @Test
     fun `cannot lift a control or fewer than two available pins`() {
         assertNull(DockReorderSession.lift(1, false, listOf("a", "missing"), listOf("a"), "a"))
         assertNull(DockReorderSession.lift(1, false, listOf("a", "b"), listOf("a", "b"), "tools"))
+        assertNull(DockReorderSession.lift(1, false, listOf("a", "b"), listOf("a", "ghost"), "a"))
     }
 
     @Test

@@ -22,15 +22,14 @@ class DockReorderCoordinator(
     private val packages: AppsRepository,
     private val onSaveError: () -> Unit
 ) {
-    private val pins = MutableStateFlow(emptyList<String>())
+    private val pins = MutableStateFlow<List<String>?>(null)
     private val installed = MutableStateFlow<Set<String>?>(null)
     private val editing = MutableStateFlow<DockReorderSession?>(null)
     val session: StateFlow<DockReorderSession?> = editing
-    private val hydrated = MutableStateFlow(false)
     private var nextToken = 0L
 
-    val apps: StateFlow<List<String>> = combine(pins, installed, editing, hydrated) { saved, available, edit, ready ->
-        if (ready) (edit?.order ?: saved).filter { available?.contains(it) == true } else emptyList()
+    val apps: StateFlow<List<String>> = combine(pins, installed, editing) { saved, available, edit ->
+        (edit?.order ?: saved.orEmpty()).filter { available?.contains(it) == true }
     }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     init {
@@ -38,7 +37,6 @@ class DockReorderCoordinator(
             preferences.userPreferences.map { it.secondaryHomeApps }.distinctUntilChanged().collect { order ->
                 if (order != pins.value) editing.value = null
                 pins.value = order
-                hydrated.value = true
             }
         }
         scope.launch {
@@ -58,8 +56,11 @@ class DockReorderCoordinator(
     }
 
     fun begin(packageName: String, controller: Boolean): Long? {
-        if (!hydrated.value || installed.value == null || editing.value != null) return null
-        val edit = DockReorderSession.lift(++nextToken, controller, pins.value, apps.value, packageName) ?: return null
+        val saved = pins.value ?: return null
+        val available = installed.value ?: return null
+        if (editing.value != null) return null
+        val visible = saved.filter { it in available }
+        val edit = DockReorderSession.lift(++nextToken, controller, saved, visible, packageName) ?: return null
         editing.value = edit
         return edit.token
     }
@@ -78,14 +79,15 @@ class DockReorderCoordinator(
 
     fun save(token: Long) {
         val edit = editing.value?.takeIf { it.token == token && !it.saving } ?: return
-        if (edit.order == edit.reorder.backup) {
+        val order = edit.order
+        if (order == edit.originalOrder) {
             cancel(token)
             return
         }
         editing.value = edit.copy(saving = true)
         scope.launch {
             val saved = try {
-                preferences.reorderDockPins(edit.reorder.backup, edit.order)
+                preferences.reorderDockPins(edit.originalOrder, order)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {

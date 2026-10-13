@@ -1,26 +1,26 @@
 package com.nendo.argosy.ui.components
 
 import androidx.compose.runtime.Immutable
+import java.util.Collections
 
 @Immutable
 data class DockReorderSession(
     val token: Long,
     val controller: Boolean,
     val visiblePackages: List<String>,
-    val reorder: ListReorder<String>,
-    val order: List<String>,
+    val originalOrder: List<String>,
+    val heldPackage: String,
+    val targetIndex: Int,
     val saving: Boolean = false
 ) {
-    val heldPackage: String get() = reorder.backup[reorder.originIndex]
-    val targetIndex: Int get() = visiblePackages.indexOf(reorder.backup[reorder.heldIndex])
-
-    fun target(index: Int): DockReorderSession {
-        val packageName = visiblePackages[index.coerceIn(0, visiblePackages.lastIndex)]
-        val step = reorder.swapTo(reorder.backup.indexOf(packageName))
-        return if (step.moved) copy(reorder = step.reorder, order = step.items) else this
+    val order: List<String> get() = originalOrder.toMutableList().apply {
+        Collections.swap(this, originalOrder.indexOf(heldPackage), originalOrder.indexOf(visiblePackages[targetIndex]))
     }
 
-    fun move(delta: Int): DockReorderSession = target(targetIndex + delta)
+    fun target(index: Int): DockReorderSession {
+        val target = index.coerceIn(0, visiblePackages.lastIndex)
+        return if (target != targetIndex) copy(targetIndex = target) else this
+    }
 
     companion object {
         fun lift(
@@ -30,9 +30,8 @@ data class DockReorderSession(
             visible: List<String>,
             packageName: String
         ): DockReorderSession? {
-            if (visible.size < 2 || packageName !in visible) return null
-            val reorder = ListReorder.lift(pins, pins.indexOf(packageName)) ?: return null
-            return DockReorderSession(token, controller, visible, reorder, pins)
+            if (visible.size < 2 || packageName !in visible || !pins.containsAll(visible)) return null
+            return DockReorderSession(token, controller, visible, pins, packageName, visible.indexOf(packageName))
         }
     }
 }

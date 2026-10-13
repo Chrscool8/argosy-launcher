@@ -13,12 +13,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 
@@ -57,6 +60,32 @@ class DockReorderCoordinatorTest {
         assertNull(fixture.coordinator.begin("a", false))
         delayed.emit(UserPreferences(secondaryHomeApps = listOf("c", "b", "a")))
         assertEquals(listOf("c", "b", "a"), fixture.coordinator.apps.value)
+    }
+
+    @Test
+    fun `begin uses current pins before the rendered apps catch up`() = runTest {
+        val changed = CompletableDeferred<Unit>()
+        lateinit var fixture: Fixture
+        var attempted = false
+        var token: Long? = null
+        val preferences = flow {
+            emit(UserPreferences(secondaryHomeApps = listOf("a", "b")))
+            changed.await()
+            emit(UserPreferences(secondaryHomeApps = listOf("a")))
+            assertEquals(listOf("a", "b"), fixture.coordinator.apps.value)
+            token = fixture.coordinator.begin("a", false)
+            attempted = true
+        }
+        fixture = Fixture(this, preferences)
+        runCurrent()
+
+        changed.complete(Unit)
+        runCurrent()
+
+        assertTrue(attempted)
+        assertNull(token)
+        assertNull(fixture.coordinator.session.value)
+        assertEquals(listOf("a"), fixture.coordinator.apps.value)
     }
 
     @Test

@@ -856,8 +856,8 @@ sealed class HomeEvent {
 fun HomeUiState.movedTo(row: HomeRow): HomeUiState =
     if (row == currentRow) this else copy(currentRow = row, focusedGameIndex = 0)
 
-fun HomeUiState.withDockApps(apps: List<String>, heldPackage: String? = null): HomeUiState {
-    val packageName = heldPackage ?: homeApps.getOrNull(appBarIndex)
+fun HomeUiState.withDockApps(apps: List<String>): HomeUiState {
+    val packageName = homeApps.getOrNull(appBarIndex)
     val index = packageName?.let { apps.indexOf(it) }?.takeIf { it >= 0 }
         ?: if (appBarFocused && appBarIndex == homeApps.size) apps.size
         else appBarIndex.coerceIn(-1, apps.size)

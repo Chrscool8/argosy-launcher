@@ -11,31 +11,6 @@ class ListReorderTest {
     private val items = listOf("a", "b", "c", "d")
 
     @Test
-    fun `swapping targets always uses the original order`() {
-        val first = ListReorder.lift(items, 0)!!.swapTo(1)
-        val second = first.reorder.swapTo(2)
-        val same = second.reorder.swapTo(2)
-        val restored = same.reorder.swapTo(0)
-
-        assertEquals(listOf("b", "a", "c", "d"), first.items)
-        assertEquals(listOf("c", "b", "a", "d"), second.items)
-        assertEquals(second.items, same.items)
-        assertFalse(same.moved)
-        assertEquals(items, restored.items)
-        assertNull(restored.reorder.changedOrder(restored.items))
-    }
-
-    @Test
-    fun `swapping preserves unavailable slots and clamps at the ends`() {
-        val pins = listOf("a", "missing", "b", "c")
-        val last = ListReorder.lift(pins, 0)!!.swapTo(99)
-
-        assertEquals(listOf("c", "missing", "b", "a"), last.items)
-        assertEquals(3, last.reorder.heldIndex)
-        assertEquals(pins, last.reorder.swapTo(-1).items)
-    }
-
-    @Test
     fun `lift outside the list yields no session`() {
         assertNull(ListReorder.lift(items, -1))
         assertNull(ListReorder.lift(items, items.size))

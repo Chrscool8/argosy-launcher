@@ -16,6 +16,14 @@ import org.junit.Test
 
 class HomeDockInputTest {
     @Test
+    fun `dock focus follows app identity through a preview and its cancellation`() {
+        val original = HomeUiState(homeApps = listOf("a", "b", "c"), appBarFocused = true)
+        val preview = original.withDockApps(listOf("c", "b", "a"))
+        assertEquals(2, preview.appBarIndex)
+        assertEquals(0, preview.withDockApps(original.homeApps).appBarIndex)
+    }
+
+    @Test
     fun `hydrating pins does not mistake the initial index for focused tools`() {
         val initial = HomeUiState().withDockApps(listOf("a", "b"))
         assertEquals(0, initial.appBarIndex)

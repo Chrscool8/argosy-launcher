@@ -934,11 +934,7 @@ class HomeViewModel @Inject constructor(
 
     fun cancelAppBarReorder() {
         val token = dockControllerToken ?: return
-        val session = dockReorder.value?.takeIf { it.token == token }
         DualScreenManagerHolder.instance?.cancelDockReorder(token)
-        session?.let {
-            _uiState.update { state -> state.copy(appBarIndex = state.homeApps.indexOf(it.heldPackage).coerceAtLeast(0)) }
-        }
         dockControllerToken = null
     }
 
@@ -948,7 +944,7 @@ class HomeViewModel @Inject constructor(
             .onEach { (apps, session) ->
                 if (session?.token != dockControllerToken) dockControllerToken = null
                 _uiState.update { state ->
-                    state.withDockApps(apps, session?.takeIf { it.controller }?.heldPackage)
+                    state.withDockApps(apps)
                 }
             }.launchIn(viewModelScope)
     }
