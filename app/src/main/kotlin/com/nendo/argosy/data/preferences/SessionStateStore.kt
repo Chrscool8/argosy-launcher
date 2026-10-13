@@ -80,12 +80,6 @@ class SessionStateStore(context: Context) {
 
     fun isSaveDirty(): Boolean = prefs.getBoolean(KEY_SAVE_DIRTY, false)
 
-    fun setHomeApps(apps: Set<String>) {
-        prefs.edit().putStringSet(KEY_HOME_APPS, apps).apply()
-    }
-
-    fun getHomeApps(): Set<String> = prefs.getStringSet(KEY_HOME_APPS, emptySet()) ?: emptySet()
-
     fun setArgosyForeground(isForeground: Boolean) {
         prefs.edit().putBoolean(KEY_ARGOSY_FOREGROUND, isForeground).apply()
     }
@@ -250,7 +244,6 @@ class SessionStateStore(context: Context) {
         private const val KEY_CHANNEL_NAME = "channel_name"
         private const val KEY_IS_HARDCORE = "is_hardcore"
         private const val KEY_SAVE_DIRTY = "save_dirty"
-        private const val KEY_HOME_APPS = "home_apps"
         private const val KEY_ARGOSY_FOREGROUND = "argosy_foreground"
         private const val KEY_FOREIGN_APP_ON_SECONDARY = "foreign_app_on_secondary"
         private const val KEY_PRIMARY_COLOR = "primary_color"

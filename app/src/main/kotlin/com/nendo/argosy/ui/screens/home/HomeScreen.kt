@@ -208,7 +208,8 @@ fun HomeScreen(
     }
     com.nendo.argosy.ui.input.ModalInputEffect(
         active = presentationShowsHints && dockReorder?.controller == true && uiState.appBarFocused,
-        handler = viewModel.dockReorderInputHandler
+        handler = viewModel.dockReorderInputHandler,
+        onInputLost = viewModel::cancelAppBarReorder
     )
     if (presentationShowsHints && dockReorder?.controller == true) com.nendo.argosy.ui.input.ModalPresenceEffect()
     val rowButtons = if (presentationShowsHints || quickNavigation) InputButton.LT_RT else InputButton.LB_RB

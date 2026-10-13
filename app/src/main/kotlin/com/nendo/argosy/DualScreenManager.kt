@@ -716,7 +716,6 @@ class DualScreenManager(
         fun onSessionStarted(gameId: Long, isHardcore: Boolean, channelName: String?)
         fun onSessionHardcoreChanged(isHardcore: Boolean, channelName: String?)
         fun onSessionEnded()
-        fun onHomeAppsChanged(apps: List<String>)
         fun onLibraryRefresh()
         fun onAccountSwitched()
         fun onOverlayRequested(eventName: String)
@@ -1896,12 +1895,6 @@ class DualScreenManager(
 
     fun onRefocusUpper() {
         refocusMain()
-    }
-
-    fun onCompanionHomeAppsChanged(apps: List<String>) {
-        scope.launch {
-            preferencesRepository.setSecondaryHomeApps(apps)
-        }
     }
 
     fun onSessionChanged(gameId: Long, isHardcore: Boolean = false, channelName: String? = null) {

@@ -83,7 +83,6 @@ class SecondaryHomeActivity :
         private set
     private var currentChannelName by mutableStateOf<String?>(null)
     private var isHardcore by mutableStateOf(false)
-    var homeApps by mutableStateOf<List<String>>(emptyList())
         private set
     private var companionAchievements by mutableStateOf<List<AchievementUi>>(emptyList())
     private var companionSessionTimer: CompanionSessionTimer? = null
@@ -461,10 +460,6 @@ class SecondaryHomeActivity :
         companionSessionTimer?.stop(applicationContext)
         companionSessionTimer = null
         isInitialized = true
-    }
-
-    override fun onHomeAppsChanged(apps: List<String>) {
-        homeApps = apps
     }
 
     override fun onLibraryRefresh() = Unit

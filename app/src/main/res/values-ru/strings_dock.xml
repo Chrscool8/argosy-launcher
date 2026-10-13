@@ -1,4 +1,5 @@
 <resources>
+    <string name="dock_hint_open">Открыть</string>
     <string name="dock_reorder_save_failed">Не удалось сохранить порядок в док-панели. Повторите попытку.</string>
     <string name="dock_hint_hold_reorder">Удерживайте, чтобы изменить порядок</string>
     <string name="dock_reorder_move_left">Переместить влево</string>

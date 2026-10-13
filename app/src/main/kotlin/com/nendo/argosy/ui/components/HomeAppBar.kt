@@ -438,7 +438,6 @@ private fun DockToolsPopup(
         properties = PopupProperties(focusable = false, clippingEnabled = true)
     ) {
         Column(horizontalAlignment = Alignment.End) {
-            // Keep the native popup bounds fixed when the selector opens or closes.
             Column(
                 Modifier.width(popupWidth).height(pickerHeight + gap).touchOnly(dismiss),
                 horizontalAlignment = Alignment.End,
