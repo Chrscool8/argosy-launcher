@@ -664,6 +664,7 @@ private fun ShowcaseCover(
 ) {
     if (art == PresentationArt.TITLE) return
     val artUrl = detail.artUrl
+    val boxArtStyle = LocalBoxArtStyle.current
     val repairArt = com.nendo.argosy.ui.common.rememberArtRepair()
     val repair: (ArtSlot) -> Unit = { slot -> detail.gameId?.let { repairArt(it, slot) } }
     var failedRoutes by remember(detail.spineUrl, detail.box3dUrl, artUrl) {
@@ -696,6 +697,7 @@ private fun ShowcaseCover(
             model = rememberFileImageModel(artUrl),
             width = width,
             height = height,
+            aspectRatio = boxArtStyle.aspectRatio.takeUnless { boxArtStyle.nativeAspectRatio },
             modifier = Modifier.clip(RoundedCornerShape(Dimens.radiusLg)),
             onError = {
                 failedRoutes = failedRoutes + BoxArtRoute.FLAT_COVER
@@ -711,15 +713,16 @@ private fun ShowcaseImage(
     model: Any?,
     width: Dp,
     height: Dp,
+    aspectRatio: Float? = null,
     modifier: Modifier = Modifier,
     onError: () -> Unit
 ) {
     var nativeRatio by remember(model) { mutableStateOf<Float?>(null) }
-    val fitted = nativeRatio?.let { fitPresentationArt(width.value, height.value, it) }
+    val fitted = (aspectRatio ?: nativeRatio)?.let { fitPresentationArt(width.value, height.value, it) }
     AsyncImage(
         model = model,
         contentDescription = null,
-        contentScale = ContentScale.Fit,
+        contentScale = if (aspectRatio == null) ContentScale.Fit else ContentScale.Crop,
         modifier = modifier.then(
             if (fitted == null) Modifier.widthIn(max = width).heightIn(max = height)
             else Modifier.size(fitted.width.dp, fitted.height.dp)
