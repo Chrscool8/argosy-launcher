@@ -1,5 +1,10 @@
 package com.nendo.argosy.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -431,33 +436,46 @@ private fun DockToolsPopup(
         properties = PopupProperties(focusable = false, clippingEnabled = true)
     ) {
         Column(horizontalAlignment = Alignment.End) {
-            if (pickerOpen) {
-                LazyColumn(
-                    state = pickerState,
-                    modifier = Modifier.width(slot + padding * 2)
-                        .heightIn(max = pickerMaxHeight)
-                        .frostedSurface(RoundedCornerShape(Dimens.radiusLg))
-                        .padding(padding),
-                    verticalArrangement = Arrangement.spacedBy(gap),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    itemsIndexed(displays, key = { _, target -> target.displayId }) { index, target ->
-                        DockControl(
-                            slot,
-                            focused = false,
-                            onClick = {
-                                onToolFocusVisibilityChange(false)
-                                onFocusDisplay(target.displayId)
-                                onDismiss()
-                            },
-                            showFocusRing = showToolFocus && index == pickerIndex
-                        ) { tint ->
-                            Text(target.number.toString(), color = tint,
-                                style = MaterialTheme.typography.titleLarge)
+            AnimatedVisibility(
+                visible = pickerOpen,
+                enter = expandVertically(
+                    tween(Motion.durationSlide, easing = Motion.argosyEase),
+                    expandFrom = Alignment.Bottom
+                ) + fadeIn(tween(Motion.durationSlide, easing = Motion.argosyEase)),
+                exit = shrinkVertically(
+                    tween(Motion.durationSlide, easing = Motion.argosyEase),
+                    shrinkTowards = Alignment.Bottom
+                ) + fadeOut(tween(Motion.durationSlide, easing = Motion.argosyEase))
+            ) {
+                Column {
+                    LazyColumn(
+                        state = pickerState,
+                        modifier = Modifier.width(slot + padding * 2)
+                            .heightIn(max = pickerMaxHeight)
+                            .frostedSurface(RoundedCornerShape(Dimens.radiusLg))
+                            .padding(padding),
+                        verticalArrangement = Arrangement.spacedBy(gap),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        itemsIndexed(displays, key = { _, target -> target.displayId }) { index, target ->
+                            DockControl(
+                                slot,
+                                focused = false,
+                                enabled = pickerOpen,
+                                onClick = {
+                                    onToolFocusVisibilityChange(false)
+                                    onFocusDisplay(target.displayId)
+                                    onDismiss()
+                                },
+                                showFocusRing = showToolFocus && index == pickerIndex
+                            ) { tint ->
+                                Text(target.number.toString(), color = tint,
+                                    style = MaterialTheme.typography.titleLarge)
+                            }
                         }
                     }
+                    Spacer(Modifier.height(gap))
                 }
-                Spacer(Modifier.height(gap))
             }
             Row(
                 modifier = Modifier.width(popupWidth)
