@@ -203,12 +203,16 @@ fun HomeScreen(
     val isCustomGrid = uiState.layoutKind == HomeLayoutKind.CUSTOM_GRID
     val quickNavigation by viewModel.quickNavigationEnabled.collectAsState()
     val dockReorder by viewModel.dockReorder.collectAsState()
+    val dockIsRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val dockReorderInputHandler = remember(viewModel, dockIsRtl) {
+        viewModel.createDockReorderInputHandler(dockIsRtl)
+    }
     LaunchedEffect(presentationShowsHints) {
         if (!presentationShowsHints) viewModel.releaseAppBar()
     }
     com.nendo.argosy.ui.input.ModalInputEffect(
         active = presentationShowsHints && dockReorder?.controller == true && uiState.appBarFocused,
-        handler = viewModel.dockReorderInputHandler,
+        handler = dockReorderInputHandler,
         onInputLost = viewModel::cancelAppBarReorder
     )
     if (presentationShowsHints && dockReorder?.controller == true) com.nendo.argosy.ui.input.ModalPresenceEffect()
@@ -317,12 +321,13 @@ fun HomeScreen(
     }
 
     val inputDispatcher = LocalInputDispatcher.current
-    val inputHandler = remember(onGameSelect, toggleDrawer, isDefaultView) {
+    val inputHandler = remember(onGameSelect, toggleDrawer, isDefaultView, dockIsRtl) {
         viewModel.createInputHandler(
             isDefaultView = isDefaultView,
             onGameSelect = onGameSelect,
             onNavigateToDefault = onNavigateToDefault,
             onDrawerToggle = toggleDrawer,
+            dockIsRtl = dockIsRtl,
             onScrollOverflow = { direction ->
                 val canScroll = if (direction < 0) {
                     overflowScrollState.canScrollBackward
@@ -1000,8 +1005,8 @@ fun HomeScreen(
                         forced = true,
                         onHintClick = { button ->
                             when (button) {
-                                InputButton.A -> viewModel.dockReorderInputHandler.onConfirm()
-                                InputButton.B -> viewModel.dockReorderInputHandler.onBack()
+                                InputButton.A -> dockReorderInputHandler.onConfirm()
+                                InputButton.B -> dockReorderInputHandler.onBack()
                                 else -> Unit
                             }
                         }

@@ -233,27 +233,15 @@ class HomeViewModel @Inject constructor(
     val dockReorder = DualScreenManagerHolder.instance?.dockReorder
         ?: MutableStateFlow<com.nendo.argosy.ui.components.DockReorderSession?>(null)
 
-    val dockReorderInputHandler = object : com.nendo.argosy.ui.input.CapturingInputHandler {
-        override fun onLeft(): com.nendo.argosy.ui.input.InputResult {
-            dockControllerToken?.let { DualScreenManagerHolder.instance?.moveDockReorder(it, -1) }
-            return com.nendo.argosy.ui.input.InputResult.HANDLED
-        }
-
-        override fun onRight(): com.nendo.argosy.ui.input.InputResult {
-            dockControllerToken?.let { DualScreenManagerHolder.instance?.moveDockReorder(it, 1) }
-            return com.nendo.argosy.ui.input.InputResult.HANDLED
-        }
-
-        override fun onConfirm(): com.nendo.argosy.ui.input.InputResult {
-            dockControllerToken?.let { DualScreenManagerHolder.instance?.saveDockReorder(it) }
-            return com.nendo.argosy.ui.input.InputResult.handled(com.nendo.argosy.core.input.SoundType.TOGGLE)
-        }
-
-        override fun onBack(): com.nendo.argosy.ui.input.InputResult {
-            cancelAppBarReorder()
-            return com.nendo.argosy.ui.input.InputResult.handled(com.nendo.argosy.core.input.SoundType.BACK)
-        }
-    }
+    fun createDockReorderInputHandler(isRtl: Boolean): InputHandler =
+        com.nendo.argosy.ui.components.DockReorderInputHandler(
+            isRtl = isRtl,
+            onMove = { delta ->
+                dockControllerToken?.let { DualScreenManagerHolder.instance?.moveDockReorder(it, delta) }
+            },
+            onSave = { dockControllerToken?.let { DualScreenManagerHolder.instance?.saveDockReorder(it) } },
+            onCancel = ::cancelAppBarReorder
+        )
 
     init {
         modalResetSignal.signal.onEach {
@@ -2317,14 +2305,16 @@ class HomeViewModel @Inject constructor(
         onGameSelect: (Long) -> Unit,
         onNavigateToDefault: () -> Unit,
         onDrawerToggle: () -> Unit,
-        onScrollOverflow: ((Int) -> Boolean)? = null
+        onScrollOverflow: ((Int) -> Boolean)? = null,
+        dockIsRtl: Boolean = false
     ): InputHandler = HomeInputHandler(
         actions = this,
         isDefaultView = isDefaultView,
         onGameSelect = onGameSelect,
         onNavigateToDefault = onNavigateToDefault,
         onDrawerToggle = onDrawerToggle,
-        onScrollOverflow = onScrollOverflow
+        onScrollOverflow = onScrollOverflow,
+        dockIsRtl = dockIsRtl
     )
 
     // --- HomeInputActions Implementation ---

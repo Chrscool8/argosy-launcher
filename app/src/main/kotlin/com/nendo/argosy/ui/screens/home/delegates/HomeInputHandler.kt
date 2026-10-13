@@ -144,7 +144,8 @@ class HomeInputHandler(
     private val onGameSelect: (Long) -> Unit,
     private val onNavigateToDefault: () -> Unit,
     private val onDrawerToggle: () -> Unit,
-    private val onScrollOverflow: ((direction: Int) -> Boolean)? = null
+    private val onScrollOverflow: ((direction: Int) -> Boolean)? = null,
+    private val dockIsRtl: Boolean = false
 ) : InputHandler {
 
     private val focusPicker: com.nendo.argosy.DualScreenManager?
@@ -280,7 +281,7 @@ class HomeInputHandler(
         if (actions.uiState.value.appDrawer != null) return InputResult.handled(SoundType.BOUNDARY)
         if (focusPicker != null) return InputResult.handled(SoundType.BOUNDARY)
         if (actions.uiState.value.appBarFocused) {
-            actions.moveAppBarFocus(-1)
+            actions.moveAppBarFocus(if (dockIsRtl) 1 else -1)
             return InputResult.HANDLED
         }
         if (actions.uiState.value.customGrid.engagedTileId != null) {
@@ -313,7 +314,7 @@ class HomeInputHandler(
         if (actions.uiState.value.appDrawer != null) return InputResult.handled(SoundType.BOUNDARY)
         if (focusPicker != null) return InputResult.handled(SoundType.BOUNDARY)
         if (actions.uiState.value.appBarFocused) {
-            actions.moveAppBarFocus(1)
+            actions.moveAppBarFocus(if (dockIsRtl) -1 else 1)
             return InputResult.HANDLED
         }
         if (actions.uiState.value.customGrid.engagedTileId != null) {

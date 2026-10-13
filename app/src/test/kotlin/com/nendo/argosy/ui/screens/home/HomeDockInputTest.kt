@@ -18,6 +18,24 @@ import org.junit.Test
 
 class HomeDockInputTest {
     @Test
+    fun `dock focus follows physical controller directions in both layouts`() {
+        for (isRtl in listOf(false, true)) {
+            val state = MutableStateFlow(HomeUiState(homeApps = listOf("a", "b", "c"),
+                appBarFocused = true, appBarIndex = 1))
+            val actions = mockk<HomeInputActions>(relaxed = true)
+            every { actions.uiState } returns state
+            every { actions.moveAppBarFocus(any()) } answers {
+                state.value = state.value.copy(appBarIndex = state.value.appBarIndex + firstArg<Int>())
+            }
+            val handler = HomeInputHandler(actions, true, {}, {}, {}, dockIsRtl = isRtl)
+            handler.onLeft()
+            assertEquals(if (isRtl) 2 else 0, state.value.appBarIndex)
+            handler.onRight()
+            assertEquals(1, state.value.appBarIndex)
+        }
+    }
+
+    @Test
     fun `game actions belong to carousel and resume after leaving dock`() {
         val game = mockk<HomeGameUi>(relaxed = true)
         every { game.id } returns 42L

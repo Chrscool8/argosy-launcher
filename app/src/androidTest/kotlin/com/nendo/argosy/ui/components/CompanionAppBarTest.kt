@@ -135,36 +135,47 @@ class CompanionAppBarTest {
 
     @Test
     fun accessibleSwapKeepsOverflowSlotsInPlace() {
+        accessibleSwap(LayoutDirection.Ltr)
+    }
+
+    @Test
+    fun rtlAccessibilityActionsFollowPhysicalDirectionAndBoundaries() {
+        accessibleSwap(LayoutDirection.Rtl)
+    }
+
+    private fun accessibleSwap(direction: LayoutDirection) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val original = listOf("a", "b", "c", "d", "e", "f")
         val apps = mutableStateOf(original)
         val session = mutableStateOf<DockReorderSession?>(null)
         var saved: List<String>? = null
         compose.setContent {
-            MaterialTheme {
-                Box(Modifier.width(440.dp)) {
-                    CompanionAppBar(
-                        apps = apps.value,
-                        onAppClick = {},
-                        maximumWidth = 400.dp,
-                        reorder = session.value,
-                        onReorderStart = { packageName ->
-                            session.value = DockReorderSession.lift(1, false, original, original, packageName)
-                            session.value?.token
-                        },
-                        onReorderTarget = { _, target ->
-                            session.value = session.value?.target(target)
-                            apps.value = session.value!!.order
-                        },
-                        onReorderSave = {
-                            saved = apps.value
-                            session.value = null
-                        },
-                        onReorderCancel = {
-                            apps.value = original
-                            session.value = null
-                        }
-                    )
+            CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                MaterialTheme {
+                    Box(Modifier.width(440.dp)) {
+                        CompanionAppBar(
+                            apps = apps.value,
+                            onAppClick = {},
+                            maximumWidth = 400.dp,
+                            reorder = session.value,
+                            onReorderStart = { packageName ->
+                                session.value = DockReorderSession.lift(1, false, original, original, packageName)
+                                session.value?.token
+                            },
+                            onReorderTarget = { _, target ->
+                                session.value = session.value?.target(target)
+                                apps.value = session.value!!.order
+                            },
+                            onReorderSave = {
+                                saved = apps.value
+                                session.value = null
+                            },
+                            onReorderCancel = {
+                                apps.value = original
+                                session.value = null
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -176,14 +187,26 @@ class CompanionAppBarTest {
             compose.runOnIdle { actions.first { it.label == label }.action() }
         }
         compose.onNodeWithContentDescription("a").performSemanticsAction(SemanticsActions.OnLongClick) { it() }
+        val forward = context.getString(if (direction == LayoutDirection.Rtl)
+            R.string.dock_reorder_move_left else R.string.dock_reorder_move_right)
+        val backward = context.getString(if (direction == LayoutDirection.Rtl)
+            R.string.dock_reorder_move_right else R.string.dock_reorder_move_left)
+        fun assertBoundary(absent: String, present: String) {
+            val labels = compose.onNodeWithContentDescription(dockLabel).fetchSemanticsNode()
+                .config[SemanticsActions.CustomActions].map { it.label }
+            assertTrue(absent !in labels)
+            assertTrue(present in labels)
+        }
+        assertBoundary(backward, forward)
         repeat(2) {
-            invokeAction(context.getString(R.string.dock_reorder_move_right))
+            invokeAction(forward)
         }
         compose.onNodeWithContentDescription("c").assertIsDisplayed()
         val swappedLeft = compose.onNodeWithContentDescription("c").fetchSemanticsNode().boundsInRoot.left
         assertEquals(originalLeft, swappedLeft, 1f)
         compose.runOnIdle { assertEquals(listOf("c", "b", "a", "d", "e", "f"), apps.value) }
-        repeat(3) { invokeAction(context.getString(R.string.dock_reorder_move_right)) }
+        repeat(3) { invokeAction(forward) }
+        assertBoundary(forward, backward)
         compose.onNodeWithContentDescription("a").assertIsDisplayed()
         invokeAction(context.getString(R.string.reorder_hint_done))
         compose.runOnIdle { assertEquals(listOf("f", "b", "c", "d", "e", "a"), saved) }
