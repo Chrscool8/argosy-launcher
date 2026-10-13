@@ -47,6 +47,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.nendo.argosy.ui.ScreenDimmerPreferences
+import com.nendo.argosy.ui.toScreenDimmerPreferences
 import com.nendo.argosy.ui.common.rememberFileImageModel
 import com.nendo.argosy.ui.components.FooterBarWithState
 import com.nendo.argosy.ui.components.FooterHintItem
@@ -55,6 +57,7 @@ import com.nendo.argosy.ui.components.rememberFrostedBackdrop
 import com.nendo.argosy.ui.components.frostedBackdropSource
 import com.nendo.argosy.ui.components.HomeLayoutPreview
 import com.nendo.argosy.ui.components.ScreenNumberBadge
+import com.nendo.argosy.ui.components.ScreenDimmerOverlay
 import com.nendo.argosy.ui.components.animateScrollToItemCentered
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
@@ -62,6 +65,8 @@ import com.nendo.argosy.ui.theme.backdrop.BackdropRole
 import com.nendo.argosy.ui.theme.backdrop.surfaceBackdrop
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 private const val TIMELINE_SCROLL_DELAY_MS = 1500L
 private const val PLAY_SHARE_COLUMNS = 2
@@ -74,14 +79,32 @@ fun PresentationSlotContent(
     showControlHints: Boolean = true,
     showsNotifications: Boolean = false
 ) {
+    val manager = com.nendo.argosy.DualScreenManagerHolder.instance
+    val dimmerPrefs = remember(manager) {
+        manager?.preferencesRepository?.userPreferences
+            ?.map { it.toScreenDimmerPreferences() }?.distinctUntilChanged()
+    }?.collectAsState(ScreenDimmerPreferences())?.value ?: ScreenDimmerPreferences()
+    val lastActivity = manager?.lastUserActivityAtMs?.collectAsState()?.value ?: 0L
+    val gameActive = manager?.swappedIsGameActive?.collectAsState()?.value ?: false
+    val mediaPlayback = manager?.mediaPlayback?.collectAsState()?.value
+    val primaryRoute = manager?.primaryRoute?.collectAsState()?.value
     val artSource = com.nendo.argosy.ui.common.LocalImageCacheManager.current
-        ?: com.nendo.argosy.DualScreenManagerHolder.instance?.imageCacheManager
+        ?: manager?.imageCacheManager
     val frostedBackdrop = rememberFrostedBackdrop()
     androidx.compose.runtime.CompositionLocalProvider(
         LocalFrostedBackdrop provides frostedBackdrop,
         com.nendo.argosy.ui.common.LocalImageCacheManager provides artSource
     ) {
-        PresentationSlotBody(slot, showControlHints, showsNotifications)
+        ScreenDimmerOverlay(
+            enabled = dimmerPrefs.enabled && !gameActive && mediaPlayback == null &&
+                primaryRoute != null && primaryRoute != com.nendo.argosy.ui.navigation.Screen.FirstRun.route,
+            timeoutMs = dimmerPrefs.timeoutMinutes * 60_000L,
+            dimLevel = dimmerPrefs.level / 100f,
+            lastActivityAtMs = lastActivity,
+            onWake = { manager?.notifyUserActivity("presentationDimmerTap") }
+        ) {
+            PresentationSlotBody(slot, showControlHints, showsNotifications)
+        }
     }
 }
 
