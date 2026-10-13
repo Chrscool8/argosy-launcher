@@ -103,7 +103,10 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Run Android Lint
-        run: ./gradlew lintDebug -PallAbis
+        run: >-
+          ./gradlew lintDebug -PallAbis
+          -Pkotlin.compiler.execution.strategy=in-process
+          -Dorg.gradle.jvmargs="-Xmx12g -XX:+UseParallelGC -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
 
       - name: Upload lint results
         if: always()
