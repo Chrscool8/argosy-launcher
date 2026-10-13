@@ -264,7 +264,7 @@ class HomeInputHandler(
             isGrid(state) -> gridMove(GridDirection.DOWN)
             else -> {
                 if (onScrollOverflow?.invoke(1) == true) return InputResult.HANDLED
-                if (state.currentRow == state.availableRows.lastOrNull() && actions.focusAppBar()) {
+                if (actions.focusAppBar()) {
                     return InputResult.handled(SoundType.SECTION_CHANGE)
                 }
                 actions.nextRow()

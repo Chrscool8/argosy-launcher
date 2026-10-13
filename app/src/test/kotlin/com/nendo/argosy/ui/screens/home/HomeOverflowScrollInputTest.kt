@@ -86,15 +86,39 @@ class HomeOverflowScrollInputTest {
     }
 
     @Test
-    fun `down from an earlier carousel row advances before the dock`() {
+    fun `down from an earlier carousel row focuses the dock without changing rows`() {
         val fixture = Fixture(
             HomeUiState(platforms = listOf(mockk(), mockk()), currentRow = HomeRow.Platform(0)),
             dockAvailable = true
         )
 
         assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), fixture.handler().onDown())
+        assertTrue(fixture.state.value.appBarFocused)
+        assertEquals(1, fixture.row)
+    }
+
+    @Test
+    fun `exhausted carousel scrolling enters dock and up preserves the selected game`() {
+        val selected = HomeUiState(
+            platforms = listOf(mockk(), mockk()), currentRow = HomeRow.Platform(0), focusedGameIndex = 3
+        )
+        val fixture = Fixture(selected, dockAvailable = true)
+        var canScroll = true
+        val handler = fixture.handler {
+            val moved = canScroll
+            canScroll = false
+            moved
+        }
+
+        assertEquals(InputResult.HANDLED, handler.onDown())
         assertFalse(fixture.state.value.appBarFocused)
-        assertEquals(2, fixture.row)
+        assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), handler.onDown())
+        assertTrue(fixture.state.value.appBarFocused)
+        assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), handler.onUp())
+        assertFalse(fixture.state.value.appBarFocused)
+        assertEquals(selected.currentRow, fixture.state.value.currentRow)
+        assertEquals(selected.focusedGameIndex, fixture.state.value.focusedGameIndex)
+        assertEquals(1, fixture.row)
     }
 
     @Test
