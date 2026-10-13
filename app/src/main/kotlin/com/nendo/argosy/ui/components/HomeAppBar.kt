@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -452,8 +451,9 @@ internal fun CompanionAppItem(
     onLongPress: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val label by produceState<String?>(null, packageName) {
-        value = withContext(Dispatchers.IO) {
+    var label by remember(packageName) { mutableStateOf<String?>(null) }
+    LaunchedEffect(packageName) {
+        label = withContext(Dispatchers.IO) {
             runCatching {
                 val pm = context.packageManager
                 pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
