@@ -554,12 +554,12 @@ private fun DockControl(
 @Composable
 internal fun CompanionAppItem(
     packageName: String,
-    isFocused: Boolean = false,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isFocused: Boolean = false,
     onLongPress: (() -> Unit)? = null,
     onSemanticReorder: (() -> Boolean)? = null,
-    reorderActions: List<CustomAccessibilityAction> = emptyList(),
-    modifier: Modifier = Modifier
+    reorderActions: List<CustomAccessibilityAction> = emptyList()
 ) {
     val reorderLabel = stringResource(R.string.library_apps_menu_reorder)
     val context = LocalContext.current
