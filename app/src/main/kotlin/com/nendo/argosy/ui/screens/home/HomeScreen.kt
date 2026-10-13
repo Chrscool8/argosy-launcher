@@ -1009,9 +1009,12 @@ fun HomeScreen(
                 } else if (uiState.appBarFocused) {
                     FooterHints(
                         forced = true,
-                        hints = if (uiState.appBarIndex in uiState.homeApps.indices && uiState.homeApps.size > 1) {
-                            listOf(InputButton.A to stringResource(R.string.dock_hint_hold_reorder))
-                        } else emptyList()
+                        hints = buildList {
+                            add(InputButton.A to stringResource(R.string.dock_hint_open))
+                            if (uiState.appBarIndex in uiState.homeApps.indices && uiState.homeApps.size > 1) {
+                                add(InputButton.A to stringResource(R.string.dock_hint_hold_reorder))
+                            }
+                        }
                     )
                     FooterSpacer()
                 } else if (isCustomGrid) {
