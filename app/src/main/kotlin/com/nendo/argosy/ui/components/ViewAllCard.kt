@@ -61,9 +61,10 @@ fun ViewAllCard(
     tapMode: CarouselTapMode = CarouselTapMode.CLICK,
     remainingCount: Int = 0,
     focusScale: Float = 1f,
-    scalePivotY: Float = 0.5f
+    scalePivotY: Float = 0.5f,
+    scaleOverride: Float? = null
 ) {
-    val scaleTarget = if (isFocused) focusScale else 1f
+    val scaleTarget = scaleOverride ?: if (isFocused) focusScale else 1f
     val scale by animateFloatAsState(
         targetValue = scaleTarget,
         animationSpec = spring(stiffness = VIEW_ALL_OUTLINE_SCALE_STIFFNESS),

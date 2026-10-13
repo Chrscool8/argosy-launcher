@@ -660,6 +660,7 @@ class HomeInputHandler(
         if (selectHeldByOverlay()) return InputResult.HANDLED
         val state = actions.uiState.value
         if (com.nendo.argosy.ui.dualscreen.selectSwapsRoles()) return InputResult.UNHANDLED
+        if (state.appBarFocused) return InputResult.HANDLED
         if (isCustomGrid(state)) return InputResult.UNHANDLED
         if (state.isMediaRow) return InputResult.HANDLED
         if (state.focusedGame != null) {
@@ -745,6 +746,7 @@ class HomeInputHandler(
     override fun onSecondaryAction(): InputResult {
         if (appOverlayOpen()) return InputResult.HANDLED
         val state = actions.uiState.value
+        if (state.appBarFocused) return InputResult.HANDLED
         if (state.customGrid.mediaSetup != null || state.customGrid.featureSetup != null) return InputResult.HANDLED
         if (state.showTilePicker) {
             actions.toggleTilePickerSearch()
@@ -837,6 +839,7 @@ class HomeInputHandler(
     override fun onContextMenu(): InputResult {
         if (appOverlayOpen()) return InputResult.HANDLED
         val state = actions.uiState.value
+        if (state.appBarFocused) return InputResult.HANDLED
         if (state.customGrid.engagedTileId != null) {
             actions.openEngagedFullscreen()
             return InputResult.HANDLED

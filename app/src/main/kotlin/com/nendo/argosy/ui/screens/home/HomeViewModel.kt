@@ -1915,7 +1915,8 @@ class HomeViewModel @Inject constructor(
         val state = _uiState.value
         if (index < 0 || index >= state.currentItems.size) return
 
-        if (index != state.focusedGameIndex) {
+        if (state.appBarFocused || index != state.focusedGameIndex) {
+            releaseAppBar()
             setFocusIndex(index)
             return
         }
@@ -1936,6 +1937,7 @@ class HomeViewModel @Inject constructor(
     fun handleItemLongPress(index: Int) {
         val state = _uiState.value
         if (index < 0 || index >= state.currentItems.size) return
+        releaseAppBar()
         val item = state.currentItems[index]
         if (item is HomeRowItem.Media) {
             if (index != state.focusedGameIndex) {

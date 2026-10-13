@@ -12,9 +12,41 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class HomeDockInputTest {
+    @Test
+    fun `game actions belong to carousel and resume after leaving dock`() {
+        val game = mockk<HomeGameUi>(relaxed = true)
+        every { game.id } returns 42L
+        val state = MutableStateFlow(HomeUiState(appBarFocused = true, recentGames = listOf(game)))
+        val actions = mockk<HomeInputActions>(relaxed = true)
+        every { actions.uiState } returns state
+        every { actions.releaseAppBar() } answers { state.value = state.value.copy(appBarFocused = false) }
+        every { actions.toggleGameMenu() } answers { state.value = state.value.copy(showGameMenu = true) }
+        var detailsId: Long? = null
+        var favoriteId: Long? = null
+        every { actions.toggleFavorite(any()) } answers { favoriteId = firstArg() }
+        val handler = HomeInputHandler(actions, true, { detailsId = it }, {}, {})
+
+        assertTrue(handler.onContextMenu().handled)
+        assertTrue(handler.onSecondaryAction().handled)
+        assertTrue(handler.onSelect().handled)
+        assertNull(detailsId)
+        assertNull(favoriteId)
+        assertFalse(state.value.showGameMenu)
+
+        handler.onUp()
+        handler.onContextMenu()
+        handler.onSecondaryAction()
+        handler.onSelect()
+        assertEquals(42L, detailsId)
+        assertEquals(42L, favoriteId)
+        assertTrue(state.value.showGameMenu)
+    }
+
     @Test
     fun `dock focus follows app identity through a preview and its cancellation`() {
         val original = HomeUiState(homeApps = listOf("a", "b", "c"), appBarFocused = true)

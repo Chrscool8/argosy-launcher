@@ -123,6 +123,7 @@ fun HomeAutoGrid(
     onItemLongPress: (Int) -> Unit,
     modifier: Modifier = Modifier,
     showPlatformBadge: Boolean = true,
+    showFocusVisuals: Boolean = true,
     downloadIndicatorFor: (CarouselItem) -> GameDownloadIndicator = { GameDownloadIndicator.NONE },
     onCoverLoadFailed: ((Long, String) -> Unit)? = null,
     onCoverLoaded: ((Long, android.graphics.Bitmap) -> Unit)? = null,
@@ -158,6 +159,7 @@ fun HomeAutoGrid(
                 AutoGridCell(
                     item = item,
                     isFocused = index == focusedIndex,
+                    showFocusVisuals = showFocusVisuals,
                     showTitle = false,
                     showPlatformBadge = showPlatformBadge,
                     useBoxArt = useBoxArt,
@@ -394,6 +396,7 @@ private fun AutoGridTitle(item: CarouselItem?) {
 private fun AutoGridCell(
     item: CarouselItem,
     isFocused: Boolean,
+    showFocusVisuals: Boolean,
     showTitle: Boolean,
     showPlatformBadge: Boolean,
     useBoxArt: Boolean,
@@ -435,8 +438,9 @@ private fun AutoGridCell(
                 ) {
                     GameCard(
                         game = item.game,
-                        isFocused = isFocused,
+                        isFocused = isFocused && showFocusVisuals,
                         focusScale = ComponentDefaults.Focus.scaleFocused,
+                        scaleOverride = if (isFocused) ComponentDefaults.Focus.scaleFocused else null,
                         downloadIndicator = downloadIndicator,
                         showPlatformBadge = showPlatformBadge,
                         useBoxArt = useBoxArt,
@@ -462,7 +466,8 @@ private fun AutoGridCell(
                 val fitByHeight = posterRatio <= coverAspectRatio
                 MediaCard(
                     media = item.media,
-                    isFocused = isFocused,
+                    isFocused = isFocused && showFocusVisuals,
+                    scaleOverride = if (isFocused) ComponentDefaults.Focus.scaleFocused else null,
                     downloadIndicator = downloadIndicator,
                     onPosterLoaded = onPosterLoaded,
                     modifier = Modifier
@@ -472,7 +477,7 @@ private fun AutoGridCell(
                 )
             }
             is CarouselItem.ViewAll -> ViewAllCard(
-                isFocused = isFocused,
+                isFocused = isFocused && showFocusVisuals,
                 onClick = onTap,
                 remainingCount = item.remainingCount,
                 modifier = Modifier

@@ -261,6 +261,7 @@ fun HomeScreen(
             )
         }.collect { (isScrolling, programmatic, layoutInfo) ->
             if (isScrolling && !programmatic) {
+                if (uiState.appBarFocused) viewModel.releaseAppBar()
                 val viewportStart = layoutInfo.viewportStartOffset
                 val visibleItems = layoutInfo.visibleItemsInfo
                 if (visibleItems.isNotEmpty()) {
@@ -832,11 +833,18 @@ fun HomeScreen(
                                         ?: (cell == grid.cell)
                                     when {
                                         grid.isEditing -> viewModel.moveEditingTileTo(cell)
+                                        uiState.appBarFocused -> {
+                                            viewModel.releaseAppBar()
+                                            viewModel.setCustomGridCell(cell)
+                                        }
                                         onFocused -> inputHandler.onConfirm()
                                         else -> viewModel.setCustomGridCell(cell)
                                     }
                                 },
-                                onSwipePage = { delta -> viewModel.turnCustomGridPage(delta) },
+                                onSwipePage = { delta ->
+                                    viewModel.releaseAppBar()
+                                    viewModel.turnCustomGridPage(delta)
+                                },
                                 onTileDrag = { cell -> viewModel.moveEditingTileTo(cell) },
                                 onTileResize = { cell -> viewModel.resizeEditingTileTo(cell) },
                                 onToggleEditMode = { viewModel.toggleTileEditMode() },
@@ -851,11 +859,18 @@ fun HomeScreen(
                                 onAddPage = { viewModel.confirmAddPage() },
                                 onHiddenTilesTap = viewModel::openHiddenCustomGridTiles,
                                 onTileLongPress = { cell ->
+                                    viewModel.releaseAppBar()
                                     viewModel.setCustomGridCell(cell)
                                     viewModel.openTileMenu()
                                 },
-                                onBadgeTap = { index -> viewModel.engageRaTileAt(index) },
-                                onBandTap = { inputHandler.onConfirm() },
+                                onBadgeTap = { index ->
+                                    viewModel.releaseAppBar()
+                                    viewModel.engageRaTileAt(index)
+                                },
+                                onBandTap = {
+                                    viewModel.releaseAppBar()
+                                    inputHandler.onConfirm()
+                                },
                                 downloadIndicatorFor = {
                                     downloadIndicators.value[it] ?: GameDownloadIndicator.NONE
                                 },
@@ -899,6 +914,7 @@ fun HomeScreen(
                                 ),
                                 focusedIndex = uiState.focusedGameIndex,
                                 config = uiState.autoGridConfig,
+                                showFocusVisuals = !uiState.appBarFocused,
                                 useBoxArt = uiState.boxArt3d,
                                 gridState = gridState,
                                 entryAnimationKey = (uiState.currentPlatform?.id ?: uiState.currentRow)
@@ -942,6 +958,7 @@ fun HomeScreen(
                                 },
                                 focusedIndex = uiState.focusedGameIndex,
                                 listState = listState,
+                                showFocusVisuals = !uiState.appBarFocused,
                                 availableWidth = availableCarouselWidth,
                                 verticalContentPadding = railTop,
                                 metrics = CarouselMetrics.hero(

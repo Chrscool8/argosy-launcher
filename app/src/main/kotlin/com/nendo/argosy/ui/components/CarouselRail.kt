@@ -310,8 +310,7 @@ internal fun carouselContentPadding(
  * layout and card rendering only; the focus index, the list state and the scroll effects stay with
  * the caller, which must snap using [CarouselMetrics.anchor]'s `snapOffsetPx`.
  *
- * @param showFocusVisuals false suppresses the focus treatment on game cards while another region
- * holds input. The trailing View All card keeps its own focus marker either way.
+ * @param showFocusVisuals false suppresses focus treatment while another region holds input.
  */
 @Composable
 fun CarouselRail(
@@ -447,12 +446,13 @@ fun CarouselRail(
                         label = "carouselViewAllAlpha"
                     )
                     ViewAllCard(
-                        isFocused = isFocused,
+                        isFocused = isFocused && showFocusVisuals,
                         onClick = { onItemTap(index) },
                         style = viewAllStyle,
                         tapMode = tapMode,
                         remainingCount = item.remainingCount,
                         focusScale = metrics.focusScale,
+                        scaleOverride = if (isFocused) metrics.focusScale else null,
                         scalePivotY = metrics.scalePivotY,
                         modifier = Modifier
                             .graphicsLayer {
@@ -510,7 +510,7 @@ private fun CarouselMediaCard(
         isFocused = isFocused && showFocusVisuals,
         focusScale = metrics.focusScale,
         scalePivotY = metrics.scalePivotY,
-        scaleOverride = if (isFocused) overrides.focusedScale else null,
+        scaleOverride = if (isFocused) overrides.focusedScale ?: metrics.focusScale else null,
         alphaOverride = if (isFocused) overrides.focusedAlpha else overrides.unfocusedAlpha,
         downloadIndicator = downloadIndicator,
         onPosterLoaded = onPosterLoaded,
@@ -548,7 +548,7 @@ private fun CarouselGameCard(
     } else {
         DpSize(maxWidth, maxHeight)
     }
-    val scaleOverride = if (isFocused) overrides.focusedScale else null
+    val scaleOverride = if (isFocused) overrides.focusedScale ?: metrics.focusScale else null
     val alphaOverride = if (isFocused) overrides.focusedAlpha else overrides.unfocusedAlpha
 
     GameCardWithNewBadge(
