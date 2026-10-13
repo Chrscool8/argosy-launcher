@@ -153,8 +153,7 @@ class DualScreenManager(
     private var activityContext: Context = context
 
     private val dockCoordinator = com.nendo.argosy.ui.dualscreen.DockReorderCoordinator(
-        activityIndependentScope, preferencesRepository, appsRepository, sessionStateStore,
-        onAppsChanged = { pins -> eachCompanion { it.onHomeAppsChanged(pins) } },
+        activityIndependentScope, preferencesRepository, appsRepository,
         onSaveError = {
             notificationManager.showError(
                 com.nendo.argosy.core.notification.NotificationText.Res(R.string.dock_reorder_save_failed)

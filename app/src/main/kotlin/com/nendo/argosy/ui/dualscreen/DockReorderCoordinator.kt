@@ -1,6 +1,5 @@
 package com.nendo.argosy.ui.dualscreen
 
-import com.nendo.argosy.data.preferences.SessionStateStore
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.repository.AppsRepository
 import com.nendo.argosy.ui.components.DockReorderSession
@@ -21,11 +20,9 @@ class DockReorderCoordinator(
     private val scope: CoroutineScope,
     private val preferences: UserPreferencesRepository,
     private val packages: AppsRepository,
-    private val cache: SessionStateStore,
-    private val onAppsChanged: (List<String>) -> Unit,
     private val onSaveError: () -> Unit
 ) {
-    private val pins = MutableStateFlow(cache.getHomeApps())
+    private val pins = MutableStateFlow(emptyList<String>())
     private val installed = MutableStateFlow<Set<String>?>(null)
     private val editing = MutableStateFlow<DockReorderSession?>(null)
     val session: StateFlow<DockReorderSession?> = editing
@@ -42,8 +39,6 @@ class DockReorderCoordinator(
                 if (order != pins.value) editing.value = null
                 pins.value = order
                 hydrated.value = true
-                cache.setHomeApps(order)
-                onAppsChanged(order)
             }
         }
         scope.launch {

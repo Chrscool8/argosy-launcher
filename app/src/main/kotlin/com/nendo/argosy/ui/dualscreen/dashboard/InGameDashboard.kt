@@ -274,7 +274,7 @@ private fun DashboardRail(
             .width(if (wide) RAIL_WIDTH_WIDE else RAIL_WIDTH)
             .fillMaxHeight()
             .background(theme.surfaceBase.copy(alpha = PANEL_ALPHA))
-            .padding(bottom = if (wide) 0.dp else content.bottomInset)
+            .padding(bottom = content.bottomInset)
             .padding(horizontal = Dimens.spacingSm, vertical = Dimens.spacingMd),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingXs)
     ) {

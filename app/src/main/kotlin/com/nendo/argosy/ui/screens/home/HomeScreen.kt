@@ -203,11 +203,14 @@ fun HomeScreen(
     val isCustomGrid = uiState.layoutKind == HomeLayoutKind.CUSTOM_GRID
     val quickNavigation by viewModel.quickNavigationEnabled.collectAsState()
     val dockReorder by viewModel.dockReorder.collectAsState()
+    LaunchedEffect(presentationShowsHints) {
+        if (!presentationShowsHints) viewModel.releaseAppBar()
+    }
     com.nendo.argosy.ui.input.ModalInputEffect(
-        active = dockReorder?.controller == true && uiState.appBarFocused,
+        active = presentationShowsHints && dockReorder?.controller == true && uiState.appBarFocused,
         handler = viewModel.dockReorderInputHandler
     )
-    if (dockReorder?.controller == true) com.nendo.argosy.ui.input.ModalPresenceEffect()
+    if (presentationShowsHints && dockReorder?.controller == true) com.nendo.argosy.ui.input.ModalPresenceEffect()
     val rowButtons = if (quickNavigation) InputButton.LT_RT else InputButton.LB_RB
     val scope = rememberCoroutineScope()
     val overflowScrollState = rememberScrollState()

@@ -1,6 +1,5 @@
 package com.nendo.argosy.ui.dualscreen
 
-import com.nendo.argosy.data.preferences.SessionStateStore
 import com.nendo.argosy.data.preferences.UserPreferences
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.repository.AppsRepository
@@ -9,7 +8,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,14 +31,12 @@ class DockReorderCoordinatorTest {
         var available = listOf("a", "b", "c", "d")
         val repository = mockk<UserPreferencesRepository>()
         val apps = mockk<AppsRepository>()
-        val cache = mockk<SessionStateStore>(relaxed = true)
         var failures = 0
         val coordinator: DockReorderCoordinator
 
         init {
             every { repository.userPreferences } returns (initialPreferences ?: prefs)
             every { apps.packageChanges } returns packages.map { "" }
-            every { cache.getHomeApps() } returns original
             coEvery { apps.getInstalledApps(true) } coAnswers {
                 available.map { InstalledApp(it, it, false, false) }
             }
@@ -48,12 +44,12 @@ class DockReorderCoordinatorTest {
                 prefs.value = prefs.value.copy(secondaryHomeApps = secondArg())
                 true
             }
-            coordinator = DockReorderCoordinator(scope.backgroundScope, repository, apps, cache, {}, { failures++ })
+            coordinator = DockReorderCoordinator(scope.backgroundScope, repository, apps, { failures++ })
         }
     }
 
     @Test
-    fun `cached pins stay hidden until authoritative preferences hydrate`() = runTest(UnconfinedTestDispatcher()) {
+    fun `dock waits for authoritative preferences before displaying pins`() = runTest(UnconfinedTestDispatcher()) {
         val delayed = MutableSharedFlow<UserPreferences>()
         val fixture = Fixture(this, delayed)
 
@@ -64,13 +60,12 @@ class DockReorderCoordinatorTest {
     }
 
     @Test
-    fun `preview cancel and successful commit keep cache authoritative`() = runTest(UnconfinedTestDispatcher()) {
+    fun `preview cancel and successful commit keep saved pins authoritative`() = runTest(UnconfinedTestDispatcher()) {
         val fixture = Fixture(this)
         val dock = fixture.coordinator
         val token = dock.begin("a", true)!!
         dock.target(token, 2)
         assertEquals(listOf("c", "b", "a"), dock.apps.value)
-        verify(exactly = 0) { fixture.cache.setHomeApps(listOf("c", "missing", "b", "a")) }
         dock.cancel(token)
         assertEquals(listOf("a", "b", "c"), dock.apps.value)
         coVerify(exactly = 0) { fixture.repository.reorderDockPins(any(), any()) }
@@ -79,7 +74,6 @@ class DockReorderCoordinatorTest {
         dock.save(saved)
         assertNull(dock.session.value)
         assertEquals(listOf("c", "missing", "b", "a"), fixture.prefs.value.secondaryHomeApps)
-        verify(exactly = 1) { fixture.cache.setHomeApps(listOf("c", "missing", "b", "a")) }
     }
 
     @Test
@@ -95,7 +89,6 @@ class DockReorderCoordinatorTest {
         assertEquals(fixture.original, fixture.prefs.value.secondaryHomeApps)
         assertEquals(listOf("a", "b", "c"), dock.apps.value)
         assertEquals(1, fixture.failures)
-        verify(exactly = 1) { fixture.cache.setHomeApps(fixture.original) }
     }
 
     @Test

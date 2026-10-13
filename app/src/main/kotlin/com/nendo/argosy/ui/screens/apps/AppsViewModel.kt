@@ -119,7 +119,7 @@ class AppsViewModel @Inject constructor(
     init {
         _uiState.update { it.copy(hasSecondaryDisplay = displayAffinityHelper.hasSecondaryDisplay) }
         observePackageChanges()
-        observeGridDensity()
+        observePreferences()
     }
 
     private fun observePackageChanges() {
@@ -130,10 +130,18 @@ class AppsViewModel @Inject constructor(
         }
     }
 
-    private fun observeGridDensity() {
+    private fun observePreferences() {
         viewModelScope.launch {
             preferencesRepository.preferences.collect { prefs ->
-                _uiState.update { it.copy(gridDensity = prefs.gridDensity) }
+                secondaryHomeApps = prefs.secondaryHomeApps
+                _uiState.update { state ->
+                    state.copy(
+                        gridDensity = prefs.gridDensity,
+                        apps = state.apps.map { app ->
+                            app.copy(isOnSecondaryHome = app.packageName in secondaryHomeApps)
+                        }
+                    )
+                }
             }
         }
     }
@@ -145,7 +153,6 @@ class AppsViewModel @Inject constructor(
             val prefs = preferencesRepository.preferences.first()
             hiddenApps = prefs.hiddenApps
             visibleSystemApps = prefs.visibleSystemApps
-            secondaryHomeApps = prefs.secondaryHomeApps
             customOrder = prefs.appOrder
 
             val showHidden = _uiState.value.showHiddenApps
@@ -382,18 +389,6 @@ class AppsViewModel @Inject constructor(
         viewModelScope.launch {
             val pinned = preferencesRepository.toggleDockPin(packageName)
             soundManager.play(if (pinned) SoundType.FAVORITE else SoundType.UNFAVORITE)
-
-            _uiState.update { state ->
-                state.copy(
-                    apps = state.apps.map { app ->
-                        if (app.packageName == packageName) {
-                            app.copy(isOnSecondaryHome = pinned)
-                        } else {
-                            app
-                        }
-                    }
-                )
-            }
         }
     }
 

@@ -80,18 +80,11 @@ class SessionStateStore(context: Context) {
 
     fun isSaveDirty(): Boolean = prefs.getBoolean(KEY_SAVE_DIRTY, false)
 
-    fun setHomeApps(apps: List<String>) {
-        prefs.edit().putString("home_apps_order", apps.joinToString(","))
-            .remove(KEY_HOME_APPS).apply()
+    fun setHomeApps(apps: Set<String>) {
+        prefs.edit().putStringSet(KEY_HOME_APPS, apps).apply()
     }
 
-    fun getHomeApps(): List<String> =
-        if (prefs.contains("home_apps_order")) {
-            prefs.getString("home_apps_order", null)?.split(",")
-                ?.filter { it.isNotBlank() }?.distinct() ?: emptyList()
-        } else {
-            prefs.getStringSet(KEY_HOME_APPS, emptySet())?.toList() ?: emptyList()
-        }
+    fun getHomeApps(): Set<String> = prefs.getStringSet(KEY_HOME_APPS, emptySet()) ?: emptySet()
 
     fun setArgosyForeground(isForeground: Boolean) {
         prefs.edit().putBoolean(KEY_ARGOSY_FOREGROUND, isForeground).apply()
