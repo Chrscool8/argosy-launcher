@@ -50,6 +50,7 @@ import com.nendo.argosy.domain.model.CustomGridShape
 import com.nendo.argosy.ui.screens.settings.DisplayState
 import com.nendo.argosy.ui.screens.settings.SettingsPreviewGame
 import com.nendo.argosy.ui.screens.settings.toSettingsPreviewGame
+import com.nendo.argosy.util.HomeAppAvailability
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,7 +71,8 @@ class DisplaySettingsDelegate @Inject constructor(
     private val screenCaptureManager: ScreenCaptureManager,
     private val customGridShapeStore: CustomGridShapeStore,
     private val homeTileRepository: HomeTileRepository,
-    private val syncPreferencesRepository: SyncPreferencesRepository
+    private val syncPreferencesRepository: SyncPreferencesRepository,
+    private val homeAppAvailability: HomeAppAvailability
 ) {
     private val _state = MutableStateFlow(DisplayState())
     val state: StateFlow<DisplayState> = _state.asStateFlow()
@@ -550,6 +552,22 @@ class DisplaySettingsDelegate @Inject constructor(
         scope.launch {
             preferencesRepository.setLockScreenArt(enabled)
             _state.update { it.copy(lockScreenArt = enabled) }
+        }
+    }
+
+    fun setHomeAppAvailable(scope: CoroutineScope, available: Boolean) {
+        scope.launch {
+            val applied = homeAppAvailability.setAvailable(available)
+            _state.update { it.copy(homeAppAvailable = applied) }
+        }
+    }
+
+    suspend fun isDefaultHome(): Boolean = homeAppAvailability.isDefaultHome()
+
+    fun refreshDefaultHome(scope: CoroutineScope) {
+        scope.launch {
+            val isDefaultHome = homeAppAvailability.isDefaultHome()
+            _state.update { it.copy(isDefaultHome = isDefaultHome) }
         }
     }
 

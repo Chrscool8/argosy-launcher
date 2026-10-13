@@ -1152,6 +1152,9 @@ class SettingsViewModel @Inject constructor(
     fun setUseAccentColorFooter(use: Boolean) = displayDelegate.setUseAccentColorFooter(viewModelScope, use)
     fun setCompactFooter(enabled: Boolean) = displayDelegate.setCompactFooter(viewModelScope, enabled)
     fun setLockScreenArt(enabled: Boolean) = displayDelegate.setLockScreenArt(viewModelScope, enabled)
+    fun setHomeAppAvailable(available: Boolean) =
+        displayDelegate.setHomeAppAvailable(viewModelScope, available)
+    fun refreshDefaultHome() = displayDelegate.refreshDefaultHome(viewModelScope)
     fun setIconPack(packageName: String?) = displayDelegate.setIconPack(viewModelScope, packageName)
     fun cycleIconPack(direction: Int) = displayDelegate.cycleIconPack(viewModelScope, direction)
 

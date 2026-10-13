@@ -310,6 +310,15 @@
     <!-- Setting subtitle. Explains what the switch does and warns that it takes over the lock
          screen wallpaper. "Home app" is the app the device shows when Home is pressed. -->
     <string name="settings_interface_lock_screen_art_subtitle">While Argosy is your home app, the lock screen shows your library, or the game you left running. Replaces your lock screen wallpaper for good.</string>
+    <!-- Setting title. Whether Android lists Argosy among the apps it can use as the home screen.
+         "Home app" is the app the device shows when Home is pressed. -->
+    <string name="settings_interface_home_app_title">Available as Home App</string>
+    <!-- Second line of that row while the switch can be changed. -->
+    <string name="settings_interface_home_app_subtitle">Lets Android offer Argosy as your home screen. Samsung DeX only opens Argosy while this is off.</string>
+    <!-- Value shown in place of the switch while Argosy is the device's home app. Adjective. -->
+    <string name="settings_interface_home_app_locked_value">On</string>
+    <!-- Second line of that row while Argosy is the device's home app and the switch is locked. -->
+    <string name="settings_interface_home_app_locked_subtitle">Argosy is your home app. Choose another home app in Android settings to turn this off.</string>
 
     <!-- Row title. Noun: the time of day shown in the status bar. -->
     <string name="settings_interface_status_clock_title">Clock</string>

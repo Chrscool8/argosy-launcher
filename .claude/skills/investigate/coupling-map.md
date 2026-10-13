@@ -456,7 +456,7 @@ Routing: contributor-open. LIVE DEFECT flag: reports of covers still failing to 
 open bug; modifications welcome but tread carefully.
 
 Triggers: `data/cache/ImageCacheManager.kt`, `domain/usecase/cache/RepairImageCacheUseCase.kt`,
-`recoverMissingCovers` (`ImageCacheManager.kt:1240`, boot call `MainActivity.kt:691`),
+`recoverMissingCovers` (`ImageCacheManager.kt:1240`, boot call in `ArgosyActivity.kt`),
 fallback chains.
 
 Three fragilities:
@@ -493,7 +493,7 @@ Lockstep set:
   only at construction.
 - Focus travels through `refocusSelf()` on both sides. Only one side had it, and the missing
   half made the pad look dead until a touch.
-- `MainActivity` is the HOME activity bound to display 0 and cannot change display. Any plan
+- `ArgosyActivity` (HOME through the `.MainActivity` activity-alias) is bound to display 0 and cannot change display. Any plan
   that "moves Home to the other screen" is wrong on that fact alone.
 - Primary -> companion notification is `CompanionHost`. `CompanionScreen` has only HOME and
   GAME_DETAIL, and `onGameDetailOpened`/`onGameDetailClosed` are empty, so that direction does

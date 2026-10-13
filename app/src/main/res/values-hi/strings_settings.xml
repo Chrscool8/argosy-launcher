@@ -109,6 +109,10 @@
     <string name="settings_interface_compact_footer_subtitle">पतली कंट्रोल गाइड बार का उपयोग करें</string>
     <string name="settings_interface_lock_screen_art_title">लॉक स्क्रीन चित्र</string>
     <string name="settings_interface_lock_screen_art_subtitle">जब Argosy आपका होम ऐप हो, लॉक स्क्रीन पर आपकी लाइब्रेरी या चालू छोड़ा गया गेम दिखता है। यह आपके लॉक स्क्रीन वॉलपेपर की जगह हमेशा के लिए ले लेता है।</string>
+    <string name="settings_interface_home_app_title">होम ऐप के रूप में उपलब्ध</string>
+    <string name="settings_interface_home_app_subtitle">Android को Argosy को आपकी होम स्क्रीन के रूप में पेश करने देता है। Samsung DeX में Argosy तभी खुलता है जब यह बंद हो।</string>
+    <string name="settings_interface_home_app_locked_value">चालू</string>
+    <string name="settings_interface_home_app_locked_subtitle">Argosy आपका होम ऐप है। इसे बंद करने के लिए Android सेटिंग्स में कोई दूसरा होम ऐप चुनें।</string>
     <string name="settings_interface_controller_grip_title">कंट्रोलर ग्रिप</string>
     <string name="settings_interface_controller_grip_subtitle">ग्रिप वाले हिस्से से UI को ऊपर खिसकाएँ</string>
     <string name="settings_interface_home_screen_title">होम स्क्रीन</string>

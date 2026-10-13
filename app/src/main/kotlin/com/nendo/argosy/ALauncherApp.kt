@@ -159,6 +159,9 @@ class ArgosyApp : Application(), Configuration.Provider, ImageLoaderFactory {
     @Inject
     lateinit var iconPackRepository: com.nendo.argosy.data.iconpack.IconPackRepository
 
+    @Inject
+    lateinit var homeAppAvailability: com.nendo.argosy.util.HomeAppAvailability
+
     private val quayPassForegroundObserver = object : androidx.lifecycle.DefaultLifecycleObserver {
         override fun onStart(owner: androidx.lifecycle.LifecycleOwner) {
             appScope.launch { quayPassCredentialManager.refreshIfNeeded() }
@@ -171,6 +174,7 @@ class ArgosyApp : Application(), Configuration.Provider, ImageLoaderFactory {
         appScope.launch { com.nendo.argosy.util.RootShell.isAvailable }
         appScope.launch { socialSyncCoordinator.discardQueueWithoutSocialAccount() }
         appScope.launch { variantFileCleanup.runOnce() }
+        appScope.launch { homeAppAvailability.applyAtStartup() }
         UpdateCheckWorker.schedule(this)
         SaveSyncWorker.schedule(this)
         SocialSyncWorker.schedule(this)

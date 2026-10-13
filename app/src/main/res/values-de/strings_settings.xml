@@ -119,6 +119,10 @@
     <string name="settings_interface_compact_footer_subtitle">Schmalere Bedienleiste verwenden</string>
     <string name="settings_interface_lock_screen_art_title">Sperrbildschirm-Motiv</string>
     <string name="settings_interface_lock_screen_art_subtitle">Solange Argosy deine Startbildschirm-App ist, zeigt der Sperrbildschirm deine Bibliothek oder das laufende Spiel. Ersetzt dein Sperrbildschirm-Hintergrundbild dauerhaft.</string>
+    <string name="settings_interface_home_app_title">Als Startbildschirm-App verfügbar</string>
+    <string name="settings_interface_home_app_subtitle">Android kann Argosy als Startbildschirm anbieten. Samsung DeX öffnet Argosy nur, wenn dies aus ist.</string>
+    <string name="settings_interface_home_app_locked_value">An</string>
+    <string name="settings_interface_home_app_locked_subtitle">Argosy ist deine Startbildschirm-App. Wähle in den Android-Einstellungen eine andere Startbildschirm-App, um dies auszuschalten.</string>
     <string name="settings_interface_controller_grip_title">Controller-Griff</string>
     <string name="settings_interface_controller_grip_subtitle">Schiebt die Oberfläche aus dem vom Griff verdeckten Bereich</string>
     <string name="settings_interface_home_screen_title">Startbildschirm</string>

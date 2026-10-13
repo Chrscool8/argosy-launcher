@@ -59,7 +59,7 @@ All interactive UI components MUST have:
 **Focus Management:**
 - NO Compose focus for navigation or selection. `focusable()` appears once per
   rendered surface, as that surface's root key sink: `ArgosyApp` for the control
-  surface, and the presentation branch of both `MainActivity` and
+  surface, and the presentation branch of both `ArgosyActivity` and
   `SecondaryHomeActivity`. Each activity renders either `ArgosyApp` or
   `PresentationSlotContent`, so each needs a sink on the presentation side. A surface
   rendered without one leaves its window with nothing focusable and Android ANRs the
@@ -343,7 +343,7 @@ The `clickableNoFocus` extension (defined in `ui/util/Modifiers.kt`) disables Co
 - Use `isFocused: Boolean` prop for visual focus state
 - Manage focus index in ViewModel, not Compose focus system
 - `Modifier.focusable()` belongs only to a surface's root key sink, one per rendered
-  surface (`ArgosyApp` for control; the presentation branch of `MainActivity` and
+  surface (`ArgosyApp` for control; the presentation branch of `ArgosyActivity` and
   `SecondaryHomeActivity`). Never add one to a row, tile or control
 - `FocusRequester` is allowed ONLY for soft-keyboard text entry and those root key
   sinks. Using it to move selection between rows is the violation
@@ -597,9 +597,9 @@ There is no `:companion` process and no companion ViewModel. `SecondaryHomeActiv
 reach the same instance (see `PresentOnCompanion.kt`).
 - Any dependency exposed on `DualScreenManager` is available to the companion, including
   `GameRepository`
-- `MainActivity` constructs `DualScreenManager` by hand, passing its own injected fields
+- `ArgosyActivity` constructs `DualScreenManager` by hand, passing its own injected fields
 - To give the companion a new dependency, add the constructor parameter to
-  `DualScreenManager` and pass it at the construction site in `MainActivity`
+  `DualScreenManager` and pass it at the construction site in `ArgosyActivity`
 
 ## Completion Criteria
 

@@ -5,7 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class MainActivityScreenCaptureGateTest {
+class ArgosyActivityScreenCaptureGateTest {
 
     @Test
     fun `returns true only when ambient LED and screen colors are both enabled`() {

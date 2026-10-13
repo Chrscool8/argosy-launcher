@@ -107,6 +107,10 @@
     <string name="settings_interface_compact_footer_subtitle">使用更薄的操作提示栏</string>
     <string name="settings_interface_lock_screen_art_title">锁屏图片</string>
     <string name="settings_interface_lock_screen_art_subtitle">当 Argosy 是你的主屏幕应用时，锁屏会显示你的游戏库或未退出的游戏。会永久替换你的锁屏壁纸。</string>
+    <string name="settings_interface_home_app_title">可用作主屏幕应用</string>
+    <string name="settings_interface_home_app_subtitle">让 Android 可以将 Argosy 作为主屏幕提供。仅在关闭此项时，Samsung DeX 才能打开 Argosy。</string>
+    <string name="settings_interface_home_app_locked_value">开启</string>
+    <string name="settings_interface_home_app_locked_subtitle">Argosy 是你的主屏幕应用。请先在 Android 设置中选择其他主屏幕应用，再关闭此项。</string>
     <string name="settings_interface_controller_grip_title">手柄夹持</string>
     <string name="settings_interface_controller_grip_subtitle">将界面上移，避开夹持配件遮挡的区域</string>
     <string name="settings_interface_home_screen_title">主屏幕</string>

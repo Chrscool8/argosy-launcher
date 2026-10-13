@@ -17,7 +17,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.nendo.argosy.MainActivity
+import com.nendo.argosy.ArgosyActivity
 import com.nendo.argosy.R
 import com.nendo.argosy.core.service.ServiceNotificationIds
 import com.nendo.argosy.core.service.startForegroundServiceSafely
@@ -104,7 +104,7 @@ class ScreenCaptureService : Service() {
     }
 
     private fun createContentIntent(): PendingIntent {
-        val intent = Intent(this, MainActivity::class.java).apply {
+        val intent = Intent(this, ArgosyActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         return PendingIntent.getActivity(

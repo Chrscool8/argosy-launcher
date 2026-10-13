@@ -64,6 +64,9 @@ internal class InterfaceSectionInput(
             InterfaceItem.LockScreenArt -> return toggleLeftRight(direction, state.display.lockScreenArt) {
                 viewModel.setLockScreenArt(it)
             }
+            InterfaceItem.HomeApp -> return toggleLeftRight(direction, state.display.homeAppAvailable) {
+                viewModel.setHomeAppAvailable(it)
+            }
             InterfaceItem.StatusClock -> return toggleLeftRight(direction, state.display.showStatusClock) {
                 viewModel.setShowStatusClock(it)
             }

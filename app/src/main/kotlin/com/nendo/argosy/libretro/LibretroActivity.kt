@@ -3375,7 +3375,11 @@ class LibretroActivity : ComponentActivity() {
      */
     private fun setUpSecondScreen() {
         val output = DualScreenOutput.forCore(resolvedCoreId)
-            ?.takeIf { !isDockedDark() && secondScreenDisplay() != null }
+            ?.takeIf {
+                !isDockedDark() &&
+                    !com.nendo.argosy.util.DesktopMode.isActive(this) &&
+                    secondScreenDisplay() != null
+            }
         if (output == null) {
             clearScreenSplit()
             return

@@ -28,7 +28,7 @@ APP_TARGET    where launched apps and games open. Takes no launcher UI.
 OFF           Argosy draws nothing.
 ```
 
-Either physical activity can hold PRIMARY. `MainActivity` and `SecondaryHomeActivity` are
+Either physical activity can hold PRIMARY. `ArgosyActivity` and `SecondaryHomeActivity` are
 interchangeable hosts, and which one is hosting is `DualScreenManager.companionHoldsPrimary`.
 
 LAW: `companionHoldsPrimary` decides BOTH what an activity renders AND where its key events go.
@@ -53,7 +53,7 @@ monitor and you land back in its profile.
 that bug made every screen card draw at the same aspect) and filters to BUILT_IN and EXTERNAL.
 
 `DualScreenManager.applyStoredScreenLayout(promptWhenUnknown)` is THE entry point that resolves
-and applies a layout. Called from `MainActivity.onCreate`, from the display listener on add and
+and applies a layout. Called from `ArgosyActivity.onCreate`, from the display listener on add and
 remove, and by the settings router after a role change. Do not resolve a layout anywhere else.
 
 Swap rule (`ScreenLayout.withRole`): only PRIMARY and PRESENTATION ever trade. Assigning
@@ -66,7 +66,7 @@ where an app-target screen must survive a swap.
 Both activities choose from DSM flows:
 
 ```
-MainActivity                         SecondaryHomeActivity
+ArgosyActivity                       SecondaryHomeActivity
   companionHoldsPrimary                isRolesSwapped
   || game on another screen            || game shows the dashboard here
     ? PresentationSlotContent(slot)      ? PresentationSlotContent(slot)
@@ -79,7 +79,7 @@ hosting"; one (`isShowcaseRole`) let both screens compose `ArgosyApp` after slee
 or a game closing, and every press moved menus twice.
 
 The two gates are not exact mirrors: while the companion is stopped (screen off, `onStop`)
-`companionHoldsPrimary` is false, so MainActivity composes `ArgosyApp` while the stopped
+`companionHoldsPrimary` is false, so ArgosyActivity composes `ArgosyApp` while the stopped
 companion's composition still exists. What keeps that safe is the next rule.
 
 RULE: `ArgosyApp` collects the gamepad, shortcut and home event flows with
@@ -89,11 +89,11 @@ collector of a `GamepadInputHandler` flow must do the same.
 `ArgosyApp` takes no dual-screen parameters. It reads `DualScreenManagerHolder.instance`.
 
 LAW: inside `ArgosyApp` and anything it hosts, reach DSM through the Holder, never through
-`context as? MainActivity`.
+`context as? ArgosyActivity`.
 - Why: on the companion that cast is null, and roughly twenty sites went silently inert when the
   companion held PRIMARY - overlay events, keyboard toggle, media routing, the screen dimmer.
-- Exception: genuinely MainActivity-owned things, e.g. `pendingDeepLink`, which exists because
-  MainActivity receives the Intent.
+- Exception: genuinely ArgosyActivity-owned things, e.g. `pendingDeepLink`, which exists because
+  ArgosyActivity receives the Intent.
 
 ## PresentationSlot
 
@@ -260,7 +260,7 @@ makes launching to a media screen work even in single-display mode.
 1. [ ] State on DSM as a StateFlow, never on an activity.
 2. [ ] Does the presentation screen show it? Add a `PresentationSlot` case and publish it, rather
        than reaching for a second render path.
-3. [ ] Reach DSM via the Holder, not via MainActivity.
+3. [ ] Reach DSM via the Holder, not via ArgosyActivity.
 4. [ ] Gamepad AND touch. An app bar you can tap but not reach with the d-pad fails the
        completeness matrix; that has already shipped once.
 5. [ ] If you add a CompanionHost method, implement it for real or do not add it. Three `= Unit`

@@ -717,6 +717,7 @@ private fun routeInterfaceConfirm(vm: SettingsViewModel, state: SettingsUiState)
         }
         InterfaceItem.CompactFooter -> vm.setCompactFooter(!state.display.compactFooter)
         InterfaceItem.LockScreenArt -> vm.setLockScreenArt(!state.display.lockScreenArt)
+        InterfaceItem.HomeApp -> vm.setHomeAppAvailable(!state.display.homeAppAvailable)
         InterfaceItem.StatusClock -> vm.setShowStatusClock(!state.display.showStatusClock)
         InterfaceItem.StatusBattery -> vm.setShowStatusBattery(!state.display.showStatusBattery)
         InterfaceItem.StatusNetwork -> vm.setShowStatusNetwork(!state.display.showStatusNetwork)

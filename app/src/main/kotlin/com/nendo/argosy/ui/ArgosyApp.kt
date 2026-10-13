@@ -164,7 +164,7 @@ fun ArgosyApp(
     val navRingState by viewModel.navRingState.collectAsState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val activity = context as? com.nendo.argosy.MainActivity
+    val activity = context as? com.nendo.argosy.ArgosyActivity
     val dsm = remember { com.nendo.argosy.DualScreenManagerHolder.instance }
 
     val companionActive by dsm?.isCompanionActive?.collectAsState()

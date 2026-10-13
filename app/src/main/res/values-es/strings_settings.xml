@@ -121,6 +121,10 @@
     <string name="settings_interface_compact_footer_subtitle">Usar una barra de controles más fina</string>
     <string name="settings_interface_lock_screen_art_title">Imagen de la pantalla de bloqueo</string>
     <string name="settings_interface_lock_screen_art_subtitle">Mientras Argosy sea tu aplicación de inicio, la pantalla de bloqueo muestra tu biblioteca o el juego que dejaste en curso. Sustituye tu fondo de pantalla de bloqueo de forma permanente.</string>
+    <string name="settings_interface_home_app_title">Disponible como aplicación de inicio</string>
+    <string name="settings_interface_home_app_subtitle">Permite que Android ofrezca Argosy como pantalla de inicio. Samsung DeX solo abre Argosy si está desactivado.</string>
+    <string name="settings_interface_home_app_locked_value">Activado</string>
+    <string name="settings_interface_home_app_locked_subtitle">Argosy es tu aplicación de inicio. Elige otra aplicación de inicio en los ajustes de Android para desactivarlo.</string>
     <string name="settings_interface_controller_grip_title">Agarre del mando</string>
     <string name="settings_interface_controller_grip_subtitle">Desplazar la interfaz fuera del área que cubre un agarre</string>
     <string name="settings_interface_home_screen_title">Pantalla de inicio</string>

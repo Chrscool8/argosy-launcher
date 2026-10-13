@@ -59,8 +59,10 @@ tap landed where intended.
 - Prefer gamepad keyevents for NAVIGATION (dpad + confirm) over guessing pixel coords; it both
   avoids mistaps and exercises the controller path. Reserve taps for the touch-modality check.
 - Argosy is a HOME/launcher app. `monkey -c LAUNCHER` does NOT foreground it; launch the
-  activity directly: `am start -a android.intent.action.MAIN -c android.intent.category.HOME -n
-  com.nendo.argosy.debug/com.nendo.argosy.MainActivity`.
+  activity directly: `am start -a android.intent.action.MAIN -n
+  com.nendo.argosy.debug/com.nendo.argosy.ArgosyActivity`. The HOME filter lives on the
+  `com.nendo.argosy.MainActivity` activity-alias, which the "Available as Home App" setting
+  disables.
 - First immersive entry pops Android's "Viewing full screen" overlay ON TOP of the app; dismiss
   it ("Got it") or the first screenshot is the overlay, not the screen.
 

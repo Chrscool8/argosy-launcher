@@ -585,6 +585,8 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             useAccentColorFooter = prefs.useAccentColorFooter,
             compactFooter = prefs.compactFooter,
             lockScreenArt = prefs.lockScreenArt,
+            homeAppAvailable = prefs.homeAppAvailable,
+            isDefaultHome = vm.displayDelegate.isDefaultHome(),
             iconPack = prefs.iconPack,
             iconPacks = iconPacks,
             boxArtShape = prefs.boxArtShape,

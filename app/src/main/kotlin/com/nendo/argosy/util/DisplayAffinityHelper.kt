@@ -43,26 +43,42 @@ class DisplayAffinityHelper @Inject constructor(
      */
     var appTargetDisplayId: Int? = null
 
+    /**
+     * The display the launcher window sits on while Samsung DeX is active, or null outside DeX.
+     * The launcher pushes it on creation and on every configuration change. While set, the
+     * launcher, the games and the apps all run on that one display, and no dual-screen surface
+     * is raised.
+     */
+    var desktopModeDisplayId: Int? = null
+
+    val isDesktopMode: Boolean
+        get() = desktopModeDisplayId != null
+
     private val resolvedAppTarget: Int?
-        get() = appTargetDisplayId?.takeIf { id -> physicalDisplays.any { it.displayId == id } }
+        get() = appTargetDisplayId?.takeIf { id ->
+            !isDesktopMode && physicalDisplays.any { it.displayId == id }
+        }
 
     /**
      * The television or monitor while the handheld's own panels are switched off beside it, as
      * a dock does when the device is set to blank its screens on video output. The launcher, the
-     * games and the apps all run there until the panels light again.
+     * games and the apps all run there until the panels light again. Never set under DeX.
      */
     val dockedDisplayId: Int?
-        get() = dockedExternalDisplayId(context)
+        get() = if (isDesktopMode) null else dockedExternalDisplayId(context)
 
     val isDockedDark: Boolean
         get() = dockedDisplayId != null
 
     val hasSecondaryDisplay: Boolean
-        get() = if (isDockedDark) {
-            secondaryDisplayUsable
-        } else {
-            dualScreenEnabled && secondaryDisplayUsable && hasPhysicalSecondaryDisplay
+        get() = when {
+            isDesktopMode -> false
+            isDockedDark -> secondaryDisplayUsable
+            else -> dualScreenEnabled && secondaryDisplayUsable && hasPhysicalSecondaryDisplay
         }
+
+    private val singleSurfaceDisplayId: Int?
+        get() = desktopModeDisplayId ?: dockedDisplayId
 
     val secondaryDisplayType: SecondaryDisplayType
         get() {
@@ -152,7 +168,7 @@ class DisplayAffinityHelper @Inject constructor(
         preferredScreenKey: String? = null,
         rolesSwapped: Boolean = false,
         occupiedDisplayId: Int? = null
-    ): Int? = dockedDisplayId ?: resolveAppLaunchDisplayId(
+    ): Int? = singleSurfaceDisplayId ?: resolveAppLaunchDisplayId(
         preferredDisplayId = preferredScreenKey?.let { key ->
             screenCatalog.attachedScreens().find { it.key == key }?.displayId
         },
@@ -178,7 +194,7 @@ class DisplayAffinityHelper @Inject constructor(
      * and the launch should be placed the way it is on a device with two screens.
      */
     fun getDisplayTargetId(target: EmulatorDisplayTarget, rolesSwapped: Boolean): Int? =
-        dockedDisplayId ?: resolveDisplayTargetId(
+        singleSurfaceDisplayId ?: resolveDisplayTargetId(
             target = target,
             roleDisplayIds = getRoleDisplayIds(rolesSwapped),
             appScreenDisplayId = appScreenDisplayId(rolesSwapped)
@@ -194,7 +210,7 @@ class DisplayAffinityHelper @Inject constructor(
      * and keeps landing correctly after a swap.
      */
     fun getRoleDisplayIds(rolesSwapped: Boolean): Pair<Int, Int>? =
-        dockedDisplayId?.let { it to it }
+        singleSurfaceDisplayId?.let { it to it }
             ?: resolveRoleDisplayIds(roleDisplayIds, attachedIds, secondaryDisplayId, rolesSwapped)
 
     /**
@@ -229,7 +245,9 @@ class DisplayAffinityHelper @Inject constructor(
         rolesSwapped: Boolean = false,
         overrideDisplayId: Int? = null
     ): Bundle? {
-        if (overrideDisplayId == null && !hasSecondaryDisplay && (forEmulator || resolvedAppTarget == null)) {
+        if (overrideDisplayId == null && !isDesktopMode && !hasSecondaryDisplay &&
+            (forEmulator || resolvedAppTarget == null)
+        ) {
             return null
         }
 
@@ -274,17 +292,24 @@ class DisplayAffinityHelper @Inject constructor(
          * The lit external display while the built-in panels are dark beside it, or null. Dark
          * means every panel reports [Display.STATE_OFF], or the firmware has blanked their
          * backlights for video output while Android still reports them on. A sleeping device
-         * darkens the external display too, so sleep never reads as docked.
+         * darkens the external display too, so sleep never reads as docked, and neither does a
+         * Samsung DeX monitor.
          */
-        fun dockedExternalDisplayId(context: Context): Int? = dockedExternalDisplayId(
-            displayManager = context.getSystemService(DisplayManager::class.java),
-            firmwareBlanksPanels = firmwareBlanksPanels(context)
-        )
+        fun dockedExternalDisplayId(context: Context): Int? {
+            val desktopMode = DesktopMode.isActive(context)
+            return dockedExternalDisplayId(
+                displayManager = context.getSystemService(DisplayManager::class.java),
+                firmwareBlanksPanels = !desktopMode && firmwareBlanksPanels(context),
+                desktopMode = desktopMode
+            )
+        }
 
         internal fun dockedExternalDisplayId(
             displayManager: DisplayManager,
-            firmwareBlanksPanels: Boolean
+            firmwareBlanksPanels: Boolean,
+            desktopMode: Boolean
         ): Int? {
+            if (desktopMode) return null
             val displays = displayManager.displays
             val panels = displays.filter {
                 it.displayId == Display.DEFAULT_DISPLAY || it.displayType() == DISPLAY_TYPE_BUILT_IN

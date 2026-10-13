@@ -28,7 +28,8 @@ class DisplaySettingsIconPackTest {
         screenCaptureManager = mockk(relaxed = true),
         customGridShapeStore = CustomGridShapeStore(),
         homeTileRepository = mockk(relaxed = true),
-        syncPreferencesRepository = mockk(relaxed = true)
+        syncPreferencesRepository = mockk(relaxed = true),
+        homeAppAvailability = mockk(relaxed = true)
     )
 
     private fun hydrate(selected: String?) {

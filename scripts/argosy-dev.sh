@@ -18,7 +18,7 @@ set -euo pipefail
 
 PKG="com.nendo.argosy.debug"
 APK="app/build/outputs/apk/debug/app-debug.apk"
-ACTIVITY="$PKG/com.nendo.argosy.MainActivity"
+ACTIVITY="$PKG/com.nendo.argosy.ArgosyActivity"
 
 resolve_serial() {
   if [ -n "${ARGOSY_DEVICE:-}" ]; then

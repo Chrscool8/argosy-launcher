@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import com.nendo.argosy.R
 import com.nendo.argosy.data.preferences.AppLanguage
 import com.nendo.argosy.ui.components.CyclePreference
+import com.nendo.argosy.ui.components.InfoPreference
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -47,7 +48,7 @@ internal sealed class InterfaceItem(
     val visibleWhen: (InterfaceLayoutState) -> Boolean = { true }
 ) {
     val isFocusable: Boolean get() = when (this) {
-        is Header -> false
+        is Header, HomeAppLocked -> false
         else -> true
     }
 
@@ -69,6 +70,16 @@ internal sealed class InterfaceItem(
         }
     )
     data object LockScreenArt : InterfaceItem("lockScreenArt", SECTION_SCREENS)
+    data object HomeApp : InterfaceItem(
+        key = "homeApp",
+        section = SECTION_SCREENS,
+        visibleWhen = { !it.display.isDefaultHome }
+    )
+    data object HomeAppLocked : InterfaceItem(
+        key = "homeAppLocked",
+        section = SECTION_SCREENS,
+        visibleWhen = { it.display.isDefaultHome }
+    )
     data object StatusClock : InterfaceItem("statusClock", SECTION_STATUS_BAR)
     data object StatusBattery : InterfaceItem("statusBattery", SECTION_STATUS_BAR)
     data object StatusNetwork : InterfaceItem("statusNetwork", SECTION_STATUS_BAR)
@@ -86,6 +97,7 @@ internal sealed class InterfaceItem(
                 Language, UiScale, CompactFooter, ControllerGrip,
                 Header("screensHeader", SECTION_SCREENS, R.string.settings_interface_section_screens),
                 HomeScreen, LibraryView, BoxArt, Presentation, LockScreenArt,
+                HomeApp, HomeAppLocked,
                 Header("statusBarHeader", SECTION_STATUS_BAR, R.string.settings_interface_section_status_bar),
                 StatusClock, StatusBattery, StatusNetwork
             )
@@ -142,6 +154,7 @@ fun InterfaceSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.refreshUsageStatsPermission()
+            viewModel.refreshDefaultHome()
         }
     }
 
@@ -219,6 +232,21 @@ fun InterfaceSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                     isEnabled = display.lockScreenArt,
                     isFocused = isFocused(item),
                     onToggle = { viewModel.setLockScreenArt(it) }
+                )
+
+                InterfaceItem.HomeApp -> SwitchPreference(
+                    title = stringResource(R.string.settings_interface_home_app_title),
+                    subtitle = stringResource(R.string.settings_interface_home_app_subtitle),
+                    isEnabled = display.homeAppAvailable,
+                    isFocused = isFocused(item),
+                    onToggle = { viewModel.setHomeAppAvailable(it) }
+                )
+
+                InterfaceItem.HomeAppLocked -> InfoPreference(
+                    title = stringResource(R.string.settings_interface_home_app_title),
+                    value = stringResource(R.string.settings_interface_home_app_locked_value),
+                    subtitle = stringResource(R.string.settings_interface_home_app_locked_subtitle),
+                    isFocused = false
                 )
 
                 InterfaceItem.StatusClock -> SwitchPreference(

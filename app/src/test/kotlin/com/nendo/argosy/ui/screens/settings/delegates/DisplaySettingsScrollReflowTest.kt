@@ -37,7 +37,8 @@ class DisplaySettingsScrollReflowTest {
         screenCaptureManager = mockk(relaxed = true),
         customGridShapeStore = CustomGridShapeStore(),
         homeTileRepository = homeTileRepository,
-        syncPreferencesRepository = syncPreferences
+        syncPreferencesRepository = syncPreferences,
+        homeAppAvailability = mockk(relaxed = true)
     )
 
     private fun start(grid: CustomGridConfig): HomeLayoutSettings {

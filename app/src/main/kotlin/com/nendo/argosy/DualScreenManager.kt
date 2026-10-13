@@ -302,7 +302,7 @@ class DualScreenManager(
     }
 
     fun applyStoredScreenLayout(promptWhenUnknown: Boolean = false) {
-        if (displayAffinityHelper.isDockedDark) return
+        if (displayAffinityHelper.isDockedDark || displayAffinityHelper.isDesktopMode) return
         scope.launch {
             val resolved = resolveScreenLayout() ?: return@launch
             val attached = resolved.attached
@@ -342,7 +342,7 @@ class DualScreenManager(
     /**
      * Bumped whenever the launcher's display language changes. A locale override only takes
      * effect for resources resolved through an Activity's own wrapped base Context, so both
-     * MainActivity and SecondaryHomeActivity collect this and recreate themselves; a token rather
+     * ArgosyActivity and SecondaryHomeActivity collect this and recreate themselves; a token rather
      * than the language itself, since each Activity already reads the new value straight from
      * SessionStateStore during its own attachBaseContext.
      */
@@ -435,8 +435,32 @@ class DualScreenManager(
         _isDualScreenDevice.value = false
     }
 
+    /**
+     * Applies a Samsung DeX switch already recorded on [displayAffinityHelper]. Entering DeX takes
+     * every dual-screen surface down; leaving it re-probes the displays and restores the stored
+     * layout and the companion as the dual-screen setting has them.
+     */
+    fun onDesktopModeChanged() {
+        val active = displayAffinityHelper.isDesktopMode
+        Log.i(TAG, "Samsung DeX ${if (active) "active" else "inactive"}")
+        if (active) {
+            teardownCompanion()
+            setSecondaryHomeComponentEnabled(false)
+            clearUnconfiguredScreenSet()
+            _hasPresentationScreen.value = false
+            _isDualScreenDevice.value = false
+            return
+        }
+        reprobeSecondaryDisplay()
+        applyStoredScreenLayout()
+        ensureCompanionLaunched()
+    }
+
     private fun setSecondaryHomeComponentEnabled(enabled: Boolean) {
-        com.nendo.argosy.util.SecondaryHomeComponent.setEnabled(appContext, enabled)
+        com.nendo.argosy.util.SecondaryHomeComponent.setEnabled(
+            appContext,
+            enabled && !displayAffinityHelper.isDesktopMode
+        )
     }
 
     /** Live in-memory session check; unlike SessionStateStore.hasActiveSession this flips false the moment session teardown begins, not after save sync completes. */
@@ -1139,6 +1163,7 @@ class DualScreenManager(
      * film takes the other screen rather than opening underneath the game.
      */
     fun mediaPlayerRelocationDisplayId(): Int? {
+        displayAffinityHelper.desktopModeDisplayId?.let { return it }
         val emulator = emulatorDisplayId
         if (emulator != null) return displayAffinityHelper.getMediaPlayerDisplayId(emulator)
         return displayAffinityHelper.largestDisplayId() ?: interactiveDisplayId()
@@ -1546,6 +1571,7 @@ class DualScreenManager(
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayAdded(displayId: Int) {
             if (!displayAffinityHelper.isPhysicalDisplay(displayId)) return
+            if (displayAffinityHelper.isDesktopMode) return
             reprobeSecondaryDisplay()
             val resolver = DisplayRoleResolver(displayAffinityHelper, sessionStateStore)
             val newSwapped = resolver.isSwapped
@@ -2068,7 +2094,7 @@ class DualScreenManager(
     }
 
     private suspend fun persistPrimaryRole(swapped: Boolean) {
-        if (displayAffinityHelper.isDockedDark) return
+        if (displayAffinityHelper.isDockedDark || displayAffinityHelper.isDesktopMode) return
         val primaryDisplayId = displayAffinityHelper.getRoleDisplayIds(swapped)?.first ?: return
         val resolved = resolveScreenLayout() ?: return
         val primary = resolved.attached.find { it.displayId == primaryDisplayId } ?: return
@@ -2402,7 +2428,7 @@ class DualScreenManager(
             }
         }
         activityContext.startActivity(
-            Intent(activityContext, MainActivity::class.java).apply {
+            Intent(activityContext, ArgosyActivity::class.java).apply {
                 addFlags(
                     Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
                         Intent.FLAG_ACTIVITY_SINGLE_TOP or

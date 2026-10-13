@@ -266,6 +266,8 @@ data class DisplayState(
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
+    val homeAppAvailable: Boolean = true,
+    val isDefaultHome: Boolean = false,
     val iconPack: String? = null,
     val iconPacks: List<com.nendo.argosy.data.model.IconPack> = emptyList(),
     val boxArtShape: BoxArtShape = BoxArtShape.STANDARD,

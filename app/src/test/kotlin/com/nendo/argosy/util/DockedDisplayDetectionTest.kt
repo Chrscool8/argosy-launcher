@@ -20,8 +20,23 @@ class DockedDisplayDetectionTest {
         every { this@mockk.displays } returns arrayOf(*displays)
     }
 
-    private fun docked(dm: DisplayManager, firmwareBlanksPanels: Boolean = false): Int? =
-        DisplayAffinityHelper.dockedExternalDisplayId(dm, firmwareBlanksPanels)
+    private fun docked(
+        dm: DisplayManager,
+        firmwareBlanksPanels: Boolean = false,
+        desktopMode: Boolean = false
+    ): Int? = DisplayAffinityHelper.dockedExternalDisplayId(dm, firmwareBlanksPanels, desktopMode)
+
+    @Test
+    fun `a dex monitor beside a dark panel is not docked`() {
+        val dm = manager(
+            display(Display.DEFAULT_DISPLAY, Display.STATE_OFF),
+            display(7, Display.STATE_ON, presentation = true)
+        )
+
+        assertEquals(7, docked(dm))
+        assertNull(docked(dm, desktopMode = true))
+        assertNull(docked(dm, firmwareBlanksPanels = true, desktopMode = true))
+    }
 
     @Test
     fun `panel off beside a lit television reads as docked on the television`() {
