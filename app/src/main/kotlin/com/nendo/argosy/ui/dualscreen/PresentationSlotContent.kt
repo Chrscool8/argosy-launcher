@@ -48,7 +48,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.nendo.argosy.ui.common.rememberFileImageModel
-import com.nendo.argosy.ui.components.FooterBar
+import com.nendo.argosy.ui.components.FooterBarWithState
+import com.nendo.argosy.ui.components.FooterHintItem
 import com.nendo.argosy.ui.components.LocalFrostedBackdrop
 import com.nendo.argosy.ui.components.rememberFrostedBackdrop
 import com.nendo.argosy.ui.components.frostedBackdropSource
@@ -161,7 +162,7 @@ private fun PresentationSlotBody(
                         .align(Alignment.BottomCenter)
                         .onSizeChanged { measuredHintsHeight = with(density) { it.height.toDp() } }
                 ) {
-                    FooterBar(hints = hints.map { it.button to it.label })
+                    PresentationControlHints(hints)
                 }
             }
             com.nendo.argosy.ui.components.LaunchOverlayMirror()
@@ -178,6 +179,14 @@ private fun PresentationSlotBody(
             )
         }
     }
+}
+
+@Composable
+internal fun PresentationControlHints(hints: List<CompanionHint>) {
+    FooterBarWithState(
+        hints = hints.map { FooterHintItem(it.button, it.label) },
+        forceVisible = hints.any { it.forced }
+    )
 }
 
 private fun dashboardActions(manager: com.nendo.argosy.DualScreenManager) =

@@ -53,5 +53,6 @@ data class CompanionFact(
  */
 data class CompanionHint(
     val button: com.nendo.argosy.ui.components.InputButton,
-    val label: String
+    val label: String,
+    val forced: Boolean = false
 )

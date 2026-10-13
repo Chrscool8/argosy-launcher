@@ -1439,7 +1439,7 @@ fun ArgosyApp(
             if (presentationShowsHints) {
                 val topEntry = footerHostController.top
                 val relayed = topEntry?.hints.orEmpty().map {
-                    com.nendo.argosy.ui.dualscreen.CompanionHint(it.button, it.action)
+                    com.nendo.argosy.ui.dualscreen.CompanionHint(it.button, it.action, forced = topEntry?.forced == true)
                 }
                 LaunchedEffect(relayed) {
                     com.nendo.argosy.DualScreenManagerHolder.instance?.publishControlHints(relayed)
