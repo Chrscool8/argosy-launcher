@@ -15,9 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
@@ -93,7 +92,9 @@ import com.nendo.argosy.ui.components.friends.FriendsActivityBadge
 import com.nendo.argosy.ui.theme.ALauncherColors
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
+import com.nendo.argosy.ui.theme.LocalBoxArtStyle
 import com.nendo.argosy.ui.theme.LocalLauncherTheme
+import com.nendo.argosy.ui.theme.LocalUiScale
 import com.nendo.argosy.ui.theme.Motion
 import com.nendo.argosy.ui.theme.generated.ColorTokens
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
@@ -134,13 +135,14 @@ fun GameShowcase(
     GameShowcaseContent(liveDetail, style, bottomInset, backgroundBlur, modifier)
 }
 
-private fun CompanionDetail.withLiveArt(art: com.nendo.argosy.data.model.ResolvedGameArt?): CompanionDetail {
+internal fun CompanionDetail.withLiveArt(art: com.nendo.argosy.data.model.ResolvedGameArt?): CompanionDetail {
     if (art == null) return this
     return copy(
         artUrl = art.coverPath ?: artUrl,
         backdropUrl = art.backgroundPath ?: backdropUrl,
         spineUrl = art.boxSpinePath ?: spineUrl,
         box3dUrl = art.box3dPath ?: box3dUrl,
+        backUrl = art.boxBackPath ?: backUrl,
         logoUrl = art.logoPath?.takeIf { it.startsWith("/") } ?: logoUrl
     )
 }
@@ -218,7 +220,6 @@ private fun GameShowcaseContent(
             PresentationLayout.CINEMATIC -> CinematicShowcase(
                 detail = detail,
                 style = style,
-                friends = friends,
                 bottom = bottomInset,
                 viewportWidth = maxWidth,
                 viewportHeight = maxHeight,
@@ -338,16 +339,14 @@ private const val LOGO_GLOW_HOLD_FADE = 0.7f
 private fun CinematicShowcase(
     detail: CompanionDetail,
     style: PresentationStyle,
-    friends: List<FriendActivity>,
     bottom: Dp,
     viewportWidth: Dp,
     viewportHeight: Dp,
     onTitleBoundsChanged: (Rect) -> Unit
 ) {
-    val theme = LocalArgosyTheme.current
-    val scrollState = rememberLazyListState()
+    val scrollState = rememberScrollState()
     LaunchedEffect(detail.gameId) {
-        scrollState.scrollToItem(0)
+        scrollState.scrollTo(0)
     }
     val gutter = if (viewportWidth.value < ComponentDefaults.Carousel.compactWidthDp) {
         Dimens.spacingMd
@@ -356,8 +355,75 @@ private fun CinematicShowcase(
     }
     val zero = 0.dp
     val availableHeight = (viewportHeight - bottom - gutter * 2).coerceAtLeast(zero)
-    val availableWidth = (viewportWidth - gutter * 2).coerceAtLeast(zero)
+    GameHero(
+        detail = detail,
+        style = style,
+        coverMaxHeight = availableHeight,
+        modifier = Modifier.fillMaxSize().padding(bottom = bottom).padding(gutter),
+        metadataModifier = Modifier.heightIn(max = availableHeight).verticalScroll(scrollState)
+            .onGloballyPositioned {
+                onTitleBoundsChanged(Rect(it.positionInRoot(), Size(it.size.width.toFloat(), it.size.height.toFloat())))
+            }
+    )
+}
+
+@Composable
+internal fun GameHero(
+    detail: CompanionDetail,
+    style: PresentationStyle,
+    coverMaxHeight: Dp,
+    modifier: Modifier = Modifier,
+    metadataModifier: Modifier = Modifier,
+    interactiveCover: Boolean = false
+) {
     val textDirection = LocalLayoutDirection.current
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.CenterStart) {
+            val gap = Dimens.spacingXl
+            val stacked = !LocalUiScale.current.aspectRatioClass.isWide
+            val boundedHeight = constraints.hasBoundedHeight
+            val coverWidth = if (stacked) maxWidth / 2 else ((maxWidth - gap) / 3).coerceAtLeast(0.dp)
+            val coverHeight = if (stacked) {
+                minOf(coverMaxHeight, coverWidth / LocalBoxArtStyle.current.aspectRatio,
+                    if (boundedHeight) maxHeight / 3 else coverMaxHeight)
+            } else coverMaxHeight
+            val cover: @Composable () -> Unit = {
+                if (style.art != PresentationArt.TITLE) {
+                    Box(Modifier.width(coverWidth).height(coverHeight), contentAlignment = Alignment.CenterStart) {
+                        ShowcaseCover(detail, style.art, coverHeight, coverWidth, interactiveCover)
+                    }
+                }
+            }
+            val metadata: @Composable (Modifier) -> Unit = { containerModifier ->
+                Box(containerModifier) {
+                    CompositionLocalProvider(LocalLayoutDirection provides textDirection) {
+                        GameHeroMetadata(detail, style, metadataModifier)
+                    }
+                }
+            }
+            if (stacked) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                    cover()
+                    metadata(if (boundedHeight) Modifier.weight(1f, fill = false) else Modifier)
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(gap),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    cover()
+                    metadata(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameHeroMetadata(detail: CompanionDetail, style: PresentationStyle, modifier: Modifier) {
+    val theme = LocalArgosyTheme.current
+    val friends = detail.stats?.friends.orEmpty().takeIf { style.shows(PresentationStat.FRIENDS) }.orEmpty()
     val journey = rememberJourney(detail.stats, style)
     val items = detail.stats?.let { showcaseRailItems(it, style, journeyShown = journey != null) }.orEmpty()
     val developer = items.firstOrNull { it.first == PresentationStat.DEVELOPER }?.second?.text
@@ -372,68 +438,26 @@ private fun CinematicShowcase(
             groupItems.takeIf { it.isNotEmpty() }?.let { group to it }
         }
     }
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-      Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = bottom)
-            .padding(gutter),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.spacingXl),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (style.art != PresentationArt.TITLE) {
-            val coverWidth = ((availableWidth - Dimens.spacingXl) / 3).coerceAtLeast(zero)
-            Box(
-                modifier = Modifier.width(coverWidth),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                ShowcaseCover(
-                    detail = detail,
-                    art = style.art,
-                    height = availableHeight,
-                    width = coverWidth
-                )
+    Column(modifier = modifier) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
+            ShowcaseTitle(detail = detail)
+            developer?.let {
+                Text(text = it, style = MaterialTheme.typography.titleMedium, color = theme.textDim)
             }
         }
-        Box(Modifier.weight(1f).heightIn(max = availableHeight)) {
-          CompositionLocalProvider(LocalLayoutDirection provides textDirection) {
-            LazyColumn(
-                state = scrollState,
-                modifier = Modifier.onGloballyPositioned {
-                    onTitleBoundsChanged(
-                        Rect(it.positionInRoot(), Size(it.size.width.toFloat(), it.size.height.toFloat()))
-                    )
-                }
-            ) {
-                item(key = "heading") {
-                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
-                        ShowcaseTitle(detail = detail)
-                        developer?.let {
-                            Text(text = it, style = MaterialTheme.typography.titleMedium, color = theme.textDim)
-                        }
-                    }
-                }
-                itemsIndexed(rows, key = { _, row -> row.first.name }) { index, row ->
-                    Box(Modifier.padding(top = if (index == 0) Dimens.spacingMd else Dimens.spacingSm)) {
-                        ShowcaseRailRow(row.second)
-                    }
-                }
-                journey?.let {
-                    item(key = "journey") {
-                        Box(Modifier.padding(top = Dimens.spacingMd)) {
-                            ShowcaseJourneyBar(journey = it)
-                        }
-                    }
-                }
-                if (friends.isNotEmpty()) {
-                    item(key = "friends") {
-                        ShowcaseFriendsPill(friends = friends, modifier = Modifier.padding(top = Dimens.spacingMd))
-                    }
-                }
+        rows.forEachIndexed { index, row ->
+            Box(Modifier.padding(top = if (index == 0) Dimens.spacingMd else Dimens.spacingSm)) {
+                ShowcaseRailRow(row.second)
             }
-          }
         }
-      }
+        journey?.let {
+            Box(Modifier.padding(top = Dimens.spacingMd)) {
+                ShowcaseJourneyBar(journey = it)
+            }
+        }
+        if (friends.isNotEmpty()) {
+            ShowcaseFriendsPill(friends = friends, modifier = Modifier.padding(top = Dimens.spacingMd))
+        }
     }
 }
 
@@ -631,7 +655,13 @@ private fun ShowcaseSubtitle(subtitle: String, platformSlug: String?, pill: Bool
 }
 
 @Composable
-private fun ShowcaseCover(detail: CompanionDetail, art: PresentationArt, height: Dp, width: Dp) {
+private fun ShowcaseCover(
+    detail: CompanionDetail,
+    art: PresentationArt,
+    height: Dp,
+    width: Dp,
+    interactive: Boolean = false
+) {
     if (art == PresentationArt.TITLE) return
     val artUrl = detail.artUrl
     val repairArt = com.nendo.argosy.ui.common.rememberArtRepair()
@@ -644,7 +674,8 @@ private fun ShowcaseCover(detail: CompanionDetail, art: PresentationArt, height:
         BoxArtRoute.SPINE_RENDER -> Box3dCover(
             frontPath = artUrl.orEmpty(),
             spinePath = detail.spineUrl.orEmpty(),
-            isInteractive = false,
+            backPath = detail.backUrl?.takeIf { it.startsWith("/") },
+            isInteractive = interactive,
             modifier = Modifier.heightIn(max = height).widthIn(max = width),
             onUnavailable = {
                 failedRoutes = failedRoutes + BoxArtRoute.SPINE_RENDER

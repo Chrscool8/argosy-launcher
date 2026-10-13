@@ -13,6 +13,7 @@ fun GameDetailUi.toCompanionDetail(friends: List<FriendActivity> = emptyList()):
         backdropUrl = backgroundPath,
         isGameTitle = true,
         spineUrl = boxSpinePath,
+        backUrl = boxBackPath,
         gameId = id,
         stats = CompanionGameStats(
             developer = developer,
