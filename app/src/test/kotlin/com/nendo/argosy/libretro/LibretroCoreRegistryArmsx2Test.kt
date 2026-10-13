@@ -62,6 +62,8 @@ class LibretroCoreRegistryArmsx2Test {
                     "Blend TFF", "Blend BFF", "Adaptive TFF", "Adaptive BFF"
                 ) to "Automatic"
                 ),
+            "armsx2_no_interlacing_patches" to (listOf("disabled", "enabled") to "disabled"),
+            "armsx2_widescreen_patches" to (listOf("disabled", "enabled") to "disabled"),
             "armsx2_blending_accuracy" to (listOf("Minimum", "Basic", "Medium", "High", "Full", "Maximum") to "Basic"),
             "armsx2_dithering" to (listOf("Unscaled", "Off", "Scaled") to "Unscaled"),
             "armsx2_trilinear_filtering" to (

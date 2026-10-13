@@ -46,7 +46,7 @@ class CoreSystemDataManagerTest {
         "https://raw.githubusercontent.com/ARMSX2/ARMSX2/0076b5c389ea7296331ad2d96193c6e8d5d314fa"
 
     @Test
-    fun `armsx2 fetches exactly the overrides and the font from the pinned commit`() = runTest {
+    fun `armsx2 fetches the overrides and font from the pinned commit and the PCSX2 patches archive`() = runTest {
         serveArmsx2()
 
         assertTrue(manager.ensureCoreSystemData("armsx2", systemDir))
@@ -54,7 +54,8 @@ class CoreSystemDataManagerTest {
         assertEquals(
             listOf(
                 "$armsx2Base/bin/resources-overlay/armsx2_overrides.yaml",
-                "$armsx2Base/bin/resources/fonts/Roboto-Regular.ttf"
+                "$armsx2Base/bin/resources/fonts/Roboto-Regular.ttf",
+                "https://github.com/PCSX2/pcsx2_patches/releases/download/latest/patches.zip"
             ),
             requestedUrls
         )
@@ -62,6 +63,7 @@ class CoreSystemDataManagerTest {
         val font = File(systemDir, "pcsx2/resources/fonts/Roboto-Regular.ttf")
         assertEquals("$armsx2Base/bin/resources-overlay/armsx2_overrides.yaml", overrides.readText())
         assertTrue(font.exists())
+        assertTrue(File(systemDir, "pcsx2/resources/patches.zip").exists())
         assertFalse(manager.needsSystemData("armsx2", systemDir))
     }
 
