@@ -1,10 +1,8 @@
 package com.nendo.argosy.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -430,6 +428,8 @@ private fun DockToolsPopup(
     }
     val pickerMaxHeight = (LocalConfiguration.current.screenHeightDp.dp - height * 2 - padding * 2)
         .coerceAtLeast(slot)
+    val pickerHeight = (slot * displays.size + gap * (displays.size - 1).coerceAtLeast(0) + padding * 2)
+        .coerceAtMost(pickerMaxHeight)
     val popupWidth = slot * 3 + gap * 2 + padding * 2
 
     Popup(
@@ -438,45 +438,46 @@ private fun DockToolsPopup(
         properties = PopupProperties(focusable = false, clippingEnabled = true)
     ) {
         Column(horizontalAlignment = Alignment.End) {
-            AnimatedVisibility(
-                visible = pickerOpen,
-                enter = expandVertically(
-                    tween(Motion.durationSlide, easing = Motion.argosyEase),
-                    expandFrom = Alignment.Bottom
-                ) + fadeIn(tween(Motion.durationSlide, easing = Motion.argosyEase)),
-                exit = shrinkVertically(
-                    tween(Motion.durationSlide, easing = Motion.argosyEase),
-                    shrinkTowards = Alignment.Bottom
-                ) + fadeOut(tween(Motion.durationSlide, easing = Motion.argosyEase))
+            // Keep the native popup bounds fixed when the selector opens or closes.
+            Column(
+                Modifier.width(popupWidth).height(pickerHeight + gap).touchOnly(dismiss),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.Bottom
             ) {
-                Column {
-                    LazyColumn(
-                        state = pickerState,
-                        modifier = Modifier.width(slot + padding * 2)
-                            .heightIn(max = pickerMaxHeight)
-                            .frostedSurface(RoundedCornerShape(Dimens.radiusLg))
-                            .padding(padding),
-                        verticalArrangement = Arrangement.spacedBy(gap),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        itemsIndexed(displays, key = { _, target -> target.displayId }) { index, target ->
-                            DockControl(
-                                slot,
-                                focused = false,
-                                enabled = pickerOpen,
-                                onClick = {
-                                    onToolFocusVisibilityChange(false)
-                                    onFocusDisplay(target.displayId)
-                                    onDismiss()
-                                },
-                                showFocusRing = showToolFocus && index == pickerIndex
-                            ) { tint ->
-                                Text(target.number.toString(), color = tint,
-                                    style = MaterialTheme.typography.titleLarge)
+                AnimatedVisibility(
+                    visible = pickerOpen,
+                    enter = fadeIn(tween(Motion.durationMicro, easing = Motion.argosyEase)),
+                    exit = fadeOut(tween(Motion.durationMicro, easing = Motion.argosyEase))
+                ) {
+                    Column {
+                        LazyColumn(
+                            state = pickerState,
+                            modifier = Modifier.width(slot + padding * 2)
+                                .heightIn(max = pickerMaxHeight)
+                                .frostedSurface(RoundedCornerShape(Dimens.radiusLg))
+                                .padding(padding),
+                            verticalArrangement = Arrangement.spacedBy(gap),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            itemsIndexed(displays, key = { _, target -> target.displayId }) { index, target ->
+                                DockControl(
+                                    slot,
+                                    focused = false,
+                                    enabled = pickerOpen,
+                                    onClick = {
+                                        onToolFocusVisibilityChange(false)
+                                        onFocusDisplay(target.displayId)
+                                        onDismiss()
+                                    },
+                                    showFocusRing = showToolFocus && index == pickerIndex
+                                ) { tint ->
+                                    Text(target.number.toString(), color = tint,
+                                        style = MaterialTheme.typography.titleLarge)
+                                }
                             }
                         }
+                        Spacer(Modifier.height(gap))
                     }
-                    Spacer(Modifier.height(gap))
                 }
             }
             Row(
