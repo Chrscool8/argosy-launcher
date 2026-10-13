@@ -1325,8 +1325,8 @@ fun HomeScreen(
                 showStatus = !presentationShowsHints &&
                     (!isPortrait || com.nendo.argosy.ui.components.LocalTransientHomeStatusVisible.current),
                 onNavigationWidthChanged = { navigationPillWidth = it },
-                horizontalPadding = headerHorizontalPadding,
-                verticalPadding = chromeVerticalPadding,
+                edgePadding = ComponentDefaults.Carousel.headerEdgePaddingDp.dp,
+                bottomPadding = chromeVerticalPadding,
                 headerOffset = videoModeHeaderOffset,
                 showSections = !isCustomGrid
             )
@@ -1736,8 +1736,8 @@ private fun HomeHeader(
     isStacked: Boolean,
     showStatus: Boolean,
     onNavigationWidthChanged: (Dp) -> Unit,
-    horizontalPadding: Dp,
-    verticalPadding: Dp,
+    edgePadding: Dp,
+    bottomPadding: Dp,
     headerOffset: androidx.compose.ui.unit.Dp = 0.dp,
     showSections: Boolean = true
 ) {
@@ -1750,7 +1750,7 @@ private fun HomeHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = horizontalPadding, vertical = verticalPadding)
+                .padding(start = edgePadding, top = edgePadding, end = edgePadding, bottom = bottomPadding)
                 .offset(y = headerOffset),
             horizontalArrangement = if (isStacked) Arrangement.Center else Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
@@ -1764,7 +1764,7 @@ private fun HomeHeader(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = horizontalPadding, vertical = verticalPadding)
+                .padding(start = edgePadding, top = edgePadding, end = edgePadding, bottom = bottomPadding)
                 .offset(y = headerOffset),
             verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
         ) {
@@ -1792,7 +1792,7 @@ private fun HomeHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = horizontalPadding, vertical = verticalPadding)
+            .padding(start = edgePadding, top = edgePadding, end = edgePadding, bottom = bottomPadding)
             .offset(y = headerOffset),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
