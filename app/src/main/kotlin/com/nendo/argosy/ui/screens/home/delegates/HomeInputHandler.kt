@@ -27,6 +27,7 @@ interface HomeInputActions {
     fun confirmGameMenuSelection(onGameSelect: (Long) -> Unit)
     fun previousRow()
     fun nextRow()
+    fun appBarIsDrawn(): Boolean
     fun focusAppBar(): Boolean
     fun startAppBarReorder(): Boolean
     fun openAppBarAppMenu(): Boolean
@@ -207,6 +208,7 @@ class HomeInputHandler(
             isCustomGrid(state) -> customMove(GridDirection2D.UP)
             isGrid(state) -> gridMove(GridDirection.UP)
             else -> {
+                if (actions.appBarIsDrawn()) return InputResult.handled(SoundType.BOUNDARY)
                 if (onScrollOverflow?.invoke(-1) == true) return InputResult.HANDLED
                 actions.previousRow()
                 InputResult.handled(SoundType.SECTION_CHANGE)
@@ -263,10 +265,10 @@ class HomeInputHandler(
             isCustomGrid(state) -> customMove(GridDirection2D.DOWN)
             isGrid(state) -> gridMove(GridDirection.DOWN)
             else -> {
-                if (onScrollOverflow?.invoke(1) == true) return InputResult.HANDLED
                 if (actions.focusAppBar()) {
                     return InputResult.handled(SoundType.SECTION_CHANGE)
                 }
+                if (onScrollOverflow?.invoke(1) == true) return InputResult.HANDLED
                 actions.nextRow()
                 InputResult.handled(SoundType.SECTION_CHANGE)
             }
@@ -458,12 +460,24 @@ class HomeInputHandler(
         when (actions.moveGridFocus(direction)) {
             is AutoGridMove.Focus -> InputResult.HANDLED
             AutoGridMove.PreviousSection -> {
-                actions.previousRow()
-                InputResult.handled(SoundType.SECTION_CHANGE)
+                if (actions.appBarIsDrawn()) {
+                    InputResult.handled(SoundType.BOUNDARY)
+                } else {
+                    actions.previousRow()
+                    InputResult.handled(SoundType.SECTION_CHANGE)
+                }
             }
             AutoGridMove.NextSection -> {
-                actions.nextRow()
-                InputResult.handled(SoundType.SECTION_CHANGE)
+                if (actions.appBarIsDrawn()) {
+                    if (direction == GridDirection.DOWN && actions.focusAppBar()) {
+                        InputResult.handled(SoundType.SECTION_CHANGE)
+                    } else {
+                        InputResult.handled(SoundType.BOUNDARY)
+                    }
+                } else {
+                    actions.nextRow()
+                    InputResult.handled(SoundType.SECTION_CHANGE)
+                }
             }
             AutoGridMove.None -> {
                 if (direction == GridDirection.DOWN) actions.focusAppBar()
@@ -772,10 +786,12 @@ class HomeInputHandler(
     override fun onNextSection(): InputResult = bumper(1)
 
     private fun trigger(delta: Int): InputResult =
-        shiftRowOrPage(delta, movesRows = actions.quickNavigation()) { actions.jumpTilePickerLetter(delta > 0) }
+        shiftRowOrPage(delta, movesRows = actions.appBarIsDrawn() || actions.quickNavigation()) {
+            actions.jumpTilePickerLetter(delta > 0)
+        }
 
     private fun bumper(delta: Int): InputResult =
-        if (actions.quickNavigation()) {
+        if (actions.appBarIsDrawn() || actions.quickNavigation()) {
             bumperInModal(delta)
         } else {
             shiftRowOrPage(delta, movesRows = true) { actions.cycleTilePickerCategory(delta) }

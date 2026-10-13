@@ -211,7 +211,7 @@ fun HomeScreen(
         handler = viewModel.dockReorderInputHandler
     )
     if (presentationShowsHints && dockReorder?.controller == true) com.nendo.argosy.ui.input.ModalPresenceEffect()
-    val rowButtons = if (quickNavigation) InputButton.LT_RT else InputButton.LB_RB
+    val rowButtons = if (presentationShowsHints || quickNavigation) InputButton.LT_RT else InputButton.LB_RB
     val scope = rememberCoroutineScope()
     val overflowScrollState = rememberScrollState()
     var overflowScrollEnabled by remember { mutableStateOf(false) }
@@ -1203,7 +1203,7 @@ fun HomeScreen(
                                 rowButtons to
                                     stringResource(R.string.home_footer_viewall_section)
                             } else {
-                                InputButton.DPAD_VERTICAL to
+                                (if (presentationShowsHints) rowButtons else InputButton.DPAD_VERTICAL) to
                                     stringResource(R.string.home_footer_viewall_platform)
                             },
                             InputButton.A to stringResource(R.string.home_footer_viewall_library)

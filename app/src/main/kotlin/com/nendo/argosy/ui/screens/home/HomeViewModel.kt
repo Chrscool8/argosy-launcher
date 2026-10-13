@@ -915,7 +915,7 @@ class HomeViewModel @Inject constructor(
     private fun appBarSlotCount(): Int =
         _uiState.value.homeApps.size + 1
 
-    private fun appBarIsDrawn(): Boolean =
+    override fun appBarIsDrawn(): Boolean =
         DualScreenManagerHolder.instance?.presentationShowsHints?.value == true
 
     override fun focusAppBar(): Boolean {

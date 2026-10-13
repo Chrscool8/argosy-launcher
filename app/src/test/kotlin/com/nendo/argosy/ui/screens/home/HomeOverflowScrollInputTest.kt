@@ -98,24 +98,20 @@ class HomeOverflowScrollInputTest {
     }
 
     @Test
-    fun `exhausted carousel scrolling enters dock and up preserves the selected game`() {
+    fun `dual screen vertical input only enters and leaves dock preserving game and tab`() {
         val selected = HomeUiState(
             platforms = listOf(mockk(), mockk()), currentRow = HomeRow.Platform(0), focusedGameIndex = 3
         )
         val fixture = Fixture(selected, dockAvailable = true)
-        var canScroll = true
-        val handler = fixture.handler {
-            val moved = canScroll
-            canScroll = false
-            moved
-        }
+        val handler = fixture.handler { error("Dual screen vertical input reached carousel scrolling") }
 
-        assertEquals(InputResult.HANDLED, handler.onDown())
+        assertEquals(InputResult.handled(SoundType.BOUNDARY), handler.onUp())
         assertFalse(fixture.state.value.appBarFocused)
         assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), handler.onDown())
         assertTrue(fixture.state.value.appBarFocused)
         assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), handler.onUp())
         assertFalse(fixture.state.value.appBarFocused)
+        assertEquals(InputResult.handled(SoundType.BOUNDARY), handler.onUp())
         assertEquals(selected.currentRow, fixture.state.value.currentRow)
         assertEquals(selected.focusedGameIndex, fixture.state.value.focusedGameIndex)
         assertEquals(1, fixture.row)
@@ -133,7 +129,7 @@ class HomeOverflowScrollInputTest {
     }
 
     @Test
-    fun `category triggers and bumpers wrap the last row without focusing the dock`() {
+    fun `dual screen triggers wrap tabs regardless of quick navigation and bumpers do not`() {
         for (quickNavigation in listOf(true, false)) {
             val fixture = Fixture(
                 HomeUiState(platforms = listOf(mockk(), mockk()), currentRow = HomeRow.Platform(1)),
@@ -147,7 +143,9 @@ class HomeOverflowScrollInputTest {
             }
             val handler = fixture.handler()
 
-            val result = if (quickNavigation) handler.onNextTrigger() else handler.onNextSection()
+            assertFalse(handler.onNextSection().handled)
+            assertEquals(HomeRow.Platform(1), fixture.state.value.currentRow)
+            val result = handler.onNextTrigger()
 
             assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), result)
             assertEquals(HomeRow.Platform(0), fixture.state.value.currentRow)
@@ -197,6 +195,20 @@ class HomeOverflowScrollInputTest {
     }
 
     @Test
+    fun `dual screen auto grid boundaries enter dock without changing tabs`() {
+        val fixture = Fixture(HomeUiState(layoutKind = HomeLayoutKind.AUTO_GRID), dockAvailable = true)
+        every { fixture.actions.moveGridFocus(GridDirection.UP) } returns AutoGridMove.PreviousSection
+        every { fixture.actions.moveGridFocus(GridDirection.DOWN) } returns AutoGridMove.NextSection
+        val handler = fixture.handler()
+
+        assertEquals(InputResult.handled(SoundType.BOUNDARY), handler.onUp())
+        assertFalse(fixture.state.value.appBarFocused)
+        assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), handler.onDown())
+        assertTrue(fixture.state.value.appBarFocused)
+        assertEquals(1, fixture.row)
+    }
+
+    @Test
     fun `custom grid moves its selection without scrolling the carousel`() {
         val fixture = Fixture(HomeUiState(layoutKind = HomeLayoutKind.CUSTOM_GRID))
         var cellRow = 1
@@ -224,6 +236,7 @@ class HomeOverflowScrollInputTest {
 
         init {
             every { actions.uiState } returns state
+            every { actions.appBarIsDrawn() } returns dockAvailable
             every { actions.previousRow() } answers { row -= 1 }
             every { actions.nextRow() } answers { row += 1 }
             every { actions.focusAppBar() } answers {
