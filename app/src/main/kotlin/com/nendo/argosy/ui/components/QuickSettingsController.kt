@@ -104,9 +104,19 @@ class QuickSettingsController(
     private val device = MutableStateFlow(DeviceSettings())
     private var performance: DevicePerformance? = null
     private val dualScreen = MutableStateFlow(DualScreenFlags())
-    private val levels = MutableStateFlow(readDisplayLevels(DEFAULT_BRIGHTNESS))
-    private var volumeInputTimestamp = 0L
+    private val levels = MutableStateFlow(
+        DisplayLevels(
+            volume = QuickSettingsState().systemVolume,
+            brightness = DEFAULT_BRIGHTNESS,
+            secondaryBrightness = null
+        )
+    )
+    @Volatile private var volumeInputTimestamp = 0L
     @Volatile private var brightnessInputTimestamp = 0L
+
+    init {
+        refreshDisplayLevels()
+    }
 
     private val hudEnabled = preferencesRepository.getBuiltinEmulatorSettings()
         .map { it.hudEnabled }
@@ -169,19 +179,19 @@ class QuickSettingsController(
     }
 
     fun refreshDisplayLevels() {
-        val now = System.currentTimeMillis()
-        val volumeFresh = now - volumeInputTimestamp > VOLUME_ECHO_GUARD_MS
-        val brightnessFresh = now - brightnessInputTimestamp > BRIGHTNESS_ECHO_GUARD_MS
-        levels.update { current ->
-            val read = readDisplayLevels(current.brightness)
-            read.copy(
-                volume = if (volumeFresh) read.volume else current.volume,
-                brightness = if (brightnessFresh) read.brightness else current.brightness,
-                secondaryBrightness = current.secondaryBrightness
-            )
-        }
-        if (!_isOpen.value) return
         scope.launch(deviceDispatcher) {
+            val read = readDisplayLevels(levels.value.brightness)
+            val now = System.currentTimeMillis()
+            val volumeFresh = now - volumeInputTimestamp > VOLUME_ECHO_GUARD_MS
+            val brightnessFresh = now - brightnessInputTimestamp > BRIGHTNESS_ECHO_GUARD_MS
+            levels.update { current ->
+                read.copy(
+                    volume = if (volumeFresh) read.volume else current.volume,
+                    brightness = if (brightnessFresh) read.brightness else current.brightness,
+                    secondaryBrightness = current.secondaryBrightness
+                )
+            }
+            if (!_isOpen.value) return@launch
             val secondary = brightnessController.secondaryBrightness()
             levels.update { it.copy(secondaryBrightness = secondary) }
         }
