@@ -171,9 +171,13 @@ private fun LandscapeExpandedHeader(
         )
 
         Column(modifier = Modifier.weight(1f)) {
-            TitleSection(game = game, friends = friends)
+            TitleSection(game = game)
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
             RatingsRow(game = game)
+            if (friends.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                com.nendo.argosy.ui.components.friends.FriendsActivityBadge(friends = friends)
+            }
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
             PlayStatsRow(game = game)
         }
@@ -267,7 +271,7 @@ private fun PortraitExpandedHeader(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
     ) {
-        TitleSection(game = game, friends = friends)
+        TitleSection(game = game)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -282,7 +286,7 @@ private fun PortraitExpandedHeader(
                     .height(coverHeight)
             )
 
-            PortraitStatChips(game = game, modifier = Modifier.weight(1f))
+            PortraitStatChips(game = game, friends = friends, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -309,7 +313,6 @@ private fun CoverArtImage(
 @Composable
 private fun TitleSection(
     game: GameDetailUi,
-    friends: List<com.nendo.argosy.data.social.FriendActivity>,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -401,11 +404,6 @@ private fun TitleSection(
                 }
             }
         }
-
-        if (friends.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(Dimens.spacingSm))
-            com.nendo.argosy.ui.components.friends.FriendsActivityBadge(friends = friends)
-        }
     }
 }
 
@@ -477,6 +475,7 @@ private fun RatingsRow(
 @Composable
 private fun PortraitStatChips(
     game: GameDetailUi,
+    friends: List<com.nendo.argosy.data.social.FriendActivity>,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -492,6 +491,9 @@ private fun PortraitStatChips(
             game.status?.let { status ->
                 StatusChip(statusValue = status)
             }
+        }
+        if (friends.isNotEmpty()) {
+            com.nendo.argosy.ui.components.friends.FriendsActivityBadge(friends = friends)
         }
         if (game.playTimeMinutes > 0) {
             PlayTimeChip(minutes = game.playTimeMinutes)
