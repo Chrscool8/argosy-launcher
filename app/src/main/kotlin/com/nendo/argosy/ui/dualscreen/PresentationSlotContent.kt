@@ -145,7 +145,7 @@ private fun PresentationSlotBody(
                     sessionTimer = manager.swappedSessionTimer,
                     reader = manager.dashboardReader,
                     actions = actions,
-                    appBar = { if (bar != null) InGameAppBar(bar) }
+                    appBar = { modifier -> if (bar != null) InGameAppBar(bar, modifier) }
                 )
             }
         }

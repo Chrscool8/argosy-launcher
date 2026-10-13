@@ -20,15 +20,16 @@ internal fun dockWidths(
     controlIconSize: Float,
     controlCount: Int = 2
 ): DockWidths {
-    val groupCount = ((if (appCount > 0) 1 else 0) + controlCount - 1).coerceAtLeast(0)
+    val layoutAppCount = if (appCount == 0 && controlCount > 1) DOCK_MINIMUM_VISIBLE_APPS else appCount
+    val groupCount = ((if (layoutAppCount > 0) 1 else 0) + controlCount - 1).coerceAtLeast(0)
     val controlsWidth = slot * controlCount
     val appInset = (slot - appIconSize).coerceAtLeast(0f) / 2f
     val controlInset = (slot - controlIconSize).coerceAtLeast(0f) / 2f
     val visibleAppGap = gap + appInset * 2
-    val desiredGroupGap = if (appCount > 0) {
+    val desiredGroupGap = if (layoutAppCount > 0) {
         (visibleAppGap * 2 - appInset - controlInset).coerceAtLeast(0f)
     } else gap * 2
-    val minimumVisibleApps = appCount.coerceAtMost(DOCK_MINIMUM_VISIBLE_APPS)
+    val minimumVisibleApps = layoutAppCount.coerceAtMost(DOCK_MINIMUM_VISIBLE_APPS)
     val desiredMinimumApps = minimumVisibleApps * slot + (minimumVisibleApps - 1).coerceAtLeast(0) * gap
     val minimumWidth = controlsWidth + desiredMinimumApps + desiredGroupGap * groupCount + padding * 2
     val usable = preferredMaximum.coerceAtLeast(minimumWidth).coerceAtMost(maximum)
@@ -42,7 +43,7 @@ internal fun dockWidths(
         0f, (availableAfterControls - minimumApps - groupGap * groupCount) / 2f
     )
     val fixed = controlsAndGaps + resolvedPadding * 2
-    val desiredApps = appCount * slot + (appCount - 1).coerceAtLeast(0) * gap
+    val desiredApps = layoutAppCount * slot + (layoutAppCount - 1).coerceAtLeast(0) * gap
     val apps = desiredApps.coerceAtMost((usable - fixed).coerceAtLeast(0f))
     return DockWidths(fixed + apps, apps, resolvedPadding, groupGap)
 }

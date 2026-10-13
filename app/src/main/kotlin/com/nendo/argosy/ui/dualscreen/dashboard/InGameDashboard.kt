@@ -118,7 +118,7 @@ fun InGameDashboard(
     sessionTimer: CompanionSessionTimer?,
     reader: DocumentReaderController,
     actions: DashboardActions,
-    appBar: @Composable () -> Unit
+    appBar: @Composable (Modifier) -> Unit
 ) {
     if (!state.isLoaded) return
     val theme = LocalArgosyTheme.current
@@ -184,46 +184,43 @@ fun InGameDashboard(
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = SCRIM_ALPHA)))
 
         Row(modifier = Modifier.fillMaxSize()) {
-                DashboardRail(
-                    content = content,
-                    sections = sections,
-                    selected = section,
-                    wide = wide,
-                    controls = controls,
-                    quitArmed = android.os.SystemClock.elapsedRealtime() < quitArmedUntil,
-                    showsQuit = state.quickActionsAvailable,
-                    onSelect = selectSection,
-                    onCheats = actions.onOpenCheats,
-                    onSettings = actions.onOpenSettings,
-                    onQuit = {
-                        if (android.os.SystemClock.elapsedRealtime() < quitArmedUntil) {
-                            quitArmedUntil = 0L
-                            actions.onQuit()
-                        } else {
-                            quitArmedUntil = android.os.SystemClock.elapsedRealtime() + CONFIRM_WINDOW_MS
-                        }
-                    }
-                )
-                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                    when (section) {
-                        DashboardSection.SESSION -> SessionSection(content, wide)
-                        DashboardSection.STATES -> StatesSection(content, wide)
-                        DashboardSection.TROPHIES -> TrophiesSection(content)
-                        DashboardSection.MANUAL, DashboardSection.GUIDE -> Unit
-                    }
-                    if (wide && readerOpen) {
-                        DashboardReader(reader, Modifier.fillMaxSize().padding(bottom = footerHeight))
-                    }
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .background(theme.surfaceBase.copy(alpha = PANEL_ALPHA))
-                            .onSizeChanged { footerHeight = with(density) { it.height.toDp() } }
-                    ) {
-                        appBar()
+            DashboardRail(
+                content = content,
+                sections = sections,
+                selected = section,
+                wide = wide,
+                controls = controls,
+                quitArmed = android.os.SystemClock.elapsedRealtime() < quitArmedUntil,
+                showsQuit = state.quickActionsAvailable,
+                onSelect = selectSection,
+                onCheats = actions.onOpenCheats,
+                onSettings = actions.onOpenSettings,
+                onQuit = {
+                    if (android.os.SystemClock.elapsedRealtime() < quitArmedUntil) {
+                        quitArmedUntil = 0L
+                        actions.onQuit()
+                    } else {
+                        quitArmedUntil = android.os.SystemClock.elapsedRealtime() + CONFIRM_WINDOW_MS
                     }
                 }
+            )
+            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                when (section) {
+                    DashboardSection.SESSION -> SessionSection(content, wide)
+                    DashboardSection.STATES -> StatesSection(content, wide)
+                    DashboardSection.TROPHIES -> TrophiesSection(content)
+                    DashboardSection.MANUAL, DashboardSection.GUIDE -> Unit
+                }
+                if (wide && readerOpen) {
+                    DashboardReader(reader, Modifier.fillMaxSize().padding(bottom = footerHeight))
+                }
+            }
         }
+        appBar(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .onSizeChanged { footerHeight = with(density) { it.height.toDp() } }
+        )
         if (!wide && readerOpen) DashboardReader(reader, Modifier.fillMaxSize())
     }
 }
@@ -277,6 +274,7 @@ private fun DashboardRail(
             .width(if (wide) RAIL_WIDTH_WIDE else RAIL_WIDTH)
             .fillMaxHeight()
             .background(theme.surfaceBase.copy(alpha = PANEL_ALPHA))
+            .padding(bottom = if (wide) 0.dp else content.bottomInset)
             .padding(horizontal = Dimens.spacingSm, vertical = Dimens.spacingMd),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingXs)
     ) {

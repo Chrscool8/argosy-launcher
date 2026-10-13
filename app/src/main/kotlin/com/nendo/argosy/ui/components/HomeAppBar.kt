@@ -278,6 +278,8 @@ fun CompanionAppBar(
                         }
                     }
                     if (toolsAvailable) Spacer(Modifier.width(widths.groupGap.dp))
+                } else if (toolsAvailable) {
+                    Spacer(Modifier.width(widths.appsWidth.dp + widths.groupGap.dp))
                 }
                 if (toolsAvailable) Box {
                     DockControl(
