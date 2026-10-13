@@ -245,15 +245,9 @@ class GameDetailViewModel @Inject constructor(
         modalResetSignal.signal.onEach { resetAllModals() }.launchIn(viewModelScope)
 
         viewModelScope.launch {
-            var publishedArt: Triple<Long, String?, String?>? = null
-            _uiState.collect { state ->
-                val game = state.game
-                val art = game?.let { Triple(it.id, it.coverPath, it.backgroundPath) }
-                if (art != publishedArt) {
-                    publishedArt = art
-                    publishCompanionDetail(game)
-                }
-            }
+            _uiState.map { state -> state.game?.toCompanionDetail(state.friendsActivity) }
+                .distinctUntilChanged()
+                .collect { publishCompanionDetail(it) }
         }
 
         viewModelScope.launch {
@@ -469,7 +463,6 @@ class GameDetailViewModel @Inject constructor(
                 igdbId?.let { activity[it.toInt()] }.orEmpty()
             }.distinctUntilChanged().collect { friends ->
                 _uiState.update { it.copy(friendsActivity = friends) }
-                publishCompanionDetail(_uiState.value.game)
             }
         }
 
@@ -2433,18 +2426,15 @@ class GameDetailViewModel @Inject constructor(
         soundManager.play(SoundType.CLOSE_MODAL)
     }
 
-    private fun publishCompanionDetail(game: GameDetailUi?) {
+    private fun publishCompanionDetail(detail: com.nendo.argosy.ui.dualscreen.CompanionDetail?) {
         if (!isDescribing) return
         val dsm = com.nendo.argosy.DualScreenManagerHolder.instance ?: return
-        if (game == null) {
+        if (detail == null) {
             dsm.releaseSlot(companionOwner)
         } else {
             dsm.presentSlot(
                 companionOwner,
-                com.nendo.argosy.ui.dualscreen.PresentationSlot.GameHero(
-                    game,
-                    _uiState.value.friendsActivity
-                )
+                com.nendo.argosy.ui.dualscreen.PresentationSlot.Detail(detail)
             )
         }
     }
@@ -2452,7 +2442,8 @@ class GameDetailViewModel @Inject constructor(
     fun republishCompanionDetail() {
         isDescribing = true
         heldForTimeline = false
-        publishCompanionDetail(_uiState.value.game)
+        val state = _uiState.value
+        publishCompanionDetail(state.game?.toCompanionDetail(state.friendsActivity))
     }
 
     /**

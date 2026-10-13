@@ -68,12 +68,16 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.nendo.argosy.R
 import com.nendo.argosy.data.social.FriendActivity
+import com.nendo.argosy.domain.model.CompletionStatus
 import com.nendo.argosy.domain.model.PresentationArt
 import com.nendo.argosy.domain.model.PresentationLayout
 import com.nendo.argosy.domain.model.PresentationScrim
 import com.nendo.argosy.domain.model.PresentationStat
 import com.nendo.argosy.domain.model.PresentationStyle
 import com.nendo.argosy.ui.common.backgroundBlurDp
+import com.nendo.argosy.ui.common.color
+import com.nendo.argosy.ui.common.icon
+import com.nendo.argosy.ui.common.labelRes
 import com.nendo.argosy.ui.common.playerCountGlyph
 import com.nendo.argosy.ui.common.rememberFileImageModel
 import com.nendo.argosy.data.model.ArtSlot
@@ -135,6 +139,8 @@ private fun CompanionDetail.withLiveArt(art: com.nendo.argosy.data.model.Resolve
     return copy(
         artUrl = art.coverPath ?: artUrl,
         backdropUrl = art.backgroundPath ?: backdropUrl,
+        spineUrl = art.boxSpinePath ?: spineUrl,
+        box3dUrl = art.box3dPath ?: box3dUrl,
         logoUrl = art.logoPath?.takeIf { it.startsWith("/") } ?: logoUrl
     )
 }
@@ -355,14 +361,15 @@ private fun CinematicShowcase(
     val journey = rememberJourney(detail.stats, style)
     val items = detail.stats?.let { showcaseRailItems(it, style, journeyShown = journey != null) }.orEmpty()
     val developer = items.firstOrNull { it.first == PresentationStat.DEVELOPER }?.second?.text
+    val progressDetails = detail.stats?.let { showcaseProgressDetails(it, style) }.orEmpty()
     val rows = if (detail.stats == null) {
         listOf(RailGroup.FACTS to detail.facts.map { RailItem(null, null, it.value) })
             .filter { it.second.isNotEmpty() }
     } else {
         RailGroup.entries.mapNotNull { group ->
-            items.filter { it.first.railGroup == group && it.first != PresentationStat.DEVELOPER }
-                .map { it.second }.takeIf { it.isNotEmpty() }
-                ?.let { group to it }
+            val groupItems = items.filter { it.first.railGroup == group && it.first != PresentationStat.DEVELOPER }
+                .map { it.second } + if (group == RailGroup.PROGRESS) progressDetails else emptyList()
+            groupItems.takeIf { it.isNotEmpty() }?.let { group to it }
         }
     }
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -500,7 +507,8 @@ private fun JournalJourneyCard(stats: CompanionGameStats, style: PresentationSty
         null
     }
     val achievements = stats.takeIf { style.shows(PresentationStat.ACHIEVEMENTS) && it.achievementCount > 0 }
-    if (played == null && mainStoryLabel == null && achievements == null) return
+    val progressDetails = showcaseProgressDetails(stats, style)
+    if (played == null && mainStoryLabel == null && achievements == null && progressDetails.isEmpty()) return
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -542,6 +550,7 @@ private fun JournalJourneyCard(stats: CompanionGameStats, style: PresentationSty
                 }
             }
         }
+        if (progressDetails.isNotEmpty()) ShowcaseRailRow(progressDetails)
         achievements?.let {
             ShowcaseProgressBar(
                 fraction = it.earnedAchievementCount.toFloat() / it.achievementCount,
@@ -708,6 +717,17 @@ private fun ShowcaseFriendsPill(friends: List<FriendActivity>, modifier: Modifie
 }
 
 private data class RailItem(val icon: ImageVector?, val tint: Color?, val text: String)
+
+@Composable
+private fun showcaseProgressDetails(stats: CompanionGameStats, style: PresentationStyle): List<RailItem> {
+    val completionist = stats.timeToBeatCompletionistSec
+        ?.takeIf { it > 0 && style.shows(PresentationStat.TIME_TO_BEAT) }
+        ?.let { formatTimeToBeat(LocalContext.current, it) }
+        ?.let { RailItem(Icons.Default.Schedule, null, stringResource(R.string.dual_showcase_completionist, it)) }
+    val status = CompletionStatus.fromApiValue(stats.status)
+        ?.let { RailItem(it.icon, it.color, stringResource(it.labelRes)) }
+    return listOfNotNull(completionist, status)
+}
 
 private enum class RailGroup { FACTS, RATINGS, PROGRESS }
 

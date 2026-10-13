@@ -487,4 +487,5 @@
     <string name="dual_showcase_played">%1$s खेला</string>
     <string name="dual_showcase_journey_header">आपकी यात्रा</string>
     <string name="dual_showcase_journey_main">मुख्य कहानी %1$s</string>
+    <string name="dual_showcase_completionist">कंप्लीशनिस्ट %1$s</string>
 </resources>

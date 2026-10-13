@@ -38,6 +38,8 @@ data class CompanionGameStats(
     val userDifficulty: Int = 0,
     val playTimeMinutes: Int = 0,
     val timeToBeatMainSec: Int? = null,
+    val timeToBeatCompletionistSec: Int? = null,
+    val status: String? = null,
     val achievementCount: Int = 0,
     val earnedAchievementCount: Int = 0,
     val friends: List<com.nendo.argosy.data.social.FriendActivity> = emptyList()
