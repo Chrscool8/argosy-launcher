@@ -415,8 +415,23 @@ data class RomMRAGameProgression(
     @Json(name = "num_awarded") val numAwarded: Int? = null,
     @Json(name = "num_awarded_hardcore") val numAwardedHardcore: Int? = null,
     @Json(name = "most_recent_awarded_date") val mostRecentAwardedDate: String? = null,
+    @Json(name = "highest_award_kind") val highestAwardKind: String? = null,
+    @Json(name = "highest_award_date") val highestAwardDate: String? = null,
     @Json(name = "earned_achievements") val earnedAchievements: List<RomMEarnedAchievement> = emptyList()
 )
+
+/**
+ * `GET /api/users/me/ra/summary`: the RetroAchievements rich-presence line the server last saw for
+ * the signed-in user's RA account, when it was current (UTC ISO 8601), and the RA game it was for.
+ */
+@JsonClass(generateAdapter = true)
+data class RomMRaUserSummary(
+    @Json(name = "rich_presence_msg") val richPresenceMsg: String? = null,
+    @Json(name = "rich_presence_msg_date") val richPresenceMsgDate: String? = null,
+    @Json(name = "last_game_id") val lastGameId: Long? = null
+)
+
+const val ROMM_RA_USER_SUMMARY_PATH = "api/users/me/ra/summary"
 
 @JsonClass(generateAdapter = true)
 data class RomMEarnedAchievement(
@@ -434,13 +449,17 @@ data class RomMRARefreshRequest(
 data class RomMHeartbeatResponse(
     @Json(name = "SYSTEM") val system: RomMSystem? = null,
     @Json(name = "METADATA_SOURCES") val metadataSources: RomMMetadataSources? = null,
-    @Json(name = "SAVE_SYNC") val saveSync: RomMSaveSyncFeatures? = null
+    @Json(name = "SAVE_SYNC") val saveSync: RomMSaveSyncFeatures? = null,
+    @Json(name = "RETROACHIEVEMENTS") val retroAchievements: RomMRetroAchievementsFeatures? = null
 ) {
     val version: String?
         get() = system?.version
 
     val snapshotsEnabled: Boolean
         get() = saveSync?.snapshots == true
+
+    val raUserSummaryEnabled: Boolean
+        get() = retroAchievements?.userSummary == true
 
     val libretroApiEnabled: Boolean?
         get() = metadataSources?.libretroApiEnabled
@@ -482,6 +501,11 @@ data class RomMSystem(
 @JsonClass(generateAdapter = true)
 data class RomMSaveSyncFeatures(
     @Json(name = "SNAPSHOTS") val snapshots: Boolean? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class RomMRetroAchievementsFeatures(
+    @Json(name = "USER_SUMMARY") val userSummary: Boolean? = null
 )
 
 @JsonClass(generateAdapter = true)

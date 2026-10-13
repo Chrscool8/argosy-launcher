@@ -83,6 +83,14 @@ class PlaySessionBackfill @Inject constructor(
         Summary(sent, duplicates, failed)
     }
 
+    suspend fun uploadThenPull(): Summary {
+        val summary = run()
+        if (summary.stoppedBy != null) return summary
+        val pulled = pull.run()
+        Logger.info(TAG, "pull after upload | added=${pulled.added} devices=${pulled.devices} stoppedBy=${pulled.stoppedBy}")
+        return summary
+    }
+
     internal suspend fun runOnceAfterConnect() {
         val userId = syncPreferencesRepository.getRommUserId() ?: return
         val deviceId = connectionManager.getDeviceId() ?: return

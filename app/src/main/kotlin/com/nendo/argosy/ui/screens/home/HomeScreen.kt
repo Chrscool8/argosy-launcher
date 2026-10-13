@@ -336,15 +336,18 @@ fun HomeScreen(
                 viewModel.refreshFavorites()
                 viewModel.refreshRecentGames()
                 viewModel.republishCompanionDetail()
+                viewModel.onHomeShown()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         inputDispatcher.subscribeView(inputHandler, forRoute = Screen.ROUTE_HOME)
         viewModel.republishCompanionDetail()
+        viewModel.onHomeShown()
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             viewModel.clearCompanionDetail()
             viewModel.dismissAppBarTools()
+            viewModel.onHomeHidden()
         }
     }
 

@@ -10,6 +10,7 @@ object InputTokens {
     object Debounce {
         const val transitionMs = 200L
         const val focusScrollMs = 60L
+        const val selectDoubleTapMs = 300L
     }
 
     const val scrollPaddingPercent = 0.2f

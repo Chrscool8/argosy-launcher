@@ -24,6 +24,8 @@ interface CapturingInputHandler : InputHandler {
     override fun onRightStickClick(): InputResult = InputResult.HANDLED
     override fun onRightStickUp(): InputResult = InputResult.HANDLED
     override fun onRightStickDown(): InputResult = InputResult.HANDLED
+    override fun onRightStickLeft(): InputResult = InputResult.HANDLED
+    override fun onRightStickRight(): InputResult = InputResult.HANDLED
     override fun onLongConfirm(): InputResult = InputResult.HANDLED
     override fun onLongSelect(): InputResult = InputResult.HANDLED
 }

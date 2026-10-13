@@ -124,7 +124,8 @@ class GameLaunchDelegate @Inject constructor(
     private val getUnifiedSavesUseCase: com.nendo.argosy.domain.usecase.save.GetUnifiedSavesUseCase,
     private val launchProgressTracker: LaunchProgressTracker,
     private val resolveSnapshotConflict: com.nendo.argosy.domain.usecase.savechannel.ResolveSnapshotConflictUseCase,
-    private val gamepadInputHandler: com.nendo.argosy.ui.input.GamepadInputHandler
+    private val gamepadInputHandler: com.nendo.argosy.ui.input.GamepadInputHandler,
+    private val preLaunchRecapStep: PreLaunchRecapStep
 ) {
     companion object {
         private const val EMULATOR_KILL_DELAY_MS = 500L
@@ -252,15 +253,20 @@ class GameLaunchDelegate @Inject constructor(
                     emuId?.let { EmulatorRegistry.getById(it) }?.launchConfig?.requiresEmulatorKill == true
                 } ?: false
 
+                val resolvedVariantId = variantResolver.resolveVariant(game)?.id
+
+                val canResume = !sessionRequiresKill && playSessionTracker.canResumeSession(gameId, resolvedVariantId)
+
+                if (!canResume && !preLaunchRecapStep.run(ticket, gameId, game.title)) {
+                    onLaunchFailed()
+                    return@launch
+                }
+
                 if (sessionRequiresKill) {
                     android.util.Log.d("GameLaunchDelegate", "Session requires emulator kill, ending before fresh launch")
                     endSessionAndAwaitConflictAnswer()
                     delay(EMULATOR_KILL_DELAY_MS)
                 }
-
-                val resolvedVariantId = variantResolver.resolveVariant(game)?.id
-
-                val canResume = !sessionRequiresKill && playSessionTracker.canResumeSession(gameId, resolvedVariantId)
 
                 var stoppedPackage: String? = null
                 if (!canResume && activeSession != null && !sessionRequiresKill) {
@@ -658,6 +664,11 @@ class GameLaunchDelegate @Inject constructor(
             }
             var launched = false
             try {
+                val continuesPickedLaunch = selectedDiscPath != null || variantFileId != null || skipVariantPrompt
+                if (game != null && !continuesPickedLaunch && !preLaunchRecapStep.run(ticket, gameId, game.title)) {
+                    callbacks.onLaunchFailed()
+                    return@launch
+                }
                 val activeSession = playSessionTracker.activeSession.value
                 if (activeSession != null) {
                     android.util.Log.d("GameLaunchDelegate", "launchSimple: ending session for game ${activeSession.gameId} before fresh launch")

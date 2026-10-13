@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Gamepad
@@ -86,6 +87,7 @@ internal sealed class PlayTimeItem(
     data object GamesTile : PlayTimeItem("gamesTile", "what")
 
     data object FactsCard : PlayTimeItem("factsCard", "facts")
+    data object LastMonthRecap : PlayTimeItem("lastMonthRecap", "facts")
 
     data object RommOnServer : PlayTimeItem("rommOnServer", "romm", { !it.isLoading })
     data object RommPending : PlayTimeItem("rommPending", "romm", { !it.isLoading })
@@ -118,7 +120,7 @@ internal sealed class PlayTimeItem(
                 PlatformsSpacer, PlatformsHeader, PlatformBand, PlatformsTile,
                 WhereSpacer, WhereHeader, DeviceBand, DevicesTile,
                 WhatSpacer, WhatHeader, MosaicCard, GamesTile,
-                FactsSpacer, FactsHeader, FactsCard,
+                FactsSpacer, FactsHeader, FactsCard, LastMonthRecap,
                 RommSpacer, RommHeader, RommOnServer, RommPending, RommUnlinked, RommLastUpload, RommPulled,
                 RommLastRefresh, UploadNow, RefreshFromRomm
             )
@@ -172,7 +174,8 @@ internal enum class PlayTimeConfirmAction { INSPECT, OPEN, RUN }
 internal fun playTimeConfirmActionOf(item: PlayTimeItem?): PlayTimeConfirmAction? = when (item) {
     PlayTimeItem.CalendarCard, PlayTimeItem.WaveformCard -> PlayTimeConfirmAction.INSPECT
     PlayTimeItem.PlatformsTile, PlayTimeItem.DevicesTile,
-    PlayTimeItem.MosaicCard, PlayTimeItem.GamesTile -> PlayTimeConfirmAction.OPEN
+    PlayTimeItem.MosaicCard, PlayTimeItem.GamesTile,
+    PlayTimeItem.LastMonthRecap -> PlayTimeConfirmAction.OPEN
     PlayTimeItem.UploadNow, PlayTimeItem.RefreshFromRomm -> PlayTimeConfirmAction.RUN
     else -> null
 }
@@ -367,6 +370,17 @@ fun PlayTimeSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
             )
 
             PlayTimeItem.FactsCard -> PlayTimeFactsCard(state = playTime)
+
+            PlayTimeItem.LastMonthRecap -> ActionPreference(
+                icon = Icons.Default.CalendarMonth,
+                title = stringResource(R.string.settings_play_time_last_month_title),
+                subtitle = stringResource(R.string.settings_play_time_last_month_subtitle),
+                isFocused = isFocused(item),
+                onClick = {
+                    focusOn(item)
+                    viewModel.openLastMonthRecap()
+                }
+            )
 
             PlayTimeItem.RommOnServer -> InfoPreference(
                 title = stringResource(R.string.settings_play_time_romm_on_server_title),

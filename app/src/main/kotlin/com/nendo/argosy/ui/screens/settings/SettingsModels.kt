@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.nendo.argosy.R
 import com.nendo.argosy.ui.common.DisplayText
 import com.nendo.argosy.ui.components.TextEntryFocus
+import com.nendo.argosy.ui.components.TextEntryRow
 import com.nendo.argosy.core.emulator.EmulatorDownloadState
 import com.nendo.argosy.data.cache.GradientExtractionConfig
 import com.nendo.argosy.ui.common.GradientExtractionResult
@@ -268,6 +269,8 @@ data class DisplayState(
     val lockScreenArt: Boolean = true,
     val homeAppAvailable: Boolean = true,
     val isDefaultHome: Boolean = false,
+    val preLaunchRecaps: Boolean = true,
+    val monthlyRecap: Boolean = true,
     val iconPack: String? = null,
     val iconPacks: List<com.nendo.argosy.data.model.IconPack> = emptyList(),
     val boxArtShape: BoxArtShape = BoxArtShape.STANDARD,
@@ -1576,6 +1579,45 @@ data class PermissionsState(
 const val RA_PROXY_TOGGLE_INDEX = 1
 const val RA_PROXY_FIELD_INDEX = 2
 
+const val RA_LOGGED_IN_LOGOUT_INDEX = 0
+const val RA_LOGGED_IN_WEB_API_KEY_INDEX = 1
+const val RA_LOGGED_IN_PLAY_MODE_INDEX = 2
+const val RA_LOGGED_IN_PROXY_TOGGLE_INDEX = 3
+const val RA_LOGGED_IN_PROXY_FIELD_INDEX = 4
+
+fun raLoggedInPushIndex(proxyEnabled: Boolean): Int =
+    if (proxyEnabled) RA_LOGGED_IN_PROXY_FIELD_INDEX + 1 else RA_LOGGED_IN_PROXY_TOGGLE_INDEX + 1
+
+fun raLoggedInMaxFocusIndex(proxyEnabled: Boolean, canPushToRetroArch: Boolean): Int =
+    if (canPushToRetroArch) raLoggedInPushIndex(proxyEnabled) else raLoggedInPushIndex(proxyEnabled) - 1
+
+enum class RAWebApiKeyAction { PASTE, CLEAR, CANCEL, SAVE }
+
+enum class RAWebApiKeyStatus { IDLE, VALIDATING, REJECTED, UNREACHABLE, CLIPBOARD_EMPTY }
+
+/**
+ * The open web API key editor. [buttonIndex] points into [actions] while [row] is the button row.
+ */
+data class RAWebApiKeyEditor(
+    val draft: String = "",
+    val actions: List<RAWebApiKeyAction>,
+    val row: TextEntryRow = TextEntryRow.FIELD,
+    val buttonIndex: Int = actions.indexOf(RAWebApiKeyAction.SAVE).coerceAtLeast(0),
+    val status: RAWebApiKeyStatus = RAWebApiKeyStatus.IDLE
+) {
+    val focusedAction: RAWebApiKeyAction?
+        get() = if (row == TextEntryRow.BUTTONS) actions.getOrNull(buttonIndex) else null
+
+    companion object {
+        fun actionsFor(hasStoredKey: Boolean): List<RAWebApiKeyAction> = buildList {
+            add(RAWebApiKeyAction.PASTE)
+            if (hasStoredKey) add(RAWebApiKeyAction.CLEAR)
+            add(RAWebApiKeyAction.CANCEL)
+            add(RAWebApiKeyAction.SAVE)
+        }
+    }
+}
+
 data class RASettingsState(
     val isLoggedIn: Boolean = false,
     val username: String? = null,
@@ -1590,7 +1632,11 @@ data class RASettingsState(
     val proxyEnabled: Boolean = false,
     val proxyAddress: String = "",
     val canPushToRetroArch: Boolean = false,
-    val defaultToHardcore: String = "ask"
+    val defaultToHardcore: String = "ask",
+    val hasWebApiKey: Boolean = false,
+    val webApiKeySuffix: String? = null,
+    val webApiKeyRejected: Boolean = false,
+    val webApiKeyEditor: RAWebApiKeyEditor? = null
 )
 
 data class BiosFirmwareItem(

@@ -41,7 +41,21 @@ class SessionPreferencesRepository @Inject constructor(
         val ACTIVE_SESSION_LAUNCH_ORIGIN = stringPreferencesKey("active_session_launch_origin")
         val ACTIVE_SESSION_NETPLAY_GUEST = booleanPreferencesKey("active_session_netplay_guest")
         val ACTIVE_SESSION_RECOVERY_ATTEMPTS = intPreferencesKey("active_session_recovery_attempts")
+        val ACTIVE_SESSION_RA_LAUNCH_SNAPSHOT = stringPreferencesKey("active_session_ra_launch_snapshot")
     }
+
+    /**
+     * The encoded RetroAchievements unlock snapshot taken at a session's launch. [clearActiveSession]
+     * leaves it in place.
+     */
+    suspend fun setRaLaunchSnapshot(encoded: String?) {
+        dataStore.edit { prefs ->
+            if (encoded != null) prefs[Keys.ACTIVE_SESSION_RA_LAUNCH_SNAPSHOT] = encoded
+            else prefs.remove(Keys.ACTIVE_SESSION_RA_LAUNCH_SNAPSHOT)
+        }
+    }
+
+    suspend fun getRaLaunchSnapshot(): String? = dataStore.data.first()[Keys.ACTIVE_SESSION_RA_LAUNCH_SNAPSHOT]
 
     val activeSessionFlow: Flow<PersistedSession?> = dataStore.data.map { prefs ->
         prefs.toPersistedSession()

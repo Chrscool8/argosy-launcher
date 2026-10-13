@@ -173,6 +173,45 @@ class PlaySessionBackfillTest {
     }
 
     @Test
+    fun `a session upload that succeeds pulls the other devices' sessions after it`() = runTest {
+        val batch = listOf(pending(1L))
+        coEvery { playSessionDao.getPendingForRomM(7L, 0L, 100) } returns batch
+        coEvery { playSessionDao.getPendingForRomM(7L, 1L, 100) } returns emptyList()
+        coEvery { uploader.upload(batch) } returns RomMPlaySessionUploader.UploadResult.Success(1, 0, 0)
+
+        val summary = backfill.uploadThenPull()
+
+        assertEquals(PlaySessionBackfill.Summary(sent = 1, duplicates = 0, failed = 0), summary)
+        coVerifyOrder {
+            uploader.upload(batch)
+            pull.run()
+        }
+    }
+
+    @Test
+    fun `a session upload that fails does not pull`() = runTest {
+        val batch = listOf(pending(1L))
+        coEvery { playSessionDao.getPendingForRomM(7L, 0L, 100) } returns batch
+        coEvery { uploader.upload(batch) } returns RomMPlaySessionUploader.UploadResult.Error("offline")
+
+        val summary = backfill.uploadThenPull()
+
+        assertEquals("offline", summary.stoppedBy)
+        coVerify(exactly = 0) { pull.run() }
+    }
+
+    @Test
+    fun `a session upload skipped for capability does not pull`() = runTest {
+        val batch = listOf(pending(1L))
+        coEvery { playSessionDao.getPendingForRomM(7L, 0L, 100) } returns batch
+        coEvery { uploader.upload(batch) } returns RomMPlaySessionUploader.UploadResult.Skipped("Capability or connection unavailable")
+
+        backfill.uploadThenPull()
+
+        coVerify(exactly = 0) { pull.run() }
+    }
+
+    @Test
     fun `no device id yet defers the run without recording it`() = runTest {
         every { connectionManager.getDeviceId() } returns null
 

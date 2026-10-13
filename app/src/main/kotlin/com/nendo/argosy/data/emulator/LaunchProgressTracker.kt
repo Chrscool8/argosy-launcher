@@ -1,6 +1,7 @@
 package com.nendo.argosy.data.emulator
 
 import com.nendo.argosy.domain.model.LaunchProgress
+import com.nendo.argosy.domain.model.LaunchRecap
 import com.nendo.argosy.domain.model.LaunchPromptOption
 import com.nendo.argosy.domain.model.LaunchStep
 import com.nendo.argosy.domain.model.SyncProgress
@@ -61,13 +62,30 @@ class LaunchProgressTracker internal constructor(private val scope: CoroutineSco
          * Shows [conflict] with [options] and returns the chosen option, or null when the launch
          * is cancelled instead.
          */
-        suspend fun ask(conflict: SyncProgress, options: List<LaunchPromptOption>): LaunchPromptOption? {
+        suspend fun ask(conflict: SyncProgress, options: List<LaunchPromptOption>): LaunchPromptOption? =
+            awaitAnswer(LaunchStep.Prompt(conflict, options))
+
+        /**
+         * Asks which of [options] launches the game and returns the chosen option, or null when the
+         * launch is cancelled instead.
+         */
+        suspend fun chooseLauncher(options: List<LaunchPromptOption>): LaunchPromptOption? =
+            awaitAnswer(LaunchStep.ChooseLauncher(options))
+
+        /**
+         * Shows [recap] until the player starts the game or cancels the launch. True when they
+         * start it.
+         */
+        suspend fun offerRecap(recap: LaunchRecap): Boolean =
+            awaitAnswer(LaunchStep.Recap(recap)) == LaunchPromptOption.START_GAME
+
+        private suspend fun awaitAnswer(step: LaunchStep): LaunchPromptOption? {
             val answer = CompletableDeferred<LaunchPromptOption?>()
             synchronized(lock) {
                 if (isCancelled) return null
                 pendingAnswer = answer
             }
-            publish(this, LaunchStep.Prompt(conflict, options))
+            publish(this, step)
             return answer.await().also { synchronized(lock) { pendingAnswer = null } }
         }
 

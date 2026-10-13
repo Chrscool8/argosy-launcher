@@ -249,6 +249,7 @@
     <string name="settings_interface_section_general">常规</string>
     <string name="settings_interface_section_screens">屏幕</string>
     <string name="settings_interface_section_status_bar">状态栏</string>
+    <string name="settings_interface_section_recaps">回顾</string>
     <string name="settings_presentation_layout_title">布局</string>
     <string name="settings_presentation_layout_cinematic">影院</string>
     <string name="settings_presentation_layout_journal">日志</string>
@@ -321,6 +322,10 @@
     <string name="settings_interface_status_battery_subtitle">在状态栏显示电池电量</string>
     <string name="settings_interface_status_network_title">网络</string>
     <string name="settings_interface_status_network_subtitle">在状态栏显示当前连接</string>
+    <string name="settings_interface_pre_launch_recaps_title">启动前回顾</string>
+    <string name="settings_interface_pre_launch_recaps_subtitle">启动一周未玩的 RetroAchievements 游戏前，显示上次停在哪里</string>
+    <string name="settings_interface_monthly_recap_title">月度回顾</string>
+    <string name="settings_interface_monthly_recap_subtitle">每月初在主页显示上个月的游玩总结</string>
 
     <string name="settings_home_screen_background_title">背景</string>
     <string name="settings_home_screen_background_subtitle">游戏美术图或背景图案</string>
@@ -440,6 +445,27 @@
     <string name="settings_ra_logout_title">登出</string>
     <string name="settings_ra_logout_title_busy">正在登出...</string>
     <string name="settings_ra_logout_subtitle">退出RetroAchievements登录</string>
+    <string name="settings_ra_web_api_key_title">Web API 密钥（可选）</string>
+    <string name="settings_ra_web_api_key_subtitle">可在 RetroAchievements 控制面板的 Keys 部分找到。让回顾更快、更丰富。</string>
+    <string name="settings_ra_web_api_key_value_not_set">未设置</string>
+    <string name="settings_ra_web_api_key_value_saved_short">已保存</string>
+    <string name="settings_ra_web_api_key_value_rejected">密钥被拒绝</string>
+    <string name="settings_ra_web_api_key_modal_title">RetroAchievements Web API 密钥</string>
+    <string name="settings_ra_web_api_key_modal_message">从 RetroAchievements 控制面板的 Keys 部分复制 Web API 密钥并粘贴到这里。Argosy 会在保存前验证一次。</string>
+    <string name="settings_ra_web_api_key_field_label">Web API 密钥</string>
+    <string name="settings_ra_web_api_key_paste">粘贴</string>
+    <string name="settings_ra_web_api_key_clear">清除</string>
+    <string name="settings_ra_web_api_key_cancel">取消</string>
+    <string name="settings_ra_web_api_key_save">保存</string>
+    <string name="settings_ra_web_api_key_save_busy">正在验证...</string>
+    <string name="settings_ra_web_api_key_status_validating">正在向 RetroAchievements 验证密钥...</string>
+    <string name="settings_ra_web_api_key_status_rejected">RetroAchievements 未接受此密钥。</string>
+    <string name="settings_ra_web_api_key_status_unreachable">无法连接 RetroAchievements。请重试。</string>
+    <string name="settings_ra_web_api_key_status_clipboard_empty">剪贴板中没有可粘贴的文本。</string>
+    <string name="settings_ra_web_api_key_saved_title">Web API 密钥已保存</string>
+    <string name="settings_ra_web_api_key_saved_subtitle">回顾现在直接读取 RetroAchievements。</string>
+    <string name="settings_ra_web_api_key_cleared_title">Web API 密钥已移除</string>
+    <string name="settings_ra_web_api_key_cleared_subtitle">此设备不再保存该密钥。</string>
 
     <string name="settings_ra_play_mode_title">游戏模式偏好</string>
     <string name="settings_ra_play_mode_subtitle_locked">需要开启安全存档</string>
@@ -1693,8 +1719,8 @@
 
     <!-- ===== GameNative folders panel ===== -->
 
-    <string name="settings_gamenative_folders_title">GameNative文件夹</string>
-    <string name="settings_gamenative_folders_subtitle">将每个商店指向GameNative导出安装内容的文件夹。Steam标记仅将已拥有的游戏标记为已安装；其他商店会添加或移除游戏以保持一致。</string>
+    <string name="settings_gamenative_folders_title">启动器同步文件夹</string>
+    <string name="settings_gamenative_folders_subtitle">将每个商店指向GameNative导出安装内容的文件夹，并将DroidDeck指向其游戏文件文件夹。Steam标记仅将已拥有的游戏标记为已安装；其他商店会添加或移除游戏以保持一致。</string>
     <string name="settings_gamenative_folders_hint_set">设置/清除</string>
     <string name="settings_gamenative_folders_hint_select">选择</string>
     <string name="settings_gamenative_folders_hint_back">返回</string>
@@ -2416,6 +2442,8 @@
     <string name="settings_play_time_section_where">设备</string>
     <string name="settings_play_time_section_what">你玩什么</string>
     <string name="settings_play_time_section_facts">速览</string>
+    <string name="settings_play_time_last_month_title">上月回顾</string>
+    <string name="settings_play_time_last_month_subtitle">上个月的游戏时长、新宠游戏和成就</string>
     <string name="settings_play_time_loading_title">正在读取会话...</string>
     <string name="settings_play_time_loading_message">你的游戏习惯马上就会显示。</string>
     <string name="settings_play_time_empty_title">还没有游戏会话</string>

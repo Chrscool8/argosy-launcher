@@ -79,10 +79,13 @@ sealed interface StoreScanResult {
 }
 
 /**
- * Reads GameNative's per-store Frontend Sync folders: one `<Game Name>.<store>` file per installed
- * game whose content is the store's numeric id. GOG, Epic and Amazon markers own their library
- * rows outright, creating them on appearance and deleting them on absence. Steam markers only
- * report install state onto rows Steam library sync already created.
+ * Reads the Frontend Sync folders of GameNative (one per store) and DroidDeck (Steam only): one
+ * `<Game Name>.<store>` file per installed game whose content is the store's numeric id. GOG, Epic
+ * and Amazon markers own their library rows outright, creating them on appearance and deleting
+ * them on absence. Steam markers from either launcher only mark install state, for that launcher,
+ * onto rows Steam library sync already created; a row pinned by hand or already marked for another
+ * launcher is left alone in both directions, so GameNative's folder, scanned first, claims a game
+ * both launchers report.
  */
 @Singleton
 class GameNativeStoreSync @Inject constructor(
@@ -132,7 +135,7 @@ class GameNativeStoreSync @Inject constructor(
                 results[folder] = StoreScanResult.FolderMissing(path)
                 continue
             }
-            val markers = readMarkers(dir, folder)
+            val markers = FrontendSyncMarkers.read(dir, folder)
             if (markers == null) {
                 Logger.warn(TAG, "scan: sync dir unreadable | store=${folder.slug}, path=$path")
                 results[folder] = StoreScanResult.FolderMissing(path)
@@ -140,7 +143,7 @@ class GameNativeStoreSync @Inject constructor(
             }
             val store = GameNativeStore.forFolder(folder)
             results[folder] = if (store == null) {
-                reconcileSteamInstallState(markers, ownerUserId)
+                reconcileSteamInstallState(markers, ownerUserId, folder.launcherPackage)
             } else {
                 reconcileStore(store, markers, cacheScreenshots, ownerUserId)
             }
@@ -150,24 +153,10 @@ class GameNativeStoreSync @Inject constructor(
         ScanSummary(results)
     }
 
-    private fun readMarkers(dir: File, folder: GameNativeSyncFolder): List<Pair<Int, String>>? =
-        dir.listFiles()
-            ?.filter { it.isFile }
-            ?.filter { it.name.endsWith(folder.markerExtension, ignoreCase = true) }
-            ?.mapNotNull { file ->
-                val id = runCatching { file.readText().trim().toIntOrNull() }.getOrNull()
-                    ?: return@mapNotNull null
-                id to file.name.dropLast(folder.markerExtension.length)
-            }
-
-    /**
-     * Flips install state on the Steam rows this owner can see; markers never create or delete a
-     * row. A row pinned by hand, or already pointing at another launcher, is left alone in both
-     * directions.
-     */
     private suspend fun reconcileSteamInstallState(
         markers: List<Pair<Int, String>>,
-        ownerUserId: Long?
+        ownerUserId: Long?,
+        launcherPackage: String
     ): StoreScanResult.InstallState {
         val markerIds = markers.map { it.first.toLong() }.toSet()
         val steamGames = gameDao.getBySourcesForOwner(
@@ -182,19 +171,19 @@ class GameNativeStoreSync @Inject constructor(
             val game = byAppId[appId] ?: continue
             matched++
             if (game.launcherSetManually) continue
-            if (game.steamLauncher == GameNativeLauncher.packageName) continue
+            if (game.steamLauncher == launcherPackage) continue
             if (game.isExternallyManaged) continue
-            gameDao.setSteamLauncher(game.id, GameNativeLauncher.packageName)
-            Logger.debug(TAG, "reconcileSteam: marked installed | title=${game.title}, appId=$appId")
+            gameDao.setSteamLauncher(game.id, launcherPackage)
+            Logger.debug(TAG, "reconcileSteam: marked installed | launcher=$launcherPackage, title=${game.title}, appId=$appId")
         }
 
         for (game in steamGames) {
             val appId = game.steamAppId ?: continue
             if (game.launcherSetManually) continue
-            if (game.steamLauncher != GameNativeLauncher.packageName) continue
+            if (game.steamLauncher != launcherPackage) continue
             if (appId in markerIds) continue
             gameDao.setSteamLauncher(game.id, null)
-            Logger.debug(TAG, "reconcileSteam: marker gone, cleared | title=${game.title}")
+            Logger.debug(TAG, "reconcileSteam: marker gone, cleared | launcher=$launcherPackage, title=${game.title}")
         }
 
         return StoreScanResult.InstallState(

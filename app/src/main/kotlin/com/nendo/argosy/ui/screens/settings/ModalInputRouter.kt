@@ -38,6 +38,7 @@ internal class ModalInputRouter(private val viewModel: SettingsViewModel) {
         interceptAddressVerifyPrompt(state, method)?.let { return it }
         interceptAddressEditor(state, method)?.let { return it }
         interceptAddressMenu(state, method)?.let { return it }
+        interceptRAWebApiKeyEditor(state, method)?.let { return it }
         interceptUpdateModal(state, method)?.let { return it }
         interceptVariantPicker(state, method)?.let { return it }
         interceptSteamVariantPicker(state, method)?.let { return it }
@@ -416,6 +417,19 @@ internal class ModalInputRouter(private val viewModel: SettingsViewModel) {
             InputMethod.RIGHT -> { viewModel.moveRommAddressEditorButton(1); InputResult.HANDLED }
             InputMethod.CONFIRM -> { viewModel.confirmRommAddressEditor(); InputResult.HANDLED }
             InputMethod.BACK -> { viewModel.closeRommAddressEditor(); InputResult.handled(SoundType.CLOSE_MODAL) }
+            else -> InputResult.HANDLED
+        }
+    }
+
+    private fun interceptRAWebApiKeyEditor(state: SettingsUiState, method: InputMethod): InputResult? {
+        if (state.retroAchievements.webApiKeyEditor == null) return null
+        return when (method) {
+            InputMethod.UP -> { viewModel.moveRAWebApiKeyRow(TextEntryRow.FIELD); InputResult.HANDLED }
+            InputMethod.DOWN -> { viewModel.moveRAWebApiKeyRow(TextEntryRow.BUTTONS); InputResult.HANDLED }
+            InputMethod.LEFT -> { viewModel.moveRAWebApiKeyButton(-1); InputResult.HANDLED }
+            InputMethod.RIGHT -> { viewModel.moveRAWebApiKeyButton(1); InputResult.HANDLED }
+            InputMethod.CONFIRM -> { viewModel.confirmRAWebApiKeyEditor(); InputResult.HANDLED }
+            InputMethod.BACK -> { viewModel.closeRAWebApiKeyEditor(); InputResult.handled(SoundType.CLOSE_MODAL) }
             else -> InputResult.HANDLED
         }
     }

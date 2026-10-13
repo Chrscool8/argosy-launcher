@@ -587,6 +587,8 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             lockScreenArt = prefs.lockScreenArt,
             homeAppAvailable = prefs.homeAppAvailable,
             isDefaultHome = vm.displayDelegate.isDefaultHome(),
+            preLaunchRecaps = prefs.preLaunchRecapsEnabled,
+            monthlyRecap = prefs.monthlyRecapEnabled,
             iconPack = prefs.iconPack,
             iconPacks = iconPacks,
             boxArtShape = prefs.boxArtShape,

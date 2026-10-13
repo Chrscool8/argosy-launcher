@@ -255,6 +255,7 @@
     <string name="settings_interface_section_general">Général</string>
     <string name="settings_interface_section_screens">Écrans</string>
     <string name="settings_interface_section_status_bar">Barre d\'état</string>
+    <string name="settings_interface_section_recaps">Récapitulatifs</string>
     <string name="settings_presentation_layout_title">Disposition</string>
     <string name="settings_presentation_layout_cinematic">Cinéma</string>
     <string name="settings_presentation_layout_journal">Journal</string>
@@ -329,6 +330,10 @@
     <string name="settings_interface_status_battery_subtitle">Afficher le niveau de batterie dans la barre d\'état</string>
     <string name="settings_interface_status_network_title">Réseau</string>
     <string name="settings_interface_status_network_subtitle">Afficher la connexion actuelle dans la barre d\'état</string>
+    <string name="settings_interface_pre_launch_recaps_title">Récapitulatif avant lancement</string>
+    <string name="settings_interface_pre_launch_recaps_subtitle">Avant un jeu RetroAchievements auquel vous n\'avez pas joué depuis une semaine, montrer où vous vous étiez arrêté</string>
+    <string name="settings_interface_monthly_recap_title">Récapitulatif mensuel</string>
+    <string name="settings_interface_monthly_recap_subtitle">Au début de chaque mois, afficher sur l\'accueil un résumé du mois précédent</string>
 
     <string name="settings_home_screen_background_title">Arrière-plan</string>
     <string name="settings_home_screen_background_subtitle">Jaquette du jeu ou motif de fond</string>
@@ -458,6 +463,27 @@
     <string name="settings_ra_logout_title">Déconnexion</string>
     <string name="settings_ra_logout_title_busy">Déconnexion en cours...</string>
     <string name="settings_ra_logout_subtitle">Se déconnecter de RetroAchievements</string>
+    <string name="settings_ra_web_api_key_title">Clé d\'API web (facultatif)</string>
+    <string name="settings_ra_web_api_key_subtitle">Elle se trouve dans la section Keys de votre panneau de contrôle RetroAchievements. Rend les récapitulatifs plus rapides et plus complets.</string>
+    <string name="settings_ra_web_api_key_value_not_set">Non définie</string>
+    <string name="settings_ra_web_api_key_value_saved_short">Enregistrée</string>
+    <string name="settings_ra_web_api_key_value_rejected">Clé refusée</string>
+    <string name="settings_ra_web_api_key_modal_title">Clé d\'API web RetroAchievements</string>
+    <string name="settings_ra_web_api_key_modal_message">Copiez la clé d\'API web depuis la section Keys de votre panneau de contrôle RetroAchievements et collez-la ici. Argosy la vérifie une fois avant de l\'enregistrer.</string>
+    <string name="settings_ra_web_api_key_field_label">Clé d\'API web</string>
+    <string name="settings_ra_web_api_key_paste">Coller</string>
+    <string name="settings_ra_web_api_key_clear">Supprimer</string>
+    <string name="settings_ra_web_api_key_cancel">Annuler</string>
+    <string name="settings_ra_web_api_key_save">Enregistrer</string>
+    <string name="settings_ra_web_api_key_save_busy">Vérification...</string>
+    <string name="settings_ra_web_api_key_status_validating">Vérification de la clé auprès de RetroAchievements...</string>
+    <string name="settings_ra_web_api_key_status_rejected">RetroAchievements n\'a pas accepté cette clé.</string>
+    <string name="settings_ra_web_api_key_status_unreachable">Impossible de joindre RetroAchievements. Réessayez.</string>
+    <string name="settings_ra_web_api_key_status_clipboard_empty">Le presse-papiers ne contient aucun texte à coller.</string>
+    <string name="settings_ra_web_api_key_saved_title">Clé d\'API web enregistrée</string>
+    <string name="settings_ra_web_api_key_saved_subtitle">Les récapitulatifs lisent désormais RetroAchievements directement.</string>
+    <string name="settings_ra_web_api_key_cleared_title">Clé d\'API web supprimée</string>
+    <string name="settings_ra_web_api_key_cleared_subtitle">La clé n\'est plus enregistrée sur cet appareil.</string>
 
     <string name="settings_ra_play_mode_title">Mode de jeu préféré</string>
     <string name="settings_ra_play_mode_subtitle_locked">Nécessite les Sauvegardes sécurisées</string>
@@ -1787,8 +1813,8 @@
 
     <!-- ===== Panneau des dossiers GameNative ===== -->
 
-    <string name="settings_gamenative_folders_title">Dossiers GameNative</string>
-    <string name="settings_gamenative_folders_subtitle">Associez chaque boutique au dossier vers lequel GameNative exporte ses installations. Les repères Steam marquent seulement les jeux possédés comme installés ; les autres boutiques ajoutent et retirent leurs jeux pour correspondre.</string>
+    <string name="settings_gamenative_folders_title">Dossiers de synchro des lanceurs</string>
+    <string name="settings_gamenative_folders_subtitle">Associez chaque boutique au dossier vers lequel GameNative exporte ses installations, et DroidDeck à son dossier de fichiers de jeux. Les repères Steam marquent seulement les jeux possédés comme installés ; les autres boutiques ajoutent et retirent leurs jeux pour correspondre.</string>
     <string name="settings_gamenative_folders_hint_set">Définir / Effacer</string>
     <string name="settings_gamenative_folders_hint_select">Sélectionner</string>
     <string name="settings_gamenative_folders_hint_back">Retour</string>
@@ -2526,6 +2552,8 @@
     <string name="settings_play_time_section_where">APPAREILS</string>
     <string name="settings_play_time_section_what">À QUOI VOUS JOUEZ</string>
     <string name="settings_play_time_section_facts">EN BREF</string>
+    <string name="settings_play_time_last_month_title">Récap du mois dernier</string>
+    <string name="settings_play_time_last_month_subtitle">Temps de jeu, nouveaux favoris et succès du mois dernier</string>
     <string name="settings_play_time_loading_title">Lecture des sessions...</string>
     <string name="settings_play_time_loading_message">Vos habitudes de jeu apparaîtront dans un instant.</string>
     <string name="settings_play_time_empty_title">Aucune session de jeu pour l\'instant</string>

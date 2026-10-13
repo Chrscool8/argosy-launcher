@@ -64,6 +64,7 @@ class UserPreferencesRepository @Inject constructor(
             rommDeviceClientVersion = sync.rommDeviceClientVersion,
             raUsername = sync.raUsername,
             raToken = sync.raToken,
+            raWebApiKey = sync.raWebApiKey,
             raProxyEnabled = sync.raProxyEnabled,
             raProxyAddress = sync.raProxyAddress,
             romStoragePath = storage.romStoragePath,
@@ -156,6 +157,9 @@ class UserPreferencesRepository @Inject constructor(
             betaUpdatesEnabled = app.betaUpdatesEnabled,
             closeEmulatorOnSessionEnd = app.closeEmulatorOnSessionEnd,
             appLanguage = app.appLanguage,
+            preLaunchRecapsEnabled = app.preLaunchRecapsEnabled,
+            monthlyRecapEnabled = app.monthlyRecapEnabled,
+            lastMonthlyRecapShown = app.lastMonthlyRecapShown,
             saveSyncEnabled = sync.saveSyncEnabled,
             secureSaves = sync.secureSaves,
             stateCacheEnabled = sync.stateCacheEnabled,
@@ -422,6 +426,7 @@ class UserPreferencesRepository @Inject constructor(
         syncPrefs.setRommSnapshotSupport(serverKey, supported)
     suspend fun setRACredentials(username: String, token: String) = syncPrefs.setRACredentials(username, token)
     suspend fun clearRACredentials() = syncPrefs.clearRACredentials()
+    suspend fun setRAWebApiKey(key: String?) = syncPrefs.setRAWebApiKey(key)
     suspend fun setRAProxy(enabled: Boolean, address: String) = syncPrefs.setRAProxy(enabled, address)
     suspend fun setLastRommSyncTime(time: Instant) = syncPrefs.setLastRommSyncTime(time)
     suspend fun setLastRommFullSyncTime(time: Instant) = syncPrefs.setLastRommFullSyncTime(time)
@@ -564,6 +569,9 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setAppDisplayTarget(packageName: String, screenKey: String?) =
         appPrefs.setAppDisplayTarget(packageName, screenKey)
     suspend fun setAppLanguage(tag: String) = appPrefs.setAppLanguage(tag)
+    suspend fun setPreLaunchRecapsEnabled(enabled: Boolean) = appPrefs.setPreLaunchRecapsEnabled(enabled)
+    suspend fun setMonthlyRecapEnabled(enabled: Boolean) = appPrefs.setMonthlyRecapEnabled(enabled)
+    suspend fun setLastMonthlyRecapShown(month: java.time.YearMonth) = appPrefs.setLastMonthlyRecapShown(month)
 
     // --- Builtin emulator delegates ---
 
@@ -785,6 +793,7 @@ data class UserPreferences(
     val rommDeviceClientVersion: String? = null,
     val raUsername: String? = null,
     val raToken: String? = null,
+    val raWebApiKey: String? = null,
     val raProxyEnabled: Boolean = false,
     val raProxyAddress: String = "",
     val romStoragePath: String? = null,
@@ -863,6 +872,9 @@ data class UserPreferences(
     val betaUpdatesEnabled: Boolean = false,
     val closeEmulatorOnSessionEnd: Boolean = true,
     val appLanguage: AppLanguage = AppLanguage.SYSTEM,
+    val preLaunchRecapsEnabled: Boolean = true,
+    val monthlyRecapEnabled: Boolean = true,
+    val lastMonthlyRecapShown: java.time.YearMonth? = null,
     val saveSyncEnabled: Boolean = false,
     val secureSaves: Boolean = true,
     val stateCacheEnabled: Boolean = true,

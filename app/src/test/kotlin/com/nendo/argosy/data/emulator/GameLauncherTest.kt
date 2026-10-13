@@ -66,6 +66,8 @@ class GameLauncherTest {
     private lateinit var libretroSavePathResolver: LibretroSavePathResolver
     private lateinit var launcher: GameLauncher
     private val overlayWriter = mockk<com.nendo.argosy.data.repository.GameUserOverlayWriter>(relaxed = true)
+    private val launchProgressTracker = mockk<LaunchProgressTracker>(relaxed = true)
+    private val steamInstallReports = mockk<com.nendo.argosy.data.launcher.SteamInstallReports>(relaxed = true)
 
     @Before
     fun setup() {
@@ -155,7 +157,8 @@ class GameLauncherTest {
             ),
             volumeHealth = mockk(relaxed = true),
             dreamcastVmuMigrator = mockk(relaxed = true),
-            launchProgressTracker = mockk(relaxed = true)
+            launchProgressTracker = launchProgressTracker,
+            steamInstallReports = steamInstallReports
         )
     }
 
@@ -245,6 +248,101 @@ class GameLauncherTest {
         } finally {
             io.mockk.unmockkObject(com.nendo.argosy.data.launcher.GameNativeLauncher)
         }
+    }
+
+    private val gameNativePackage = com.nendo.argosy.data.launcher.GameNativeLauncher.packageName
+    private val droidDeckPackage = com.nendo.argosy.data.launcher.DroidDeckLauncher.packageName
+
+    private fun steamGame(launcher: String?, pinned: Boolean) = createGame(
+        platformSlug = "steam",
+        source = GameSource.STEAM
+    ).copy(steamAppId = 620L, steamLauncher = launcher, launcherSetManually = pinned)
+
+    private fun withBothSteamLaunchersInstalled(block: suspend () -> Unit) = runTest {
+        val launchers = listOf(
+            com.nendo.argosy.data.launcher.GameNativeLauncher,
+            com.nendo.argosy.data.launcher.DroidDeckLauncher
+        )
+        launchers.forEach { io.mockk.mockkObject(it) }
+        try {
+            launchers.forEach {
+                every { it.isInstalled(any()) } returns true
+                every { it.createLaunchIntent(any()) } returns mockk(relaxed = true)
+            }
+            block()
+        } finally {
+            launchers.forEach { io.mockk.unmockkObject(it) }
+        }
+    }
+
+    @Test
+    fun `a steam game both launchers report asks which one to use`() = withBothSteamLaunchersInstalled {
+        val game = steamGame(launcher = gameNativePackage, pinned = false)
+        coEvery { gameDao.getById(game.id) } returns game
+        coEvery { steamInstallReports.launchersReporting(620L) } returns listOf(gameNativePackage, droidDeckPackage)
+        val ticket = mockk<LaunchProgressTracker.Ticket>()
+        every { launchProgressTracker.current } returns ticket
+        coEvery { ticket.chooseLauncher(any()) } returns
+            com.nendo.argosy.domain.model.LaunchPromptOption.LAUNCH_WITH_DROIDDECK
+
+        val result = launcher.launch(game.id)
+
+        assertTrue(result is LaunchResult.Success)
+        coVerify {
+            ticket.chooseLauncher(
+                listOf(
+                    com.nendo.argosy.domain.model.LaunchPromptOption.LAUNCH_WITH_GAMENATIVE,
+                    com.nendo.argosy.domain.model.LaunchPromptOption.LAUNCH_WITH_DROIDDECK
+                )
+            )
+        }
+        verify { com.nendo.argosy.data.launcher.DroidDeckLauncher.createLaunchIntent(620L) }
+        verify(exactly = 0) { com.nendo.argosy.data.launcher.GameNativeLauncher.createLaunchIntent(any()) }
+    }
+
+    @Test
+    fun `cancelling the launcher question cancels the launch`() = withBothSteamLaunchersInstalled {
+        val game = steamGame(launcher = gameNativePackage, pinned = false)
+        coEvery { gameDao.getById(game.id) } returns game
+        coEvery { steamInstallReports.launchersReporting(620L) } returns listOf(gameNativePackage, droidDeckPackage)
+        val ticket = mockk<LaunchProgressTracker.Ticket>()
+        every { launchProgressTracker.current } returns ticket
+        coEvery { ticket.chooseLauncher(any()) } returns null
+
+        val result = launcher.launch(game.id)
+
+        assertEquals(LaunchResult.Cancelled, result)
+        coVerify(exactly = 0) { overlayWriter.recordPlayStart(any(), any()) }
+    }
+
+    @Test
+    fun `a pinned steam game launches its pin without asking`() = withBothSteamLaunchersInstalled {
+        val game = steamGame(launcher = droidDeckPackage, pinned = true)
+        coEvery { gameDao.getById(game.id) } returns game
+        val ticket = mockk<LaunchProgressTracker.Ticket>(relaxed = true)
+        every { launchProgressTracker.current } returns ticket
+
+        val result = launcher.launch(game.id)
+
+        assertTrue(result is LaunchResult.Success)
+        coVerify(exactly = 0) { ticket.chooseLauncher(any()) }
+        coVerify(exactly = 0) { steamInstallReports.launchersReporting(any()) }
+        verify { com.nendo.argosy.data.launcher.DroidDeckLauncher.createLaunchIntent(620L) }
+    }
+
+    @Test
+    fun `a steam game only one launcher reports launches without asking`() = withBothSteamLaunchersInstalled {
+        val game = steamGame(launcher = droidDeckPackage, pinned = false)
+        coEvery { gameDao.getById(game.id) } returns game
+        coEvery { steamInstallReports.launchersReporting(620L) } returns listOf(droidDeckPackage)
+        val ticket = mockk<LaunchProgressTracker.Ticket>(relaxed = true)
+        every { launchProgressTracker.current } returns ticket
+
+        val result = launcher.launch(game.id)
+
+        assertTrue(result is LaunchResult.Success)
+        coVerify(exactly = 0) { ticket.chooseLauncher(any()) }
+        verify { com.nendo.argosy.data.launcher.DroidDeckLauncher.createLaunchIntent(620L) }
     }
 
     @Test

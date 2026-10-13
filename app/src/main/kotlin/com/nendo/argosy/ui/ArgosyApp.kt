@@ -1230,7 +1230,9 @@ fun ArgosyApp(
                     animationSpec = androidx.compose.animation.core.tween(200),
                     label = "quickMenuBlur"
                 )
-                val contentBlur = maxOf(drawerBlur, quickMenuBlur)
+                val launchRecapBlur = com.nendo.argosy.ui.components.launchRecapBackdropBlur()
+                val monthlyRecapBlur = com.nendo.argosy.ui.components.recap.monthlyRecapBackdropBlur()
+                val contentBlur = maxOf(drawerBlur, quickMenuBlur, launchRecapBlur, monthlyRecapBlur)
 
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize()
@@ -1279,6 +1281,8 @@ fun ArgosyApp(
                     )
                 }
             }
+
+            com.nendo.argosy.ui.components.recap.MonthlyRecapOverlay()
 
             com.nendo.argosy.ui.components.LaunchOverlay()
 

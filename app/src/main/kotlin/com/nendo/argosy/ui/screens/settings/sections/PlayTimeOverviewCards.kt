@@ -50,7 +50,10 @@ import com.nendo.argosy.ui.components.playtime.PlayFigureCard
 import com.nendo.argosy.ui.components.playtime.PlayFigureHeader
 import com.nendo.argosy.ui.components.playtime.PlayShareBand
 import com.nendo.argosy.ui.components.playtime.PlayWaveform
+import com.nendo.argosy.ui.components.playtime.ShareEntry
 import com.nendo.argosy.ui.components.playtime.ShareSegment
+import com.nendo.argosy.ui.components.playtime.SummaryFact
+import com.nendo.argosy.ui.components.playtime.buildShareSegments
 import com.nendo.argosy.ui.components.playtime.playHourLabel
 import com.nendo.argosy.ui.components.playtime.waveformPeak
 import com.nendo.argosy.ui.screens.settings.PlayTimeEntryUi
@@ -63,8 +66,10 @@ import com.nendo.argosy.ui.theme.LocalUiScale
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import com.nendo.argosy.util.formatClockTime
 import com.nendo.argosy.util.formatMonthDay
+import com.nendo.argosy.util.formatPlayTime
 import com.nendo.argosy.util.formatRelativeTime
 import java.time.DayOfWeek
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -73,12 +78,7 @@ import java.util.Locale
 
 private const val HOURS_IN_DAY = 24
 private const val HOUR_LABEL_STEP = 6
-private const val PERCENT = 100
 private const val CARD_FILL_ALPHA = 0.3f
-
-private fun percentOf(part: Long, whole: Long): Int =
-    if (whole <= 0L) 0 else ((part * PERCENT) / whole).toInt()
-
 
 private fun weekdayNames(style: TextStyle): List<String> =
     DayOfWeek.entries.map { it.getDisplayName(style, Locale.getDefault()) }
@@ -375,35 +375,6 @@ internal fun PlayTimeFactsCard(state: PlayTimeState) {
 }
 
 @Composable
-private fun SummaryFact(label: String, value: String, detail: String?, modifier: Modifier = Modifier) {
-    val theme = LocalArgosyTheme.current
-    Column(modifier = modifier) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = theme.textMute,
-            maxLines = 1
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleSmall,
-            color = theme.textPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        if (detail != null) {
-            Text(
-                text = detail,
-                style = MaterialTheme.typography.bodySmall,
-                color = theme.textDim,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
 private fun DayBreakdown(games: List<DayGame>, modifier: Modifier = Modifier) {
     val theme = LocalArgosyTheme.current
     val s = LocalUiScale.current.scale
@@ -612,28 +583,24 @@ private fun shareSegments(
     withGlyph: Boolean
 ): List<ShareSegment> {
     val theme = LocalArgosyTheme.current
+    val context = LocalContext.current
     val series = remember(theme.isDark) { ChartPalette.series(theme.isDark) }
-    val total = entries.sumOf { it.activeMs }
-    val slots = ComponentDefaults.PlayTimeChart.seriesSlots
-    val named = entries.take(slots).mapIndexed { index, entry ->
-        ShareSegment(
-            label = entry.name,
-            valueMs = entry.activeMs,
-            color = series[index],
-            valueLabel = playTimeLabel(entry.activeMs),
-            shareLabel = stringResource(R.string.settings_play_time_share_percent, percentOf(entry.activeMs, total)),
-            platformSlug = entry.key.takeIf { withGlyph },
-            badge = if (entry.isThisDevice) stringResource(R.string.settings_play_time_this_device) else null
-        )
-    }
-    val othersMs = entries.drop(slots).sumOf { it.activeMs }
-    if (othersMs <= 0L) return named
-    return named + ShareSegment(
-        label = othersLabel,
-        valueMs = othersMs,
-        color = theme.textMute,
-        valueLabel = playTimeLabel(othersMs),
-        shareLabel = stringResource(R.string.settings_play_time_share_percent, percentOf(othersMs, total))
+    val thisDevice = stringResource(R.string.settings_play_time_this_device)
+    return buildShareSegments(
+        entries = entries.map { entry ->
+            ShareEntry(
+                label = entry.name,
+                activeMs = entry.activeMs,
+                platformSlug = entry.key.takeIf { withGlyph },
+                badge = thisDevice.takeIf { entry.isThisDevice }
+            )
+        },
+        limit = ComponentDefaults.PlayTimeChart.seriesSlots,
+        series = series,
+        othersLabel = othersLabel,
+        othersColor = theme.textMute,
+        valueLabel = { ms -> formatPlayTime(context, Duration.ofMillis(ms).toMinutes().toInt()) },
+        shareLabel = { percent -> context.getString(R.string.settings_play_time_share_percent, percent) }
     )
 }
 

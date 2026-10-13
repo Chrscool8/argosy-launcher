@@ -76,6 +76,12 @@ internal class InterfaceSectionInput(
             InterfaceItem.StatusNetwork -> return toggleLeftRight(direction, state.display.showStatusNetwork) {
                 viewModel.setShowStatusNetwork(it)
             }
+            InterfaceItem.PreLaunchRecaps -> return toggleLeftRight(direction, state.display.preLaunchRecaps) {
+                viewModel.setPreLaunchRecaps(it)
+            }
+            InterfaceItem.MonthlyRecap -> return toggleLeftRight(direction, state.display.monthlyRecap) {
+                viewModel.setMonthlyRecap(it)
+            }
             else -> {}
         }
         return InputResult.UNHANDLED

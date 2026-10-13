@@ -29,6 +29,34 @@ class RightStickStepperTest {
     }
 
     @Test
+    fun `horizontal axis maps to left and right only past the deadzone`() {
+        assertEquals(GamepadEvent.RightStickLeft, rightStickHorizontalStepFor(-0.9f))
+        assertEquals(GamepadEvent.RightStickRight, rightStickHorizontalStepFor(0.9f))
+        assertNull(rightStickHorizontalStepFor(0f))
+        assertNull(rightStickHorizontalStepFor(-RightStickStepper.DEADZONE))
+        assertNull(rightStickHorizontalStepFor(RightStickStepper.DEADZONE))
+    }
+
+    @Test
+    fun `a horizontal stepper holds and repeats like the vertical one`() = runTest {
+        val stepper = RightStickStepper(backgroundScope, ::rightStickHorizontalStepFor) { event, isRepeat ->
+            steps += event to isRepeat
+        }
+
+        stepper.onAxis(0.8f)
+        advanceTimeBy(RightStickStepper.STEP_INTERVAL_MS)
+        runCurrent()
+        stepper.release()
+        advanceTimeBy(RightStickStepper.STEP_INTERVAL_MS * 3)
+        runCurrent()
+
+        assertEquals(
+            listOf(GamepadEvent.RightStickRight to false, GamepadEvent.RightStickRight to true),
+            steps
+        )
+    }
+
+    @Test
     fun `a tilt inside the deadzone emits nothing`() = runTest {
         val stepper = stepper()
 

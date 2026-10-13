@@ -555,6 +555,20 @@ class DisplaySettingsDelegate @Inject constructor(
         }
     }
 
+    fun setPreLaunchRecaps(scope: CoroutineScope, enabled: Boolean) {
+        scope.launch {
+            preferencesRepository.setPreLaunchRecapsEnabled(enabled)
+            _state.update { it.copy(preLaunchRecaps = enabled) }
+        }
+    }
+
+    fun setMonthlyRecap(scope: CoroutineScope, enabled: Boolean) {
+        scope.launch {
+            preferencesRepository.setMonthlyRecapEnabled(enabled)
+            _state.update { it.copy(monthlyRecap = enabled) }
+        }
+    }
+
     fun setHomeAppAvailable(scope: CoroutineScope, available: Boolean) {
         scope.launch {
             val applied = homeAppAvailability.setAvailable(available)

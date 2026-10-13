@@ -199,7 +199,7 @@ import com.nendo.argosy.data.local.entity.SteamLicenseEntity
         com.nendo.argosy.data.local.entity.SnapshotChannelEntity::class,
         com.nendo.argosy.data.local.entity.GameScreenshotEntity::class
     ],
-    version = 211,
+    version = 213,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

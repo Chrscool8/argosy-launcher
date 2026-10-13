@@ -379,6 +379,20 @@ class DualScreenManager(
     fun showcaseDisplayId(): Int? =
         displayAffinityHelper.getRoleDisplayIds(_isRolesSwapped.value)?.second
 
+    /**
+     * Pixel area of the interactive display, then of the showcase display. Each is null while its
+     * display is not attached, and both are null when one display holds both roles.
+     */
+    fun roleDisplayAreas(): Pair<Long?, Long?> {
+        val roles = displayAffinityHelper.getRoleDisplayIds(_isRolesSwapped.value)
+        if (roles == null || roles.first == roles.second) return null to null
+        val screens = com.nendo.argosy.util.ScreenCatalog(appContext).attachedScreens()
+        val areaOf = { displayId: Int ->
+            screens.firstOrNull { it.displayId == displayId }?.let { it.widthPx.toLong() * it.heightPx }
+        }
+        return areaOf(roles.first) to areaOf(roles.second)
+    }
+
     private val _isDualScreenDevice = MutableStateFlow(displayAffinityHelper.hasSecondaryDisplay)
     val isDualScreenDevice: StateFlow<Boolean> = _isDualScreenDevice
 

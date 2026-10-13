@@ -83,6 +83,8 @@ internal sealed class InterfaceItem(
     data object StatusClock : InterfaceItem("statusClock", SECTION_STATUS_BAR)
     data object StatusBattery : InterfaceItem("statusBattery", SECTION_STATUS_BAR)
     data object StatusNetwork : InterfaceItem("statusNetwork", SECTION_STATUS_BAR)
+    data object PreLaunchRecaps : InterfaceItem("preLaunchRecaps", SECTION_RECAPS)
+    data object MonthlyRecap : InterfaceItem("monthlyRecap", SECTION_RECAPS)
 
     companion object {
         /**
@@ -99,7 +101,9 @@ internal sealed class InterfaceItem(
                 HomeScreen, LibraryView, BoxArt, Presentation, LockScreenArt,
                 HomeApp, HomeAppLocked,
                 Header("statusBarHeader", SECTION_STATUS_BAR, R.string.settings_interface_section_status_bar),
-                StatusClock, StatusBattery, StatusNetwork
+                StatusClock, StatusBattery, StatusNetwork,
+                Header("recapsHeader", SECTION_RECAPS, R.string.settings_interface_section_recaps),
+                PreLaunchRecaps, MonthlyRecap
             )
     }
 }
@@ -107,11 +111,13 @@ internal sealed class InterfaceItem(
 private const val SECTION_GENERAL = "general"
 private const val SECTION_SCREENS = "screens"
 private const val SECTION_STATUS_BAR = "statusBar"
+private const val SECTION_RECAPS = "recaps"
 
 private fun interfaceSectionTitleRes(section: String): Int? = when (section) {
     SECTION_GENERAL -> R.string.settings_interface_section_general
     SECTION_SCREENS -> R.string.settings_interface_section_screens
     SECTION_STATUS_BAR -> R.string.settings_interface_section_status_bar
+    SECTION_RECAPS -> R.string.settings_interface_section_recaps
     else -> null
 }
 
@@ -271,6 +277,22 @@ fun InterfaceSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                     isEnabled = display.showStatusNetwork,
                     isFocused = isFocused(item),
                     onToggle = { viewModel.setShowStatusNetwork(it) }
+                )
+
+                InterfaceItem.PreLaunchRecaps -> SwitchPreference(
+                    title = stringResource(R.string.settings_interface_pre_launch_recaps_title),
+                    subtitle = stringResource(R.string.settings_interface_pre_launch_recaps_subtitle),
+                    isEnabled = display.preLaunchRecaps,
+                    isFocused = isFocused(item),
+                    onToggle = { viewModel.setPreLaunchRecaps(it) }
+                )
+
+                InterfaceItem.MonthlyRecap -> SwitchPreference(
+                    title = stringResource(R.string.settings_interface_monthly_recap_title),
+                    subtitle = stringResource(R.string.settings_interface_monthly_recap_subtitle),
+                    isEnabled = display.monthlyRecap,
+                    isFocused = isFocused(item),
+                    onToggle = { viewModel.setMonthlyRecap(it) }
                 )
 
                 InterfaceItem.ControllerGrip -> NavigationPreference(

@@ -338,6 +338,43 @@ object ComponentDefaults {
         const val stepFadeOutMs = 150
     }
 
+    object UnlockRecap {
+        const val cardMaxWidthDp = 520
+        const val monthlyCardMaxWidthDp = 640
+        const val monthlyStackWidthDp = 560
+        const val shortHeightDp = 400
+        const val tallHeightDp = 520
+        const val rowHeightDp = 104
+        const val shortRowHeightDp = 88
+        const val tileSizeDp = 80
+        const val shortTileSizeDp = 64
+        const val tileBorderDp = 4
+        const val tileBadgeInsetDp = 8
+        const val tileGlowRadiusDp = 14
+        const val fadeWidthDp = 32
+        const val bodyFadeHeightDp = 24
+        const val scrollStepDp = 120
+        const val presenceRuleDp = 3
+        const val trackAlpha = 0.22f
+        const val glowAlpha = 0.65f
+        const val popScale = 1.1f
+        const val dimmedAlpha = 0.6f
+        const val scrollLeadMs = 250
+        const val borderDrawMs = 450
+        const val popMs = 120
+        const val settleMs = 180
+        const val perTileMs = 2500
+        const val revealVisibleFraction = 0.6f
+        const val favoriteCoverWidthDp = 64
+        const val favoriteCoverHeightDp = 88
+        const val calendarCellMinDp = 20
+        const val calendarCellMaxDp = 24
+        const val calendarGapDp = 3
+        const val calendarRingInsetDp = 4
+        const val calendarEmptyFillAlpha = 0.1f
+        const val calendarOutsideFillAlpha = 0.035f
+    }
+
     object InlineTilePlayer {
         const val positionPollMs = 500
         const val overlayScrimAlpha = 0.55f

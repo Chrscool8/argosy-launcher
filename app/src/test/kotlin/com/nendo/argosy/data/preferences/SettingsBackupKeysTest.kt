@@ -18,7 +18,7 @@ class SettingsBackupKeysTest {
     private val credentialsAndIdentity = setOf(
         "romm_token", "romm_url", "romm_username", "romm_user_id", "romm_avatar_path",
         "romm_device_id",
-        "romm_device_client_version", "romm_snapshots_server", "romm_snapshots_supported", "ra_token", "ra_username", "ra_proxy_enabled",
+        "romm_device_client_version", "romm_snapshots_server", "romm_snapshots_supported", "ra_token", "ra_web_api_key", "ra_username", "ra_proxy_enabled",
         "ra_proxy_address", "social_session_token", "social_user_id", "social_username",
         "social_display_name", "jellyfin_access_token", "jellyfin_device_id",
         "jellyfin_server_url", "jellyfin_user_id", "jellyfin_user_name", "quaypass_credential",
@@ -49,14 +49,14 @@ class SettingsBackupKeysTest {
         "last_integrity_check_time", "romm_play_session_backfill_done",
         "sibling_split_repair_finished", "sibling_pick_seeded_owners", "sibling_full_pass_done",
         "variant_file_cleanup_done", "sibling_config_carry_over_done", "save_migration_notices_shown",
-        "home_app_default_applied"
+        "home_app_default_applied", "last_monthly_recap_shown"
     )
 
     private val liveSessionState = setOf(
         "active_session_channel_name", "active_session_core_name", "active_session_emulator",
         "active_session_game_id", "active_session_is_hardcore", "active_session_start_time",
         "active_session_variant_file_id", "active_session_launch_origin", "active_session_netplay_guest",
-        "active_session_recovery_attempts"
+        "active_session_recovery_attempts", "active_session_ra_launch_snapshot"
     )
 
     private val saveAndStateSafetyGates = setOf(
@@ -108,7 +108,7 @@ class SettingsBackupKeysTest {
             derivedAndGenerated + diagnostics
 
     private val credentialShapes = listOf(
-        "token", "credential", "password", "username", "user_name", "user_id", "device_id",
+        "token", "credential", "password", "api_key", "username", "user_name", "user_id", "device_id",
         "install_", "server_url", "active_session", "quaypass_", "romm_", "_path", "_uri",
         "migration", "first_run", "snapshot", "recommend"
     )
@@ -172,6 +172,13 @@ class SettingsBackupKeysTest {
             .map { it.name }
             .filter { name -> credentialShapes.any { name.contains(it) } }
         assertTrue("Excluded key shapes present in the allowlist: $offenders", offenders.isEmpty())
+    }
+
+    @Test
+    fun `the retroachievements web api key is held out as a credential`() {
+        assertTrue("ra_web_api_key" in credentialsAndIdentity)
+        assertTrue("ra_web_api_key" !in SettingsBackupKeys.BY_NAME)
+        assertTrue("ra_web_api_key" in declaredKeys())
     }
 
     @Test

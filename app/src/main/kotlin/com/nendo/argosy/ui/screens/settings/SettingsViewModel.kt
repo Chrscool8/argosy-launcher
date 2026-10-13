@@ -1152,6 +1152,8 @@ class SettingsViewModel @Inject constructor(
     fun setUseAccentColorFooter(use: Boolean) = displayDelegate.setUseAccentColorFooter(viewModelScope, use)
     fun setCompactFooter(enabled: Boolean) = displayDelegate.setCompactFooter(viewModelScope, enabled)
     fun setLockScreenArt(enabled: Boolean) = displayDelegate.setLockScreenArt(viewModelScope, enabled)
+    fun setPreLaunchRecaps(enabled: Boolean) = displayDelegate.setPreLaunchRecaps(viewModelScope, enabled)
+    fun setMonthlyRecap(enabled: Boolean) = displayDelegate.setMonthlyRecap(viewModelScope, enabled)
     fun setHomeAppAvailable(available: Boolean) =
         displayDelegate.setHomeAppAvailable(viewModelScope, available)
     fun refreshDefaultHome() = displayDelegate.refreshDefaultHome(viewModelScope)
@@ -1198,6 +1200,8 @@ class SettingsViewModel @Inject constructor(
     fun navigateToPlayTimePlatforms() = routePushSection(this, SettingsSection.PLAY_TIME_PLATFORMS)
     fun navigateToPlayTimeDevices() = routePushSection(this, SettingsSection.PLAY_TIME_DEVICES)
     fun navigateToPlayTimeGames() = routePushSection(this, SettingsSection.PLAY_TIME_GAMES)
+
+    fun openLastMonthRecap() = playTimeDelegate.openLastMonthRecap()
 
     fun uploadPlaySessionsNow() = playTimeDelegate.uploadNow(viewModelScope)
     fun refreshPlaySessionsFromRomm() = playTimeDelegate.refreshFromRomm(viewModelScope)
@@ -2037,6 +2041,34 @@ class SettingsViewModel @Inject constructor(
             )
         }
     }
+    fun openRAWebApiKeyEditor() = raDelegate.openWebApiKeyEditor()
+    fun closeRAWebApiKeyEditor() = raDelegate.closeWebApiKeyEditor()
+    fun setRAWebApiKeyDraft(text: String) = raDelegate.setWebApiKeyDraft(text)
+    fun moveRAWebApiKeyRow(row: TextEntryRow) = raDelegate.moveWebApiKeyRow(row)
+    fun moveRAWebApiKeyButton(delta: Int) = raDelegate.moveWebApiKeyButton(delta)
+    fun confirmRAWebApiKeyEditor() =
+        raDelegate.confirmWebApiKeyEditor(viewModelScope, ::notifyRAWebApiKeySaved, ::notifyRAWebApiKeyCleared)
+    fun runRAWebApiKeyAction(action: RAWebApiKeyAction) =
+        raDelegate.runWebApiKeyAction(viewModelScope, action, ::notifyRAWebApiKeySaved, ::notifyRAWebApiKeyCleared)
+
+    private fun notifyRAWebApiKeySaved() {
+        notificationManager.show(
+            title = NotificationText.Res(R.string.settings_ra_web_api_key_saved_title),
+            subtitle = NotificationText.Res(R.string.settings_ra_web_api_key_saved_subtitle),
+            type = com.nendo.argosy.core.notification.NotificationType.SUCCESS,
+            duration = com.nendo.argosy.core.notification.NotificationDuration.MEDIUM
+        )
+    }
+
+    private fun notifyRAWebApiKeyCleared() {
+        notificationManager.show(
+            title = NotificationText.Res(R.string.settings_ra_web_api_key_cleared_title),
+            subtitle = NotificationText.Res(R.string.settings_ra_web_api_key_cleared_subtitle),
+            type = com.nendo.argosy.core.notification.NotificationType.SUCCESS,
+            duration = com.nendo.argosy.core.notification.NotificationDuration.MEDIUM
+        )
+    }
+
     fun setRAProxyEnabled(enabled: Boolean) = routeSetRAProxyEnabled(this, enabled)
     fun setRAProxyAddress(address: String) = raDelegate.setProxyAddress(viewModelScope, address)
 

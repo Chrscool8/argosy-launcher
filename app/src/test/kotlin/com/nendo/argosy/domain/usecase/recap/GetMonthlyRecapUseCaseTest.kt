@@ -1,0 +1,110 @@
+package com.nendo.argosy.domain.usecase.recap
+
+import com.nendo.argosy.data.local.dao.AchievementDao
+import com.nendo.argosy.data.local.dao.GameArtDao
+import com.nendo.argosy.data.local.dao.GameDao
+import com.nendo.argosy.data.local.dao.PlaySessionDao
+import com.nendo.argosy.data.local.entity.GameEntity
+import com.nendo.argosy.data.preferences.UserPreferences
+import com.nendo.argosy.data.preferences.UserPreferencesRepository
+import com.nendo.argosy.data.remote.romm.RomMEarnedAchievement
+import com.nendo.argosy.data.remote.romm.RomMRAGameProgression
+import com.nendo.argosy.data.repository.RaMetadataSource
+import com.nendo.argosy.data.social.uploader.PlaySessionPull
+import com.nendo.argosy.data.social.uploader.PlaySessionPullScheduler
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.time.YearMonth
+import java.time.ZoneOffset
+
+class GetMonthlyRecapUseCaseTest {
+
+    private val playSessionDao: PlaySessionDao = mockk()
+    private val metadataSource: RaMetadataSource = mockk()
+    private val preferencesRepository: UserPreferencesRepository = mockk()
+    private val gameDao: GameDao = mockk()
+    private val gameArtDao: GameArtDao = mockk()
+    private val achievementDao: AchievementDao = mockk()
+    private val playSessionPullScheduler: PlaySessionPullScheduler = mockk {
+        coEvery { pullWithin(any()) } returns PlaySessionPull.Summary(added = 0, devices = 1)
+    }
+    private val useCase = GetMonthlyRecapUseCase(
+        playSessionDao,
+        metadataSource,
+        preferencesRepository,
+        gameDao,
+        gameArtDao,
+        achievementDao,
+        playSessionPullScheduler
+    )
+
+    private fun stubEmptyMonth() {
+        val preferences = mockk<UserPreferences>(relaxed = true)
+        every { preferences.rommUserId } returns 7L
+        every { preferencesRepository.userPreferences } returns flowOf(preferences)
+        coEvery { playSessionDao.getSessionsForOwnerInRange(any(), any(), any()) } returns emptyList()
+        coEvery { playSessionDao.getFirstPlayedPerGame(any()) } returns emptyList()
+        coEvery { playSessionDao.getActiveMsPerDay(any(), any(), any(), any()) } returns emptyList()
+        coEvery { metadataSource.webUnlocksBetween(any(), any()) } returns null
+        coEvery { metadataSource.awardProgression(any()) } returns emptyList()
+        coEvery { metadataSource.romMProgression(any()) } returns emptyList()
+    }
+
+    @Test
+    fun `the digest waits a bounded time for other devices' sessions before reading local rows`() = runTest {
+        stubEmptyMonth()
+
+        useCase(YearMonth.of(2025, 12), ZoneOffset.UTC)
+
+        coVerifyOrder {
+            playSessionPullScheduler.pullWithin(4_000L)
+            playSessionDao.getSessionsForOwnerInRange(7L, any(), any())
+        }
+    }
+
+    @Test
+    fun `a pull that times out or fails still builds the digest from local rows`() = runTest {
+        stubEmptyMonth()
+        coEvery { playSessionPullScheduler.pullWithin(any()) } returns null
+
+        val digest = useCase(YearMonth.of(2025, 12), ZoneOffset.UTC)
+
+        assertTrue(digest.isEmpty)
+        coVerify(exactly = 1) { playSessionDao.getSessionsForOwnerInRange(7L, any(), any()) }
+    }
+
+    @Test
+    fun `a romm fallback unlock carries its local game's title, and none when the game is not in the library`() = runTest {
+        stubEmptyMonth()
+        coEvery { metadataSource.romMProgression(any()) } returns listOf(
+            RomMRAGameProgression(
+                romRaId = 55L,
+                earnedAchievements = listOf(RomMEarnedAchievement("00042", date = "2025-12-03 10:00:00"))
+            ),
+            RomMRAGameProgression(
+                romRaId = 56L,
+                earnedAchievements = listOf(RomMEarnedAchievement("00043", date = "2025-12-04 10:00:00"))
+            )
+        )
+        val game = mockk<GameEntity> {
+            every { id } returns 1L
+            every { title } returns "Donkey Kong Country"
+        }
+        coEvery { gameDao.getByRaId(55L) } returns game
+        coEvery { gameDao.getByRaId(56L) } returns null
+        coEvery { achievementDao.getByGameId(1L, 7L) } returns emptyList()
+
+        val digest = useCase(YearMonth.of(2025, 12), ZoneOffset.UTC)
+
+        assertEquals(listOf("00042", "00043"), digest.unlocks.map { it.badgeId })
+        assertEquals(listOf("Donkey Kong Country", null), digest.unlocks.map { it.gameTitle })
+    }
+}

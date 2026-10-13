@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.Instant
+import java.time.YearMonth
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,7 +34,10 @@ data class AppPreferences(
     val fileLoggingPath: String? = null,
     val fileLogLevel: LogLevel = LogLevel.INFO,
     val appDisplayTargets: Map<String, String> = emptyMap(),
-    val appLanguage: AppLanguage = AppLanguage.SYSTEM
+    val appLanguage: AppLanguage = AppLanguage.SYSTEM,
+    val preLaunchRecapsEnabled: Boolean = true,
+    val monthlyRecapEnabled: Boolean = true,
+    val lastMonthlyRecapShown: YearMonth? = null
 )
 
 @Singleton
@@ -63,6 +67,9 @@ class AppPreferencesRepository @Inject constructor(
         val SIBLING_PICK_SEEDED_OWNERS = stringPreferencesKey("sibling_pick_seeded_owners")
         val SIBLING_FULL_PASS_DONE = booleanPreferencesKey("sibling_full_pass_done")
         val VARIANT_FILE_CLEANUP_DONE = booleanPreferencesKey("variant_file_cleanup_done")
+        val PRE_LAUNCH_RECAPS_ENABLED = booleanPreferencesKey("pre_launch_recaps_enabled")
+        val MONTHLY_RECAP_ENABLED = booleanPreferencesKey("monthly_recap_enabled")
+        val LAST_MONTHLY_RECAP_SHOWN = stringPreferencesKey("last_monthly_recap_shown")
     }
 
     val preferences: Flow<AppPreferences> = dataStore.data.map { prefs ->
@@ -106,7 +113,11 @@ class AppPreferencesRepository @Inject constructor(
             fileLoggingPath = prefs[Keys.FILE_LOGGING_PATH],
             fileLogLevel = LogLevel.fromString(prefs[Keys.FILE_LOG_LEVEL]),
             appDisplayTargets = parseAppDisplayTargets(prefs[Keys.APP_DISPLAY_TARGETS]),
-            appLanguage = AppLanguage.fromString(prefs[Keys.APP_LANGUAGE])
+            appLanguage = AppLanguage.fromString(prefs[Keys.APP_LANGUAGE]),
+            preLaunchRecapsEnabled = prefs[Keys.PRE_LAUNCH_RECAPS_ENABLED] ?: true,
+            monthlyRecapEnabled = prefs[Keys.MONTHLY_RECAP_ENABLED] ?: true,
+            lastMonthlyRecapShown = prefs[Keys.LAST_MONTHLY_RECAP_SHOWN]
+                ?.let { runCatching { YearMonth.parse(it) }.getOrNull() }
         )
     }.flowOn(Dispatchers.Default)
 
@@ -245,6 +256,18 @@ class AppPreferencesRepository @Inject constructor(
 
     suspend fun setAppLanguage(tag: String) {
         dataStore.edit { it[Keys.APP_LANGUAGE] = tag }
+    }
+
+    suspend fun setPreLaunchRecapsEnabled(enabled: Boolean) {
+        dataStore.edit { it[Keys.PRE_LAUNCH_RECAPS_ENABLED] = enabled }
+    }
+
+    suspend fun setMonthlyRecapEnabled(enabled: Boolean) {
+        dataStore.edit { it[Keys.MONTHLY_RECAP_ENABLED] = enabled }
+    }
+
+    suspend fun setLastMonthlyRecapShown(month: YearMonth) {
+        dataStore.edit { it[Keys.LAST_MONTHLY_RECAP_SHOWN] = month.toString() }
     }
 
     suspend fun setAppDisplayTarget(packageName: String, screenKey: String?) {

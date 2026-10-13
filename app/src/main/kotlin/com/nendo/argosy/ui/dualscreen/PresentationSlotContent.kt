@@ -40,11 +40,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.nendo.argosy.ui.common.rememberFileImageModel
@@ -95,8 +97,58 @@ private fun PresentationSlotBody(
         ?.controlHints?.collectAsState()?.value.orEmpty()
     var measuredHintsHeight by remember { mutableStateOf(0.dp) }
     val hintsHeight = if (!showControlHints || hints.isEmpty()) 0.dp else measuredHintsHeight
-    val frostedBackdrop = LocalFrostedBackdrop.current
+    val recapBlur = maxOf(
+        com.nendo.argosy.ui.components.launchRecapBackdropBlur(),
+        com.nendo.argosy.ui.components.recap.monthlyRecapBackdropBlur()
+    ).takeIf { slot !is PresentationSlot.InGame } ?: 0.dp
     Box(modifier = Modifier.fillMaxSize()) {
+        PresentationSlotScene(
+            slot = slot,
+            hintsHeight = hintsHeight,
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (recapBlur > 0.dp) Modifier.blur(recapBlur) else Modifier)
+        )
+        if (slot !is PresentationSlot.InGame) {
+            com.nendo.argosy.ui.components.SystemStatusBar(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(Dimens.spacingLg)
+            )
+            if (showControlHints && hints.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .onSizeChanged { measuredHintsHeight = with(density) { it.height.toDp() } }
+                ) {
+                    FooterBar(hints = hints.map { it.button to it.label })
+                }
+            }
+            com.nendo.argosy.ui.components.recap.MonthlyRecapMirror()
+            com.nendo.argosy.ui.components.LaunchOverlayMirror()
+        }
+        val manager = com.nendo.argosy.DualScreenManagerHolder.instance
+        if (showsNotifications && manager != null) {
+            val mutedKeys by manager.mutedNotificationKeys.collectAsState()
+            com.nendo.argosy.core.notification.NotificationHost(
+                manager = manager.notificationManager,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = hintsHeight),
+                mutedKeys = mutedKeys
+            )
+        }
+    }
+}
+
+@Composable
+private fun PresentationSlotScene(
+    slot: PresentationSlot,
+    hintsHeight: Dp,
+    modifier: Modifier = Modifier
+) {
+    val frostedBackdrop = LocalFrostedBackdrop.current
+    Box(modifier = modifier) {
         if (slot !is PresentationSlot.Detail) {
             Box(
                 modifier = Modifier.fillMaxSize()
@@ -148,34 +200,6 @@ private fun PresentationSlotBody(
                     appBar = { if (bar != null) InGameAppBar(bar) }
                 )
             }
-        }
-        if (slot !is PresentationSlot.InGame) {
-            com.nendo.argosy.ui.components.SystemStatusBar(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(Dimens.spacingLg)
-            )
-            if (showControlHints && hints.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .onSizeChanged { measuredHintsHeight = with(density) { it.height.toDp() } }
-                ) {
-                    FooterBar(hints = hints.map { it.button to it.label })
-                }
-            }
-            com.nendo.argosy.ui.components.LaunchOverlayMirror()
-        }
-        val manager = com.nendo.argosy.DualScreenManagerHolder.instance
-        if (showsNotifications && manager != null) {
-            val mutedKeys by manager.mutedNotificationKeys.collectAsState()
-            com.nendo.argosy.core.notification.NotificationHost(
-                manager = manager.notificationManager,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = hintsHeight),
-                mutedKeys = mutedKeys
-            )
         }
     }
 }

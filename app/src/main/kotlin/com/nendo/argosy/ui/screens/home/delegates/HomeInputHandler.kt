@@ -134,6 +134,12 @@ interface HomeInputActions {
     fun openMediaResumePrompt(): Boolean
     fun openFocusedMediaDetail()
     fun refreshMediaRails()
+
+    /**
+     * Runs [onSingle] once the double-tap window passes with no second press; a second press
+     * inside the window opens last month's recap and drops [onSingle].
+     */
+    fun pressSelect(onSingle: () -> Unit)
 }
 
 class HomeInputHandler(
@@ -633,12 +639,18 @@ class HomeInputHandler(
     }
 
     /**
-     * Opens the focused game's menu, or swaps which display holds which role when the player chose
-     * a press of Select for the swap. Holding A reaches that menu on every device, which keeps the
-     * actions on a controller when a second screen claims the press.
+     * Opens the focused game's menu, or swaps the display roles when Select is the swap gesture.
+     * With no Home overlay open, that action waits out the double-tap window and a second press
+     * inside it opens last month's recap.
      */
     override fun onSelect(): InputResult {
         if (selectHeldByOverlay()) return InputResult.HANDLED
+        if (homeOverlayOpen(actions.uiState.value)) return singleSelect()
+        actions.pressSelect(onSingle = { deferredSelect() })
+        return InputResult.HANDLED
+    }
+
+    private fun singleSelect(): InputResult {
         val state = actions.uiState.value
         if (com.nendo.argosy.ui.dualscreen.selectSwapsRoles()) return InputResult.UNHANDLED
         if (isCustomGrid(state)) return InputResult.UNHANDLED
@@ -648,6 +660,23 @@ class HomeInputHandler(
         }
         return InputResult.HANDLED
     }
+
+    private fun deferredSelect() {
+        if (selectHeldByOverlay()) return
+        if (com.nendo.argosy.ui.dualscreen.selectSwapsRoles()) {
+            com.nendo.argosy.DualScreenManagerHolder.instance?.swapRoles()
+            return
+        }
+        singleSelect()
+    }
+
+    private fun homeOverlayOpen(state: HomeUiState): Boolean =
+        state.showGameMenu ||
+            state.showTilePicker ||
+            state.customGrid.isEditing ||
+            state.customGrid.isMediaSetupOpen ||
+            state.customGrid.isFeatureSetupOpen ||
+            gridOverlayOpen(state)
 
     override fun onLongSelect(): InputResult =
         if (selectHeldByOverlay()) InputResult.HANDLED else InputResult.UNHANDLED

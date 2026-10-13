@@ -47,6 +47,8 @@ sealed interface GamepadEvent {
     data object RightStickClick : GamepadEvent
     data object RightStickUp : GamepadEvent
     data object RightStickDown : GamepadEvent
+    data object RightStickLeft : GamepadEvent
+    data object RightStickRight : GamepadEvent
     data object Home : GamepadEvent
     data object LongConfirm : GamepadEvent
     data object LongSelect : GamepadEvent
@@ -172,14 +174,19 @@ class GamepadInputHandler @Inject constructor(
     }
 
     private val rightStick = RightStickStepper(scope) { event, isRepeat -> emitWithDebounce(event, isRepeat) }
+    private val rightStickHorizontal = RightStickStepper(scope, ::rightStickHorizontalStepFor) { event, isRepeat ->
+        emitWithDebounce(event, isRepeat)
+    }
 
     fun processRightStickMotion(event: MotionEvent) {
         if (event.source and InputDevice.SOURCE_JOYSTICK == 0) return
         rightStick.onAxis(event.getAxisValue(MotionEvent.AXIS_RZ))
+        rightStickHorizontal.onAxis(event.getAxisValue(MotionEvent.AXIS_Z))
     }
 
     fun releaseRightStick() {
         rightStick.release()
+        rightStickHorizontal.release()
     }
 
     fun handleMotionEvent(event: MotionEvent): Boolean {

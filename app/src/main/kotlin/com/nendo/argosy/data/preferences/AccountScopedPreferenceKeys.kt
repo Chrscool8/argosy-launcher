@@ -7,6 +7,7 @@ object AccountScopedPreferenceKeys {
     private val RETROACHIEVEMENTS = setOf(
         "ra_username",
         "ra_token",
+        "ra_web_api_key",
         "ra_proxy_enabled",
         "ra_proxy_address"
     )
@@ -146,9 +147,15 @@ object AccountScopedPreferenceKeys {
         "ambient_audio_play_in_background"
     )
 
+    private val RECAPS = setOf(
+        "pre_launch_recaps_enabled",
+        "monthly_recap_enabled",
+        "last_monthly_recap_shown"
+    )
+
     val PER_ACCOUNT: Set<String> =
         RETROACHIEVEMENTS + SYNC_WATERMARKS_AND_FILTERS + REGION_PRIORITY + DOWNLOAD_CATEGORIES +
-            SOCIAL + QUAYPASS + INTERFACE
+            SOCIAL + QUAYPASS + INTERFACE + RECAPS
 
     fun isPerAccount(key: Preferences.Key<*>): Boolean = key.name in PER_ACCOUNT
 }

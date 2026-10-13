@@ -69,8 +69,9 @@ class PlayStatsRepository @Inject constructor(
         val today = LocalDate.now(zone)
         val firstDay = today.minusDays((rangeDays - 1).toLong())
         val since = firstDay.atStartOfDay(zone).toInstant()
+        val until = today.plusDays(1).atStartOfDay(zone).toInstant()
 
-        val dayTotals = playSessionDao.getActiveMsPerDay(ownerUserId, since, MIN_DISPLAY_MS)
+        val dayTotals = playSessionDao.getActiveMsPerDay(ownerUserId, since, until, MIN_DISPLAY_MS)
             .associate { it.day to it.activeMs }
         val days = (0 until rangeDays).map { offset ->
             val date = firstDay.plusDays(offset.toLong())

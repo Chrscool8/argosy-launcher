@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
+import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
 import com.nendo.argosy.ui.theme.Motion
@@ -95,6 +98,7 @@ fun ActionButton(
     primary: Boolean = false,
     accentColor: Color? = null,
     enabled: Boolean = true,
+    glyph: InputButton? = null,
 ) {
     val theme = LocalArgosyTheme.current
     val labelColor = when {
@@ -111,6 +115,10 @@ fun ActionButton(
         accentColor = accentColor,
         enabled = enabled,
     ) {
+        if (glyph != null) {
+            InputGlyph(button = glyph, tint = labelColor)
+            Spacer(modifier = Modifier.width(Dimens.spacingSm))
+        }
         Text(text = label, style = MaterialTheme.typography.titleSmall, color = labelColor, maxLines = 1)
     }
 }

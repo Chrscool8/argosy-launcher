@@ -668,6 +668,55 @@
     <string name="ui_launch_overlay_cancel">取消</string>
     <string name="ui_launch_overlay_cancel_option">取消啟動</string>
     <string name="ui_launch_overlay_cancel_option_subtitle">返回且不啟動遊戲</string>
+    <string name="ui_launch_overlay_launcher_choice_title">選擇啟動程式</string>
+    <string name="ui_launch_overlay_launcher_choice_message">%1$s已安裝在多個啟動程式中。在遊戲頁面透過「變更啟動程式」固定一個，即可不再詢問。</string>
+    <string name="ui_launch_overlay_launcher_choice_option_subtitle">在%1$s中啟動遊戲</string>
+    <string name="ui_launch_overlay_step_loading_recap">正在載入上次遊玩紀錄</string>
+    <string name="ui_launch_recap_meta">上次遊玩 &#183; %1$s</string>
+    <string name="ui_launch_recap_meta_duration">上次遊玩 &#183; %1$s &#183; %2$s</string>
+    <plurals name="ui_launch_recap_meta_unlocked">
+        <item quantity="other">%1$s &#183; 解鎖 %2$d 個</item>
+    </plurals>
+    <string name="ui_launch_recap_presence_eyebrow">上次進度</string>
+    <string name="ui_launch_recap_unlocks_section">上次解鎖的成就</string>
+    <string name="ui_launch_recap_start">開始遊戲</string>
+    <plurals name="ui_launch_recap_points">
+        <item quantity="other">%d 點</item>
+    </plurals>
+    <string name="ui_launch_recap_tier_hardcore">硬核</string>
+    <string name="ui_launch_recap_tier_softcore">軟核</string>
+    <string name="ui_launch_recap_type_progression">進度</string>
+    <string name="ui_launch_recap_type_win_condition">通關條件</string>
+    <string name="ui_monthly_recap_eyebrow">每月回顧</string>
+    <string name="ui_monthly_recap_loading">正在彙整%1$s的遊戲紀錄</string>
+    <string name="ui_monthly_recap_empty">%1$s沒有玩過遊戲</string>
+    <string name="ui_monthly_recap_failed">無法載入%1$s的回顧</string>
+    <string name="ui_monthly_recap_hero_caption">%1$s遊戲時間</string>
+    <string name="ui_monthly_recap_most_played">玩得最多</string>
+    <string name="ui_monthly_recap_stat_sessions">遊玩次數</string>
+    <string name="ui_monthly_recap_stat_days">遊玩天數</string>
+    <string name="ui_monthly_recap_days_value">%1$d / %2$d</string>
+    <string name="ui_monthly_recap_stat_longest">最長一次</string>
+    <string name="ui_monthly_recap_busiest_day">最忙的一天：%1$s &#183; %2$s</string>
+    <string name="ui_monthly_recap_playtime_under_minute">&lt;1m</string>
+    <string name="ui_monthly_recap_top_games_heading">熱門遊戲</string>
+    <string name="ui_monthly_recap_top_games_others">其他遊戲</string>
+    <string name="ui_monthly_recap_top_games_new">新</string>
+    <string name="ui_monthly_recap_share_percent">%1$d%%</string>
+    <string name="ui_monthly_recap_achievements_heading">成就</string>
+    <plurals name="ui_monthly_recap_unlocked_count">
+        <item quantity="other">已解鎖 %d 個</item>
+    </plurals>
+    <plurals name="ui_monthly_recap_mastery_count">
+        <item quantity="other">精通 %d 款</item>
+    </plurals>
+    <string name="ui_monthly_recap_achievements_trailing">%1$s &#183; %2$s</string>
+    <string name="ui_monthly_recap_award_line">%1$s &#183; %2$s</string>
+    <string name="ui_monthly_recap_award_mastered">已精通</string>
+    <string name="ui_monthly_recap_award_completed">已完成</string>
+    <string name="ui_monthly_recap_award_beaten_hardcore">已破關（硬核）</string>
+    <string name="ui_monthly_recap_award_beaten_softcore">已破關（軟核）</string>
+    <string name="ui_monthly_recap_done">完成</string>
     <string name="ui_sync_overlay_restore_failed_title">無法還原存檔</string>
     <string name="ui_sync_overlay_restore_failed_message">Argosy 無法還原「%1$s」的所選存檔。</string>
     <string name="ui_sync_overlay_restore_failed_launch">不同步直接啟動</string>

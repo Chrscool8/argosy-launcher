@@ -16,6 +16,7 @@ import com.nendo.argosy.data.storage.StorageCategory
 import com.nendo.argosy.data.storage.StoragePathUtils
 import com.nendo.argosy.data.storage.StorageVolumeHealth
 import com.nendo.argosy.data.launcher.GameNativeLauncher
+import com.nendo.argosy.data.launcher.SteamInstallReports
 import com.nendo.argosy.data.launcher.SteamLaunchers
 import com.nendo.argosy.data.local.dao.EmulatorConfigDao
 import com.nendo.argosy.data.local.dao.EmulatorLaunchArgsDao
@@ -124,7 +125,8 @@ class GameLauncher @Inject constructor(
     private val baseRomFileResolver: BaseRomFileResolver,
     private val dreamcastVmuMigrator: DreamcastVmuMigrator,
     private val volumeHealth: StorageVolumeHealth,
-    private val launchProgressTracker: LaunchProgressTracker
+    private val launchProgressTracker: LaunchProgressTracker,
+    private val steamInstallReports: SteamInstallReports
 ) {
     private val shellAmAvailable: Boolean by lazy {
         try {
@@ -622,7 +624,24 @@ class GameLauncher @Inject constructor(
                 Logger.warn(TAG, "launchSteamGame() failed: missing steamAppId")
             }
 
-        val chosenPackage = game.steamLauncher?.takeIf { it != GameEntity.LAUNCHER_UNSPECIFIED }
+        val storedPackage = game.steamLauncher?.takeIf { it != GameEntity.LAUNCHER_UNSPECIFIED }
+        val pinned = game.launcherSetManually && storedPackage != null
+        val choices = SteamLaunchers.launchChoices(
+            pinned = pinned,
+            reporting = if (pinned) emptyList() else steamInstallReports.launchersReporting(steamAppId),
+            isInstalled = { pkg -> SteamLaunchers.getByPackage(pkg)?.isInstalled(context) == true }
+        )
+        val ticket = launchProgressTracker.current
+        val promptedPackage = if (choices.isNotEmpty() && ticket != null) {
+            val answer = ticket.chooseLauncher(choices.mapNotNull(SteamLaunchers::promptOptionFor))
+                ?: return LaunchResult.Cancelled.also {
+                    Logger.info(TAG, "launchSteamGame(): launcher choice cancelled for appId=$steamAppId")
+                }
+            SteamLaunchers.forPromptOption(answer)?.packageName
+        } else {
+            null
+        }
+        val chosenPackage = promptedPackage ?: storedPackage
 
         val launcher = if (chosenPackage != null) {
             SteamLaunchers.getByPackage(chosenPackage) ?: GameNativeLauncher

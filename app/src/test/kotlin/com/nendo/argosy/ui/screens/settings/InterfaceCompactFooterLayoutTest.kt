@@ -68,18 +68,20 @@ class InterfaceCompactFooterLayoutTest {
     }
 
     @Test
-    fun `the screen reads general, then screens, then the status bar`() {
+    fun `the screen reads general, then screens, then the status bar, then recaps`() {
         val order = listOf(
             InterfaceItem.Language,
             InterfaceItem.ControllerGrip,
             InterfaceItem.HomeScreen,
             InterfaceItem.BoxArt,
             InterfaceItem.StatusClock,
-            InterfaceItem.StatusNetwork
+            InterfaceItem.StatusNetwork,
+            InterfaceItem.PreLaunchRecaps,
+            InterfaceItem.MonthlyRecap
         ).map { interfaceFocusIndexOf(it, layoutState) }
 
         assertEquals(order.sorted(), order)
-        assertEquals(3, interfaceSections(layoutState).size)
+        assertEquals(4, interfaceSections(layoutState).size)
     }
 
     @Test

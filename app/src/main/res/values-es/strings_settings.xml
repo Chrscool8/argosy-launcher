@@ -265,6 +265,7 @@
     <string name="settings_interface_section_general">General</string>
     <string name="settings_interface_section_screens">Pantallas</string>
     <string name="settings_interface_section_status_bar">Barra de estado</string>
+    <string name="settings_interface_section_recaps">Resúmenes</string>
     <string name="settings_presentation_layout_title">Diseño</string>
     <string name="settings_presentation_layout_cinematic">Cinemático</string>
     <string name="settings_presentation_layout_journal">Diario</string>
@@ -339,6 +340,10 @@
     <string name="settings_interface_status_battery_subtitle">Mostrar el nivel de batería en la barra de estado</string>
     <string name="settings_interface_status_network_title">Red</string>
     <string name="settings_interface_status_network_subtitle">Mostrar la conexión actual en la barra de estado</string>
+    <string name="settings_interface_pre_launch_recaps_title">Resúmenes previos al inicio</string>
+    <string name="settings_interface_pre_launch_recaps_subtitle">Antes de un juego de RetroAchievements que no has jugado en una semana, muestra dónde lo dejaste</string>
+    <string name="settings_interface_monthly_recap_title">Resumen mensual</string>
+    <string name="settings_interface_monthly_recap_subtitle">Al empezar cada mes, muestra en Inicio un resumen del mes anterior</string>
 
     <string name="settings_home_screen_background_title">Fondo</string>
     <string name="settings_home_screen_background_subtitle">Carátula del juego o patrón de fondo</string>
@@ -468,6 +473,27 @@
     <string name="settings_ra_logout_title">Cerrar sesión</string>
     <string name="settings_ra_logout_title_busy">Cerrando sesión...</string>
     <string name="settings_ra_logout_subtitle">Cerrar sesión en RetroAchievements</string>
+    <string name="settings_ra_web_api_key_title">Clave de API web (opcional)</string>
+    <string name="settings_ra_web_api_key_subtitle">Está en la sección Keys del panel de control de RetroAchievements. Hace los resúmenes más rápidos y completos.</string>
+    <string name="settings_ra_web_api_key_value_not_set">Sin configurar</string>
+    <string name="settings_ra_web_api_key_value_saved_short">Guardada</string>
+    <string name="settings_ra_web_api_key_value_rejected">Clave rechazada</string>
+    <string name="settings_ra_web_api_key_modal_title">Clave de API web de RetroAchievements</string>
+    <string name="settings_ra_web_api_key_modal_message">Copia la clave de API web de la sección Keys del panel de control de RetroAchievements y pégala aquí. Argosy la comprueba una vez antes de guardarla.</string>
+    <string name="settings_ra_web_api_key_field_label">Clave de API web</string>
+    <string name="settings_ra_web_api_key_paste">Pegar</string>
+    <string name="settings_ra_web_api_key_clear">Quitar</string>
+    <string name="settings_ra_web_api_key_cancel">Cancelar</string>
+    <string name="settings_ra_web_api_key_save">Guardar</string>
+    <string name="settings_ra_web_api_key_save_busy">Comprobando...</string>
+    <string name="settings_ra_web_api_key_status_validating">Comprobando la clave con RetroAchievements...</string>
+    <string name="settings_ra_web_api_key_status_rejected">RetroAchievements no aceptó esta clave.</string>
+    <string name="settings_ra_web_api_key_status_unreachable">No se pudo contactar con RetroAchievements. Inténtalo de nuevo.</string>
+    <string name="settings_ra_web_api_key_status_clipboard_empty">El portapapeles no tiene texto para pegar.</string>
+    <string name="settings_ra_web_api_key_saved_title">Clave de API web guardada</string>
+    <string name="settings_ra_web_api_key_saved_subtitle">Los resúmenes ahora leen RetroAchievements directamente.</string>
+    <string name="settings_ra_web_api_key_cleared_title">Clave de API web eliminada</string>
+    <string name="settings_ra_web_api_key_cleared_subtitle">La clave ya no está guardada en este dispositivo.</string>
 
     <string name="settings_ra_play_mode_title">Preferencia de modo de juego</string>
     <string name="settings_ra_play_mode_subtitle_locked">Requiere Guardados seguros</string>
@@ -1797,8 +1823,8 @@
 
     <!-- ===== GameNative folders panel ===== -->
 
-    <string name="settings_gamenative_folders_title">Carpetas de GameNative</string>
-    <string name="settings_gamenative_folders_subtitle">Asocia cada tienda a la carpeta donde GameNative exporta sus instalaciones. Los marcadores de Steam solo marcan los juegos que posees como instalados; las demás tiendas añaden y quitan sus juegos para coincidir.</string>
+    <string name="settings_gamenative_folders_title">Carpetas de sincronización de launchers</string>
+    <string name="settings_gamenative_folders_subtitle">Asocia cada tienda a la carpeta donde GameNative exporta sus instalaciones, y DroidDeck a su carpeta de archivos de juegos. Los marcadores de Steam solo marcan los juegos que posees como instalados; las demás tiendas añaden y quitan sus juegos para coincidir.</string>
     <string name="settings_gamenative_folders_hint_set">Definir / Borrar</string>
     <string name="settings_gamenative_folders_hint_select">Seleccionar</string>
     <string name="settings_gamenative_folders_hint_back">Atrás</string>
@@ -2539,6 +2565,8 @@
     <string name="settings_play_time_section_where">DISPOSITIVOS</string>
     <string name="settings_play_time_section_what">A QUÉ JUEGAS</string>
     <string name="settings_play_time_section_facts">DATOS RÁPIDOS</string>
+    <string name="settings_play_time_last_month_title">Resumen del mes pasado</string>
+    <string name="settings_play_time_last_month_subtitle">Tiempo de juego, nuevos favoritos y logros del mes pasado</string>
     <string name="settings_play_time_loading_title">Leyendo sesiones...</string>
     <string name="settings_play_time_loading_message">Tus patrones de juego aparecerán en un momento.</string>
     <string name="settings_play_time_empty_title">Aún no hay sesiones de juego</string>

@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -16,14 +17,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Icon
@@ -39,11 +39,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -51,18 +52,25 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nendo.argosy.R
 import com.nendo.argosy.data.emulator.LaunchProgressTracker
+import com.nendo.argosy.data.launcher.SteamLaunchers
 import com.nendo.argosy.domain.model.LaunchProgress
 import com.nendo.argosy.domain.model.LaunchPromptOption
 import com.nendo.argosy.domain.model.LaunchStep
 import com.nendo.argosy.domain.model.SnapshotConflictChoice
 import com.nendo.argosy.domain.model.SyncProgress
 import com.nendo.argosy.ui.common.statusMessage
+import com.nendo.argosy.ui.components.recap.LaunchRecapCard
+import com.nendo.argosy.ui.components.recap.LaunchRecapCompactCard
+import com.nendo.argosy.ui.components.recap.LaunchRecapCursor
+import com.nendo.argosy.ui.components.recap.RecapCursor
+import com.nendo.argosy.ui.components.recap.RecapSurface
+import com.nendo.argosy.ui.components.recap.rememberRecapFullCardSurface
 import com.nendo.argosy.ui.input.ModalInputEffect
+import com.nendo.argosy.ui.primitives.ActionButton
 import com.nendo.argosy.ui.primitives.ArgosyProgressBar
-import com.nendo.argosy.ui.primitives.InputGlyph
 import com.nendo.argosy.ui.theme.Dimens
-import com.nendo.argosy.ui.theme.LocalArgosyTheme
 import com.nendo.argosy.ui.theme.LocalLauncherTheme
+import com.nendo.argosy.ui.theme.Motion
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import com.nendo.argosy.ui.util.clickableNoFocus
 import dagger.hilt.EntryPoint
@@ -74,11 +82,11 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface LaunchProgressEntryPoint {
     fun launchProgressTracker(): LaunchProgressTracker
+    fun launchRecapCursor(): LaunchRecapCursor
 }
 
-private fun launchProgressTracker(context: Context): LaunchProgressTracker =
+private fun launchProgressEntryPoint(context: Context): LaunchProgressEntryPoint =
     EntryPointAccessors.fromApplication(context.applicationContext, LaunchProgressEntryPoint::class.java)
-        .launchProgressTracker()
 
 /**
  * The launch in progress over the surface that starts launches. It holds the input stack while a
@@ -91,6 +99,7 @@ fun LaunchOverlay(
 ) {
     val progress by viewModel.progress.collectAsState()
     val promptFocus by viewModel.promptFocus.collectAsState()
+    val recapCursor by viewModel.recapCursorState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, viewModel) {
         val observer = LifecycleEventObserver { _, event ->
@@ -100,12 +109,18 @@ fun LaunchOverlay(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     ModalInputEffect(active = progress != null, handler = viewModel.inputHandler)
+    if (progress?.step is LaunchStep.Recap) {
+        FooterHints(hints = emptyList())
+    }
 
     LaunchOverlayContent(
         progress = progress,
         promptFocus = promptFocus,
+        recapCursor = recapCursor,
+        surface = RecapSurface.CONTROL,
         onAnswer = viewModel::answer,
         onCancel = { viewModel.cancel() },
+        onRecapCurrent = viewModel::recapCurrent,
         modifier = modifier
     )
 }
@@ -113,15 +128,41 @@ fun LaunchOverlay(
 @Composable
 fun LaunchOverlayMirror(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val tracker = remember { launchProgressTracker(context) }
+    val entryPoint = remember { launchProgressEntryPoint(context) }
+    val tracker = remember(entryPoint) { entryPoint.launchProgressTracker() }
+    val cursorStore = remember(entryPoint) { entryPoint.launchRecapCursor() }
     val progress by tracker.progress.collectAsState()
+    val recapCursor by cursorStore.state.collectAsState()
     LaunchOverlayContent(
         progress = progress,
         promptFocus = NO_PROMPT_FOCUS,
+        recapCursor = recapCursor,
+        surface = RecapSurface.PRESENTATION,
         onAnswer = tracker::answer,
         onCancel = { tracker.cancel() },
+        onRecapCurrent = { index ->
+            val count = (tracker.progress.value?.step as? LaunchStep.Recap)?.recap?.unlocks?.size
+            if (count != null) cursorStore.centered(index, count)
+        },
         modifier = modifier
     )
+}
+
+/**
+ * The blur the screen behind the launch overlay takes while a recap shows, for the surface's
+ * content to apply alongside its other modal blurs.
+ */
+@Composable
+fun launchRecapBackdropBlur(): Dp {
+    val context = LocalContext.current
+    val tracker = remember { launchProgressEntryPoint(context).launchProgressTracker() }
+    val progress by tracker.progress.collectAsState()
+    val blur by animateDpAsState(
+        targetValue = if (progress?.step is LaunchStep.Recap) Motion.blurRadiusDrawer else 0.dp,
+        animationSpec = tween(ComponentDefaults.LaunchOverlay.fadeMs),
+        label = "launchRecapBlur"
+    )
+    return blur
 }
 
 private const val NO_PROMPT_FOCUS = -1
@@ -130,8 +171,11 @@ private const val NO_PROMPT_FOCUS = -1
 private fun LaunchOverlayContent(
     progress: LaunchProgress?,
     promptFocus: Int,
+    recapCursor: RecapCursor,
+    surface: RecapSurface,
     onAnswer: (LaunchPromptOption) -> Unit,
     onCancel: () -> Unit,
+    onRecapCurrent: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var lastShown by remember { mutableStateOf<LaunchProgress?>(null) }
@@ -166,6 +210,28 @@ private fun LaunchOverlayContent(
                     onAnswer = onAnswer,
                     onCancel = onCancel
                 )
+                is LaunchStep.ChooseLauncher -> LauncherChoiceContent(
+                    gameTitle = shown.gameTitle ?: stringResource(R.string.ui_sync_overlay_unknown_game),
+                    options = step.options,
+                    focusIndex = promptFocus,
+                    onAnswer = onAnswer,
+                    onCancel = onCancel
+                )
+                is LaunchStep.Recap -> if (rememberRecapFullCardSurface() == surface) {
+                    LaunchRecapCard(
+                        recap = step.recap,
+                        cursor = recapCursor,
+                        onStart = { onAnswer(LaunchPromptOption.START_GAME) },
+                        onCancel = onCancel,
+                        onCurrent = onRecapCurrent
+                    )
+                } else {
+                    LaunchRecapCompactCard(
+                        recap = step.recap,
+                        onStart = { onAnswer(LaunchPromptOption.START_GAME) },
+                        onCancel = onCancel
+                    )
+                }
                 else -> StepContent(
                     gameTitle = shown.gameTitle,
                     step = step,
@@ -235,30 +301,18 @@ private fun StepContent(
         }
         if (step != LaunchStep.Launching) {
             Spacer(modifier = Modifier.height(Dimens.spacingLg))
-            CancelPill(onClick = onCancel)
+            LaunchCancelButton(onClick = onCancel)
         }
     }
 }
 
 @Composable
-private fun CancelPill(onClick: () -> Unit) {
-    val theme = LocalArgosyTheme.current
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(theme.surfaceElevated)
-            .clickableNoFocus(onClick = onClick)
-            .padding(horizontal = Dimens.spacingMd, vertical = Dimens.spacingSm)
-    ) {
-        InputGlyph(button = InputButton.B, tint = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.width(Dimens.spacingSm))
-        Text(
-            text = stringResource(R.string.ui_launch_overlay_cancel),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
+internal fun LaunchCancelButton(onClick: () -> Unit) {
+    ActionButton(
+        label = stringResource(R.string.ui_launch_overlay_cancel),
+        onClick = onClick,
+        glyph = InputButton.B
+    )
 }
 
 @Composable
@@ -316,10 +370,54 @@ private fun PromptContent(
 @Composable
 private fun LaunchStep.message(): String = when (this) {
     LaunchStep.FinishingPrevious -> stringResource(R.string.ui_launch_overlay_step_finishing_previous)
+    LaunchStep.RecapLoading -> stringResource(R.string.ui_launch_overlay_step_loading_recap)
+    is LaunchStep.Recap -> ""
     is LaunchStep.Save -> progress.statusMessage()
     is LaunchStep.DownloadingCore -> stringResource(R.string.ui_launch_overlay_step_downloading_core)
     LaunchStep.PreparingSystemFiles -> stringResource(R.string.ui_launch_overlay_step_preparing_system_files)
     LaunchStep.PreparingUi -> stringResource(R.string.ui_launch_overlay_step_preparing_ui)
     LaunchStep.Launching -> stringResource(R.string.ui_launch_overlay_step_launching)
     is LaunchStep.Prompt -> ""
+    is LaunchStep.ChooseLauncher -> ""
+}
+
+@Composable
+private fun LauncherChoiceContent(
+    gameTitle: String,
+    options: List<LaunchPromptOption>,
+    focusIndex: Int,
+    onAnswer: (LaunchPromptOption) -> Unit,
+    onCancel: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(horizontal = Dimens.spacingXl)
+    ) {
+        Text(
+            text = stringResource(R.string.ui_launch_overlay_launcher_choice_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(Dimens.spacingSm))
+        Text(
+            text = stringResource(R.string.ui_launch_overlay_launcher_choice_message, gameTitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(Dimens.spacingLg))
+        Column(modifier = Modifier.fillMaxWidth(0.85f)) {
+            options.forEachIndexed { index, option ->
+                val launcherName = SteamLaunchers.forPromptOption(option)?.displayName.orEmpty()
+                ConflictOption(
+                    label = launcherName,
+                    subtitle = stringResource(R.string.ui_launch_overlay_launcher_choice_option_subtitle, launcherName),
+                    isFocused = focusIndex == index,
+                    onClick = { onAnswer(option) }
+                )
+            }
+            CancelLaunchOption(isFocused = focusIndex == options.size, onClick = onCancel)
+        }
+    }
 }
