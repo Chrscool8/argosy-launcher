@@ -374,12 +374,20 @@ private fun CinematicShowcase(
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingXl),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        ShowcaseCover(
-            detail = detail,
-            art = style.art,
-            height = availableHeight,
-            width = ((availableWidth - Dimens.spacingXl) / 3).coerceAtLeast(zero)
-        )
+        if (style.art != PresentationArt.TITLE) {
+            val coverWidth = ((availableWidth - Dimens.spacingXl) / 3).coerceAtLeast(zero)
+            Box(
+                modifier = Modifier.width(coverWidth),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                ShowcaseCover(
+                    detail = detail,
+                    art = style.art,
+                    height = availableHeight,
+                    width = coverWidth
+                )
+            }
+        }
         Box(Modifier.weight(1f).heightIn(max = availableHeight)) {
           CompositionLocalProvider(LocalLayoutDirection provides textDirection) {
             LazyColumn(
