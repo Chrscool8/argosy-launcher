@@ -276,8 +276,8 @@
     <!-- Row title. Noun phrase: how much of the accent colour bleeds into panels and cards. -->
     <string name="settings_theme_tint_bleed_title">Surface Tint</string>
 
-    <!-- Row opening the settings for the pattern drawn behind panels. Noun phrase. -->
-    <string name="settings_theme_backdrop_title">Surface Backdrop</string>
+    <!-- Row opening the settings for the pattern drawn behind full screens. Noun phrase. -->
+    <string name="settings_theme_backdrop_title">Backdrop</string>
     <!-- Second line of that row when no pattern is drawn. Adverb. -->
     <string name="settings_theme_backdrop_subtitle_off">Off</string>
     <!-- Row opening the typeface settings. Noun, plural. -->
@@ -1218,8 +1218,8 @@
     <!-- Heading over the rows that add extra drawing on top of that shape. Noun, plural. -->
     <string name="settings_backdrop_section_layers">Layers</string>
 
-    <!-- Row title. Noun phrase: the pattern drawn behind panels. -->
-    <string name="settings_backdrop_enabled_title">Surface Backdrop</string>
+    <!-- Row title. Noun phrase: the pattern drawn behind full screens. -->
+    <string name="settings_backdrop_enabled_title">Backdrop</string>
     <!-- Second line of that row. "Companion screen" is the second display. -->
     <string name="settings_backdrop_enabled_subtitle">Tiled pattern behind menus and the companion screen</string>
 

@@ -95,7 +95,7 @@
     <string name="settings_theme_accent_footer_subtitle">Utiliser la couleur d\'accent pour le fond du pied de page</string>
     <string name="settings_theme_tint_bleed_title">Teinte de surface</string>
 
-    <string name="settings_theme_backdrop_title">Fond de surface</string>
+    <string name="settings_theme_backdrop_title">Arrière-plan</string>
     <string name="settings_theme_backdrop_subtitle_off">Désactivé</string>
     <string name="settings_theme_fonts_title">Polices</string>
     <string name="settings_theme_fonts_subtitle_default">Par défaut</string>
@@ -630,12 +630,12 @@
     <string name="settings_about_version_romm_value">v%1$s</string>
     <string name="settings_about_licenses_label">Licences</string>
 
-    <!-- ===== Section Fond de surface ===== -->
+    <!-- ===== Section Arrière-plan ===== -->
 
     <string name="settings_backdrop_section_pattern">Motif</string>
     <string name="settings_backdrop_section_layers">Calques</string>
 
-    <string name="settings_backdrop_enabled_title">Fond de surface</string>
+    <string name="settings_backdrop_enabled_title">Arrière-plan</string>
     <string name="settings_backdrop_enabled_subtitle">Motif en mosaïque derrière les menus et l\'écran compagnon</string>
 
     <string name="settings_backdrop_preset_title">Motif</string>

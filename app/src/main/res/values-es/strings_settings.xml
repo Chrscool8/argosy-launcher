@@ -105,7 +105,7 @@
     <string name="settings_theme_accent_footer_subtitle">Usar el color de acento en el fondo del pie de página</string>
     <string name="settings_theme_tint_bleed_title">Tinte de superficie</string>
 
-    <string name="settings_theme_backdrop_title">Fondo de superficie</string>
+    <string name="settings_theme_backdrop_title">Fondo</string>
     <string name="settings_theme_backdrop_subtitle_off">Desactivado</string>
     <string name="settings_theme_fonts_title">Fuentes</string>
     <string name="settings_theme_fonts_subtitle_default">Predeterminada</string>
@@ -645,7 +645,7 @@
     <string name="settings_backdrop_section_pattern">Patrón</string>
     <string name="settings_backdrop_section_layers">Capas</string>
 
-    <string name="settings_backdrop_enabled_title">Fondo de superficie</string>
+    <string name="settings_backdrop_enabled_title">Fondo</string>
     <string name="settings_backdrop_enabled_subtitle">Patrón en mosaico detrás de los menús y la pantalla complementaria</string>
 
     <string name="settings_backdrop_preset_title">Patrón</string>

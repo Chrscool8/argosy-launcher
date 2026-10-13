@@ -93,7 +93,7 @@
     <string name="settings_theme_accent_footer_subtitle">फ़ुटर बैकग्राउंड के लिए एक्सेंट कलर का उपयोग करें</string>
     <string name="settings_theme_tint_bleed_title">सरफ़ेस टिंट</string>
 
-    <string name="settings_theme_backdrop_title">सरफ़ेस बैकड्रॉप</string>
+    <string name="settings_theme_backdrop_title">बैकड्रॉप</string>
     <string name="settings_theme_backdrop_subtitle_off">बंद</string>
     <string name="settings_theme_fonts_title">फ़ॉन्ट</string>
     <string name="settings_theme_fonts_subtitle_default">डिफ़ॉल्ट</string>
@@ -622,7 +622,7 @@
     <string name="settings_backdrop_section_pattern">पैटर्न</string>
     <string name="settings_backdrop_section_layers">लेयर</string>
 
-    <string name="settings_backdrop_enabled_title">सरफ़ेस बैकड्रॉप</string>
+    <string name="settings_backdrop_enabled_title">बैकड्रॉप</string>
     <string name="settings_backdrop_enabled_subtitle">मेनू और कम्पैनियन स्क्रीन के पीछे टाइल किया गया पैटर्न</string>
 
     <string name="settings_backdrop_preset_title">पैटर्न</string>
