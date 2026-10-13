@@ -1386,7 +1386,12 @@ fun HomeScreen(
                 onToolsDismiss = viewModel::dismissAppBarTools,
                 maximumWidth = navigationPillWidth.takeIf { it > 0.dp } ?: Dimens.breadcrumbMaxWidth,
                 modifier = Modifier.align(Alignment.BottomCenter)
-                    .padding(horizontal = Dimens.spacingMd, vertical = chromeVerticalPadding)
+                    .padding(
+                        start = Dimens.spacingMd,
+                        top = chromeVerticalPadding,
+                        end = Dimens.spacingMd,
+                        bottom = ComponentDefaults.Carousel.headerEdgePaddingDp.dp
+                    )
                     .onSizeChanged { size ->
                         val measured = with(localDensity) { size.height.toDp() }
                         if (measured != dockHeight) dockHeight = measured

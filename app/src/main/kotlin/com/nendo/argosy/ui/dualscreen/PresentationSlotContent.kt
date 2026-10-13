@@ -296,7 +296,12 @@ private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier
         onToolFocus = { toolIndex = it },
         onToolsDismiss = { toolsOpen = false },
         controllerInputEnabled = false,
-        modifier = modifier.padding(horizontal = Dimens.spacingMd, vertical = Dimens.spacingMd)
+        modifier = modifier.padding(
+            start = Dimens.spacingMd,
+            top = Dimens.spacingMd,
+            end = Dimens.spacingMd,
+            bottom = ComponentDefaults.Carousel.headerEdgePaddingDp.dp
+        )
     )
 
     if (drawerOpen) {
