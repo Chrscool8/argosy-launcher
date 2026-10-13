@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.zIndex
 import com.nendo.argosy.ui.theme.Motion
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +35,7 @@ internal class DockDragReorderState(
     private val listState: LazyListState,
     private val scope: CoroutineScope,
     private val edge: Float,
+    private val isRtl: Boolean,
     private val onStart: (String) -> Long?,
     private val onTarget: (Long, Int) -> Unit,
     private val onSave: (Long) -> Unit,
@@ -51,8 +54,10 @@ internal class DockDragReorderState(
 
     fun start(position: Offset) {
         if (token != null) return
+        val layout = listState.layoutInfo
+        val x = if (isRtl) layout.viewportStartOffset + layout.viewportEndOffset - position.x else position.x
         val item = listState.layoutInfo.visibleItemsInfo.firstOrNull {
-            position.x >= it.offset && position.x < it.offset + it.size
+            x >= it.offset && x < it.offset + it.size
         } ?: return
         val packageName = item.key as? String ?: return
         val started = onStart(packageName) ?: return
@@ -72,7 +77,7 @@ internal class DockDragReorderState(
 
     fun drag(delta: Float) {
         if (token == null) return
-        center += delta
+        center += if (isRtl) -delta else delta
         resolveTarget()
         updateScroll()
     }
@@ -94,7 +99,8 @@ internal class DockDragReorderState(
     fun translation(packageName: String): Float {
         if (packageName != draggingPackage) return 0f
         val item = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == packageName } ?: return 0f
-        return center - item.offset - item.size / 2f
+        val offset = center - item.offset - item.size / 2f
+        return if (isRtl) -offset else offset
     }
 
     private fun resolveTarget(scrolled: Float = 0f) {
@@ -149,12 +155,13 @@ internal fun rememberDockDragReorderState(
     onCancel: (Long) -> Unit
 ): DockDragReorderState {
     val scope = rememberCoroutineScope()
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val start by rememberUpdatedState(onStart)
     val target by rememberUpdatedState(onTarget)
     val save by rememberUpdatedState(onSave)
     val cancel by rememberUpdatedState(onCancel)
-    val state = remember(listState, scope, edge) {
-        DockDragReorderState(listState, scope, edge, { start(it) }, { token, index -> target(token, index) },
+    val state = remember(listState, scope, edge, isRtl) {
+        DockDragReorderState(listState, scope, edge, isRtl, { start(it) }, { token, index -> target(token, index) },
             { save(it) }, { cancel(it) })
     }
     DisposableEffect(state) { onDispose { state.finish(false) } }

@@ -8,6 +8,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -16,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.nendo.argosy.ui.theme.Dimens
@@ -67,40 +70,67 @@ class CompanionAppBarTest {
 
     @Test
     fun touchHoldSurvivesRecompositionAndSwapsFromOriginalOrder() {
-        val original = listOf("a", "b", "c", "d")
+        touchSwap(LayoutDirection.Ltr)
+    }
+
+    @Test
+    fun rtlTouchDragFollowsFingerAndSwapsTowardTheLeft() {
+        touchSwap(LayoutDirection.Rtl)
+    }
+
+    @Test
+    fun rtlTouchDragScrollsAtTheLeftEdgeToReachTheLastPin() {
+        touchSwap(LayoutDirection.Rtl, overflow = true)
+    }
+
+    private fun touchSwap(direction: LayoutDirection, overflow: Boolean = false) {
+        val original = if (overflow) listOf("a", "b", "c", "d", "e", "f") else listOf("a", "b", "c", "d")
         val apps = mutableStateOf(original)
         val session = mutableStateOf<DockReorderSession?>(null)
         var saved: List<String>? = null
         compose.setContent {
-            MaterialTheme {
-                CompanionAppBar(
-                    apps = apps.value,
-                    onAppClick = {},
-                    reorder = session.value,
-                    onReorderStart = { packageName ->
-                        session.value = DockReorderSession.lift(1, false, original, original, packageName)
-                        session.value?.token
-                    },
-                    onReorderTarget = { _, target ->
-                        session.value = session.value?.target(target)
-                        apps.value = session.value!!.order
-                    },
-                    onReorderSave = { saved = apps.value; session.value = null },
-                    onReorderCancel = { apps.value = original; session.value = null }
-                )
+            CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                MaterialTheme {
+                    CompanionAppBar(
+                        apps = apps.value,
+                        onAppClick = {},
+                        maximumWidth = if (overflow) 280.dp else 600.dp,
+                        reorder = session.value,
+                        onReorderStart = { packageName ->
+                            session.value = DockReorderSession.lift(1, false, original, original, packageName)
+                            session.value?.token
+                        },
+                        onReorderTarget = { _, target ->
+                            session.value = session.value?.target(target)
+                            apps.value = session.value!!.order
+                        },
+                        onReorderSave = { saved = apps.value; session.value = null },
+                        onReorderCancel = { apps.value = original; session.value = null }
+                    )
+                }
             }
         }
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val dock = compose.onNodeWithContentDescription(context.getString(R.string.dock_accessibility_label))
         val origin = dock.fetchSemanticsNode().boundsInRoot.topLeft
         val start = compose.onNodeWithContentDescription("a").fetchSemanticsNode().boundsInRoot.center - origin
-        val target = compose.onNodeWithContentDescription("c").fetchSemanticsNode().boundsInRoot.center - origin
+        val target = if (overflow) Offset(0f, start.y) else
+            compose.onNodeWithContentDescription("c").fetchSemanticsNode().boundsInRoot.center - origin
         dock.performTouchInput { down(start) }
         compose.mainClock.advanceTimeBy(700)
         compose.waitForIdle()
         compose.runOnIdle { assertEquals("a", session.value?.heldPackage) }
-        dock.performTouchInput { moveTo(target); up() }
-        compose.runOnIdle { assertEquals(listOf("c", "b", "a", "d"), saved) }
+        dock.performTouchInput { moveTo(target) }
+        if (overflow) compose.waitUntil(5_000) { session.value?.targetIndex == original.lastIndex }
+        else {
+            compose.waitForIdle()
+            assertEquals(target.x + origin.x,
+                compose.onNodeWithContentDescription("a").fetchSemanticsNode().boundsInRoot.center.x, 1f)
+        }
+        dock.performTouchInput { up() }
+        compose.runOnIdle {
+            assertEquals(if (overflow) listOf("f", "b", "c", "d", "e", "a") else listOf("c", "b", "a", "d"), saved)
+        }
     }
 
     @Test
