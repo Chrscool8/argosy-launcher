@@ -16,8 +16,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -193,9 +192,8 @@ fun ProvideStatusBarItems(
 /**
  * [scrim] backs the bar with a plate so it reads over artwork. Turn it off on a flat surface,
  * where the plate has nothing to separate the bar from and only shows as a panel of its own.
- * [allowWrap] lets narrow containers move whole status items onto another line.
+ * [allowWrap] places network and battery below the clock when network status is shown.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SystemStatusBar(
     modifier: Modifier = Modifier,
@@ -250,27 +248,41 @@ fun SystemStatusBar(
             )
         }
 
-        if (shown.network) {
-            NetworkIndicator(color = effectiveColor, modifier = itemModifier)
-        }
-
-        if (shown.battery) {
-            BatteryIndicator(
-                level = batteryState.level,
-                isCharging = batteryState.isCharging,
-                color = effectiveColor,
-                modifier = itemModifier
-            )
+    }
+    val indicators: @Composable (Modifier) -> Unit = { itemModifier ->
+        if (shown.network || shown.battery) {
+            Row(
+                modifier = itemModifier,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
+            ) {
+                if (shown.network) {
+                    NetworkIndicator(color = effectiveColor)
+                }
+                if (shown.battery) {
+                    BatteryIndicator(
+                        level = batteryState.level,
+                        isCharging = batteryState.isCharging,
+                        color = effectiveColor
+                    )
+                }
+            }
         }
     }
-    if (allowWrap) {
-        FlowRow(
+    if (allowWrap && shown.network) {
+        Column(
             modifier = statusModifier,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm),
             verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
         ) {
-            val itemModifier = Modifier.align(Alignment.CenterVertically)
-            content(itemModifier, itemModifier)
+            if (shown.clock || isScrapingArtwork) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
+                ) {
+                    content(Modifier.weight(1f, fill = false), Modifier)
+                }
+            }
+            indicators(Modifier)
         }
     } else {
         Row(
@@ -279,6 +291,7 @@ fun SystemStatusBar(
             horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
         ) {
             content(Modifier.weight(1f, fill = false), Modifier)
+            indicators(Modifier)
         }
     }
 }
