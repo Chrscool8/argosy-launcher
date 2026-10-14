@@ -19,16 +19,18 @@ object RecapEligibility {
     /**
      * The recap to show before launching a game, or null. Only RetroAchievements games qualify
      * ([gameRaId] non-null), and only when [lastSession] ended at least [PRE_LAUNCH_MIN_GAP]
-     * before [now].
+     * before [now]. A session that ended before [notBefore] counts as ending at [notBefore].
      */
     fun preLaunchRecapFor(
         gameRaId: Long?,
         lastSession: PlaySessionEntity?,
         now: Instant,
-        enabled: Boolean
+        enabled: Boolean,
+        notBefore: Instant? = null
     ): PreLaunchRecap? {
         if (!enabled || lastSession == null || gameRaId == null) return null
-        val gap = Duration.between(lastSession.endTime, now)
+        val countedEnd = notBefore?.takeIf { it.isAfter(lastSession.endTime) } ?: lastSession.endTime
+        val gap = Duration.between(countedEnd, now)
         if (gap < PRE_LAUNCH_MIN_GAP) return null
         return PreLaunchRecap(
             gameId = lastSession.gameId,

@@ -160,6 +160,7 @@ class UserPreferencesRepository @Inject constructor(
             preLaunchRecapsEnabled = app.preLaunchRecapsEnabled,
             monthlyRecapEnabled = app.monthlyRecapEnabled,
             lastMonthlyRecapShown = app.lastMonthlyRecapShown,
+            preLaunchRecapBaseline = app.preLaunchRecapBaseline,
             saveSyncEnabled = sync.saveSyncEnabled,
             secureSaves = sync.secureSaves,
             stateCacheEnabled = sync.stateCacheEnabled,
@@ -581,6 +582,8 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setMonthlyRecapEnabled(enabled: Boolean) = appPrefs.setMonthlyRecapEnabled(enabled)
     suspend fun setLastMonthlyRecapShown(month: java.time.YearMonth) = appPrefs.setLastMonthlyRecapShown(month)
 
+    suspend fun setPreLaunchRecapBaseline(at: java.time.Instant) = appPrefs.setPreLaunchRecapBaseline(at)
+
     // --- Builtin emulator delegates ---
 
     suspend fun setBuiltinShader(shader: String) = builtinPrefs.setBuiltinShader(shader)
@@ -883,6 +886,7 @@ data class UserPreferences(
     val preLaunchRecapsEnabled: Boolean = true,
     val monthlyRecapEnabled: Boolean = true,
     val lastMonthlyRecapShown: java.time.YearMonth? = null,
+    val preLaunchRecapBaseline: java.time.Instant? = null,
     val saveSyncEnabled: Boolean = false,
     val secureSaves: Boolean = true,
     val stateCacheEnabled: Boolean = true,

@@ -150,7 +150,8 @@ object AccountScopedPreferenceKeys {
     private val RECAPS = setOf(
         "pre_launch_recaps_enabled",
         "monthly_recap_enabled",
-        "last_monthly_recap_shown"
+        "last_monthly_recap_shown",
+        "pre_launch_recap_baseline"
     )
 
     val PER_ACCOUNT: Set<String> =

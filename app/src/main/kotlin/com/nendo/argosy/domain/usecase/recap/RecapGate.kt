@@ -22,12 +22,15 @@ class RecapGate @Inject constructor(
     suspend fun preLaunchRecap(gameId: Long, now: Instant = Instant.now()): PreLaunchRecap? {
         val prefs = preferencesRepository.userPreferences.first()
         if (!prefs.preLaunchRecapsEnabled) return null
+        val baseline = prefs.preLaunchRecapBaseline
+            ?: now.also { preferencesRepository.setPreLaunchRecapBaseline(it) }
         val game = gameDao.getById(gameId) ?: return null
         return RecapEligibility.preLaunchRecapFor(
             gameRaId = game.effectiveRaId ?: game.raId,
             lastSession = playSessionDao.getLatestForGameAndOwner(gameId, prefs.rommUserId),
             now = now,
-            enabled = prefs.preLaunchRecapsEnabled
+            enabled = prefs.preLaunchRecapsEnabled,
+            notBefore = baseline
         )
     }
 
@@ -36,6 +39,10 @@ class RecapGate @Inject constructor(
         zone: ZoneId = ZoneId.systemDefault()
     ): YearMonth? {
         val prefs = preferencesRepository.userPreferences.first()
+        if (prefs.lastMonthlyRecapShown == null) {
+            preferencesRepository.setLastMonthlyRecapShown(RecapEligibility.digestMonthAt(now, zone))
+            return null
+        }
         val candidate = RecapEligibility.monthlyDigestDue(
             now = now,
             zone = zone,

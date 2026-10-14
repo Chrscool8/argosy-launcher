@@ -29,10 +29,11 @@ class RecapGateTest {
     private val playSessionDao: PlaySessionDao = mockk()
     private val preferencesRepository: UserPreferencesRepository = mockk()
 
-    private fun gate(enabled: Boolean): RecapGate {
+    private fun gate(enabled: Boolean, baseline: Instant? = now.minus(Duration.ofDays(365))): RecapGate {
         every { preferencesRepository.userPreferences } returns flowOf(
-            UserPreferences(rommUserId = 7L, preLaunchRecapsEnabled = enabled)
+            UserPreferences(rommUserId = 7L, preLaunchRecapsEnabled = enabled, preLaunchRecapBaseline = baseline)
         )
+        coEvery { preferencesRepository.setPreLaunchRecapBaseline(any()) } returns Unit
         val game = mockk<GameEntity> {
             every { effectiveRaId } returns 50L
             every { raId } returns 50L
@@ -59,6 +60,23 @@ class RecapGateTest {
     }
 
     @Test
+    fun `the first check after the update records today and holds back an old session`() = runTest {
+        lastSessionEndedAgo(Duration.ofDays(400))
+
+        assertNull(gate(enabled = true, baseline = null).preLaunchRecap(1L, now))
+        coVerify(exactly = 1) { preferencesRepository.setPreLaunchRecapBaseline(now) }
+    }
+
+    @Test
+    fun `a session before the baseline is due a week after the baseline, not before`() = runTest {
+        lastSessionEndedAgo(Duration.ofDays(400))
+
+        assertNull(gate(enabled = true, baseline = now.minus(Duration.ofDays(3))).preLaunchRecap(1L, now))
+        val due = gate(enabled = true, baseline = now.minus(Duration.ofDays(8))).preLaunchRecap(1L, now)
+        assertEquals(400L, due!!.lastSession.daysSince)
+    }
+
+    @Test
     fun `the setting off answers before any lookup`() = runTest {
         lastSessionEndedAgo(Duration.ofDays(10))
         assertNull(gate(enabled = false).preLaunchRecap(1L, now))
@@ -68,7 +86,7 @@ class RecapGateTest {
 
     private fun monthlyGate(
         enabled: Boolean = true,
-        lastShown: YearMonth? = null,
+        lastShown: YearMonth? = YearMonth.of(2026, 1),
         privateIds: List<Long> = emptyList()
     ): RecapGate {
         every { preferencesRepository.userPreferences } returns flowOf(
@@ -77,6 +95,15 @@ class RecapGateTest {
         coEvery { preferencesRepository.setLastMonthlyRecapShown(any()) } returns Unit
         coEvery { preferencesRepository.privateIgdbIds() } returns privateIds
         return RecapGate(preferencesRepository, playSessionDao, gameDao)
+    }
+
+    @Test
+    fun `the first check after the update marks last month shown so the first digest is next month's`() = runTest {
+        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any(), any()) } returns true
+
+        assertNull(monthlyGate(lastShown = null).monthlyDigestDue(now, ZoneOffset.UTC))
+        coVerify(exactly = 1) { preferencesRepository.setLastMonthlyRecapShown(YearMonth.of(2026, 9)) }
+        coVerify(exactly = 0) { playSessionDao.hasSessionsForOwnerInRange(any(), any(), any(), any()) }
     }
 
     @Test

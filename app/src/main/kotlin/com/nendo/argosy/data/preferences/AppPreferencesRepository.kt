@@ -37,7 +37,8 @@ data class AppPreferences(
     val appLanguage: AppLanguage = AppLanguage.SYSTEM,
     val preLaunchRecapsEnabled: Boolean = true,
     val monthlyRecapEnabled: Boolean = true,
-    val lastMonthlyRecapShown: YearMonth? = null
+    val lastMonthlyRecapShown: YearMonth? = null,
+    val preLaunchRecapBaseline: Instant? = null
 )
 
 @Singleton
@@ -70,6 +71,7 @@ class AppPreferencesRepository @Inject constructor(
         val PRE_LAUNCH_RECAPS_ENABLED = booleanPreferencesKey("pre_launch_recaps_enabled")
         val MONTHLY_RECAP_ENABLED = booleanPreferencesKey("monthly_recap_enabled")
         val LAST_MONTHLY_RECAP_SHOWN = stringPreferencesKey("last_monthly_recap_shown")
+        val PRE_LAUNCH_RECAP_BASELINE = stringPreferencesKey("pre_launch_recap_baseline")
     }
 
     val preferences: Flow<AppPreferences> = dataStore.data.map { prefs ->
@@ -113,7 +115,9 @@ class AppPreferencesRepository @Inject constructor(
             preLaunchRecapsEnabled = prefs[Keys.PRE_LAUNCH_RECAPS_ENABLED] ?: true,
             monthlyRecapEnabled = prefs[Keys.MONTHLY_RECAP_ENABLED] ?: true,
             lastMonthlyRecapShown = prefs[Keys.LAST_MONTHLY_RECAP_SHOWN]
-                ?.let { runCatching { YearMonth.parse(it) }.getOrNull() }
+                ?.let { runCatching { YearMonth.parse(it) }.getOrNull() },
+            preLaunchRecapBaseline = prefs[Keys.PRE_LAUNCH_RECAP_BASELINE]
+                ?.let { runCatching { Instant.parse(it) }.getOrNull() }
         )
     }.flowOn(Dispatchers.Default)
 
@@ -285,6 +289,10 @@ class AppPreferencesRepository @Inject constructor(
 
     suspend fun setLastMonthlyRecapShown(month: YearMonth) {
         dataStore.edit { it[Keys.LAST_MONTHLY_RECAP_SHOWN] = month.toString() }
+    }
+
+    suspend fun setPreLaunchRecapBaseline(at: Instant) {
+        dataStore.edit { it[Keys.PRE_LAUNCH_RECAP_BASELINE] = at.toString() }
     }
 
     suspend fun setAppDisplayTarget(packageName: String, screenKey: String?) {
