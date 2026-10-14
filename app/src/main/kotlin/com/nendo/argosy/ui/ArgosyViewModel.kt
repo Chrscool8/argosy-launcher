@@ -33,7 +33,6 @@ import com.nendo.argosy.core.notification.NotificationType
 import com.nendo.argosy.data.emulator.EmulatorUpdateManager
 import com.nendo.argosy.data.emulator.PlaySessionTracker
 import com.nendo.argosy.data.preferences.MenuWrapMode
-import com.nendo.argosy.ui.screens.common.GameLaunchRequest
 import com.nendo.argosy.data.preferences.UserPreferences
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.remote.romm.ConnectionState
@@ -69,6 +68,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -192,8 +192,7 @@ class ArgosyViewModel @Inject constructor(
     private val pendingConflictDao: com.nendo.argosy.data.local.dao.PendingConflictDao,
     val saveConflicts: com.nendo.argosy.ui.conflict.SaveConflictPrompts,
     private val deepLinkLaunchCoordinator: com.nendo.argosy.ui.deeplink.DeepLinkLaunchCoordinator,
-    private val emulatorLaunchTargetResolver:
-        com.nendo.argosy.ui.screens.common.EmulatorLaunchTargetResolver
+    private val gameStartRouter: com.nendo.argosy.ui.screens.common.GameStartRouter
 ) : ViewModel() {
 
     suspend fun resolveDeepLinkLaunch(
@@ -205,7 +204,6 @@ class ArgosyViewModel @Inject constructor(
     val netplayJoinState: StateFlow<com.nendo.argosy.data.netplay.NetplayJoinState> get() = netplayJoinService.state
 
     fun cancelNetplayJoin() = netplayJoinService.cancel()
-    fun resetNetplayJoin() = netplayJoinService.reset()
     fun netplayJoinService(): com.nendo.argosy.data.netplay.NetplayJoinService = netplayJoinService
 
     private val contentResolver get() = application.contentResolver
@@ -240,6 +238,7 @@ class ArgosyViewModel @Inject constructor(
         observeConnectionForSync()
         observeSocialConnectionForSync()
         observeNetplayInvites()
+        observeNetplayJoinLaunch()
         registerSettingsObserver()
     }
 
@@ -613,21 +612,25 @@ class ArgosyViewModel @Inject constructor(
     private val _netplayInviteFocusIndex = MutableStateFlow(0)
     val netplayInviteFocusIndex: StateFlow<Int> = _netplayInviteFocusIndex.asStateFlow()
 
-    private val _netplayInviteLaunch =
-        kotlinx.coroutines.flow.MutableSharedFlow<GameLaunchRequest>(extraBufferCapacity = 4)
-    val netplayInviteLaunch: kotlinx.coroutines.flow.SharedFlow<GameLaunchRequest> = _netplayInviteLaunch
-
     private val _coreCrashLaunch =
         kotlinx.coroutines.flow.MutableSharedFlow<Long>(extraBufferCapacity = 1)
     val coreCrashLaunch: kotlinx.coroutines.flow.SharedFlow<Long> = _coreCrashLaunch
-
-    suspend fun launchOptionsFor(gameId: Long): android.os.Bundle? =
-        emulatorLaunchTargetResolver.launchOptionsFor(gameId)
 
     fun launchFromCoreCrash() {
         val gameId = coreCrashController.prompt.value?.gameId ?: return
         coreCrashController.dismiss()
         _coreCrashLaunch.tryEmit(gameId)
+    }
+
+    private fun observeNetplayJoinLaunch() {
+        viewModelScope.launch {
+            netplayJoinService.state
+                .filterIsInstance<com.nendo.argosy.data.netplay.NetplayJoinState.LaunchReady>()
+                .collect { ready ->
+                    gameStartRouter.start(ready.gameId, ready.intent)
+                    netplayJoinService.reset()
+                }
+        }
     }
 
     private fun observeNetplayInvites() {
@@ -705,9 +708,7 @@ class ArgosyViewModel @Inject constructor(
                             putExtra(LibretroActivity.EXTRA_CORE_PATH, preflight.resolvedCorePath)
                         }
                     }
-                    _netplayInviteLaunch.tryEmit(
-                        GameLaunchRequest(decorated, emulatorLaunchTargetResolver.launchOptionsFor(gameId))
-                    )
+                    gameStartRouter.start(gameId, decorated)
                 }
                 is LaunchResult.Error -> {
                     notificationManager.show(
@@ -806,9 +807,7 @@ class ArgosyViewModel @Inject constructor(
                             putExtra(LibretroActivity.EXTRA_CORE_PATH, preflight.resolvedCorePath)
                         }
                     }
-                    _netplayInviteLaunch.tryEmit(
-                        GameLaunchRequest(decorated, emulatorLaunchTargetResolver.launchOptionsFor(game.id))
-                    )
+                    gameStartRouter.start(game.id, decorated)
                 }
                 is LaunchResult.Error -> {
                     notificationManager.show(

@@ -146,9 +146,7 @@ fun GameDetailScreen(
             when (event) {
                 is LaunchEvent.LaunchIntent -> {
                     try {
-                        if (!event.intent.getBooleanExtra("argosy.already_launched", false)) {
-                            context.startActivity(event.intent, event.options)
-                        }
+                        context.startActivity(event.intent)
                     } catch (e: Exception) {
                         viewModel.showLaunchError(
                             NotificationText.Res(

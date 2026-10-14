@@ -157,6 +157,15 @@ class DualScreenManager(
 
     private var activityContext: Context = context
 
+    private val gameActivityStarter =
+        com.nendo.argosy.ui.screens.common.GameActivityStarter(appContext) { activityContext }
+
+    /**
+     * Starts a resolved game request from the activity this manager is bound to.
+     */
+    fun startGame(request: com.nendo.argosy.ui.screens.common.GameLaunchRequest): Result<Unit> =
+        gameActivityStarter.start(request)
+
     private val dockCoordinator = com.nendo.argosy.ui.dualscreen.DockReorderCoordinator(
         activityIndependentScope, preferencesRepository, appsRepository,
         onSaveError = {
@@ -1414,10 +1423,6 @@ class DualScreenManager(
         private set
 
     /**
-     * What the presentation screen shows right now. A live session outranks everything, then the
-     * most recent published slot, then whatever screen is describing its selection.
-     */
-    /**
      * Whether the Primary surface on [primaryDisplayId] should show the in-game dashboard in place
      * of Home. It does only while a game runs on the presentation screen, which leaves the
      * dashboard nowhere else to go; a game on the app screen leaves the presentation screen free
@@ -1745,6 +1750,7 @@ class DualScreenManager(
      */
     fun endSessionAfterEmulatorLeft() {
         val emulatorPackage = sessionStateStore.getEmulatorPackage()
+        val endedSession = playSessionTracker.activeSession.value
         emulatorDisplayId = null
         sessionStateStore.clearSession()
         val sessionEnd = sessionEndCoordinator.endClosedSession()
@@ -1753,11 +1759,15 @@ class DualScreenManager(
         if (emulatorPackage == com.nendo.argosy.data.emulator.EmulatorRegistry.BUILTIN_PACKAGE) return
         scope.launch {
             sessionEnd.join()
-            repeat(EMULATOR_RELEASE_ATTEMPTS) {
-                if (sessionStateStore.hasActiveSession()) return@launch
-                sessionEndCoordinator.stopBackgroundEmulator(emulatorPackage)
-                delay(EMULATOR_RELEASE_INTERVAL_MS)
-            }
+            releaseStoppedEmulator(
+                emulatorPackage = emulatorPackage,
+                endedSession = endedSession,
+                activeSession = playSessionTracker.activeSession,
+                persistedSessionActive = { sessionStateStore.hasActiveSession() },
+                stop = { sessionEndCoordinator.stopBackgroundEmulator(it) },
+                attempts = EMULATOR_RELEASE_ATTEMPTS,
+                intervalMs = EMULATOR_RELEASE_INTERVAL_MS
+            )
         }
     }
 

@@ -267,7 +267,7 @@ fun LibraryScreen(
             when (event) {
                 is LibraryEvent.LaunchIntent -> {
                     try {
-                        context.startActivity(event.intent, event.options)
+                        context.startActivity(event.intent)
                     } catch (e: Exception) {
                         android.util.Log.e("LibraryScreen", "Failed to start activity", e)
                     }

@@ -115,7 +115,7 @@ class GameDetailViewModel @Inject constructor(
     private val repairImageCacheUseCase: RepairImageCacheUseCase,
     private val modalResetSignal: ModalResetSignal,
     private val titleIdDownloadObserver: com.nendo.argosy.data.emulator.TitleIdDownloadObserver,
-    private val emulatorLaunchTargetResolver: com.nendo.argosy.ui.screens.common.EmulatorLaunchTargetResolver,
+    private val gameStartRouter: com.nendo.argosy.ui.screens.common.GameStartRouter,
     private val gameDocumentLoader: com.nendo.argosy.data.repository.GameDocumentLoader,
     private val documentHighlightStore: com.nendo.argosy.data.repository.DocumentHighlightStore,
     val pickerModalDelegate: PickerModalDelegate,
@@ -1250,13 +1250,20 @@ class GameDetailViewModel @Inject constructor(
     ): com.nendo.argosy.ui.screens.common.LaunchResultCallbacks =
         com.nendo.argosy.ui.screens.common.LaunchResultCallbacks(
             onLaunch = { intent ->
-                viewModelScope.launch {
-                    val options = emulatorLaunchTargetResolver.launchOptionsFor(
-                        gameId = currentGameId,
-                        overrideDisplayId = overrideDisplayId
-                    )
-                    _launchEvents.emit(LaunchEvent.LaunchIntent(intent, options))
-                }
+                val notices = notificationManager
+                gameStartRouter.start(
+                    gameId = currentGameId,
+                    intent = intent,
+                    overrideDisplayId = overrideDisplayId,
+                    onFailure = { e ->
+                        notices.showError(
+                            NotificationText.Res(
+                                R.string.gamedetail_notice_launch_failed,
+                                listOf(e.message ?: "null")
+                            )
+                        )
+                    }
+                )
             },
             onSelectDisc = { discs -> pickerModalDelegate.showDiscPicker(discs) },
             onSelectVariant = { variants -> pickerModalDelegate.showVariantPicker(variants) },

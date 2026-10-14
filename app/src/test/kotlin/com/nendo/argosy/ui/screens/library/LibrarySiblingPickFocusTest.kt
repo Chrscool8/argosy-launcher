@@ -179,7 +179,7 @@ class LibrarySiblingPickFocusTest {
         steamContentManager = mockk(relaxed = true),
         steamDownloadPromptController = mockk(relaxed = true),
         downloadFileStatusRepository = mockk(relaxed = true),
-        emulatorLaunchTargetResolver = mockk(relaxed = true),
+        gameStartRouter = mockk(relaxed = true),
         siblingChoice = siblingChoice,
         socialRepository = mockk(relaxed = true),
         saveListStatusRepository = mockk(relaxed = true),

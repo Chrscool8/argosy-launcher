@@ -120,7 +120,7 @@ data class GameDetailUi(
 )
 
 sealed class LaunchEvent {
-    data class LaunchIntent(val intent: Intent, val options: android.os.Bundle? = null) : LaunchEvent()
+    data class LaunchIntent(val intent: Intent) : LaunchEvent()
     data object NavigateBack : LaunchEvent()
     data class OpenSaveTimeline(val gameId: Long) : LaunchEvent()
 }

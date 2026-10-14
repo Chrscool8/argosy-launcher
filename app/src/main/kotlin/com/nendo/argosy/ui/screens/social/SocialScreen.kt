@@ -158,14 +158,9 @@ fun SocialScreen(
     val notificationsListState = rememberLazyListState()
     val profileListState = rememberLazyListState()
 
-    val launchContext = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.launchEvents.collect { event ->
             when (event) {
-                is SocialLaunchEvent.LaunchIntent -> {
-                    event.intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    launchContext.startActivity(event.intent, event.options)
-                }
                 is SocialLaunchEvent.LaunchError -> {
                     viewModel.notificationManager.show(
                         title = NotificationText.Raw(event.message),

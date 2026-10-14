@@ -449,7 +449,7 @@ private const val MIN_SECTION_RAIL_LABELS = 3
 private const val FILTER_OPTION_PAGE = 5
 
 sealed class LibraryEvent {
-    data class LaunchIntent(val intent: Intent, val options: android.os.Bundle? = null) : LibraryEvent()
+    data class LaunchIntent(val intent: Intent) : LibraryEvent()
 }
 
 @HiltViewModel
@@ -458,7 +458,7 @@ class LibraryViewModel @Inject constructor(
     private val platformRepository: PlatformRepository,
     private val gameRepository: GameRepository,
     private val mediaRepository: MediaRepository,
-    private val emulatorLaunchTargetResolver: com.nendo.argosy.ui.screens.common.EmulatorLaunchTargetResolver,
+    private val gameStartRouter: com.nendo.argosy.ui.screens.common.GameStartRouter,
     private val collectionRepository: CollectionRepository,
     private val gameNavigationContext: GameNavigationContext,
     private val notificationManager: NotificationManager,
@@ -2127,12 +2127,7 @@ class LibraryViewModel @Inject constructor(
             scope = viewModelScope,
             gameId = gameId,
             channelName = channelName,
-            onLaunch = { intent ->
-                viewModelScope.launch {
-                    val options = emulatorLaunchTargetResolver.launchOptionsFor(gameId)
-                    _events.emit(LibraryEvent.LaunchIntent(intent, options))
-                }
-            }
+            onLaunch = { intent -> gameStartRouter.start(gameId, intent) }
         )
     }
 

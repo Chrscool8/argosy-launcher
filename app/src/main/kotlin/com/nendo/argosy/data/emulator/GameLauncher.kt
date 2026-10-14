@@ -49,7 +49,7 @@ import javax.inject.Singleton
 
 private const val TAG = "GameLauncher"
 private val PACKAGE_NAME = Regex("^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$")
-private const val EXTRA_ALREADY_LAUNCHED = "argosy.already_launched"
+internal const val EXTRA_ALREADY_LAUNCHED = "argosy.already_launched"
 private val DISC_TAG_REGEX = Regex("\\(Disc \\d+\\)", RegexOption.IGNORE_CASE)
 private val DISC_NUMBER_REGEX = Regex("\\d+")
 

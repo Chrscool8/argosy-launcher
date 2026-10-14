@@ -9,16 +9,12 @@ import com.nendo.argosy.domain.usecase.game.LaunchGameUseCase
 import com.nendo.argosy.domain.usecase.save.GetUnifiedSavesUseCase
 import com.nendo.argosy.ui.input.SoundFeedbackManager
 import com.nendo.argosy.core.input.SoundType
-import com.nendo.argosy.ui.screens.gamedetail.LaunchEvent
 import com.nendo.argosy.ui.screens.gamedetail.modals.PlayOptionAction
 import com.nendo.argosy.ui.screens.gamedetail.modals.buildPlayOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -60,9 +56,6 @@ class PlayOptionsDelegate @Inject constructor(
 ) {
     private val _state = MutableStateFlow(PlayOptionsState())
     val state: StateFlow<PlayOptionsState> = _state.asStateFlow()
-
-    private val _launchEvents = MutableSharedFlow<LaunchEvent>()
-    val launchEvents: SharedFlow<LaunchEvent> = _launchEvents.asSharedFlow()
 
     fun reset() {
         _state.value = PlayOptionsState()
