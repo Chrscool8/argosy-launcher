@@ -27,7 +27,11 @@ import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DockReorderCoordinatorTest {
-    private class Fixture(scope: TestScope, initialPreferences: Flow<UserPreferences>? = null) {
+    private class Fixture(
+        scope: TestScope,
+        initialPreferences: Flow<UserPreferences>? = null,
+        installedFails: Boolean = false
+    ) {
         val original = listOf("a", "missing", "b", "c")
         val prefs = MutableStateFlow(UserPreferences(secondaryHomeApps = original))
         val packages = MutableStateFlow(0)
@@ -41,6 +45,7 @@ class DockReorderCoordinatorTest {
             every { repository.userPreferences } returns (initialPreferences ?: prefs)
             every { apps.packageChanges } returns packages.map { "" }
             coEvery { apps.getInstalledApps(true) } coAnswers {
+                if (installedFails) throw IOException("package manager unavailable")
                 available.map { InstalledApp(it, it, false, false) }
             }
             coEvery { repository.reorderDockPins(any(), any()) } coAnswers {
@@ -60,6 +65,14 @@ class DockReorderCoordinatorTest {
         assertNull(fixture.coordinator.begin("a", false))
         delayed.emit(UserPreferences(secondaryHomeApps = listOf("c", "b", "a")))
         assertEquals(listOf("c", "b", "a"), fixture.coordinator.apps.value)
+    }
+
+    @Test
+    fun `saved pins show while the installed list is unknown, and reorder waits for it`() = runTest(UnconfinedTestDispatcher()) {
+        val fixture = Fixture(this, installedFails = true)
+
+        assertEquals(fixture.original, fixture.coordinator.apps.value)
+        assertNull(fixture.coordinator.begin("a", false))
     }
 
     @Test

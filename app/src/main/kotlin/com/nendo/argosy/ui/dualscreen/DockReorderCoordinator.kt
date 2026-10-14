@@ -29,7 +29,7 @@ class DockReorderCoordinator(
     private var nextToken = 0L
 
     val apps: StateFlow<List<String>> = combine(pins, installed, editing) { saved, available, edit ->
-        (edit?.order ?: saved.orEmpty()).filter { available?.contains(it) == true }
+        (edit?.order ?: saved.orEmpty()).filter { available == null || it in available }
     }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     init {
