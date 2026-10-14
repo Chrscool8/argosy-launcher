@@ -73,6 +73,17 @@ class HomeRefreshFocusTest {
     }
 
     @Test
+    fun `games added in front during a library scan leave the cursor on the game it was on`() {
+        val state = grid(listOf(1L, 2L, 3L), focusedIndex = 0)
+
+        val firstBatch = state.relisted(listOf(4L, 1L, 2L, 3L), state.focusedGame?.id)
+        val secondBatch = firstBatch.relisted(listOf(6L, 5L, 4L, 1L, 2L, 3L), firstBatch.focusedGame?.id)
+
+        assertEquals(1L, secondBatch.focusedGame?.id)
+        assertEquals(3, secondBatch.focusedGameIndex)
+    }
+
+    @Test
     fun `a row with nothing loaded yet leaves the cursor where it is`() {
         val state = grid(listOf(1L, 2L, 3L), focusedIndex = 2)
 

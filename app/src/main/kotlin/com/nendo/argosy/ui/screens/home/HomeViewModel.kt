@@ -710,11 +710,13 @@ class HomeViewModel @Inject constructor(
         libraryDelegate.observeRecentlyPlayedChanges(viewModelScope) { validated ->
             _uiState.update { state ->
                 val newState = state.copy(recentGames = validated)
-                if (state.currentRow == HomeRow.Continue && validated.isEmpty()) {
-                    val newRow = newState.availableRows.firstOrNull() ?: HomeRow.Continue
-                    newState.copy(currentRow = newRow, focusedGameIndex = 0)
-                } else {
-                    newState
+                when {
+                    state.currentRow != HomeRow.Continue -> newState
+                    validated.isEmpty() -> {
+                        val newRow = newState.availableRows.firstOrNull() ?: HomeRow.Continue
+                        newState.copy(currentRow = newRow, focusedGameIndex = 0)
+                    }
+                    else -> newState.keepingFocusOn(state.focusedGame?.id)
                 }
             }
             refreshTileGamesAndFeatures()
