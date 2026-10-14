@@ -8,8 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.nendo.argosy.data.local.dao.AchievementDao
 import com.nendo.argosy.data.local.dao.GameDao
+import com.nendo.argosy.data.remote.ra.RAPatchData
 import com.nendo.argosy.data.repository.RAAwardResult
+import com.nendo.argosy.data.repository.RAPatchFetchResult
 import com.nendo.argosy.data.repository.RetroAchievementsRepository
+import com.nendo.argosy.data.sync.AchievementSubmissionWorker
 import com.nendo.argosy.domain.usecase.achievement.VerifyRAGameIdUseCase
 import com.nendo.argosy.data.social.SocialRepository
 import com.nendo.argosy.hardware.AmbientLedManager
@@ -47,7 +50,8 @@ class RetroAchievementsSessionManager(
     private val ambientLedManager: AmbientLedManager,
     private val socialRepository: SocialRepository,
     private val scope: CoroutineScope,
-    private val context: Context
+    private val context: Context,
+    private val achievementRuntime: AchievementRuntime = NativeAchievementRuntime
 ) {
     private val achievementInfo = mutableMapOf<Long, AchievementPatchInfo>()
     private val achievementUnlockQueue = mutableListOf<AchievementUnlock>()
@@ -117,81 +121,118 @@ class RetroAchievementsSessionManager(
                 return@launch
             }
 
-            Log.d(TAG, "Starting RA session for raId=$gameRaId, hardcore=$requestedHardcore")
-            val sessionResult = raRepository.startSession(gameRaId!!, requestedHardcore)
+            val raId = gameRaId!!
+            Log.d(TAG, "Starting RA session for raId=$raId, hardcore=$requestedHardcore")
+            val sessionResult = raRepository.startSession(raId, requestedHardcore)
             if (sessionResult.success) {
                 raSessionActive = true
-                _sessionMode.value = if (requestedHardcore) RASessionMode.HARDCORE else RASessionMode.CASUAL
-                val preUnlocked = sessionResult.unlockedAchievements
-                Log.d(TAG, "RA session started for game $gameRaId (hardcore=$isHardcore), pre-unlocked=${preUnlocked.size}: $preUnlocked")
-
-                val patchData = raRepository.getGamePatchData(gameRaId!!)
-                if (patchData != null) {
-                    val validAchievements = patchData.achievements?.filter { ach ->
-                        !ach.title.contains("Unknown Emulator", ignoreCase = true) &&
-                        !ach.title.contains("Emulator Warning", ignoreCase = true) &&
-                        ach.memAddr.isNotBlank()
-                    } ?: emptyList()
-
-                    validAchievements.forEach { patch ->
-                        achievementInfo[patch.id] = AchievementPatchInfo(
-                            title = patch.title,
-                            description = patch.description,
-                            points = patch.points,
-                            badgeName = patch.badgeName
-                        )
-                    }
-
-                    totalAchievements = validAchievements.size
-                    val validIds = validAchievements.map { a -> a.id }.toSet()
-                    earnedAchievements = preUnlocked.count { it in validIds }
-
-                    val now = System.currentTimeMillis()
-                    val ownerUserId = raRepository.activeOwnerUserId()
-                    for (achId in preUnlocked) {
-                        if (achId in validIds) {
-                            if (isHardcore) {
-                                achievementDao.markUnlockedHardcore(gameId, achId, ownerUserId, now)
-                            } else {
-                                achievementDao.markUnlocked(gameId, achId, ownerUserId, now)
-                            }
-                        }
-                    }
-                    overlayWriter.updateAchievementCount(gameId, totalAchievements, earnedAchievements)
-
-                    raConnectionInfo = RAConnectionInfo(
-                        isHardcore = isHardcore,
-                        earnedCount = earnedAchievements,
-                        totalCount = totalAchievements
-                    )
-
-                    val toWatch = validAchievements
-                        .filter { it.id !in preUnlocked }
-
-                    val consoleId = patchData.consoleId
-                    if (toWatch.isNotEmpty() && consoleId != null) {
-                        val achievementDefs = toWatch.map { patch ->
-                            com.swordfish.libretrodroid.AchievementDef(patch.id, patch.memAddr)
-                        }.toTypedArray()
-
-                        Log.d(TAG, "Sending ${achievementDefs.size} achievements to native for console $consoleId")
-                        com.swordfish.libretrodroid.LibretroDroid.initAchievements(achievementDefs, consoleId)
-                        cachedAchievementDefs = achievementDefs
-                        cachedConsoleId = consoleId
-
-                        retroView.achievementUnlockListener = { achievementId ->
-                            onAchievementUnlocked(achievementId)
-                        }
-                    } else {
-                        Log.d(TAG, "No achievements to watch (all pre-unlocked)")
-                    }
-                }
-
-                startHeartbeatLoop()
             } else {
-                Log.w(TAG, "Failed to start RA session")
+                Log.w(TAG, "Failed to start RA session; arming from definitions alone")
+            }
+
+            val livePatch = (raRepository.fetchPatchData(raId) as? RAPatchFetchResult.Fetched)?.patchData
+            val patchData = livePatch ?: raRepository.getCachedPatchData(raId)
+            val armedFromCache = livePatch == null && patchData != null
+            val claimsHardcore = requestedHardcore && sessionResult.success && !armedFromCache
+            val fellBackFromHardcore = requestedHardcore && !claimsHardcore
+            if (claimsHardcore) {
+                _sessionMode.value = RASessionMode.HARDCORE
+            } else {
                 resolveWithoutHardcore()
             }
+
+            val preUnlocked = if (sessionResult.success) {
+                sessionResult.unlockedAchievements
+            } else {
+                raRepository.getCachedAchievements(gameId)
+                    .filter { it.isUnlocked }
+                    .map { it.raId }
+                    .toSet()
+            }
+            Log.d(TAG, "RA game $raId: session=${sessionResult.success}, hardcore=$isHardcore, fromCache=$armedFromCache, pre-unlocked=${preUnlocked.size}")
+
+            if (patchData != null) {
+                armAchievements(
+                    retroView = retroView,
+                    patchData = patchData,
+                    preUnlocked = preUnlocked,
+                    recordPreUnlocked = sessionResult.success,
+                    announceConnection = sessionResult.success && !fellBackFromHardcore
+                )
+            }
+
+            if (raSessionActive) {
+                startHeartbeatLoop()
+            }
+        }
+    }
+
+    private suspend fun armAchievements(
+        retroView: GLRetroView,
+        patchData: RAPatchData,
+        preUnlocked: Set<Long>,
+        recordPreUnlocked: Boolean,
+        announceConnection: Boolean
+    ) {
+        val validAchievements = patchData.achievements?.filter { ach ->
+            !ach.title.contains("Unknown Emulator", ignoreCase = true) &&
+            !ach.title.contains("Emulator Warning", ignoreCase = true) &&
+            ach.memAddr.isNotBlank()
+        } ?: emptyList()
+
+        validAchievements.forEach { patch ->
+            achievementInfo[patch.id] = AchievementPatchInfo(
+                title = patch.title,
+                description = patch.description,
+                points = patch.points,
+                badgeName = patch.badgeName
+            )
+        }
+
+        totalAchievements = validAchievements.size
+        val validIds = validAchievements.map { a -> a.id }.toSet()
+        earnedAchievements = preUnlocked.count { it in validIds }
+
+        if (recordPreUnlocked) {
+            val now = System.currentTimeMillis()
+            val ownerUserId = raRepository.activeOwnerUserId()
+            for (achId in preUnlocked) {
+                if (achId in validIds) {
+                    if (isHardcore) {
+                        achievementDao.markUnlockedHardcore(gameId, achId, ownerUserId, now)
+                    } else {
+                        achievementDao.markUnlocked(gameId, achId, ownerUserId, now)
+                    }
+                }
+            }
+        }
+        overlayWriter.updateAchievementCount(gameId, totalAchievements, earnedAchievements)
+
+        if (announceConnection) {
+            raConnectionInfo = RAConnectionInfo(
+                isHardcore = isHardcore,
+                earnedCount = earnedAchievements,
+                totalCount = totalAchievements
+            )
+        }
+
+        val toWatch = validAchievements.filter { it.id !in preUnlocked }
+        val consoleId = patchData.consoleId
+        if (toWatch.isNotEmpty() && consoleId != null) {
+            val achievementDefs = toWatch.map { patch ->
+                com.swordfish.libretrodroid.AchievementDef(patch.id, patch.memAddr)
+            }.toTypedArray()
+
+            Log.d(TAG, "Sending ${achievementDefs.size} achievements to native for console $consoleId")
+            achievementRuntime.arm(achievementDefs, consoleId)
+            cachedAchievementDefs = achievementDefs
+            cachedConsoleId = consoleId
+
+            retroView.achievementUnlockListener = { achievementId ->
+                onAchievementUnlocked(achievementId)
+            }
+        } else {
+            Log.d(TAG, "No achievements to watch (all pre-unlocked)")
         }
     }
 
@@ -372,7 +413,7 @@ class RetroAchievementsSessionManager(
         pausedForNetplay = true
         heartbeatJob?.cancel()
         heartbeatJob = null
-        com.swordfish.libretrodroid.LibretroDroid.clearAchievements()
+        achievementRuntime.clear()
         cachedRetroView?.achievementUnlockListener = null
         Log.d(TAG, "RA paused for netplay")
     }
@@ -384,7 +425,7 @@ class RetroAchievementsSessionManager(
         val consoleId = cachedConsoleId
         val view = cachedRetroView
         if (defs != null && consoleId != null && view != null && gameRaId != null) {
-            com.swordfish.libretrodroid.LibretroDroid.initAchievements(defs, consoleId)
+            achievementRuntime.arm(defs, consoleId)
             view.achievementUnlockListener = { achievementId ->
                 onAchievementUnlocked(achievementId)
             }
@@ -404,7 +445,10 @@ class RetroAchievementsSessionManager(
         cachedAchievementDefs = null
         cachedConsoleId = null
         cachedRetroView = null
-        com.swordfish.libretrodroid.LibretroDroid.clearAchievements()
+        achievementRuntime.clear()
+        if (gameRaId != null) {
+            AchievementSubmissionWorker.schedule(context)
+        }
     }
 
     companion object {

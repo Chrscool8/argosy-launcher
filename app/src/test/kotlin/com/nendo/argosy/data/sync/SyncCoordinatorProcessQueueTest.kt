@@ -296,6 +296,25 @@ class SyncCoordinatorProcessQueueTest {
     }
 
     @Test
+    fun `an ACHIEVEMENT row is left for the RetroAchievements drain, never deleted or failed here`() = runTest {
+        val row = PendingSyncQueueEntity(
+            id = 44L, gameId = 1L, rommId = 0L,
+            syncType = SyncType.ACHIEVEMENT, priority = SyncPriority.PROPERTY,
+            payloadJson = payloadCodec.encode(AchievementPayload(achievementRaId = 9L, forHardcoreMode = false, earnedAt = 1L)),
+            status = SyncStatus.PENDING,
+            createdAt = Instant.now(), updatedAt = Instant.now(),
+        )
+        coEvery { pendingSyncQueueDao.getPendingByPriorityTier(SyncPriority.PROPERTY) } returns listOf(row)
+
+        coordinator.processQueue()
+
+        coVerify(exactly = 0) { pendingSyncQueueDao.deleteById(44L) }
+        coVerify(exactly = 0) { pendingSyncQueueDao.markInProgress(44L, any()) }
+        coVerify(exactly = 0) { pendingSyncQueueDao.markFailed(44L, any(), any()) }
+        coVerify(exactly = 0) { pendingSyncQueueDao.markCompleted(44L, any()) }
+    }
+
+    @Test
     fun `returns NotConnected when RomM is not connected`() = runTest {
         connectionState.value = ConnectionState.Disconnected
 

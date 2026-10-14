@@ -4225,6 +4225,20 @@ object Migration_212_213 : Migration(212, 213) {
     }
 }
 
+object Migration_213_214 : Migration(213, 214) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `ra_patch_cache` (" +
+                "`raGameId` INTEGER NOT NULL, `ownerUserId` INTEGER NOT NULL, " +
+                "`patchJson` TEXT NOT NULL, `fetchedAt` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`raGameId`, `ownerUserId`))"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_ra_patch_cache_ownerUserId` ON `ra_patch_cache` (`ownerUserId`)"
+        )
+    }
+}
+
 object Migration_203_204 : Migration(203, 204) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(

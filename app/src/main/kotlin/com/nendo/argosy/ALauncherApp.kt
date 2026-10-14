@@ -151,6 +151,12 @@ class ArgosyApp : Application(), Configuration.Provider, ImageLoaderFactory {
     lateinit var siblingGroupDownloadObserver: com.nendo.argosy.data.repository.SiblingGroupDownloadObserver
 
     @Inject
+    lateinit var raPatchDownloadObserver: com.nendo.argosy.data.repository.RAPatchDownloadObserver
+
+    @Inject
+    lateinit var raRepository: com.nendo.argosy.data.repository.RetroAchievementsRepository
+
+    @Inject
     lateinit var variantFileCleanup: com.nendo.argosy.data.emulator.VariantFileCleanup
 
     @Inject
@@ -189,6 +195,12 @@ class ArgosyApp : Application(), Configuration.Provider, ImageLoaderFactory {
         pushInstallCoordinator.start()
         siblingGroupRepository.start()
         siblingGroupDownloadObserver.start()
+        raPatchDownloadObserver.start()
+        appScope.launch {
+            if (raRepository.isLoggedIn()) {
+                com.nendo.argosy.data.sync.RAPatchBackfillWorker.schedule(this@ArgosyApp)
+            }
+        }
         lockScreenArtManager.start()
         appScope.launch {
             val storedOverride = builtinPrefs.getArchitectureOverride().first()

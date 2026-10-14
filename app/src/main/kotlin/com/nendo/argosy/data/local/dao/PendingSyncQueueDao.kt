@@ -86,7 +86,7 @@ interface PendingSyncQueueDao {
 
     @Query("""
         DELETE FROM pending_sync_queue
-        WHERE status = 'FAILED' AND retryCount >= maxRetries
+        WHERE status = 'FAILED' AND retryCount >= maxRetries AND syncType != 'ACHIEVEMENT'
     """)
     suspend fun deleteExhaustedRetries()
 
@@ -114,11 +114,28 @@ interface PendingSyncQueueDao {
     """)
     suspend fun getRetryableBySyncType(syncType: SyncType): List<PendingSyncQueueEntity>
 
-    @Query("SELECT COUNT(*) FROM pending_sync_queue WHERE syncType = :syncType AND status = 'PENDING'")
-    suspend fun countPendingBySyncType(syncType: SyncType): Int
+    @Query("""
+        SELECT * FROM pending_sync_queue
+        WHERE syncType = :syncType AND status IN ('PENDING', 'FAILED')
+        ORDER BY createdAt ASC
+    """)
+    suspend fun getUnsubmittedBySyncType(syncType: SyncType): List<PendingSyncQueueEntity>
 
-    @Query("SELECT COUNT(*) FROM pending_sync_queue WHERE syncType = :syncType AND status = 'PENDING'")
-    fun observePendingCountBySyncType(syncType: SyncType): Flow<Int>
+    @Query("SELECT COUNT(*) FROM pending_sync_queue WHERE syncType = :syncType AND status IN ('PENDING', 'FAILED')")
+    suspend fun countUnsubmittedBySyncType(syncType: SyncType): Int
+
+    @Query("SELECT COUNT(*) FROM pending_sync_queue WHERE syncType = :syncType AND status IN ('PENDING', 'FAILED')")
+    fun observeUnsubmittedCountBySyncType(syncType: SyncType): Flow<Int>
+
+    @Query("""
+        UPDATE pending_sync_queue
+        SET status = 'PENDING',
+            lastError = :error,
+            retryCount = retryCount + 1,
+            updatedAt = :now
+        WHERE id = :id
+    """)
+    suspend fun recordRetryableFailure(id: Long, error: String?, now: Instant = Instant.now())
 
     @Query("DELETE FROM pending_sync_queue WHERE gameId = :gameId")
     suspend fun deleteByGameId(gameId: Long)

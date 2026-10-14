@@ -197,6 +197,7 @@ class AccountRemovalService @Inject constructor(
             database.pendingSocialSyncDao().deleteByOwner(ownerUserId)
             database.playSessionDao().deleteByOwner(ownerUserId)
             database.achievementDao().deleteByOwner(ownerUserId)
+            database.raPatchCacheDao().deleteByOwner(ownerUserId)
             database.saveOwnershipDao().deleteByOwner(ownerUserId)
             database.saveSyncDao().deleteByOwner(ownerUserId)
             database.stateCacheDao().deleteByOwner(ownerUserId)

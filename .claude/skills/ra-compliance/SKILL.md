@@ -318,6 +318,33 @@ grep -rn "hardcore" app/src/main/kotlin/com/nendo/argosy/libretro/speedrun/
 - **Boundary**: the fallback only ever DOWNGRADES (`earnedHardcore = false`);
   nothing may promote a casual unlock to hardcore after the fact.
 
+### 4.4 Casual achievements arm without a session
+
+- **Rule**: achievements are armed from definitions the server just sent.
+- **Exception**: `RetroAchievementsSessionManager.initialize` arms from the
+  cached `r=patch` answer (`ra_patch_cache`, read through
+  `RetroAchievementsRepository.getCachedPatchData`) when the live fetch fails,
+  and arms whether or not `startSession` succeeded. Without a session the
+  already-unlocked set comes from the local `achievements` rows
+  (`getCachedAchievements`), and unlocks queue through `queueAchievement`.
+- **Why**: casual unlocks may be submitted after the fact; RA forbids that
+  only for hardcore (4.3).
+- **Boundary**: a session armed from the cache is CASUAL even when the server
+  confirmed a hardcore session (`claimsHardcore` requires live definitions),
+  so every unlock it produces is submitted with `forHardcoreMode = false`.
+  Cached definitions pass the same filter as live ones (Unknown Emulator,
+  Emulator Warning, blank MemAddr) because both go through `armAchievements`.
+  Queued ACHIEVEMENT rows leave `pending_sync_queue` only when RA accepts them,
+  reports them already awarded, or rejects them under a status
+  `rc_client_should_retry` does not retry (auth refusals excepted);
+  `SyncCoordinator.processQueue` never touches them.
+
+```bash
+grep -n "claimsHardcore\|armedFromCache\|getCachedPatchData" app/src/main/kotlin/com/nendo/argosy/libretro/RetroAchievementsSessionManager.kt
+grep -n "syncType != 'ACHIEVEMENT'" app/src/main/kotlin/com/nendo/argosy/data/local/dao/PendingSyncQueueDao.kt
+grep -n "SyncType.ACHIEVEMENT" app/src/main/kotlin/com/nendo/argosy/data/sync/SyncCoordinator.kt
+```
+
 ---
 
 ## 5. Adjacent gates
@@ -336,7 +363,7 @@ grep -rn "hardcore" app/src/main/kotlin/com/nendo/argosy/libretro/speedrun/
   netplay check, so hardcore compliance does not depend on the role.
 - **RA session carries the flag, not the heartbeat**:
   `RetroAchievementsSessionManager` starts the session with `requestedHardcore`
-  (`raRepository.startSession(gameRaId!!, requestedHardcore)`, sent as
+  (`raRepository.startSession(raId, requestedHardcore)`, sent as
   `hardcore = 0/1`); awards send `forHardcoreMode`; the periodic
   `sendHeartbeat` carries no mode. Unlocks are stored split
   (`markUnlockedHardcore` vs `markUnlocked`) and social/LED surfaces receive
@@ -448,6 +475,18 @@ Run when hardcore logic changed. Log tag anchors:
 1. With the network dropped mid-session, unlock an achievement in hardcore:
    verify the casual fallback path logs and the local unlock is casual, not
    hardcore.
+
+### Offline casual (cached definitions)
+1. Online, download a built-in RA game (or launch it once). Confirm a
+   `ra_patch_cache` row exists for its RA id.
+2. Turn networking off and launch it casual. Logs show `fromCache=true`;
+   already-earned achievements are not re-armed.
+3. Unlock an achievement: the unlock toast shows, a `pending_sync_queue`
+   ACHIEVEMENT row appears, and the row survives several failed drains.
+4. "New Hardcore" still refuses to confirm offline. A hardcore launch whose
+   session starts but whose `r=patch` fails runs CASUAL.
+5. Reconnect and exit the game: `AchievementSubmissionWorker` submits the
+   row with `h=0` and deletes it.
 
 ---
 

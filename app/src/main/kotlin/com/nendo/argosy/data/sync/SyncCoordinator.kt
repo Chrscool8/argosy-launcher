@@ -304,6 +304,7 @@ class SyncCoordinator @Inject constructor(
             }
             for (priority in priorities) {
                 val items = pendingSyncQueueDao.getPendingByPriorityTier(priority)
+                    .filterNot { it.syncType == SyncType.ACHIEVEMENT }
                 if (items.isNotEmpty()) Logger.debug(TAG, "processQueue: Processing ${items.size} items at priority $priority")
 
                 for ((index, item) in items.withIndex()) {
@@ -391,7 +392,7 @@ class SyncCoordinator @Inject constructor(
                 SyncType.STATUS -> processProperty(item, signedInUserId)
                 SyncType.FAVORITE -> processFavorite(item, signedInUserId)
                 SyncType.HIDDEN -> processHidden(item, signedInUserId)
-                SyncType.ACHIEVEMENT -> processAchievement(item)
+                SyncType.ACHIEVEMENT -> false
                 SyncType.SCREENSHOT -> processScreenshot(item, signedInUserId)
             }
         } catch (e: Exception) {
@@ -720,13 +721,6 @@ class SyncCoordinator @Inject constructor(
         if (swept > 0) {
             Logger.info(TAG, "cleanupScreenshotArtifacts: swept $swept orphaned pending screenshots")
         }
-    }
-
-    private suspend fun processAchievement(item: PendingSyncQueueEntity): Boolean {
-        // Achievement sync would go to RetroAchievements API, not RomM
-        // For now, just mark as processed - this can be expanded later
-        Logger.debug(TAG, "processAchievement: Achievement sync not yet implemented")
-        return true
     }
 
     private suspend fun clearChainDirtyFlags(cache: SaveCacheEntity) {

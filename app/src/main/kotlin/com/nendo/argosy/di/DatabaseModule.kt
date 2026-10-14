@@ -135,6 +135,10 @@ object DatabaseModule {
         database.achievementDao()
 
     @Provides
+    fun provideRAPatchCacheDao(database: ALauncherDatabase): com.nendo.argosy.data.local.dao.RAPatchCacheDao =
+        database.raPatchCacheDao()
+
+    @Provides
     fun provideSaveCacheDao(database: ALauncherDatabase): SaveCacheDao =
         database.saveCacheDao()
 

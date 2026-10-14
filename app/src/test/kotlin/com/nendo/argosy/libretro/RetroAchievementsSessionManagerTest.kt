@@ -4,17 +4,29 @@ import android.content.Context
 import com.nendo.argosy.core.event.AchievementUpdateBus
 import com.nendo.argosy.data.local.dao.AchievementDao
 import com.nendo.argosy.data.local.dao.GameDao
+import com.nendo.argosy.data.local.entity.AchievementEntity
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.model.GameSource
+import com.nendo.argosy.data.remote.ra.RAAchievementPatch
+import com.nendo.argosy.data.remote.ra.RAPatchData
 import com.nendo.argosy.data.repository.GameUserOverlayWriter
+import com.nendo.argosy.data.repository.RAAwardResult
+import com.nendo.argosy.data.repository.RAPatchFetchResult
 import com.nendo.argosy.data.repository.RetroAchievementsRepository
 import com.nendo.argosy.data.social.SocialRepository
 import com.nendo.argosy.domain.usecase.achievement.VerifyRAGameIdUseCase
 import com.nendo.argosy.hardware.AmbientLedManager
+import com.swordfish.libretrodroid.AchievementDef
 import com.swordfish.libretrodroid.GLRetroView
+import io.mockk.CapturingSlot
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -26,6 +38,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,8 +46,14 @@ class RetroAchievementsSessionManagerTest {
 
     private class Harness(
         val manager: RetroAchievementsSessionManager,
-        val raRepository: RetroAchievementsRepository
-    )
+        val raRepository: RetroAchievementsRepository,
+        val achievementDao: AchievementDao,
+        val runtime: AchievementRuntime,
+        private val armed: CapturingSlot<Array<AchievementDef>>
+    ) {
+        val armedIds: Set<Long>?
+            get() = if (armed.isCaptured) armed.captured.map { it.id }.toSet() else null
+    }
 
     private fun game(raId: Long?) = GameEntity(
         id = 1L,
@@ -48,38 +67,74 @@ class RetroAchievementsSessionManagerTest {
         source = GameSource.ROMM_SYNCED
     )
 
+    private fun patch(vararg achievements: RAAchievementPatch) = RAPatchData(
+        id = 4242L,
+        consoleId = 5,
+        achievements = achievements.toList()
+    )
+
+    private fun achievement(id: Long, title: String = "Achievement $id", memAddr: String = "0xH00$id=1") =
+        RAAchievementPatch(id = id, memAddr = memAddr, title = title, points = 5)
+
+    private fun storedRow(raId: Long, unlockedAt: Long? = null, unlockedHardcoreAt: Long? = null) =
+        AchievementEntity(
+            gameId = 1L,
+            raId = raId,
+            title = "Achievement $raId",
+            description = null,
+            points = 5,
+            type = null,
+            badgeUrl = null,
+            badgeUrlLock = null,
+            unlockedAt = unlockedAt,
+            unlockedHardcoreAt = unlockedHardcoreAt
+        )
+
     private fun build(
         scope: CoroutineScope,
         requestedHardcore: Boolean,
         loggedIn: Boolean = true,
         raId: Long? = 4242L,
-        startSucceeds: Boolean = true
+        startSucceeds: Boolean = true,
+        serverUnlocks: Set<Long> = emptySet(),
+        liveFetch: RAPatchFetchResult = RAPatchFetchResult.Unavailable,
+        cachedPatch: RAPatchData? = null,
+        storedRows: List<AchievementEntity> = emptyList()
     ): Harness {
         val gameDao = mockk<GameDao>(relaxed = true)
         val raRepository = mockk<RetroAchievementsRepository>(relaxed = true)
+        val achievementDao = mockk<AchievementDao>(relaxed = true)
+        val runtime = mockk<AchievementRuntime>(relaxed = true)
+        val armed = slot<Array<AchievementDef>>()
+        every { runtime.arm(capture(armed), any()) } just Runs
         val verifyRAGameIdUseCase = mockk<VerifyRAGameIdUseCase>()
         coEvery { raRepository.isLoggedIn() } returns loggedIn
         coEvery { gameDao.getById(1L) } returns game(raId)
         coEvery { verifyRAGameIdUseCase.invoke(any(), any()) } returns null
         coEvery { raRepository.startSession(any(), any()) } returns
-            RetroAchievementsRepository.RASessionResult(success = startSucceeds)
-        coEvery { raRepository.getGamePatchData(any()) } returns null
+            RetroAchievementsRepository.RASessionResult(success = startSucceeds, unlockedAchievements = serverUnlocks)
+        coEvery { raRepository.fetchPatchData(any()) } returns liveFetch
+        coEvery { raRepository.getCachedPatchData(any()) } returns cachedPatch
+        coEvery { raRepository.getCachedAchievements(1L) } returns storedRows
+        coEvery { raRepository.activeOwnerUserId() } returns 7L
+        coEvery { raRepository.awardAchievement(any(), any(), any()) } returns RAAwardResult.Error("offline")
         val manager = RetroAchievementsSessionManager(
             gameId = 1L,
             romPath = "/roms/test.gba",
             requestedHardcore = requestedHardcore,
             gameDao = gameDao,
             overlayWriter = mockk<GameUserOverlayWriter>(relaxed = true),
-            achievementDao = mockk<AchievementDao>(relaxed = true),
+            achievementDao = achievementDao,
             raRepository = raRepository,
             verifyRAGameIdUseCase = verifyRAGameIdUseCase,
             achievementUpdateBus = mockk<AchievementUpdateBus>(relaxed = true),
             ambientLedManager = mockk<AmbientLedManager>(relaxed = true),
             socialRepository = mockk<SocialRepository>(relaxed = true),
             scope = scope,
-            context = mockk<Context>(relaxed = true)
+            context = mockk<Context>(relaxed = true),
+            achievementRuntime = runtime
         )
-        return Harness(manager, raRepository)
+        return Harness(manager, raRepository, achievementDao, runtime, armed)
     }
 
     @Test
@@ -163,6 +218,148 @@ class RetroAchievementsSessionManagerTest {
 
         assertEquals(RASessionMode.CASUAL, harness.manager.sessionMode.value)
         assertNull(harness.manager.raConnectionInfo)
+        scope.cancel()
+    }
+
+    @Test
+    fun aFailedStartArmsFromTheCacheWithTheLivePathFilters() = runTest {
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        val harness = build(
+            scope,
+            requestedHardcore = false,
+            startSucceeds = false,
+            liveFetch = RAPatchFetchResult.RetryLater,
+            cachedPatch = patch(
+                achievement(1L),
+                achievement(2L),
+                achievement(90L, title = "Unknown Emulator"),
+                achievement(91L, title = "Emulator Warning: core"),
+                achievement(92L, memAddr = " ")
+            )
+        )
+
+        harness.manager.initialize(mockk<GLRetroView>(relaxed = true))
+        runCurrent()
+
+        assertEquals(setOf(1L, 2L), harness.armedIds)
+        verify { harness.runtime.arm(any(), 5) }
+        assertEquals(2, harness.manager.totalAchievements)
+        assertEquals(RASessionMode.CASUAL, harness.manager.sessionMode.value)
+        assertFalse(harness.manager.raSessionActive)
+        scope.cancel()
+    }
+
+    @Test
+    fun liveDefinitionsWinOverTheCacheWhenTheFetchSucceeds() = runTest {
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        val harness = build(
+            scope,
+            requestedHardcore = false,
+            startSucceeds = false,
+            liveFetch = RAPatchFetchResult.Fetched(patch(achievement(3L))),
+            cachedPatch = patch(achievement(1L), achievement(2L))
+        )
+
+        harness.manager.initialize(mockk<GLRetroView>(relaxed = true))
+        runCurrent()
+
+        assertEquals(setOf(3L), harness.armedIds)
+        coVerify(exactly = 0) { harness.raRepository.getCachedPatchData(any()) }
+        scope.cancel()
+    }
+
+    @Test
+    fun offlineArmingSkipsEveryAchievementTheLocalDatabaseAlreadyHasUnlocked() = runTest {
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        val harness = build(
+            scope,
+            requestedHardcore = false,
+            startSucceeds = false,
+            liveFetch = RAPatchFetchResult.RetryLater,
+            cachedPatch = patch(achievement(1L), achievement(2L), achievement(3L)),
+            storedRows = listOf(
+                storedRow(1L, unlockedAt = 10L),
+                storedRow(2L, unlockedHardcoreAt = 20L),
+                storedRow(3L)
+            )
+        )
+
+        harness.manager.initialize(mockk<GLRetroView>(relaxed = true))
+        runCurrent()
+
+        assertEquals(setOf(3L), harness.armedIds)
+        assertEquals(2, harness.manager.earnedAchievements)
+        coVerify(exactly = 0) { harness.achievementDao.markUnlocked(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { harness.achievementDao.markUnlockedHardcore(any(), any(), any(), any()) }
+        scope.cancel()
+    }
+
+    @Test
+    fun aConfirmedHardcoreSessionArmedFromTheCacheRunsCasualAndAwardsCasual() = runTest {
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        val harness = build(
+            scope,
+            requestedHardcore = true,
+            startSucceeds = true,
+            liveFetch = RAPatchFetchResult.RetryLater,
+            cachedPatch = patch(achievement(1L))
+        )
+        val view = mockk<GLRetroView>(relaxed = true)
+        val listeners = mutableListOf<((Long) -> Unit)?>()
+        every { view.achievementUnlockListener = captureNullable(listeners) } just Runs
+
+        harness.manager.initialize(view)
+        runCurrent()
+
+        assertEquals(RASessionMode.CASUAL, harness.manager.sessionMode.value)
+        assertEquals(setOf(1L), harness.armedIds)
+        assertFalse(harness.manager.raConnectionInfo!!.connected)
+
+        listeners.filterNotNull().single().invoke(1L)
+        runCurrent()
+
+        coVerify(exactly = 1) { harness.raRepository.awardAchievement(1L, 1L, false) }
+        coVerify(exactly = 0) { harness.raRepository.awardAchievement(any(), any(), true) }
+        scope.cancel()
+    }
+
+    @Test
+    fun aRefusedHardcoreStartArmedFromTheCacheNeverClaimsHardcore() = runTest {
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        val harness = build(
+            scope,
+            requestedHardcore = true,
+            startSucceeds = false,
+            liveFetch = RAPatchFetchResult.RetryLater,
+            cachedPatch = patch(achievement(1L))
+        )
+
+        harness.manager.initialize(mockk<GLRetroView>(relaxed = true))
+        runCurrent()
+
+        assertEquals(RASessionMode.CASUAL, harness.manager.sessionMode.value)
+        assertEquals(setOf(1L), harness.armedIds)
+        assertFalse(harness.manager.raConnectionInfo!!.isHardcore)
+        scope.cancel()
+    }
+
+    @Test
+    fun aHardcoreSessionWithLiveDefinitionsStaysHardcore() = runTest {
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        val harness = build(
+            scope,
+            requestedHardcore = true,
+            startSucceeds = true,
+            liveFetch = RAPatchFetchResult.Fetched(patch(achievement(1L))),
+            cachedPatch = patch(achievement(1L))
+        )
+
+        harness.manager.initialize(mockk<GLRetroView>(relaxed = true))
+        runCurrent()
+
+        assertEquals(RASessionMode.HARDCORE, harness.manager.sessionMode.value)
+        assertTrue(harness.manager.raConnectionInfo!!.isHardcore)
+        assertEquals(setOf(1L), harness.armedIds)
         scope.cancel()
     }
 }
