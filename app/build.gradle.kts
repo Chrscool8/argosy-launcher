@@ -123,10 +123,6 @@ android {
         )
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -160,6 +156,12 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 // Feed the Compose compiler a stability config for pervasive external types (flows,
 // java.time, ...) and the app's immutable state packages. This short-circuits
 // StabilityInferencer's deep recursion over the UI state graph, which is otherwise the
@@ -174,6 +176,8 @@ composeCompiler {
         )
     }
     featureFlags.add(org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag.IntrinsicRemember.disabled())
+    featureFlags.add(org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag.OptimizeNonSkippingGroups.disabled())
+    featureFlags.add(org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag.PausableComposition.disabled())
     if (project.hasProperty("composeMetrics")) {
         val dir = layout.buildDirectory.dir("compose_metrics")
         metricsDestination.set(dir)
@@ -249,6 +253,8 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    ksp(libs.kotlin.metadata.jvm)
+    annotationProcessor(libs.kotlin.metadata.jvm)
     implementation(libs.hilt.navigation.compose)
 
     // Room

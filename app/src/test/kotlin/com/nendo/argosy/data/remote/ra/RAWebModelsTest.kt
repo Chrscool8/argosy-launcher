@@ -40,9 +40,9 @@ class RAWebModelsTest {
 
         val progress = moshi.adapter(RAWebGameProgress::class.java).fromJson(json)!!
 
-        assertEquals(2, progress.achievements.size)
-        assertEquals("2026-10-01 10:30:00", progress.achievements.getValue("9").dateEarnedHardcore)
-        assertNull(progress.achievements.getValue("10").dateEarned)
+        assertEquals(2, progress.achievements.byId.size)
+        assertEquals("2026-10-01 10:30:00", progress.achievements.byId.getValue("9").dateEarnedHardcore)
+        assertNull(progress.achievements.byId.getValue("10").dateEarned)
         assertEquals("beaten-hardcore", progress.highestAwardKind)
         assertEquals("2026-10-01T10:45:00+00:00", progress.highestAwardDate)
     }
@@ -53,7 +53,7 @@ class RAWebModelsTest {
 
         val progress = moshi.adapter(RAWebGameProgress::class.java).fromJson(json)!!
 
-        assertTrue(progress.achievements.isEmpty())
+        assertTrue(progress.achievements.byId.isEmpty())
     }
 
     @Test
@@ -74,8 +74,8 @@ class RAWebModelsTest {
     @Test
     fun `earned dates without an offset are read as UTC`() {
         val progress = RAWebGameProgress(
-            achievements = mapOf(
-                "9" to RAWebAchievementProgress(9L, "00042", dateEarned = "2026-10-01 23:30:00")
+            achievements = RAWebAchievements(
+                mapOf("9" to RAWebAchievementProgress(9L, "00042", dateEarned = "2026-10-01 23:30:00"))
             )
         )
 

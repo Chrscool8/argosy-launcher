@@ -3,6 +3,7 @@ package com.nendo.argosy.data.repository
 import com.nendo.argosy.data.preferences.UserPreferences
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.remote.ra.RAWebAchievementProgress
+import com.nendo.argosy.data.remote.ra.RAWebAchievements
 import com.nendo.argosy.data.remote.ra.RAWebClient
 import com.nendo.argosy.data.remote.ra.RAWebCompletionEntry
 import com.nendo.argosy.data.remote.ra.RAWebCredentials
@@ -45,7 +46,7 @@ class RaMetadataSourceTest {
     }
 
     private fun webProgress(vararg achievements: RAWebAchievementProgress) =
-        RAWebGameProgress(id = 55L, achievements = achievements.associateBy { it.id.toString() })
+        RAWebGameProgress(id = 55L, achievements = RAWebAchievements(achievements.associateBy { it.id.toString() }))
 
     private fun romMCurrentWith(vararg earned: RomMEarnedAchievement) {
         every { achievementService.progressionRefreshedAt() } returns end.plusSeconds(60)

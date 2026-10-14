@@ -6,6 +6,7 @@ import com.nendo.argosy.data.local.dao.GameDao
 import com.nendo.argosy.data.local.entity.AchievementEntity
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.remote.ra.RAWebAchievementProgress
+import com.nendo.argosy.data.remote.ra.RAWebAchievements
 import com.nendo.argosy.data.remote.ra.RAWebGameProgress
 import com.nendo.argosy.data.remote.romm.RomMEarnedAchievement
 import com.nendo.argosy.data.repository.RA_BADGE_BASE_URL
@@ -125,14 +126,16 @@ class GetSessionUnlocksUseCaseTest {
     fun `web progress maps into the same unlock shape with UTC dates`() = runTest {
         val web = RAWebGameProgress(
             id = 55L,
-            achievements = mapOf(
-                "9" to RAWebAchievementProgress(
-                    id = 9L,
-                    badgeName = "00042",
-                    dateEarned = "2026-10-01 10:30:00",
-                    dateEarnedHardcore = "2026-10-01 10:30:00"
-                ),
-                "10" to RAWebAchievementProgress(id = 10L, badgeName = "00043", dateEarned = "2026-10-01 09:59:59")
+            achievements = RAWebAchievements(
+                mapOf(
+                    "9" to RAWebAchievementProgress(
+                        id = 9L,
+                        badgeName = "00042",
+                        dateEarned = "2026-10-01 10:30:00",
+                        dateEarnedHardcore = "2026-10-01 10:30:00"
+                    ),
+                    "10" to RAWebAchievementProgress(id = 10L, badgeName = "00043", dateEarned = "2026-10-01 09:59:59")
+                )
             )
         )
         coEvery { metadataSource.unlockEvidence(55L, end, null) } returns RaUnlockEvidence.Dated(web.toEarnedAchievements())

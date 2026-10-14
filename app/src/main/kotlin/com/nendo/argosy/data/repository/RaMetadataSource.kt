@@ -180,7 +180,7 @@ class RaMetadataSource @Inject constructor(
          * Achievements earned in neither mode are left out.
          */
         fun RAWebGameProgress.toEarnedAchievements(): List<RomMEarnedAchievement> =
-            achievements.values.mapNotNull { achievement ->
+            achievements.byId.values.mapNotNull { achievement ->
                 val badge = achievement.badgeName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
                 if (achievement.dateEarned == null && achievement.dateEarnedHardcore == null) return@mapNotNull null
                 RomMEarnedAchievement(

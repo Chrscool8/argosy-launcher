@@ -4,7 +4,6 @@ import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
-import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
@@ -38,8 +37,7 @@ data class RAWebAchievementProgress(
 @JsonClass(generateAdapter = true)
 data class RAWebGameProgress(
     @Json(name = "ID") val id: Long? = null,
-    @RAWebAchievementMap
-    @Json(name = "Achievements") val achievements: Map<String, RAWebAchievementProgress> = emptyMap(),
+    @Json(name = "Achievements") val achievements: RAWebAchievements = RAWebAchievements(),
     @Json(name = "HighestAwardKind") val highestAwardKind: String? = null,
     @Json(name = "HighestAwardDate") val highestAwardDate: String? = null
 )
@@ -93,35 +91,31 @@ data class RAWebEarnedAchievement(
 }
 
 /**
- * Marks an achievement map that RetroAchievements sends as an empty JSON array when the game has
- * no achievements.
+ * A game's achievements keyed by achievement id; an empty JSON array reads as none.
  */
-@Retention(AnnotationRetention.RUNTIME)
-@JsonQualifier
-annotation class RAWebAchievementMap
+data class RAWebAchievements(val byId: Map<String, RAWebAchievementProgress> = emptyMap())
 
 @JvmSuppressWildcards
 object RAWebAchievementMapAdapter {
 
     @FromJson
-    @RAWebAchievementMap
     fun fromJson(
         reader: JsonReader,
         delegate: JsonAdapter<Map<String, RAWebAchievementProgress>>
-    ): Map<String, RAWebAchievementProgress> {
+    ): RAWebAchievements {
         if (reader.peek() != JsonReader.Token.BEGIN_OBJECT) {
             reader.skipValue()
-            return emptyMap()
+            return RAWebAchievements()
         }
-        return delegate.fromJson(reader).orEmpty()
+        return RAWebAchievements(delegate.fromJson(reader).orEmpty())
     }
 
     @ToJson
     fun toJson(
         writer: JsonWriter,
-        @RAWebAchievementMap value: Map<String, RAWebAchievementProgress>,
+        value: RAWebAchievements,
         delegate: JsonAdapter<Map<String, RAWebAchievementProgress>>
     ) {
-        delegate.toJson(writer, value)
+        delegate.toJson(writer, value.byId)
     }
 }
