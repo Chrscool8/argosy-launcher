@@ -110,6 +110,7 @@ private fun routeApplySectionExit(vm: SettingsViewModel, section: SettingsSectio
         SettingsSection.SHADER_STACK -> routeFlushShaderChain(vm)
         SettingsSection.STEAM_SETTINGS -> vm.cancelSteamQrAuth()
         SettingsSection.DRIVERS -> routeRefreshBuiltinGraphics(vm)
+        SettingsSection.SCREENS -> routeRefreshLaunchTargets(vm)
         else -> {}
     }
 }
@@ -159,6 +160,7 @@ private fun routeApplySectionEntry(vm: SettingsViewModel, section: SettingsSecti
         )
         SettingsSection.DRIVERS -> vm.driversDelegate.loadDrivers(vm.viewModelScope)
         SettingsSection.SCREENS -> routeRefreshScreens(vm)
+        SettingsSection.DISPLAYS -> routeRefreshLaunchTargets(vm)
         SettingsSection.MANAGED_INSTALLERS -> vm.openManagedInstallers()
         else -> {}
     }
@@ -499,6 +501,7 @@ internal fun routeSetDisplayRoleOverride(
             com.nendo.argosy.data.preferences.SessionStateStore(vm.context)
                 .setDisplayRoleOverride(next.name)
         }
+        routeRefreshLaunchTargets(vm)
     }
 }
 

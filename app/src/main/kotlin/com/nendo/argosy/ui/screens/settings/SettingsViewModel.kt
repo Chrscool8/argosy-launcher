@@ -1462,6 +1462,14 @@ class SettingsViewModel @Inject constructor(
     fun setDisplayRoleOverride(value: com.nendo.argosy.data.preferences.DisplayRoleOverride) =
         routeSetDisplayRoleOverride(this, value)
 
+    fun cycleGamesLaunchTarget(direction: Int = 1) = routeCycleLaunchTarget(this, LaunchTargetKind.GAMES, direction)
+
+    fun cycleAppsLaunchTarget(direction: Int = 1) = routeCycleLaunchTarget(this, LaunchTargetKind.APPS, direction)
+
+    fun selectGamesLaunchTarget(index: Int) = routeSelectLaunchTarget(this, LaunchTargetKind.GAMES, index)
+
+    fun selectAppsLaunchTarget(index: Int) = routeSelectLaunchTarget(this, LaunchTargetKind.APPS, index)
+
     fun setSoundVolume(volume: Int) = soundsDelegate.setSoundVolume(viewModelScope, volume)
 
     fun adjustSoundVolume(delta: Int) = routeAdjustSoundVolume(this, delta)

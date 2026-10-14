@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import com.nendo.argosy.ui.screens.common.EmulatorLaunchTargetResolver
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -73,7 +74,7 @@ data class PerGameSettingsState(
     val isSavePathOverride: Boolean = false,
     val showDisplayTargetRow: Boolean = false,
     val displayTarget: EmulatorDisplayTarget? = null,
-    val inheritedDisplayTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.DEFAULT,
+    val inheritedDisplayTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.PRESENTATION,
     val extensionOptions: List<ExtensionOption> = emptyList(),
     val preferredExtension: String? = null,
     val inheritedExtension: String? = null,
@@ -423,8 +424,9 @@ class PerGameSettingsDelegate @Inject constructor(
 
         val displayTarget = emulatorConfigDao.getDisplayTargetForGame(gameId)
             ?.let { raw -> EmulatorDisplayTarget.fromString(raw) }
-        val inheritedDisplayTarget = EmulatorDisplayTarget.fromString(
-            emulatorConfigDao.getDisplayTargetForPlatform(game.platformId)
+        val inheritedDisplayTarget = EmulatorLaunchTargetResolver.resolvedTarget(
+            stored = EmulatorDisplayTarget.fromString(emulatorConfigDao.getDisplayTargetForPlatform(game.platformId)),
+            gamesDefault = preferencesRepository.userPreferences.first().gamesDisplayTarget
         )
 
         val extensionOptions = EmulatorRegistry.getExtensionOptionsForPlatform(game.platformSlug)

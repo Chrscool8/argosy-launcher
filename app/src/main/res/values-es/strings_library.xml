@@ -138,7 +138,6 @@
     <string name="library_apps_hint_cancel">Cancelar</string>
     <string name="library_apps_hint_open">Abrir</string>
     <string name="library_apps_hint_back">Atrás</string>
-    <string name="library_apps_hint_open_on_top">Abrir arriba</string>
     <string name="library_apps_hint_reorder">Reordenar</string>
     <string name="library_apps_hint_swap_screens">Cambiar pantallas</string>
     <string name="library_apps_hint_open_hold_options">Abrir, mantén para opciones</string>

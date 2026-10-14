@@ -106,6 +106,8 @@
     <string name="custom_tile_menu_action_page_backdrop">Hintergrund für diese Seite</string>
     <string name="custom_tile_menu_action_page_music">Musik für diese Seite</string>
     <string name="custom_tile_menu_action_delete_page">Seite löschen</string>
+    <string name="custom_tile_menu_action_open_on_screen">Auf Bildschirm %1$d öffnen</string>
+    <string name="custom_tile_menu_action_play_on_screen">Auf Bildschirm %1$d spielen</string>
 
     <!-- ================= Home tile picker category tabs ================= -->
 

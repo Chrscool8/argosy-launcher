@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Monitor
+import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.material.icons.outlined.WbTwilight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,13 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import com.nendo.argosy.DualScreenManagerHolder
 import com.nendo.argosy.R
 import com.nendo.argosy.data.preferences.DisplayRoleOverride
+import com.nendo.argosy.data.preferences.EmulatorDisplayTarget
+import com.nendo.argosy.domain.model.ScreenRole
+import com.nendo.argosy.hardware.DisplayBadgeSize
 import com.nendo.argosy.ui.components.CyclePreference
 import com.nendo.argosy.ui.components.NavigationPreference
 import com.nendo.argosy.ui.components.SliderPreference
 import com.nendo.argosy.ui.components.SwitchPreference
 import com.nendo.argosy.ui.screens.settings.DisplayState
+import com.nendo.argosy.ui.screens.settings.LaunchTargetScreens
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
 import com.nendo.argosy.ui.screens.settings.components.SectionPaneLayout
@@ -84,12 +90,39 @@ internal sealed class DisplaysItem(
         visibleWhen = { it.display.ambientLedAvailable }
     )
 
+    data object GamesTarget : DisplaysItem(
+        key = "gamesTarget",
+        section = DISPLAY_TARGETS_SECTION,
+        visibleWhen = { it.hasPhysicalSecondaryDisplay }
+    )
+    data object AppsTarget : DisplaysItem(
+        key = "appsTarget",
+        section = DISPLAY_TARGETS_SECTION,
+        visibleWhen = { it.hasPhysicalSecondaryDisplay }
+    )
+    data object ByPlatformAndApp : DisplaysItem(
+        key = "byPlatformAndApp",
+        section = DISPLAY_TARGETS_SECTION,
+        visibleWhen = { it.hasPhysicalSecondaryDisplay }
+    )
+
     companion object {
         private val ScreenSafetyHeader =
             Header("screenSafetyHeader", "screenSafety", R.string.settings_displays_section_screen_safety)
         private val DisplaysSpacer = SectionSpacer("displaysSpacer", "displays")
         private val DisplaysHeader =
             Header("displaysHeader", "displays", R.string.settings_displays_section_displays)
+        private val DisplayTargetsSpacer = SectionSpacer(
+            "displayTargetsSpacer",
+            DISPLAY_TARGETS_SECTION,
+            visibleWhen = { it.hasPhysicalSecondaryDisplay }
+        )
+        private val DisplayTargetsHeader = Header(
+            "displayTargetsHeader",
+            DISPLAY_TARGETS_SECTION,
+            R.string.settings_displays_section_display_targets,
+            visibleWhen = { it.hasPhysicalSecondaryDisplay }
+        )
 
         val ALL: List<DisplaysItem>
             get() = listOf(
@@ -97,10 +130,14 @@ internal sealed class DisplaysItem(
                 ScreenDimmer, DimAfter, DimLevel,
                 DisplaysSpacer, DisplaysHeader,
                 DualScreenEnabled, DisplayRoles, ScreenLayout,
-                AmbientLedSettings
+                AmbientLedSettings,
+                DisplayTargetsSpacer, DisplayTargetsHeader,
+                GamesTarget, AppsTarget, ByPlatformAndApp
             )
     }
 }
+
+private const val DISPLAY_TARGETS_SECTION = "displayTargets"
 
 private val displaysLayout = SettingsLayout<DisplaysItem, DisplaysLayoutState>(
     allItems = DisplaysItem.ALL,
@@ -111,6 +148,7 @@ private val displaysLayout = SettingsLayout<DisplaysItem, DisplaysLayoutState>(
         when (it) {
             "screenSafety" -> R.string.settings_displays_section_screen_safety
             "displays" -> R.string.settings_displays_section_displays
+            DISPLAY_TARGETS_SECTION -> R.string.settings_displays_section_display_targets
             else -> null
         }
     }
@@ -120,6 +158,56 @@ private fun displayRoleLabelRes(mode: DisplayRoleOverride): Int = when (mode) {
     DisplayRoleOverride.AUTO -> R.string.settings_displays_display_roles_auto
     DisplayRoleOverride.STANDARD -> R.string.settings_displays_display_roles_standard
     DisplayRoleOverride.SWAPPED -> R.string.settings_displays_display_roles_swapped
+}
+
+private val EmulatorDisplayTarget.screenRole: ScreenRole
+    get() = when (this) {
+        EmulatorDisplayTarget.PRIMARY -> ScreenRole.PRIMARY
+        EmulatorDisplayTarget.APP_SCREEN -> ScreenRole.APP_TARGET
+        EmulatorDisplayTarget.PRESENTATION, EmulatorDisplayTarget.DEFAULT -> ScreenRole.PRESENTATION
+    }
+
+@Composable
+private fun launchTargetLabel(target: EmulatorDisplayTarget, screens: LaunchTargetScreens): String {
+    val role = stringResource(screenRoleTitleRes(target.screenRole))
+    val number = screens.numberFor(target) ?: return role
+    return stringResource(R.string.settings_displays_launch_target_value, role, number)
+}
+
+@Composable
+private fun LaunchTargetPreference(
+    title: String,
+    stored: EmulatorDisplayTarget,
+    screens: LaunchTargetScreens,
+    isFocused: Boolean,
+    onCycle: (Int) -> Unit,
+    onSelect: (Int) -> Unit,
+    pickerRequestToken: Int
+) {
+    val shown = screens.shown(stored)
+    val noAppScreenSubtitle = if (screens.lacksAppScreen(shown)) {
+        stringResource(
+            R.string.settings_displays_launch_target_no_app_screen,
+            launchTargetLabel(EmulatorDisplayTarget.PRESENTATION, screens)
+        )
+    } else {
+        null
+    }
+    CyclePreference(
+        title = title,
+        value = launchTargetLabel(shown, screens),
+        subtitle = noAppScreenSubtitle,
+        isFocused = isFocused,
+        onClick = { onCycle(1) },
+        onPrev = { onCycle(-1) },
+        options = screens.options.map { launchTargetLabel(it, screens) },
+        onSelect = onSelect,
+        pickerRequestToken = pickerRequestToken,
+        onPickerVisibilityChange = { visible ->
+            val manager = DualScreenManagerHolder.instance
+            if (visible) manager?.showScreenNumbers(DisplayBadgeSize.SMALL) else manager?.hideScreenNumbers()
+        }
+    )
 }
 
 internal fun displaysMaxFocusIndex(state: DisplaysLayoutState): Int = displaysLayout.maxFocusIndex(state)
@@ -267,6 +355,42 @@ fun DisplaysSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                 subtitle = stringResource(R.string.settings_displays_ambient_led_subtitle),
                 isFocused = isFocused(item),
                 onClick = { openFrom(item) { viewModel.navigateToAmbientLed() } }
+            )
+
+            DisplaysItem.GamesTarget -> LaunchTargetPreference(
+                title = stringResource(R.string.settings_displays_games_target_title),
+                stored = display.gamesLaunchTarget,
+                screens = display.launchTargetScreens,
+                isFocused = isFocused(item),
+                onCycle = { viewModel.cycleGamesLaunchTarget(it) },
+                onSelect = { viewModel.selectGamesLaunchTarget(it) },
+                pickerRequestToken = pickerToken(item)
+            )
+
+            DisplaysItem.AppsTarget -> LaunchTargetPreference(
+                title = stringResource(R.string.settings_displays_apps_target_title),
+                stored = display.appsLaunchTarget,
+                screens = display.launchTargetScreens,
+                isFocused = isFocused(item),
+                onCycle = { viewModel.cycleAppsLaunchTarget(it) },
+                onSelect = { viewModel.selectAppsLaunchTarget(it) },
+                pickerRequestToken = pickerToken(item)
+            )
+
+            DisplaysItem.ByPlatformAndApp -> NavigationPreference(
+                icon = Icons.Outlined.Tv,
+                title = stringResource(R.string.settings_displays_by_platform_and_app_title),
+                subtitle = if (display.launchTargetSetCount == 0) {
+                    stringResource(R.string.settings_displays_by_platform_and_app_none)
+                } else {
+                    pluralStringResource(
+                        R.plurals.settings_displays_by_platform_and_app_count,
+                        display.launchTargetSetCount,
+                        display.launchTargetSetCount
+                    )
+                },
+                isFocused = isFocused(item),
+                onClick = { viewModel.setFocusIndex(displaysLayout.focusIndexOf(item, layoutState)) }
             )
         }
     }

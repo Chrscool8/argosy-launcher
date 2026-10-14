@@ -122,7 +122,6 @@
     <string name="library_apps_hint_cancel">取消</string>
     <string name="library_apps_hint_open">開啟</string>
     <string name="library_apps_hint_back">返回</string>
-    <string name="library_apps_hint_open_on_top">在上方開啟</string>
     <string name="library_apps_hint_reorder">重新排序</string>
     <string name="library_apps_hint_swap_screens">交換螢幕</string>
     <string name="library_apps_hint_open_hold_options">開啟，長按查看選項</string>

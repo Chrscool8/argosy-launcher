@@ -106,6 +106,8 @@
     <string name="custom_tile_menu_action_page_backdrop">Фон для этой страницы</string>
     <string name="custom_tile_menu_action_page_music">Музыка для этой страницы</string>
     <string name="custom_tile_menu_action_delete_page">Удалить страницу</string>
+    <string name="custom_tile_menu_action_open_on_screen">Открыть на экране %1$d</string>
+    <string name="custom_tile_menu_action_play_on_screen">Играть на экране %1$d</string>
 
     <!-- ================= Home tile picker category tabs ================= -->
 

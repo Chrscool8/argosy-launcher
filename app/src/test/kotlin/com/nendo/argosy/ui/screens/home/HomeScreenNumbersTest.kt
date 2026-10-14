@@ -2,6 +2,7 @@ package com.nendo.argosy.ui.screens.home
 
 import com.nendo.argosy.ui.components.AppLaunchTarget
 import com.nendo.argosy.ui.components.AppMenuRow
+import com.nendo.argosy.ui.components.CustomGridState
 import com.nendo.argosy.ui.screens.home.delegates.GameMenuState
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -45,5 +46,25 @@ class HomeScreenNumbersTest {
 
         assertTrue(showsScreenNumbers(HomeUiState(appBarMenu = menu), GameMenuState()))
         assertFalse(showsScreenNumbers(HomeUiState(appBarMenu = null), GameMenuState()))
+    }
+
+    @Test
+    fun `a tile menu offering two screens shows the numbers only while open`() {
+        val screens = listOf(AppMenuRow.OpenOnScreen(0, 1, "a"), AppMenuRow.OpenOnScreen(4, 2, "b"))
+        val open = HomeUiState(customGrid = CustomGridState(showMenu = true, menuScreens = screens))
+
+        assertTrue(showsScreenNumbers(open, GameMenuState()))
+        assertFalse(
+            showsScreenNumbers(
+                open.copy(customGrid = open.customGrid.copy(showMenu = false)),
+                GameMenuState()
+            )
+        )
+        assertFalse(
+            showsScreenNumbers(
+                open.copy(customGrid = open.customGrid.copy(menuScreens = screens.take(1))),
+                GameMenuState()
+            )
+        )
     }
 }

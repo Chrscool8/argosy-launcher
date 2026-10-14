@@ -112,6 +112,8 @@
     <string name="custom_tile_menu_action_page_backdrop">此頁面的背景</string>
     <string name="custom_tile_menu_action_page_music">此頁面的音樂</string>
     <string name="custom_tile_menu_action_delete_page">刪除頁面</string>
+    <string name="custom_tile_menu_action_open_on_screen">在螢幕 %1$d 上開啟</string>
+    <string name="custom_tile_menu_action_play_on_screen">在螢幕 %1$d 上遊玩</string>
 
     <!-- ================= Home tile picker category tabs ================= -->
 

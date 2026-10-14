@@ -2,6 +2,8 @@ package com.nendo.argosy.ui.screens.home
 
 import com.nendo.argosy.domain.model.GridDirection2D
 import com.nendo.argosy.domain.model.HomeLayoutKind
+import com.nendo.argosy.ui.components.AppContextMenuItem
+import com.nendo.argosy.ui.components.AppMenuRow
 import com.nendo.argosy.ui.components.CustomGridState
 import com.nendo.argosy.ui.components.TileEditMode
 import com.nendo.argosy.ui.screens.home.delegates.HomeInputActions
@@ -110,13 +112,61 @@ class HomeDockInputTest {
     }
 
     @Test
-    fun `hold confirm on focused dock starts reorder instead of opening menu`() {
+    fun `hold confirm on focused dock opens the dock app menu`() {
         val (handler, actions) = handler(HomeUiState(appBarFocused = true, homeApps = listOf("a", "b")))
-        every { actions.startAppBarReorder() } returns true
+        every { actions.openDockAppMenu() } returns true
 
         assertTrue(handler.onLongConfirm().handled)
-        verify(exactly = 1) { actions.startAppBarReorder() }
+        verify(exactly = 1) { actions.openDockAppMenu() }
         verify(exactly = 0) { actions.openAppBarAppMenu() }
         verify(exactly = 0) { actions.activateAppBarSlot() }
+    }
+
+    @Test
+    fun `hold confirm on a dock slot without an app is consumed without opening a menu`() {
+        val (handler, actions) = handler(
+            HomeUiState(appBarFocused = true, homeApps = listOf("a"), appBarIndex = -1)
+        )
+        every { actions.openDockAppMenu() } returns false
+
+        assertTrue(handler.onLongConfirm().handled)
+        verify(exactly = 0) { actions.activateAppBarSlot() }
+    }
+
+    @Test
+    fun `an open dock app menu takes every direction and button`() {
+        val menu = AppBarLaunchMenu(
+            packageName = "a",
+            label = "A",
+            rows = listOf(
+                AppMenuRow.Action(AppContextMenuItem.REORDER),
+                AppMenuRow.OpenOnScreen(0, 1, "x"),
+                AppMenuRow.OpenOnScreen(4, 2, "y")
+            )
+        )
+        val (handler, actions) = handler(
+            HomeUiState(appBarFocused = true, homeApps = listOf("a", "b"), appBarMenu = menu)
+        )
+
+        assertTrue(handler.onDown().handled)
+        verify(exactly = 1) { actions.moveAppBarAppMenu(1) }
+        assertTrue(handler.onUp().handled)
+        verify(exactly = 1) { actions.moveAppBarAppMenu(-1) }
+        assertTrue(handler.onLeft().handled)
+        assertTrue(handler.onRight().handled)
+        verify(exactly = 0) { actions.moveAppBarFocus(any()) }
+        assertTrue(handler.onConfirm().handled)
+        verify(exactly = 1) { actions.confirmAppBarAppMenu() }
+        verify(exactly = 0) { actions.activateAppBarSlot() }
+        assertTrue(handler.onLongConfirm().handled)
+        verify(exactly = 0) { actions.openDockAppMenu() }
+        assertTrue(handler.onSecondaryAction().handled)
+        assertTrue(handler.onContextMenu().handled)
+        assertTrue(handler.onMenu().handled)
+        assertTrue(handler.onPrevSection().handled)
+        assertTrue(handler.onNextTrigger().handled)
+        assertTrue(handler.onBack().handled)
+        verify(exactly = 1) { actions.dismissAppBarAppMenu() }
+        verify(exactly = 0) { actions.releaseAppBar() }
     }
 }

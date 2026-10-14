@@ -29,8 +29,8 @@ interface HomeInputActions {
     fun nextRow()
     fun appBarIsDrawn(): Boolean
     fun focusAppBar(): Boolean
-    fun startAppBarReorder(): Boolean
     fun openAppBarAppMenu(): Boolean
+    fun openDockAppMenu(): Boolean
     fun moveAppBarAppMenu(delta: Int)
     fun confirmAppBarAppMenu()
     fun dismissAppBarAppMenu()
@@ -721,7 +721,7 @@ class HomeInputHandler(
 
     /**
      * Holding confirm opens the menu under the cursor: the tile menu on the grid, the game menu on
-     * a row, the app menu in the app drawer. On the dock it picks the focused app up to reorder.
+     * a row, the app menu in the app drawer and on the dock, where Reorder is the menu's first entry.
      * A second hold commits an arrange; on a title with something stored it asks to start over.
      */
     override fun onLongConfirm(): InputResult {
@@ -735,8 +735,8 @@ class HomeInputHandler(
             }
         }
         if (state.appBarFocused) {
-            return if (actions.startAppBarReorder()) {
-                InputResult.handled(SoundType.TOGGLE)
+            return if (actions.openDockAppMenu()) {
+                InputResult.handled(SoundType.OPEN_MODAL)
             } else {
                 InputResult.handled(SoundType.BOUNDARY)
             }

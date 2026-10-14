@@ -641,11 +641,14 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             hasPhysicalSecondaryDisplay = vm.displayAffinityHelper.hasPhysicalSecondaryDisplay,
             dualScreenEnabled = prefs.dualScreenEnabled,
             displayRoleOverride = prefs.displayRoleOverride,
+            gamesLaunchTarget = prefs.gamesDisplayTarget,
+            appsLaunchTarget = prefs.appsDisplayTarget,
             installedOnlyHome = prefs.installedOnlyHome,
             showStatusClock = prefs.showStatusClock,
             showStatusBattery = prefs.showStatusBattery,
             showStatusNetwork = prefs.showStatusNetwork
         ))
+        routeRefreshLaunchTargets(vm)
 
         val detectionResult = ControllerDetector.detectFromActiveGamepad()
         val detectedLayoutName = when (detectionResult.layout) {

@@ -758,6 +758,15 @@ private fun routeDisplaysConfirm(vm: SettingsViewModel, state: SettingsUiState):
         }
         DisplaysItem.ScreenLayout -> vm.navigateToScreens()
         DisplaysItem.AmbientLedSettings -> vm.navigateToAmbientLed()
+        DisplaysItem.GamesTarget -> {
+            vm.requestEnumPicker(DisplaysItem.GamesTarget.key)
+            return InputResult.handled(SoundType.OPEN_MODAL)
+        }
+        DisplaysItem.AppsTarget -> {
+            vm.requestEnumPicker(DisplaysItem.AppsTarget.key)
+            return InputResult.handled(SoundType.OPEN_MODAL)
+        }
+        DisplaysItem.ByPlatformAndApp -> return InputResult.handled(SoundType.SILENT)
         else -> {}
     }
     return InputResult.HANDLED

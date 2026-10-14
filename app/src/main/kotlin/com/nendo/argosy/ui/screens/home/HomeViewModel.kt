@@ -99,6 +99,7 @@ class HomeViewModel @Inject constructor(
     private val gameRepository: GameRepository,
     private val displayAffinityHelper: com.nendo.argosy.util.DisplayAffinityHelper,
     private val emulatorLaunchTargetResolver: com.nendo.argosy.ui.screens.common.EmulatorLaunchTargetResolver,
+    private val configureEmulatorUseCase: com.nendo.argosy.domain.usecase.game.ConfigureEmulatorUseCase,
     private val appShortcutActions: com.nendo.argosy.ui.screens.common.AppShortcutActions,
     private val preferencesRepository: UserPreferencesRepository,
     private val notificationManager: NotificationManager,
@@ -236,6 +237,7 @@ class HomeViewModel @Inject constructor(
             )
         },
         raGamePickerEntries = { query -> libraryDelegate.searchRaCompatibleForTiles(query) },
+        onOpenOnScreen = { target, screen -> openTileOnScreen(target, screen) },
         read = { _uiState.value.customGrid },
         write = { transform -> _uiState.update { it.copy(customGrid = transform(it.customGrid)) } }
     )
@@ -924,12 +926,6 @@ class HomeViewModel @Inject constructor(
         return true
     }
 
-    override fun startAppBarReorder(): Boolean {
-        val state = _uiState.value
-        val packageName = state.homeApps.getOrNull(state.appBarIndex) ?: return false
-        return dockDelegate.startReorder(packageName)
-    }
-
     fun cancelAppBarReorder() = dockDelegate.cancelReorder()
 
     private fun observeDockApps() {
@@ -1472,7 +1468,30 @@ class HomeViewModel @Inject constructor(
     fun tileMenuActions(): List<com.nendo.argosy.ui.components.CustomTileMenuAction> =
         _uiState.value.customGrid.menuActions
 
-    override fun openTileMenu() = customGrid.openMenu()
+    override fun openTileMenu() = customGrid.openMenu(tileLaunchScreens())
+
+    private fun tileLaunchScreens(): List<com.nendo.argosy.ui.components.AppMenuRow.OpenOnScreen> {
+        val state = _uiState.value
+        if (state.customGrid.isEditing) return emptyList()
+        val launchable = when (val target = state.customGrid.focusedTile?.target) {
+            is HomeTileTargetRef.App -> true
+            is HomeTileTargetRef.Game -> state.tileGames[target.gameId]?.isDownloaded == true
+            else -> false
+        }
+        if (!launchable) return emptyList()
+        return launchableScreens().takeIf { it.size > 1 }.orEmpty()
+    }
+
+    private fun openTileOnScreen(
+        target: HomeTileTargetRef,
+        screen: com.nendo.argosy.ui.components.AppMenuRow.OpenOnScreen
+    ) {
+        when (target) {
+            is HomeTileTargetRef.App -> launchApp(target.packageName, pinnedScreenKey = screen.screenKey)
+            is HomeTileTargetRef.Game -> playGameOnDisplay(target.gameId, screen.displayId)
+            else -> Unit
+        }
+    }
 
     override fun closeTileMenu() = customGrid.closeMenu()
 
@@ -1597,12 +1616,12 @@ class HomeViewModel @Inject constructor(
             if (pinnedScreenKey != null) {
                 preferencesRepository.setAppDisplayTarget(packageName, pinnedScreenKey)
             }
-            val dsm = DualScreenManagerHolder.instance
+            val prefs = preferencesRepository.preferences.first()
             val options = displayAffinityHelper.getAppLaunchOptions(
-                preferredScreenKey = pinnedScreenKey
-                    ?: preferencesRepository.preferences.first().appDisplayTargets[packageName],
-                rolesSwapped = dsm?.isRolesSwapped?.value == true,
-                occupiedDisplayId = dsm?.emulatorDisplayId
+                preferredScreenKey = pinnedScreenKey ?: prefs.appDisplayTargets[packageName],
+                rolesSwapped = sessionStateStore.isRolesSwapped(),
+                occupiedDisplayId = DualScreenManagerHolder.instance?.emulatorDisplayId,
+                defaultTarget = prefs.appsDisplayTarget
             )
             _events.emit(HomeEvent.LaunchIntent(intent, options))
         }
@@ -1614,8 +1633,15 @@ class HomeViewModel @Inject constructor(
         return openAppMenuFor(packageName)
     }
 
-    private fun openAppMenuFor(packageName: String): Boolean {
-        val screens = DualScreenManagerHolder.instance
+    override fun openDockAppMenu(): Boolean {
+        if (dockDelegate.isReordering()) return false
+        val state = _uiState.value
+        val packageName = state.homeApps.getOrNull(state.appBarIndex) ?: return false
+        return openAppMenuFor(packageName, reorderable = state.homeApps.size > 1)
+    }
+
+    private fun launchableScreens(): List<com.nendo.argosy.ui.components.AppMenuRow.OpenOnScreen> =
+        DualScreenManagerHolder.instance
             ?.focusableDisplays()
             ?.map { screen ->
                 com.nendo.argosy.ui.components.AppMenuRow.OpenOnScreen(
@@ -1625,7 +1651,17 @@ class HomeViewModel @Inject constructor(
                 )
             }
             .orEmpty()
+
+    private fun openAppMenuFor(packageName: String, reorderable: Boolean = false): Boolean {
+        val screens = launchableScreens()
         val rows = buildList<com.nendo.argosy.ui.components.AppMenuRow> {
+            if (reorderable) {
+                add(
+                    com.nendo.argosy.ui.components.AppMenuRow.Action(
+                        com.nendo.argosy.ui.components.AppContextMenuItem.REORDER
+                    )
+                )
+            }
             if (screens.size > 1) addAll(screens)
             add(
                 com.nendo.argosy.ui.components.AppMenuRow.Action(
@@ -1680,6 +1716,9 @@ class HomeViewModel @Inject constructor(
             is com.nendo.argosy.ui.components.AppMenuRow.OpenOnScreen ->
                 launchApp(packageName, pinnedScreenKey = row.screenKey)
             is com.nendo.argosy.ui.components.AppMenuRow.Action -> when (row.item) {
+                com.nendo.argosy.ui.components.AppContextMenuItem.REORDER -> {
+                    dockDelegate.startReorder(packageName)
+                }
                 com.nendo.argosy.ui.components.AppContextMenuItem.TOGGLE_SECONDARY_HOME ->
                     viewModelScope.launch { appShortcutActions.togglePinned(packageName) }
                 com.nendo.argosy.ui.components.AppContextMenuItem.TOGGLE_VISIBILITY ->
@@ -1987,6 +2026,7 @@ class HomeViewModel @Inject constructor(
     private fun playGameOnDisplay(gameId: Long, displayId: Int) {
         videoPreviewDelegate.deactivateVideoPreview()
         saveCurrentState()
+        rememberGameScreen(gameId, displayId)
         gameLaunchDelegate.launchGame(
             scope = viewModelScope,
             gameId = gameId,
@@ -2001,6 +2041,18 @@ class HomeViewModel @Inject constructor(
                 }
             }
         )
+    }
+
+    private fun rememberGameScreen(gameId: Long, displayId: Int) {
+        val rolesSwapped = sessionStateStore.isRolesSwapped()
+        val target = gameDisplayTargetFor(
+            displayId = displayId,
+            roleDisplayIds = displayAffinityHelper.getRoleDisplayIds(rolesSwapped),
+            appScreenDisplayId = displayAffinityHelper.appScreenDisplayId(rolesSwapped)
+        ) ?: return
+        viewModelScope.launch {
+            configureEmulatorUseCase.setDisplayTargetForGame(gameId, target.name)
+        }
     }
 
     override fun toggleFavorite(gameId: Long) {

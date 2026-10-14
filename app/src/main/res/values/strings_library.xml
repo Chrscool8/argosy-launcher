@@ -295,11 +295,7 @@
     <string name="library_apps_hint_open">Open</string>
     <!-- Button hint on the apps screen. Verb, leaves the screen. -->
     <string name="library_apps_hint_back">Back</string>
-    <!-- Button hint on the apps screen for a device with two screens. Verb phrase, starts the
-         focused app on the upper screen. -->
-    <string name="library_apps_hint_open_on_top">Open on Top</string>
-    <!-- Button hint on the apps screen for a device with one screen. Verb, begins arranging
-         the apps into a new order. -->
+    <!-- Button hint on the apps screen. Verb, begins arranging the apps into a new order. -->
     <string name="library_apps_hint_reorder">Reorder</string>
     <!-- Footer hint on dual-screen devices, where Select swaps the two screens. Verb phrase. -->
     <string name="library_apps_hint_swap_screens">Swap Screens</string>

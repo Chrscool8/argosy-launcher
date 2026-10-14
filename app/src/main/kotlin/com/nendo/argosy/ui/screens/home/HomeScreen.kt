@@ -1016,11 +1016,11 @@ fun HomeScreen(
                     )
                     FooterSpacer()
                 } else if (uiState.appBarFocused) {
-                    if (uiState.appBarIndex in uiState.homeApps.indices && uiState.homeApps.size > 1) {
+                    if (uiState.appBarIndex in uiState.homeApps.indices) {
                         FooterHints(
                             forced = true,
-                            hints = listOf(InputButton.A to stringResource(R.string.dock_hint_hold_reorder)),
-                            onHintClick = { if (it == InputButton.A) viewModel.startAppBarReorder() }
+                            hints = listOf(InputButton.A to stringResource(R.string.dock_hint_options)),
+                            onHintClick = { if (it == InputButton.A) viewModel.openDockAppMenu() }
                         )
                         FooterSpacer()
                     }
@@ -1536,7 +1536,8 @@ fun HomeScreen(
                 entries = if (grid.menuListsHidden) {
                     grid.hiddenTiles.map { uiState.tileContentFor(it, context)?.label ?: hiddenFallback }
                 } else {
-                    grid.menuActions.map { context.getString(it.labelRes) }
+                    grid.menuScreens.map { context.getString(grid.menuScreenLabelRes, it.number) } +
+                        grid.menuActions.map { context.getString(it.labelRes) }
                 },
                 focusIndex = uiState.customGrid.menuFocusIndex,
                 onSelect = { index ->

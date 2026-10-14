@@ -543,6 +543,30 @@
     <string name="settings_displays_screens_title">Screen Layout</string>
     <!-- Second line of that row. -->
     <string name="settings_displays_screens_subtitle">Give each attached screen a job</string>
+
+    <!-- Heading over the rows choosing which screen games and apps open on. Noun phrase,
+         "target" as in destination. -->
+    <string name="settings_displays_section_display_targets">Display Targets</string>
+    <!-- Row title: the screen games open on unless a platform or game says otherwise. Noun,
+         plural. -->
+    <string name="settings_displays_games_target_title">Games</string>
+    <!-- Row title: the screen other apps open on unless an app says otherwise. Noun, plural. -->
+    <string name="settings_displays_apps_target_title">Apps</string>
+    <!-- Value of those rows. %1$s is a screen role name (Primary, Presentation, App Screen);
+         %2$d is the number drawn on that screen. -->
+    <string name="settings_displays_launch_target_value">%1$s (Screen %2$d)</string>
+    <!-- Second line of those rows when the chosen role is held by no screen. %1$s is the screen
+         used instead, e.g. "Presentation (Screen 2)". -->
+    <string name="settings_displays_launch_target_no_app_screen">No screen is the App Screen. Opens on %1$s.</string>
+    <!-- Row opening the per-platform and per-app screen choices. -->
+    <string name="settings_displays_by_platform_and_app_title">By Platform and App</string>
+    <!-- Second line of that row when no platform or app has its own screen. -->
+    <string name="settings_displays_by_platform_and_app_none">Everything follows these defaults</string>
+    <!-- Second line of that row: how many platforms and apps have their own screen. -->
+    <plurals name="settings_displays_by_platform_and_app_count">
+        <item quantity="one">%d set individually</item>
+        <item quantity="other">%d set individually</item>
+    </plurals>
     <!-- Row opening the settings for how the second screen draws the game focused on the first. -->
     <string name="settings_interface_presentation_title">Presentation</string>
     <!-- Second line of that row. -->
@@ -616,7 +640,7 @@
     <!-- Role name: the screen that other apps are sent to. -->
     <string name="settings_screens_role_app_target">App Screen</string>
     <!-- Its one-line explanation. -->
-    <string name="settings_screens_role_app_target_detail">Apps you launch open here</string>
+    <string name="settings_screens_role_app_target_detail">Games and apps sent here open here, with no launcher</string>
     <!-- Role name: the screen Argosy leaves alone. -->
     <string name="settings_screens_role_off">Off</string>
     <!-- Its one-line explanation. -->
@@ -3131,6 +3155,9 @@
     <string name="settings_platform_display_target_title">Display Target</string>
     <!-- Value of that row: send the game wherever games normally go. -->
     <string name="settings_platform_display_target_default">Default</string>
+    <!-- Value of that row when the platform follows the global Games setting. %1$s is the screen
+         that setting names, e.g. "Presentation Screen". -->
+    <string name="settings_platform_display_target_default_resolved">Default (%1$s)</string>
     <!-- Value of that row: the screen holding the Presentation role. -->
     <string name="settings_platform_display_target_presentation">Presentation Screen</string>
     <!-- Value of that row: the screen holding the Primary role. -->

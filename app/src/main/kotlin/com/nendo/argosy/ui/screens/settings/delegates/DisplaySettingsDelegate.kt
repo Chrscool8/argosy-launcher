@@ -47,7 +47,9 @@ import com.nendo.argosy.data.repository.HomeTileRepository
 import com.nendo.argosy.domain.model.CustomGridConfig
 import com.nendo.argosy.domain.model.CustomGridLayout
 import com.nendo.argosy.domain.model.CustomGridShape
+import com.nendo.argosy.data.preferences.EmulatorDisplayTarget
 import com.nendo.argosy.ui.screens.settings.DisplayState
+import com.nendo.argosy.ui.screens.settings.LaunchTargetScreens
 import com.nendo.argosy.ui.screens.settings.SettingsPreviewGame
 import com.nendo.argosy.ui.screens.settings.toSettingsPreviewGame
 import com.nendo.argosy.util.HomeAppAvailability
@@ -120,6 +122,20 @@ class DisplaySettingsDelegate @Inject constructor(
 
     fun updateState(newState: DisplayState) {
         _state.value = newState
+    }
+
+    fun setGamesLaunchTarget(scope: CoroutineScope, target: EmulatorDisplayTarget) {
+        _state.update { it.copy(gamesLaunchTarget = target) }
+        scope.launch { preferencesRepository.setGamesDisplayTarget(target) }
+    }
+
+    fun setAppsLaunchTarget(scope: CoroutineScope, target: EmulatorDisplayTarget) {
+        _state.update { it.copy(appsLaunchTarget = target) }
+        scope.launch { preferencesRepository.setAppsDisplayTarget(target) }
+    }
+
+    fun setLaunchTargetSummary(screens: LaunchTargetScreens, setCount: Int) {
+        _state.update { it.copy(launchTargetScreens = screens, launchTargetSetCount = setCount) }
     }
 
     fun setThemeMode(scope: CoroutineScope, mode: ThemeMode) {

@@ -210,6 +210,12 @@ data class CustomGridState(
     val showMenu: Boolean = false,
     val menuFocusIndex: Int = 0,
     val menuListsHidden: Boolean = false,
+    /**
+     * Screens the focused tile can be launched on, listed above the tile's own actions while the
+     * menu is open. Empty unless two or more screens are attached and the tile is an app or a
+     * downloaded game.
+     */
+    val menuScreens: List<AppMenuRow.OpenOnScreen> = emptyList(),
     val showPicker: Boolean = false,
     val pickerQuery: String = "",
     val pickerSearchActive: Boolean = false,
@@ -637,7 +643,7 @@ data class CustomGridState(
      * reaches first rather than at the page row alone.
      */
     val menuEntryCount: Int
-        get() = if (menuListsHidden) hiddenTiles.size else menuActions.size
+        get() = if (menuListsHidden) hiddenTiles.size else menuScreens.size + menuActions.size
 
     val menuDangerFromIndex: Int?
         get() = if (menuListsHidden) null else menuActions
@@ -645,6 +651,21 @@ data class CustomGridState(
                 it == CustomTileMenuAction.REMOVE || it == CustomTileMenuAction.DELETE_PAGE
             }
             .takeIf { it >= 0 }
+            ?.plus(menuScreens.size)
+
+    @get:StringRes
+    val menuScreenLabelRes: Int
+        get() = if (focusedTile?.target is HomeTileTargetRef.App) {
+            R.string.custom_tile_menu_action_open_on_screen
+        } else {
+            R.string.custom_tile_menu_action_play_on_screen
+        }
+
+    fun menuScreenAt(index: Int): AppMenuRow.OpenOnScreen? =
+        if (menuListsHidden) null else menuScreens.getOrNull(index)
+
+    fun menuActionAt(index: Int): CustomTileMenuAction? =
+        if (menuListsHidden) null else menuActions.getOrNull(index - menuScreens.size)
 
     /**
      * Whether the picker ends in the row that deletes the page. Naming a game for the

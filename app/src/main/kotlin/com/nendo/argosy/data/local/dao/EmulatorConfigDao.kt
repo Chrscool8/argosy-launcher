@@ -64,6 +64,12 @@ interface EmulatorConfigDao {
     @Query("SELECT displayTarget FROM emulator_configs WHERE platformId = :platformId AND gameId IS NULL AND isDefault = 1")
     suspend fun getDisplayTargetForPlatform(platformId: Long): String?
 
+    @Query(
+        "SELECT displayTarget FROM emulator_configs " +
+            "WHERE platformId IS NOT NULL AND gameId IS NULL AND isDefault = 1 AND displayTarget IS NOT NULL"
+    )
+    suspend fun getPlatformDisplayTargets(): List<String>
+
     @Query("SELECT displayTarget FROM emulator_configs WHERE gameId = :gameId LIMIT 1")
     suspend fun getDisplayTargetForGame(gameId: Long): String?
 

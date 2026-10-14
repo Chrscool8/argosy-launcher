@@ -80,7 +80,8 @@ class SettingsBackupKeysTest {
         "dual_screen_enabled", "dual_screen_input_focus", "screen_dimmer_enabled",
         "screen_dimmer_level", "screen_dimmer_timeout_minutes", "ui_scale",
         "builtin_architecture_override", "builtin_gpu_driver", "grip_auto_controllers",
-        "screen_layouts", "lock_screen_art_applied", "live_wallpaper_offered", "home_app_available"
+        "screen_layouts", "lock_screen_art_applied", "live_wallpaper_offered", "home_app_available",
+        "games_display_target", "apps_display_target"
     )
 
     private val perDeviceScreenChoices = setOf(

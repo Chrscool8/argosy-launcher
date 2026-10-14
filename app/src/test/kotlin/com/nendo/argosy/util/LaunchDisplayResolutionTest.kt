@@ -3,6 +3,7 @@ package com.nendo.argosy.util
 import com.nendo.argosy.data.preferences.EmulatorDisplayTarget
 import com.nendo.argosy.util.DisplayAffinityHelper.Companion.resolveDisplayTargetId
 import com.nendo.argosy.util.DisplayAffinityHelper.Companion.pickLargestScreen
+import com.nendo.argosy.util.DisplayAffinityHelper.Companion.resolveAppDefaultDisplayId
 import com.nendo.argosy.util.DisplayAffinityHelper.Companion.resolveAppLaunchDisplayId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -21,6 +22,7 @@ class LaunchDisplayResolutionTest {
     fun `an app takes the app-target screen`() {
         val resolved = resolveAppLaunchDisplayId(
             preferredDisplayId = null,
+            defaultDisplayId = null,
             appTargetDisplayId = MONITOR,
             roleDisplayIds = LOWER to BUILT_IN,
             occupiedDisplayId = null
@@ -33,6 +35,7 @@ class LaunchDisplayResolutionTest {
     fun `an app falls back to the presentation screen when no app target is set`() {
         val resolved = resolveAppLaunchDisplayId(
             preferredDisplayId = null,
+            defaultDisplayId = null,
             appTargetDisplayId = null,
             roleDisplayIds = LOWER to BUILT_IN,
             occupiedDisplayId = null
@@ -45,6 +48,7 @@ class LaunchDisplayResolutionTest {
     fun `an app pinned to a screen beats the app-target screen`() {
         val resolved = resolveAppLaunchDisplayId(
             preferredDisplayId = LOWER,
+            defaultDisplayId = null,
             appTargetDisplayId = MONITOR,
             roleDisplayIds = LOWER to BUILT_IN,
             occupiedDisplayId = null
@@ -57,6 +61,7 @@ class LaunchDisplayResolutionTest {
     fun `a pinned screen holding a game hands this launch to the next one`() {
         val resolved = resolveAppLaunchDisplayId(
             preferredDisplayId = MONITOR,
+            defaultDisplayId = null,
             appTargetDisplayId = MONITOR,
             roleDisplayIds = LOWER to BUILT_IN,
             occupiedDisplayId = MONITOR
@@ -69,6 +74,7 @@ class LaunchDisplayResolutionTest {
     fun `an unplugged pinned screen resolves to nothing and falls through`() {
         val resolved = resolveAppLaunchDisplayId(
             preferredDisplayId = null,
+            defaultDisplayId = null,
             appTargetDisplayId = null,
             roleDisplayIds = LOWER to BUILT_IN,
             occupiedDisplayId = BUILT_IN
@@ -81,6 +87,7 @@ class LaunchDisplayResolutionTest {
     fun `a game on every screen still leaves the best one`() {
         val resolved = resolveAppLaunchDisplayId(
             preferredDisplayId = BUILT_IN,
+            defaultDisplayId = null,
             appTargetDisplayId = null,
             roleDisplayIds = BUILT_IN to BUILT_IN,
             occupiedDisplayId = BUILT_IN
@@ -93,12 +100,78 @@ class LaunchDisplayResolutionTest {
     fun `an app on a single-screen device names no screen`() {
         val resolved = resolveAppLaunchDisplayId(
             preferredDisplayId = null,
+            defaultDisplayId = null,
             appTargetDisplayId = null,
             roleDisplayIds = null,
             occupiedDisplayId = null
         )
 
         assertNull(resolved)
+    }
+
+    @Test
+    fun `an app with no pin takes the global apps target over the app-target screen`() {
+        val resolved = resolveAppLaunchDisplayId(
+            preferredDisplayId = null,
+            defaultDisplayId = resolveAppDefaultDisplayId(
+                target = EmulatorDisplayTarget.PRIMARY,
+                roleDisplayIds = LOWER to BUILT_IN,
+                appScreenDisplayId = MONITOR
+            ),
+            appTargetDisplayId = MONITOR,
+            roleDisplayIds = LOWER to BUILT_IN,
+            occupiedDisplayId = null
+        )
+
+        assertEquals(LOWER, resolved)
+    }
+
+    @Test
+    fun `a pinned screen beats the global apps target`() {
+        val resolved = resolveAppLaunchDisplayId(
+            preferredDisplayId = MONITOR,
+            defaultDisplayId = LOWER,
+            appTargetDisplayId = MONITOR,
+            roleDisplayIds = LOWER to BUILT_IN,
+            occupiedDisplayId = null
+        )
+
+        assertEquals(MONITOR, resolved)
+    }
+
+    @Test
+    fun `a global apps target holding a game hands this launch to the next screen`() {
+        val resolved = resolveAppLaunchDisplayId(
+            preferredDisplayId = null,
+            defaultDisplayId = BUILT_IN,
+            appTargetDisplayId = MONITOR,
+            roleDisplayIds = LOWER to BUILT_IN,
+            occupiedDisplayId = BUILT_IN
+        )
+
+        assertEquals(MONITOR, resolved)
+    }
+
+    @Test
+    fun `the unset apps target names the app screen while one exists`() {
+        val resolved = resolveAppDefaultDisplayId(
+            target = EmulatorDisplayTarget.DEFAULT,
+            roleDisplayIds = LOWER to BUILT_IN,
+            appScreenDisplayId = MONITOR
+        )
+
+        assertEquals(MONITOR, resolved)
+    }
+
+    @Test
+    fun `the unset apps target names the presentation screen without an app screen`() {
+        val resolved = resolveAppDefaultDisplayId(
+            target = EmulatorDisplayTarget.DEFAULT,
+            roleDisplayIds = LOWER to BUILT_IN,
+            appScreenDisplayId = null
+        )
+
+        assertEquals(BUILT_IN, resolved)
     }
 
     @Test

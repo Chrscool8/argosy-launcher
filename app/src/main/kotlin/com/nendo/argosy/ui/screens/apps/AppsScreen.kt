@@ -284,11 +284,7 @@ fun AppsScreen(
                             if (selectSwapsRoles) R.string.library_apps_hint_open_hold_options else R.string.library_apps_hint_open
                         ),
                         InputButton.B to stringResource(R.string.library_apps_hint_back),
-                        InputButton.Y to if (uiState.hasSecondaryDisplay) {
-                            stringResource(R.string.library_apps_hint_open_on_top)
-                        } else {
-                            stringResource(R.string.library_apps_hint_reorder)
-                        },
+                        InputButton.Y to stringResource(R.string.library_apps_hint_reorder),
                         InputButton.SELECT to stringResource(
                             when (selectSwapMode) {
                                 com.nendo.argosy.data.preferences.SelectSwapMode.TAP ->

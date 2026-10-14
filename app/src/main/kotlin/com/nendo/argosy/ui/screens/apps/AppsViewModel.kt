@@ -111,6 +111,8 @@ class AppsViewModel @Inject constructor(
     private val _events = MutableSharedFlow<AppsEvent>()
     val events: SharedFlow<AppsEvent> = _events.asSharedFlow()
 
+    private val sessionStateStore by lazy { com.nendo.argosy.data.preferences.SessionStateStore(context) }
+
     private var hiddenApps: Set<String> = emptySet()
     private var visibleSystemApps: Set<String> = emptySet()
     private var secondaryHomeApps: List<String> = emptyList()
@@ -402,17 +404,7 @@ class AppsViewModel @Inject constructor(
             saveReorderAndExit()
             return
         }
-        if (state.hasSecondaryDisplay) {
-            val dsm = DualScreenManagerHolder.instance
-            val presentation = displayAffinityHelper
-                .getRoleDisplayIds(dsm?.isRolesSwapped?.value == true)
-                ?.second
-            state.focusedApp?.let {
-                launchApp(it.packageName, overrideDisplayId = presentation)
-            }
-        } else {
-            enterReorderMode()
-        }
+        enterReorderMode()
     }
 
     fun enterReorderMode() {
@@ -553,28 +545,20 @@ class AppsViewModel @Inject constructor(
 
     private fun launchApp(
         packageName: String,
-        pinnedScreenKey: String? = null,
-        overrideDisplayId: Int? = null
+        pinnedScreenKey: String? = null
     ) {
         val intent = appsRepository.getLaunchIntent(packageName) ?: return
         viewModelScope.launch {
             if (pinnedScreenKey != null) {
                 preferencesRepository.setAppDisplayTarget(packageName, pinnedScreenKey)
             }
-            val options = if (overrideDisplayId != null) {
-                displayAffinityHelper.getActivityOptions(
-                    forEmulator = false,
-                    overrideDisplayId = overrideDisplayId
-                )
-            } else {
-                val dsm = DualScreenManagerHolder.instance
-                displayAffinityHelper.getAppLaunchOptions(
-                    preferredScreenKey = pinnedScreenKey
-                        ?: preferencesRepository.preferences.first().appDisplayTargets[packageName],
-                    rolesSwapped = dsm?.isRolesSwapped?.value == true,
-                    occupiedDisplayId = dsm?.emulatorDisplayId
-                )
-            }
+            val prefs = preferencesRepository.preferences.first()
+            val options = displayAffinityHelper.getAppLaunchOptions(
+                preferredScreenKey = pinnedScreenKey ?: prefs.appDisplayTargets[packageName],
+                rolesSwapped = sessionStateStore.isRolesSwapped(),
+                occupiedDisplayId = DualScreenManagerHolder.instance?.emulatorDisplayId,
+                defaultTarget = prefs.appsDisplayTarget
+            )
             _events.emit(AppsEvent.Launch(intent, options))
         }
     }

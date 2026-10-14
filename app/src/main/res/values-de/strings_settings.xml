@@ -257,6 +257,17 @@
 
     <string name="settings_displays_screens_title">Bildschirmanordnung</string>
     <string name="settings_displays_screens_subtitle">Jedem angeschlossenen Bildschirm eine Aufgabe geben</string>
+    <string name="settings_displays_section_display_targets">Zielbildschirme</string>
+    <string name="settings_displays_games_target_title">Spiele</string>
+    <string name="settings_displays_apps_target_title">Apps</string>
+    <string name="settings_displays_launch_target_value">%1$s (Bildschirm %2$d)</string>
+    <string name="settings_displays_launch_target_no_app_screen">Kein Bildschirm ist der App-Bildschirm. Öffnet auf %1$s.</string>
+    <string name="settings_displays_by_platform_and_app_title">Nach Plattform und App</string>
+    <string name="settings_displays_by_platform_and_app_none">Alles folgt diesen Standards</string>
+    <plurals name="settings_displays_by_platform_and_app_count">
+        <item quantity="one">%d einzeln festgelegt</item>
+        <item quantity="other">%d einzeln festgelegt</item>
+    </plurals>
     <string name="settings_interface_presentation_title">Präsentation</string>
     <string name="settings_interface_presentation_subtitle">Wie der andere Bildschirm das gewählte Spiel zeigt</string>
     <string name="settings_interface_section_general">Allgemein</string>
@@ -300,7 +311,7 @@
     <string name="settings_screens_role_presentation">Anzeige</string>
     <string name="settings_screens_role_presentation_detail">Zeigt ohne Bedienelemente, was du gerade ansiehst</string>
     <string name="settings_screens_role_app_target">App-Bildschirm</string>
-    <string name="settings_screens_role_app_target_detail">Gestartete Apps öffnen hier</string>
+    <string name="settings_screens_role_app_target_detail">Hierher gesendete Spiele und Apps öffnen hier, ohne Launcher</string>
     <string name="settings_screens_role_off">Aus</string>
     <string name="settings_screens_role_off_detail">Argosy zeigt auf diesem Bildschirm nichts an</string>
     <string name="settings_displays_ambient_led_title">LED-Steuerung</string>
@@ -1654,6 +1665,7 @@
     <string name="settings_platform_extension_default">Standard</string>
     <string name="settings_platform_display_target_title">Zielbildschirm</string>
     <string name="settings_platform_display_target_default">Standard</string>
+    <string name="settings_platform_display_target_default_resolved">Standard (%1$s)</string>
     <string name="settings_platform_display_target_presentation">Anzeigebildschirm</string>
     <string name="settings_platform_display_target_primary">Primärbildschirm</string>
     <string name="settings_platform_display_target_app_screen">App-Bildschirm</string>

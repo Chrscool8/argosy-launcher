@@ -229,6 +229,8 @@ class UserPreferencesRepository @Inject constructor(
             appDisplayTargets = app.appDisplayTargets,
             dualScreenEnabled = display.dualScreenEnabled,
             displayRoleOverride = display.displayRoleOverride,
+            gamesDisplayTarget = display.gamesDisplayTarget,
+            appsDisplayTarget = display.appsDisplayTarget,
             dualScreenInputFocus = display.dualScreenInputFocus,
             screenLayouts = display.screenLayouts,
             installedOnlyHome = display.installedOnlyHome,
@@ -392,6 +394,8 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setScreenDimmerLevel(level: Int) = displayPrefs.setScreenDimmerLevel(level)
     suspend fun setDualScreenEnabled(enabled: Boolean) = displayPrefs.setDualScreenEnabled(enabled)
     suspend fun setDisplayRoleOverride(override: DisplayRoleOverride) = displayPrefs.setDisplayRoleOverride(override)
+    suspend fun setGamesDisplayTarget(target: EmulatorDisplayTarget) = displayPrefs.setGamesDisplayTarget(target)
+    suspend fun setAppsDisplayTarget(target: EmulatorDisplayTarget) = displayPrefs.setAppsDisplayTarget(target)
     suspend fun setScreenLayouts(layouts: ScreenLayouts) = displayPrefs.setScreenLayouts(layouts)
     suspend fun setDualScreenInputFocus(focus: DualScreenInputFocus) = displayPrefs.setDualScreenInputFocus(focus)
     suspend fun setInstalledOnlyHome(enabled: Boolean) = displayPrefs.setInstalledOnlyHome(enabled)
@@ -962,6 +966,8 @@ data class UserPreferences(
     val appDisplayTargets: Map<String, String> = emptyMap(),
     val dualScreenEnabled: Boolean = false,
     val displayRoleOverride: DisplayRoleOverride = DisplayRoleOverride.AUTO,
+    val gamesDisplayTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.PRESENTATION,
+    val appsDisplayTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.DEFAULT,
     val dualScreenInputFocus: DualScreenInputFocus = DualScreenInputFocus.AUTO,
     val screenLayouts: ScreenLayouts = ScreenLayouts(),
     val installedOnlyHome: Boolean = false,
@@ -1256,6 +1262,19 @@ enum class EmulatorDisplayTarget {
             LEGACY_BOTTOM, LEGACY_LIBRARY -> PRIMARY
             else -> entries.find { it.name == value } ?: DEFAULT
         }
+
+        /**
+         * The global Games target. Never [DEFAULT]: a missing or unknown token reads as
+         * [PRESENTATION], where games went before the setting existed.
+         */
+        fun gamesDefaultFrom(value: String?): EmulatorDisplayTarget =
+            fromString(value).takeUnless { it == DEFAULT } ?: PRESENTATION
+
+        /**
+         * The global Apps target. [DEFAULT] means the App Screen while the layout has one, else
+         * the Presentation screen.
+         */
+        fun appsDefaultFrom(value: String?): EmulatorDisplayTarget = fromString(value)
 
         private const val LEGACY_TOP = "TOP"
         private const val LEGACY_BOTTOM = "BOTTOM"

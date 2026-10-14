@@ -252,6 +252,19 @@
 
     <string name="settings_displays_screens_title">Расположение экранов</string>
     <string name="settings_displays_screens_subtitle">Назначьте задачу каждому подключённому экрану</string>
+    <string name="settings_displays_section_display_targets">Целевые экраны</string>
+    <string name="settings_displays_games_target_title">Игры</string>
+    <string name="settings_displays_apps_target_title">Приложения</string>
+    <string name="settings_displays_launch_target_value">%1$s (экран %2$d)</string>
+    <string name="settings_displays_launch_target_no_app_screen">Ни один экран не назначен экраном приложений. Откроется на: %1$s.</string>
+    <string name="settings_displays_by_platform_and_app_title">По платформам и приложениям</string>
+    <string name="settings_displays_by_platform_and_app_none">Всё следует этим настройкам по умолчанию</string>
+    <plurals name="settings_displays_by_platform_and_app_count">
+        <item quantity="one">%d с отдельной настройкой</item>
+        <item quantity="few">%d с отдельной настройкой</item>
+        <item quantity="many">%d с отдельной настройкой</item>
+        <item quantity="other">%d с отдельной настройкой</item>
+    </plurals>
     <string name="settings_interface_presentation_title">Презентация</string>
     <string name="settings_interface_presentation_subtitle">Как другой экран показывает выбранную игру</string>
     <string name="settings_interface_section_general">Общие</string>
@@ -295,7 +308,7 @@
     <string name="settings_screens_role_presentation">Показ</string>
     <string name="settings_screens_role_presentation_detail">Показывает то, что вы смотрите, без элементов управления</string>
     <string name="settings_screens_role_app_target">Экран приложений</string>
-    <string name="settings_screens_role_app_target_detail">Запущенные приложения открываются здесь</string>
+    <string name="settings_screens_role_app_target_detail">Игры и приложения, отправленные сюда, открываются здесь без лаунчера</string>
     <string name="settings_screens_role_off">Выключен</string>
     <string name="settings_screens_role_off_detail">Argosy ничего не выводит на этот экран</string>
     <string name="settings_displays_ambient_led_title">Управление LED</string>
@@ -1731,6 +1744,7 @@
     <string name="settings_platform_extension_default">По умолчанию</string>
     <string name="settings_platform_display_target_title">Целевой экран</string>
     <string name="settings_platform_display_target_default">По умолчанию</string>
+    <string name="settings_platform_display_target_default_resolved">По умолчанию (%1$s)</string>
     <string name="settings_platform_display_target_presentation">Экран показа</string>
     <string name="settings_platform_display_target_primary">Основной экран</string>
     <string name="settings_platform_display_target_app_screen">Экран приложений</string>

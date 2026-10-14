@@ -130,7 +130,6 @@
     <string name="library_apps_hint_cancel">रद्द करें</string>
     <string name="library_apps_hint_open">खोलें</string>
     <string name="library_apps_hint_back">वापस</string>
-    <string name="library_apps_hint_open_on_top">टॉप पर खोलें</string>
     <string name="library_apps_hint_reorder">फिर से व्यवस्थित करें</string>
     <string name="library_apps_hint_swap_screens">स्क्रीन बदलें</string>
     <string name="library_apps_hint_open_hold_options">खोलें, विकल्पों के लिए दबाए रखें</string>

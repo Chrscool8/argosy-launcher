@@ -162,27 +162,38 @@ class DisplayAffinityHelper @Inject constructor(
      * Where an app, a video or anything else that is not a game belongs. [preferredScreenKey] is
      * the screen this app is pinned to, keyed as the stored screen layout keys it, and
      * [occupiedDisplayId] names a screen a game holds. Either one being absent passes it over for
-     * this launch alone.
+     * this launch alone. [defaultTarget] is the global Apps target, consulted after the pin.
      */
     fun appLaunchDisplayId(
         preferredScreenKey: String? = null,
         rolesSwapped: Boolean = false,
-        occupiedDisplayId: Int? = null
-    ): Int? = singleSurfaceDisplayId ?: resolveAppLaunchDisplayId(
-        preferredDisplayId = preferredScreenKey?.let { key ->
-            screenCatalog.attachedScreens().find { it.key == key }?.displayId
-        },
-        appTargetDisplayId = resolvedAppTarget,
-        roleDisplayIds = getRoleDisplayIds(rolesSwapped),
-        occupiedDisplayId = occupiedDisplayId
-    )
+        occupiedDisplayId: Int? = null,
+        defaultTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.DEFAULT
+    ): Int? {
+        singleSurfaceDisplayId?.let { return it }
+        val roles = getRoleDisplayIds(rolesSwapped)
+        return resolveAppLaunchDisplayId(
+            preferredDisplayId = preferredScreenKey?.let { key ->
+                screenCatalog.attachedScreens().find { it.key == key }?.displayId
+            },
+            defaultDisplayId = resolveAppDefaultDisplayId(
+                target = defaultTarget,
+                roleDisplayIds = roles,
+                appScreenDisplayId = appScreenDisplayId(rolesSwapped)
+            ),
+            appTargetDisplayId = resolvedAppTarget,
+            roleDisplayIds = roles,
+            occupiedDisplayId = occupiedDisplayId
+        )
+    }
 
     fun getAppLaunchOptions(
         preferredScreenKey: String? = null,
         rolesSwapped: Boolean = false,
-        occupiedDisplayId: Int? = null
+        occupiedDisplayId: Int? = null,
+        defaultTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.DEFAULT
     ): Bundle? {
-        val displayId = appLaunchDisplayId(preferredScreenKey, rolesSwapped, occupiedDisplayId)
+        val displayId = appLaunchDisplayId(preferredScreenKey, rolesSwapped, occupiedDisplayId, defaultTarget)
             ?: return null
         return ActivityOptions.makeBasic()
             .setLaunchDisplayId(displayId)
@@ -236,6 +247,9 @@ class DisplayAffinityHelper @Inject constructor(
         val display = displayManager.getDisplay(displayId) ?: return null
         return context.createDisplayContext(display)
     }
+
+    fun screenNumbersByDisplayId(): Map<Int, Int> =
+        screenCatalog.attachedScreens().associate { it.displayId to it.number }
 
     fun isBuiltInDisplay(displayId: Int): Boolean =
         screenCatalog.attachedScreens().any { it.displayId == displayId && it.builtIn }
@@ -392,19 +406,26 @@ class DisplayAffinityHelper @Inject constructor(
             }
         }
 
-        /**
-         * Where an app lands, best screen first: the one it is pinned to, the app-target role, the
-         * presentation screen, then the interactive one. [occupiedDisplayId] names a screen a game
-         * holds, which moves the launch down the list and never off it.
-         */
+        internal fun resolveAppDefaultDisplayId(
+            target: EmulatorDisplayTarget,
+            roleDisplayIds: Pair<Int, Int>?,
+            appScreenDisplayId: Int?
+        ): Int? = resolveDisplayTargetId(
+            target = if (target == EmulatorDisplayTarget.DEFAULT) EmulatorDisplayTarget.APP_SCREEN else target,
+            roleDisplayIds = roleDisplayIds,
+            appScreenDisplayId = appScreenDisplayId
+        )
+
         internal fun resolveAppLaunchDisplayId(
             preferredDisplayId: Int?,
+            defaultDisplayId: Int?,
             appTargetDisplayId: Int?,
             roleDisplayIds: Pair<Int, Int>?,
             occupiedDisplayId: Int?
         ): Int? {
             val candidates = listOfNotNull(
                 preferredDisplayId,
+                defaultDisplayId,
                 appTargetDisplayId,
                 roleDisplayIds?.second,
                 roleDisplayIds?.first

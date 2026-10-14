@@ -121,6 +121,12 @@
     <string name="custom_tile_menu_action_page_backdrop">Backdrop for this page</string>
     <string name="custom_tile_menu_action_page_music">Music for this page</string>
     <string name="custom_tile_menu_action_delete_page">Delete page</string>
+    <!-- Tile menu on an app tile: opens the app on one screen and keeps it there next time.
+         %1$d is the number drawn on that screen while the menu is open. -->
+    <string name="custom_tile_menu_action_open_on_screen">Open on screen %1$d</string>
+    <!-- Tile menu on a game tile: starts the game on one screen and keeps it there next time.
+         %1$d is the number drawn on that screen while the menu is open. -->
+    <string name="custom_tile_menu_action_play_on_screen">Play on screen %1$d</string>
 
     <!-- ================= Home tile picker category tabs ================= -->
 

@@ -2247,11 +2247,12 @@ class DualScreenManager(
             if (pinnedScreenKey != null) {
                 preferencesRepository.setAppDisplayTarget(packageName, pinnedScreenKey)
             }
+            val prefs = preferencesRepository.userPreferences.first()
             val options = displayAffinityHelper.getAppLaunchOptions(
-                preferredScreenKey = pinnedScreenKey
-                    ?: preferencesRepository.userPreferences.first().appDisplayTargets[packageName],
-                rolesSwapped = _isRolesSwapped.value,
-                occupiedDisplayId = emulatorDisplayId
+                preferredScreenKey = pinnedScreenKey ?: prefs.appDisplayTargets[packageName],
+                rolesSwapped = sessionStateStore.isRolesSwapped(),
+                occupiedDisplayId = emulatorDisplayId,
+                defaultTarget = prefs.appsDisplayTarget
             )
             if (options != null) activityContext.startActivity(intent, options)
             else activityContext.startActivity(intent)

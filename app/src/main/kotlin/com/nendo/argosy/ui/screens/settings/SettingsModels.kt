@@ -325,6 +325,10 @@ data class DisplayState(
     val hasPhysicalSecondaryDisplay: Boolean = false,
     val dualScreenEnabled: Boolean = false,
     val displayRoleOverride: DisplayRoleOverride = DisplayRoleOverride.AUTO,
+    val gamesLaunchTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.PRESENTATION,
+    val appsLaunchTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.DEFAULT,
+    val launchTargetScreens: LaunchTargetScreens = LaunchTargetScreens(),
+    val launchTargetSetCount: Int = 0,
     val screens: List<ScreenAssignment> = emptyList(),
     val screenRoleModalOpen: Boolean = false,
     val screenRoleModalFocus: Int = 0,
@@ -341,6 +345,39 @@ data class DisplayState(
 
     val selectedIconPackIndex: Int
         get() = iconPackOptions.indexOf(iconPack).coerceAtLeast(0)
+}
+
+/**
+ * The screen number holding each launch role right now, role swap applied. Null for a role no
+ * attached screen holds.
+ */
+data class LaunchTargetScreens(
+    val primary: Int? = null,
+    val presentation: Int? = null,
+    val appScreen: Int? = null
+) {
+    val options: List<EmulatorDisplayTarget>
+        get() = listOfNotNull(
+            EmulatorDisplayTarget.PRESENTATION,
+            EmulatorDisplayTarget.PRIMARY,
+            EmulatorDisplayTarget.APP_SCREEN.takeIf { appScreen != null }
+        )
+
+    fun shown(stored: EmulatorDisplayTarget): EmulatorDisplayTarget = when {
+        stored != EmulatorDisplayTarget.DEFAULT -> stored
+        appScreen != null -> EmulatorDisplayTarget.APP_SCREEN
+        else -> EmulatorDisplayTarget.PRESENTATION
+    }
+
+    fun numberFor(target: EmulatorDisplayTarget): Int? = when (target) {
+        EmulatorDisplayTarget.PRIMARY -> primary
+        EmulatorDisplayTarget.PRESENTATION -> presentation
+        EmulatorDisplayTarget.APP_SCREEN -> appScreen
+        EmulatorDisplayTarget.DEFAULT -> null
+    }
+
+    fun lacksAppScreen(target: EmulatorDisplayTarget): Boolean =
+        target == EmulatorDisplayTarget.APP_SCREEN && appScreen == null
 }
 
 data class ScreenAssignment(

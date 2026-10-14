@@ -231,6 +231,16 @@
 
     <string name="settings_displays_screens_title">螢幕配置</string>
     <string name="settings_displays_screens_subtitle">為每片已連接的螢幕指派用途</string>
+    <string name="settings_displays_section_display_targets">顯示目標</string>
+    <string name="settings_displays_games_target_title">遊戲</string>
+    <string name="settings_displays_apps_target_title">應用程式</string>
+    <string name="settings_displays_launch_target_value">%1$s（螢幕 %2$d）</string>
+    <string name="settings_displays_launch_target_no_app_screen">沒有螢幕擔任應用程式螢幕。將在%1$s上開啟。</string>
+    <string name="settings_displays_by_platform_and_app_title">依平台與應用程式</string>
+    <string name="settings_displays_by_platform_and_app_none">全部遵循這些預設值</string>
+    <plurals name="settings_displays_by_platform_and_app_count">
+        <item quantity="other">%d 項個別設定</item>
+    </plurals>
     <string name="settings_interface_presentation_title">展示</string>
     <string name="settings_interface_presentation_subtitle">另一片螢幕如何展示選取的遊戲</string>
     <string name="settings_interface_section_general">一般</string>
@@ -274,7 +284,7 @@
     <string name="settings_screens_role_presentation">展示</string>
     <string name="settings_screens_role_presentation_detail">顯示你正在查看的內容，不含控制項</string>
     <string name="settings_screens_role_app_target">應用程式螢幕</string>
-    <string name="settings_screens_role_app_target_detail">啟動的應用程式在此開啟</string>
+    <string name="settings_screens_role_app_target_detail">傳送到這裡的遊戲與應用程式在此開啟，不顯示啟動器</string>
     <string name="settings_screens_role_off">關閉</string>
     <string name="settings_screens_role_off_detail">Argosy 不在此螢幕顯示任何內容</string>
     <string name="settings_displays_ambient_led_title">LED控制</string>
@@ -1529,6 +1539,7 @@
     <string name="settings_platform_extension_default">預設</string>
     <string name="settings_platform_display_target_title">顯示目標</string>
     <string name="settings_platform_display_target_default">預設</string>
+    <string name="settings_platform_display_target_default_resolved">預設（%1$s）</string>
     <string name="settings_platform_display_target_presentation">展示螢幕</string>
     <string name="settings_platform_display_target_primary">主控螢幕</string>
     <string name="settings_platform_display_target_app_screen">應用程式螢幕</string>

@@ -19,6 +19,7 @@ import com.nendo.argosy.domain.model.customGridStep
 import com.nendo.argosy.domain.model.settleAfterEdit
 import com.nendo.argosy.data.local.entity.PageAudioKind
 import com.nendo.argosy.data.local.entity.PageBackgroundKind
+import com.nendo.argosy.ui.components.AppMenuRow
 import com.nendo.argosy.ui.components.CustomGridState
 import com.nendo.argosy.ui.components.CustomTileMenuAction
 import com.nendo.argosy.ui.components.GridPageSettings
@@ -59,6 +60,7 @@ class CustomGridCoordinator(
     private val mediaCatalog: MediaTileCatalog? = null,
     private val featureFilterOptions: (suspend () -> FeatureFilterOptions)? = null,
     private val raGamePickerEntries: (suspend (String) -> List<TilePickerEntry>)? = null,
+    private val onOpenOnScreen: ((HomeTileTargetRef, AppMenuRow.OpenOnScreen) -> Unit)? = null,
     private val read: () -> CustomGridState,
     private val write: ((CustomGridState) -> CustomGridState) -> Unit
 ) {
@@ -337,9 +339,15 @@ class CustomGridCoordinator(
         return true
     }
 
-    fun openMenu() {
-        if (read().menuActions.isEmpty()) return
-        write { it.copy(showMenu = true, menuFocusIndex = 0, menuListsHidden = false) }
+    /**
+     * Opens the tile menu. [screens] are listed above the tile's own actions and launch the
+     * focused tile on that screen through [onOpenOnScreen].
+     */
+    fun openMenu(screens: List<AppMenuRow.OpenOnScreen> = emptyList()) {
+        if (read().menuActions.isEmpty() && screens.isEmpty()) return
+        write {
+            it.copy(showMenu = true, menuFocusIndex = 0, menuListsHidden = false, menuScreens = screens)
+        }
     }
 
     /**
@@ -347,10 +355,14 @@ class CustomGridCoordinator(
      */
     fun openHiddenTiles() {
         if (read().hiddenTiles.isEmpty()) return
-        write { it.copy(showMenu = true, menuFocusIndex = 0, menuListsHidden = true) }
+        write {
+            it.copy(showMenu = true, menuFocusIndex = 0, menuListsHidden = true, menuScreens = emptyList())
+        }
     }
 
-    fun closeMenu() = write { it.copy(showMenu = false, menuListsHidden = false) }
+    fun closeMenu() = write {
+        it.copy(showMenu = false, menuListsHidden = false, menuScreens = emptyList())
+    }
 
     fun moveMenuFocus(delta: Int) = write {
         val maxIndex = (it.menuEntryCount - 1).coerceAtLeast(0)
@@ -365,7 +377,14 @@ class CustomGridCoordinator(
             placeHiddenTile(hidden)
             return
         }
-        val action = current.menuActions.getOrNull(current.menuFocusIndex) ?: return
+        val screen = current.menuScreenAt(current.menuFocusIndex)
+        val target = current.focusedTile?.target
+        if (screen != null && target != null) {
+            closeMenu()
+            onOpenOnScreen?.invoke(target, screen)
+            return
+        }
+        val action = current.menuActionAt(current.menuFocusIndex) ?: return
         closeMenu()
         when (action) {
             CustomTileMenuAction.HIDDEN_TILES -> openHiddenTiles()

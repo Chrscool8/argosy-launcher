@@ -55,6 +55,9 @@ class EmulatorConfigRepository @Inject constructor(
     suspend fun getDisplayTargetForPlatform(platformId: Long): String? =
         emulatorConfigDao.getDisplayTargetForPlatform(platformId)
 
+    suspend fun getPlatformDisplayTargets(): List<String> =
+        emulatorConfigDao.getPlatformDisplayTargets()
+
     suspend fun getEffectiveDisplayTarget(gameId: Long): String? =
         emulatorConfigDao.getEffectiveDisplayTarget(gameId)
 

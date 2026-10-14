@@ -118,6 +118,8 @@ data class DisplayPreferences(
     val screenDimmerLevel: Int = 50,
     val dualScreenEnabled: Boolean = false,
     val displayRoleOverride: DisplayRoleOverride = DisplayRoleOverride.AUTO,
+    val gamesDisplayTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.PRESENTATION,
+    val appsDisplayTarget: EmulatorDisplayTarget = EmulatorDisplayTarget.DEFAULT,
     val dualScreenInputFocus: DualScreenInputFocus = DualScreenInputFocus.AUTO,
     val screenLayouts: ScreenLayouts = ScreenLayouts(),
     val installedOnlyHome: Boolean = false
@@ -225,6 +227,8 @@ class DisplayPreferencesRepository @Inject constructor(
         val SCREEN_DIMMER_LEVEL = intPreferencesKey("screen_dimmer_level")
         val DUAL_SCREEN_ENABLED = booleanPreferencesKey("dual_screen_enabled")
         val DISPLAY_ROLE_OVERRIDE = stringPreferencesKey("display_role_override")
+        val GAMES_DISPLAY_TARGET = stringPreferencesKey("games_display_target")
+        val APPS_DISPLAY_TARGET = stringPreferencesKey("apps_display_target")
         val DUAL_SCREEN_INPUT_FOCUS = stringPreferencesKey("dual_screen_input_focus")
         val SCREEN_LAYOUTS = stringPreferencesKey("screen_layouts")
         val INSTALLED_ONLY_HOME = booleanPreferencesKey("installed_only_home")
@@ -335,6 +339,8 @@ class DisplayPreferencesRepository @Inject constructor(
             screenDimmerLevel = prefs[Keys.SCREEN_DIMMER_LEVEL] ?: 50,
             dualScreenEnabled = prefs[Keys.DUAL_SCREEN_ENABLED] ?: DisplayAffinityHelper.isKnownDualScreenDevice(),
             displayRoleOverride = DisplayRoleOverride.fromString(prefs[Keys.DISPLAY_ROLE_OVERRIDE]),
+            gamesDisplayTarget = EmulatorDisplayTarget.gamesDefaultFrom(prefs[Keys.GAMES_DISPLAY_TARGET]),
+            appsDisplayTarget = EmulatorDisplayTarget.appsDefaultFrom(prefs[Keys.APPS_DISPLAY_TARGET]),
             dualScreenInputFocus = DualScreenInputFocus.fromString(prefs[Keys.DUAL_SCREEN_INPUT_FOCUS]),
             screenLayouts = ScreenLayouts.fromJson(prefs[Keys.SCREEN_LAYOUTS]),
             installedOnlyHome = prefs[Keys.INSTALLED_ONLY_HOME] ?: false
@@ -783,6 +789,17 @@ class DisplayPreferencesRepository @Inject constructor(
 
     suspend fun setDisplayRoleOverride(override: DisplayRoleOverride) {
         dataStore.edit { it[Keys.DISPLAY_ROLE_OVERRIDE] = override.name }
+    }
+
+    suspend fun setGamesDisplayTarget(target: EmulatorDisplayTarget) {
+        dataStore.edit { it[Keys.GAMES_DISPLAY_TARGET] = EmulatorDisplayTarget.gamesDefaultFrom(target.name).name }
+    }
+
+    suspend fun setAppsDisplayTarget(target: EmulatorDisplayTarget) {
+        dataStore.edit { prefs ->
+            if (target == EmulatorDisplayTarget.DEFAULT) prefs.remove(Keys.APPS_DISPLAY_TARGET)
+            else prefs[Keys.APPS_DISPLAY_TARGET] = target.name
+        }
     }
 
     suspend fun setDualScreenInputFocus(focus: DualScreenInputFocus) {

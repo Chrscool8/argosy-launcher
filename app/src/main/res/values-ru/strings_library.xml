@@ -146,7 +146,6 @@
     <string name="library_apps_hint_cancel">Отмена</string>
     <string name="library_apps_hint_open">Открыть</string>
     <string name="library_apps_hint_back">Назад</string>
-    <string name="library_apps_hint_open_on_top">Открыть сверху</string>
     <string name="library_apps_hint_reorder">Изменить порядок</string>
     <string name="library_apps_hint_swap_screens">Поменять экраны</string>
     <string name="library_apps_hint_open_hold_options">Открыть, удерживайте для параметров</string>

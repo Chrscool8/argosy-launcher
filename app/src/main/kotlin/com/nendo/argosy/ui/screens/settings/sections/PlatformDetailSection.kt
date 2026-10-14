@@ -386,11 +386,13 @@ fun PlatformDetailSection(
                 )
                 PlatformDetailItem.DisplayTarget -> CyclePreference(
                     title = stringResource(R.string.settings_platform_display_target_title),
-                    value = stringResource(config.displayTarget.labelRes),
+                    value = platformDisplayTargetLabel(config.displayTarget, uiState.display.gamesLaunchTarget),
                     isFocused = isFocused(item),
                     onClick = { viewModel.cycleDisplayTarget(config, 1) },
                     onPrev = { viewModel.cycleDisplayTarget(config, -1) },
-                    options = EmulatorDisplayTarget.entries.map { stringResource(it.labelRes) },
+                    options = EmulatorDisplayTarget.entries.map {
+                        platformDisplayTargetLabel(it, uiState.display.gamesLaunchTarget)
+                    },
                     onSelect = { viewModel.cycleDisplayTarget(config, it - config.displayTarget.ordinal) },
                     pickerRequestToken = pickerToken(item)
                 )
@@ -893,6 +895,20 @@ fun PlatformDetailSection(
         }
     }
 }
+
+@Composable
+private fun platformDisplayTargetLabel(
+    target: EmulatorDisplayTarget,
+    gamesDefault: EmulatorDisplayTarget
+): String =
+    if (target == EmulatorDisplayTarget.DEFAULT) {
+        stringResource(
+            R.string.settings_platform_display_target_default_resolved,
+            stringResource(EmulatorDisplayTarget.gamesDefaultFrom(gamesDefault.name).labelRes)
+        )
+    } else {
+        stringResource(target.labelRes)
+    }
 
 @Composable
 private fun StatRow(

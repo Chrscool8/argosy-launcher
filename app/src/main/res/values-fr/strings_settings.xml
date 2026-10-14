@@ -250,6 +250,18 @@
 
     <string name="settings_displays_screens_title">Disposition des écrans</string>
     <string name="settings_displays_screens_subtitle">Attribuez un rôle à chaque écran connecté</string>
+    <string name="settings_displays_section_display_targets">Écrans cibles</string>
+    <string name="settings_displays_games_target_title">Jeux</string>
+    <string name="settings_displays_apps_target_title">Applis</string>
+    <string name="settings_displays_launch_target_value">%1$s (écran %2$d)</string>
+    <string name="settings_displays_launch_target_no_app_screen">Aucun écran n\'est l\'écran des applis. Ouverture sur %1$s.</string>
+    <string name="settings_displays_by_platform_and_app_title">Par plateforme et appli</string>
+    <string name="settings_displays_by_platform_and_app_none">Tout suit ces réglages par défaut</string>
+    <plurals name="settings_displays_by_platform_and_app_count">
+        <item quantity="one">%d réglé individuellement</item>
+        <item quantity="many">%d réglés individuellement</item>
+        <item quantity="other">%d réglés individuellement</item>
+    </plurals>
     <string name="settings_interface_presentation_title">Présentation</string>
     <string name="settings_interface_presentation_subtitle">Comment l\'autre écran affiche le jeu sélectionné</string>
     <string name="settings_interface_section_general">Général</string>
@@ -293,7 +305,7 @@
     <string name="settings_screens_role_presentation">Présentation</string>
     <string name="settings_screens_role_presentation_detail">Affiche ce que vous regardez, sans commandes</string>
     <string name="settings_screens_role_app_target">Écran des applis</string>
-    <string name="settings_screens_role_app_target_detail">Les applis lancées s\'ouvrent ici</string>
+    <string name="settings_screens_role_app_target_detail">Les jeux et applis envoyés ici s\'ouvrent ici, sans launcher</string>
     <string name="settings_screens_role_off">Éteint</string>
     <string name="settings_screens_role_off_detail">Argosy n\'affiche rien sur cet écran</string>
     <string name="settings_displays_ambient_led_title">Contrôle LED</string>
@@ -1689,6 +1701,7 @@
     <string name="settings_platform_extension_default">Par défaut</string>
     <string name="settings_platform_display_target_title">Écran cible</string>
     <string name="settings_platform_display_target_default">Par défaut</string>
+    <string name="settings_platform_display_target_default_resolved">Par défaut (%1$s)</string>
     <string name="settings_platform_display_target_presentation">Écran de présentation</string>
     <string name="settings_platform_display_target_primary">Écran principal</string>
     <string name="settings_platform_display_target_app_screen">Écran des applis</string>

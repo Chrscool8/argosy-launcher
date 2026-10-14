@@ -247,6 +247,17 @@
 
     <string name="settings_displays_screens_title">स्क्रीन व्यवस्था</string>
     <string name="settings_displays_screens_subtitle">हर जुड़ी स्क्रीन को एक काम सौंपें</string>
+    <string name="settings_displays_section_display_targets">डिस्प्ले टार्गेट</string>
+    <string name="settings_displays_games_target_title">गेम</string>
+    <string name="settings_displays_apps_target_title">ऐप</string>
+    <string name="settings_displays_launch_target_value">%1$s (स्क्रीन %2$d)</string>
+    <string name="settings_displays_launch_target_no_app_screen">कोई स्क्रीन ऐप स्क्रीन नहीं है। %1$s पर खुलेगा।</string>
+    <string name="settings_displays_by_platform_and_app_title">प्लेटफ़ॉर्म और ऐप के अनुसार</string>
+    <string name="settings_displays_by_platform_and_app_none">सब कुछ इन डिफ़ॉल्ट का पालन करता है</string>
+    <plurals name="settings_displays_by_platform_and_app_count">
+        <item quantity="one">%d अलग से सेट</item>
+        <item quantity="other">%d अलग से सेट</item>
+    </plurals>
     <string name="settings_interface_presentation_title">प्रस्तुति</string>
     <string name="settings_interface_presentation_subtitle">दूसरी स्क्रीन चुने गए गेम को कैसे दिखाए</string>
     <string name="settings_interface_section_general">सामान्य</string>
@@ -290,7 +301,7 @@
     <string name="settings_screens_role_presentation">प्रस्तुति</string>
     <string name="settings_screens_role_presentation_detail">आप जो देख रहे हैं वह दिखाती है, बिना नियंत्रण के</string>
     <string name="settings_screens_role_app_target">ऐप स्क्रीन</string>
-    <string name="settings_screens_role_app_target_detail">आपके शुरू किए ऐप यहीं खुलते हैं</string>
+    <string name="settings_screens_role_app_target_detail">यहाँ भेजे गए गेम और ऐप यहीं खुलते हैं, बिना लॉन्चर के</string>
     <string name="settings_screens_role_off">बंद</string>
     <string name="settings_screens_role_off_detail">Argosy इस स्क्रीन पर कुछ नहीं दिखाता</string>
     <string name="settings_displays_ambient_led_title">LED नियंत्रण</string>
@@ -1644,6 +1655,7 @@
     <string name="settings_platform_extension_default">डिफ़ॉल्ट</string>
     <string name="settings_platform_display_target_title">डिस्प्ले टार्गेट</string>
     <string name="settings_platform_display_target_default">डिफ़ॉल्ट</string>
+    <string name="settings_platform_display_target_default_resolved">डिफ़ॉल्ट (%1$s)</string>
     <string name="settings_platform_display_target_presentation">प्रस्तुति स्क्रीन</string>
     <string name="settings_platform_display_target_primary">प्राथमिक स्क्रीन</string>
     <string name="settings_platform_display_target_app_screen">ऐप स्क्रीन</string>
