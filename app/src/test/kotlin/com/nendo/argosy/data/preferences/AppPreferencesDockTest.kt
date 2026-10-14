@@ -29,8 +29,7 @@ class AppPreferencesDockTest {
 
     @Test
     fun `pin changes preserve reordered survivors and concurrent additions`() = runBlocking {
-        val repository = AppPreferencesRepository(Store())
-        repository.setSecondaryHomeApps(listOf("c", "a", "b"))
+        val repository = AppPreferencesRepository(Store(mutablePreferencesOf(key to "c,a,b")))
         listOf("d", "e").map { async { repository.toggleDockPin(it) } }.awaitAll()
         repository.toggleDockPin("a")
 
@@ -42,9 +41,8 @@ class AppPreferencesDockTest {
 
     @Test
     fun `stale reorder cannot erase a newer pin and membership cannot change`() = runBlocking {
-        val repository = AppPreferencesRepository(Store())
         val original = listOf("a", "b", "c")
-        repository.setSecondaryHomeApps(original)
+        val repository = AppPreferencesRepository(Store(mutablePreferencesOf(key to original.joinToString(","))))
         repository.toggleDockPin("d")
 
         assertFalse(repository.reorderDockPins(original, original.reversed()))

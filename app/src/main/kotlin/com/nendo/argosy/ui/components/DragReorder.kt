@@ -2,6 +2,7 @@ package com.nendo.argosy.ui.components
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -27,7 +28,7 @@ import kotlinx.coroutines.launch
 @Stable
 class DragReorderState internal constructor(
     private val listState: LazyListState,
-    private val scope: CoroutineScope,
+    scope: CoroutineScope,
     private val canDrag: (Any) -> Boolean,
     private val onLift: (Any) -> Unit,
     private val onMove: (Any, Int) -> Unit,
@@ -39,8 +40,7 @@ class DragReorderState internal constructor(
     private var liftedTop = 0f
     private var totalDrag by mutableFloatStateOf(0f)
     private var expectedIndex = -1
-    private var autoscrollJob: Job? = null
-    private var autoscrollSpeed = 0f
+    private val autoscroller = EdgeAutoscroller(listState, scope) { resolveMove() }
 
     /** Viewport-relative translation pinning the dragged item to the pointer; 0 for other keys. */
     fun itemTranslation(key: Any): Float {
@@ -69,8 +69,7 @@ class DragReorderState internal constructor(
     }
 
     internal fun endDrag() {
-        autoscrollJob?.cancel()
-        autoscrollJob = null
+        autoscroller.stop()
         if (draggingKey == null) return
         draggingKey = null
         totalDrag = 0f
@@ -96,36 +95,52 @@ class DragReorderState internal constructor(
 
     private fun updateAutoscroll() {
         val item = draggedItem() ?: return
-        val info = listState.layoutInfo
-        val edge = item.size * 0.75f
         val top = liftedTop + totalDrag
-        val bottom = top + item.size
-        autoscrollSpeed = when {
-            top < info.viewportStartOffset + edge -> -(info.viewportStartOffset + edge - top) / edge * MAX_SCROLL_STEP
-            bottom > info.viewportEndOffset - edge -> (bottom - (info.viewportEndOffset - edge)) / edge * MAX_SCROLL_STEP
-            else -> 0f
-        }
-        if (autoscrollSpeed == 0f) {
-            autoscrollJob?.cancel()
-            autoscrollJob = null
+        autoscroller.update(edgeScrollSpeed(listState.layoutInfo, top, top + item.size, item.size * 0.75f))
+    }
+}
+
+internal fun edgeScrollSpeed(layout: LazyListLayoutInfo, leading: Float, trailing: Float, edge: Float): Float = when {
+    leading < layout.viewportStartOffset + edge ->
+        -(layout.viewportStartOffset + edge - leading) / edge * MAX_SCROLL_STEP
+    trailing > layout.viewportEndOffset - edge ->
+        (trailing - (layout.viewportEndOffset - edge)) / edge * MAX_SCROLL_STEP
+    else -> 0f
+}
+
+internal class EdgeAutoscroller(
+    private val listState: LazyListState,
+    private val scope: CoroutineScope,
+    private val onScrolled: (Float) -> Unit
+) {
+    private var job: Job? = null
+    private var speed = 0f
+
+    fun update(next: Float) {
+        speed = next
+        if (speed == 0f) {
+            stop()
             return
         }
-        if (autoscrollJob?.isActive == true) return
-        autoscrollJob = scope.launch {
-            while (isActive && draggingKey != null && autoscrollSpeed != 0f) {
-                val consumed = listState.scrollBy(autoscrollSpeed)
+        if (job?.isActive == true) return
+        job = scope.launch {
+            while (isActive && speed != 0f) {
+                val consumed = listState.scrollBy(speed)
                 if (consumed == 0f) break
-                resolveMove()
+                onScrolled(consumed)
                 delay(FRAME_MILLIS)
             }
         }
     }
 
-    private companion object {
-        const val MAX_SCROLL_STEP = 12f
-        const val FRAME_MILLIS = 16L
+    fun stop() {
+        job?.cancel()
+        job = null
     }
 }
+
+internal const val MAX_SCROLL_STEP = 12f
+private const val FRAME_MILLIS = 16L
 
 @Composable
 fun rememberDragReorderState(

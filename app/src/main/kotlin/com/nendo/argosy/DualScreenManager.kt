@@ -2042,7 +2042,16 @@ class DualScreenManager(
         }
     }
 
+    private val _isWizardActive = MutableStateFlow(!sessionStateStore.isFirstRunComplete())
+
+    /**
+     * Whether the first-run wizard is showing on the launcher, for surfaces on the other screen
+     * that must stay out of its way.
+     */
+    val isWizardActive: StateFlow<Boolean> = _isWizardActive
+
     fun recordWizardState(isActive: Boolean) {
+        _isWizardActive.value = isActive
         if (!isActive) sessionStateStore.setFirstRunComplete(true)
     }
 

@@ -136,14 +136,6 @@ class AppPreferencesRepository @Inject constructor(
         }
     }
 
-    suspend fun setSecondaryHomeApps(apps: List<String>) {
-        dataStore.edit { prefs ->
-            val pins = apps.filter { it.isNotBlank() }.distinct()
-            if (pins.isEmpty()) prefs.remove(Keys.SECONDARY_HOME_APPS)
-            else prefs[Keys.SECONDARY_HOME_APPS] = pins.joinToString(",")
-        }
-    }
-
     suspend fun toggleDockPin(packageName: String): Boolean {
         require(packageName.isNotBlank())
         var pinned = false

@@ -42,6 +42,7 @@ import com.nendo.argosy.domain.model.MediaTilePlayback
 import com.nendo.argosy.ui.components.AutoGridMove
 import com.nendo.argosy.ui.components.autoGridMove
 import com.nendo.argosy.ui.screens.home.delegates.GameMenuAction
+import com.nendo.argosy.ui.screens.home.delegates.HomeDockDelegate
 import com.nendo.argosy.ui.screens.home.delegates.HomeDownloadDelegate
 import com.nendo.argosy.ui.screens.home.delegates.HomeGameMenuDelegate
 import com.nendo.argosy.ui.screens.home.delegates.HomeInputActions
@@ -119,6 +120,7 @@ class HomeViewModel @Inject constructor(
     val gameMenuDelegate: HomeGameMenuDelegate,
     val mediaDelegate: HomeMediaDelegate,
     val tilePickerDelegate: HomeTilePickerDelegate,
+    private val dockDelegate: HomeDockDelegate,
     private val steamContentManager: com.nendo.argosy.data.steam.SteamContentManager,
     private val steamDownloadPromptController: com.nendo.argosy.data.steam.SteamDownloadPromptController,
     private val appsRepository: com.nendo.argosy.data.repository.AppsRepository,
@@ -247,19 +249,9 @@ class HomeViewModel @Inject constructor(
     private val achievementRefetchThresholdMs = 5 * 60 * 1000L
     private var currentBorderStyle: BoxArtBorderStyle = BoxArtBorderStyle.SOLID
     private var lastShowsEveryGame: Boolean? = null
-    private var dockControllerToken: Long? = null
-    val dockReorder = DualScreenManagerHolder.instance?.dockReorder
-        ?: MutableStateFlow<com.nendo.argosy.ui.components.DockReorderSession?>(null)
+    val dockReorder: StateFlow<com.nendo.argosy.ui.components.DockReorderSession?> = dockDelegate.reorder
 
-    fun createDockReorderInputHandler(isRtl: Boolean): InputHandler =
-        com.nendo.argosy.ui.components.DockReorderInputHandler(
-            isRtl = isRtl,
-            onMove = { delta ->
-                dockControllerToken?.let { DualScreenManagerHolder.instance?.moveDockReorder(it, delta) }
-            },
-            onSave = { dockControllerToken?.let { DualScreenManagerHolder.instance?.saveDockReorder(it) } },
-            onCancel = ::cancelAppBarReorder
-        )
+    fun createDockReorderInputHandler(isRtl: Boolean): InputHandler = dockDelegate.createInputHandler(isRtl)
 
     init {
         modalResetSignal.signal.onEach {
@@ -935,26 +927,13 @@ class HomeViewModel @Inject constructor(
     override fun startAppBarReorder(): Boolean {
         val state = _uiState.value
         val packageName = state.homeApps.getOrNull(state.appBarIndex) ?: return false
-        val token = DualScreenManagerHolder.instance?.beginDockReorder(packageName, controller = true) ?: return false
-        dockControllerToken = token
-        return true
+        return dockDelegate.startReorder(packageName)
     }
 
-    fun cancelAppBarReorder() {
-        val token = dockControllerToken ?: return
-        DualScreenManagerHolder.instance?.cancelDockReorder(token)
-        dockControllerToken = null
-    }
+    fun cancelAppBarReorder() = dockDelegate.cancelReorder()
 
     private fun observeDockApps() {
-        val manager = DualScreenManagerHolder.instance ?: return
-        combine(manager.homeAppsFlow, manager.dockReorder) { apps, session -> apps to session }
-            .onEach { (apps, session) ->
-                if (session?.token != dockControllerToken) dockControllerToken = null
-                _uiState.update { state ->
-                    state.withDockApps(apps)
-                }
-            }.launchIn(viewModelScope)
+        dockDelegate.observe(viewModelScope) { apps -> _uiState.update { it.withDockApps(apps) } }
     }
 
     override fun releaseAppBar() {
@@ -968,7 +947,7 @@ class HomeViewModel @Inject constructor(
     }
 
     override fun activateAppBarSlot() {
-        if (dockReorder.value != null) return
+        if (dockDelegate.isReordering()) return
         if (!appBarIsDrawn()) {
             releaseAppBar()
             return

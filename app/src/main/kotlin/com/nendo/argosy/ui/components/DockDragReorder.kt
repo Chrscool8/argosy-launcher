@@ -4,10 +4,11 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -21,19 +22,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.zIndex
+import com.nendo.argosy.R
 import com.nendo.argosy.ui.theme.Motion
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
 @Stable
 internal class DockDragReorderState(
     private val listState: LazyListState,
-    private val scope: CoroutineScope,
+    scope: CoroutineScope,
     private val edge: Float,
     private val isRtl: Boolean,
     private val onStart: (String) -> Long?,
@@ -49,8 +49,7 @@ internal class DockDragReorderState(
     private var token: Long? = null
     private var target = 0
     private var lastCenter = 0f
-    private var scrollJob: Job? = null
-    private var speed = 0f
+    private val autoscroller = EdgeAutoscroller(listState, scope) { resolveTarget(it) }
 
     fun start(position: Offset) {
         if (token != null) return
@@ -87,8 +86,7 @@ internal class DockDragReorderState(
     }
 
     fun finish(save: Boolean) {
-        scrollJob?.cancel()
-        scrollJob = null
+        autoscroller.stop()
         val finished = token ?: return
         token = null
         draggingPackage = null
@@ -116,33 +114,61 @@ internal class DockDragReorderState(
     }
 
     private fun updateScroll() {
-        val layout = listState.layoutInfo
-        speed = when {
-            center < layout.viewportStartOffset + edge ->
-                -(layout.viewportStartOffset + edge - center) / edge * MAX_SCROLL_STEP
-            center > layout.viewportEndOffset - edge ->
-                (center - layout.viewportEndOffset + edge) / edge * MAX_SCROLL_STEP
-            else -> 0f
-        }.coerceIn(-MAX_SCROLL_STEP, MAX_SCROLL_STEP)
-        if (speed == 0f) {
-            scrollJob?.cancel()
-            scrollJob = null
-        } else if (scrollJob?.isActive != true) {
-            scrollJob = scope.launch {
-                while (isActive && token != null && speed != 0f) {
-                    val consumed = listState.scrollBy(speed)
-                    if (consumed == 0f) break
-                    resolveTarget(consumed)
-                    delay(FRAME_MILLIS)
-                }
+        autoscroller.update(
+            edgeScrollSpeed(listState.layoutInfo, center, center, edge).coerceIn(-MAX_SCROLL_STEP, MAX_SCROLL_STEP)
+        )
+    }
+}
+
+@Composable
+internal fun rememberDockReorderActions(
+    listState: LazyListState,
+    drag: DockDragReorderState,
+    apps: List<String>,
+    reorder: DockReorderSession?,
+    onTarget: (Long, Int) -> Unit,
+    onSave: (Long) -> Unit,
+    onCancel: (Long) -> Unit
+): List<CustomAccessibilityAction> {
+    LaunchedEffect(reorder?.token) { drag.reconcile(reorder) }
+    var previousApps by remember { mutableStateOf(apps) }
+    var wasEditing by remember { mutableStateOf(reorder != null) }
+    SideEffect {
+        if (previousApps != apps && (reorder != null || wasEditing)) {
+            listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
+        }
+        previousApps = apps
+        wasEditing = reorder != null
+    }
+    val leftLabel = stringResource(R.string.dock_reorder_move_left)
+    val rightLabel = stringResource(R.string.dock_reorder_move_right)
+    val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
+    val saveLabel = stringResource(R.string.reorder_hint_done)
+    val cancelLabel = stringResource(R.string.dock_hint_cancel)
+    val actions = if (reorder != null && !reorder.saving) {
+        buildList {
+            for ((label, delta) in listOf(leftLabel to -direction, rightLabel to direction)) {
+                val target = reorder.targetIndex + delta
+                if (target in reorder.visiblePackages.indices) add(CustomAccessibilityAction(label) {
+                    listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
+                    onTarget(reorder.token, target)
+                    true
+                })
+            }
+            add(CustomAccessibilityAction(saveLabel) { onSave(reorder.token); true })
+            add(CustomAccessibilityAction(cancelLabel) { onCancel(reorder.token); true })
+        }
+    } else emptyList()
+    LaunchedEffect(reorder?.targetIndex, drag.accessiblePackage) {
+        if (drag.accessiblePackage != null && reorder != null) {
+            val layout = listState.layoutInfo
+            val item = layout.visibleItemsInfo.firstOrNull { it.index == reorder.targetIndex }
+            if (item == null || item.offset < layout.viewportStartOffset || item.offset + item.size > layout.viewportEndOffset) {
+                listState.animateScrollToItem(reorder.targetIndex)
             }
         }
     }
-
-    private companion object {
-        const val MAX_SCROLL_STEP = 12f
-        const val FRAME_MILLIS = 16L
-    }
+    return actions
 }
 
 @Composable

@@ -87,7 +87,7 @@ fun PresentationSlotContent(
     val lastActivity = manager?.lastUserActivityAtMs?.collectAsState()?.value ?: 0L
     val gameActive = manager?.swappedIsGameActive?.collectAsState()?.value ?: false
     val mediaPlayback = manager?.mediaPlayback?.collectAsState()?.value
-    val primaryRoute = manager?.primaryRoute?.collectAsState()?.value
+    val wizardActive = manager?.isWizardActive?.collectAsState()?.value ?: false
     val artSource = com.nendo.argosy.ui.common.LocalImageCacheManager.current
         ?: manager?.imageCacheManager
     val frostedBackdrop = rememberFrostedBackdrop()
@@ -96,8 +96,7 @@ fun PresentationSlotContent(
         com.nendo.argosy.ui.common.LocalImageCacheManager provides artSource
     ) {
         ScreenDimmerOverlay(
-            enabled = dimmerPrefs.enabled && !gameActive && mediaPlayback == null &&
-                primaryRoute != null && primaryRoute != com.nendo.argosy.ui.navigation.Screen.FirstRun.route,
+            enabled = dimmerPrefs.enabled && !gameActive && mediaPlayback == null && !wizardActive,
             timeoutMs = dimmerPrefs.timeoutMinutes * 60_000L,
             dimLevel = dimmerPrefs.level / 100f,
             lastActivityAtMs = lastActivity,

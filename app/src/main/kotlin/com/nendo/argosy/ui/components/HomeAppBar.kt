@@ -37,9 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,7 +53,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -147,47 +144,11 @@ fun CompanionAppBar(
             onStart = { onReorderStart(it) },
             onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel
         )
-        LaunchedEffect(reorder?.token) { drag.reconcile(reorder) }
-        var previousApps by remember { mutableStateOf(apps) }
-        var wasEditing by remember { mutableStateOf(reorder != null) }
-        SideEffect {
-            if (previousApps != apps && (reorder != null || wasEditing)) {
-                listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
-            }
-            previousApps = apps
-            wasEditing = reorder != null
-        }
-        val leftLabel = stringResource(R.string.dock_reorder_move_left)
-        val rightLabel = stringResource(R.string.dock_reorder_move_right)
-        val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
-        val saveLabel = stringResource(R.string.reorder_hint_done)
-        val cancelLabel = stringResource(R.string.dock_hint_cancel)
+        val reorderActions = rememberDockReorderActions(
+            listState, drag, apps, reorder,
+            onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel
+        )
         val dockLabel = stringResource(R.string.dock_accessibility_label)
-        val reorderActions = key("dock-actions") {
-            if (reorder != null && !reorder.saving) {
-                buildList {
-                    for ((label, delta) in listOf(leftLabel to -direction, rightLabel to direction)) {
-                        val target = reorder.targetIndex + delta
-                        if (target in reorder.visiblePackages.indices) add(CustomAccessibilityAction(label) {
-                            listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
-                            onReorderTarget(reorder.token, target)
-                            true
-                        })
-                    }
-                    add(CustomAccessibilityAction(saveLabel) { onReorderSave(reorder.token); true })
-                    add(CustomAccessibilityAction(cancelLabel) { onReorderCancel(reorder.token); true })
-                }
-            } else emptyList()
-        }
-        LaunchedEffect(reorder?.targetIndex, drag.accessiblePackage) {
-            if (drag.accessiblePackage != null && reorder != null) {
-                val layout = listState.layoutInfo
-                val item = layout.visibleItemsInfo.firstOrNull { it.index == reorder.targetIndex }
-                if (item == null || item.offset < layout.viewportStartOffset || item.offset + item.size > layout.viewportEndOffset) {
-                    listState.animateScrollToItem(reorder.targetIndex)
-                }
-            }
-        }
         val height = slot + gap * 2
         val caretRotation by animateFloatAsState(
             targetValue = if (toolsOpen) 180f else 0f,

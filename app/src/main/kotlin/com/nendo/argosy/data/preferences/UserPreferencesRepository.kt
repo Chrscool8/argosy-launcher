@@ -557,7 +557,6 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setBetaUpdatesEnabled(enabled: Boolean) = appPrefs.setBetaUpdatesEnabled(enabled)
     suspend fun setCloseEmulatorOnSessionEnd(enabled: Boolean) = appPrefs.setCloseEmulatorOnSessionEnd(enabled)
     suspend fun setHiddenApps(apps: Set<String>) = appPrefs.setHiddenApps(apps)
-    suspend fun setSecondaryHomeApps(apps: List<String>) = appPrefs.setSecondaryHomeApps(apps)
     suspend fun toggleDockPin(packageName: String) = appPrefs.toggleDockPin(packageName)
     suspend fun reorderDockPins(expected: List<String>, order: List<String>) =
         appPrefs.reorderDockPins(expected, order)
