@@ -75,4 +75,26 @@ class PlatformDefinitionsTest {
         assertEquals("notaplatform-hacks", PlatformDefinitions.getCanonicalSlug("notaplatform-hacks"))
         assertNull(PlatformDefinitions.deriveDisplayName("notaplatform-hacks"))
     }
+
+    @Test
+    fun `a known RomM slug keeps its own name whatever its folder is called`() {
+        assertNull(PlatformDefinitions.importDisplayNames("psvita", "PS Vita", "psvita"))
+        assertNull(PlatformDefinitions.importDisplayNames("snes", "snes hacks", "snes"))
+    }
+
+    @Test
+    fun `an unknown RomM slug still takes its name from a suffixed folder`() {
+        assertEquals(
+            "SNES Hacks" to "SNES Hacks",
+            PlatformDefinitions.importDisplayNames("notaplatform", "snes-hacks", "notaplatform")
+        )
+    }
+
+    @Test
+    fun `a sub-platform is named from its effective slug`() {
+        assertEquals(
+            "SNES Hacks" to "SNES Hacks",
+            PlatformDefinitions.importDisplayNames("snes", "snes-hacks", "snes-hacks")
+        )
+    }
 }

@@ -417,14 +417,7 @@ class RomMApiClient @Inject constructor(
                         ?: platformDao.getBySlug(remote.slug)
                     val platformDef = PlatformDefinitions.getBySlug(effectiveSlug)
                     val logoUrl = buildMediaUrl(remote.logoUrl)
-                    val derivedNames = if (isSubPlatform) {
-                        PlatformDefinitions.getAliasDisplayName(effectiveSlug)
-                            ?: PlatformDefinitions.deriveDisplayName(effectiveSlug)
-                    } else {
-                        PlatformDefinitions.getAliasDisplayName(remote.slug)
-                            ?: PlatformDefinitions.deriveDisplayName(remote.slug)
-                            ?: PlatformDefinitions.deriveDisplayName(remote.fsSlug)
-                    }
+                    val derivedNames = PlatformDefinitions.importDisplayNames(remote.slug, remote.fsSlug, effectiveSlug)
                     val normalizedName = if (isSubPlatform) {
                         remote.customName?.takeIf { it.isNotBlank() }
                             ?: derivedNames?.first ?: platformDef?.name ?: remote.name
