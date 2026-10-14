@@ -144,8 +144,9 @@ fun CompanionAppBar(
             onStart = { onReorderStart(it) },
             onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel
         )
-        val reorderActions = rememberDockReorderActions(
-            listState, drag, apps, reorder,
+        DockReorderEffects(listState, drag, apps, reorder)
+        val reorderActions = dockReorderActions(
+            listState, reorder,
             onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel
         )
         val dockLabel = stringResource(R.string.dock_accessibility_label)

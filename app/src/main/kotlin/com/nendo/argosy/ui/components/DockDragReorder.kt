@@ -120,16 +120,18 @@ internal class DockDragReorderState(
     }
 }
 
+/**
+ * Keeps the dock list in step with the reorder session: ends a touch drag the session no longer
+ * owns, holds the scroll position while the app list changes under an edit, and brings the
+ * accessibility target into view.
+ */
 @Composable
-internal fun rememberDockReorderActions(
+internal fun DockReorderEffects(
     listState: LazyListState,
     drag: DockDragReorderState,
     apps: List<String>,
-    reorder: DockReorderSession?,
-    onTarget: (Long, Int) -> Unit,
-    onSave: (Long) -> Unit,
-    onCancel: (Long) -> Unit
-): List<CustomAccessibilityAction> {
+    reorder: DockReorderSession?
+) {
     LaunchedEffect(reorder?.token) { drag.reconcile(reorder) }
     var previousApps by remember { mutableStateOf(apps) }
     var wasEditing by remember { mutableStateOf(reorder != null) }
@@ -140,12 +142,31 @@ internal fun rememberDockReorderActions(
         previousApps = apps
         wasEditing = reorder != null
     }
+    LaunchedEffect(reorder?.targetIndex, drag.accessiblePackage) {
+        if (drag.accessiblePackage != null && reorder != null) {
+            val layout = listState.layoutInfo
+            val item = layout.visibleItemsInfo.firstOrNull { it.index == reorder.targetIndex }
+            if (item == null || item.offset < layout.viewportStartOffset || item.offset + item.size > layout.viewportEndOffset) {
+                listState.animateScrollToItem(reorder.targetIndex)
+            }
+        }
+    }
+}
+
+@Composable
+internal fun dockReorderActions(
+    listState: LazyListState,
+    reorder: DockReorderSession?,
+    onTarget: (Long, Int) -> Unit,
+    onSave: (Long) -> Unit,
+    onCancel: (Long) -> Unit
+): List<CustomAccessibilityAction> {
     val leftLabel = stringResource(R.string.dock_reorder_move_left)
     val rightLabel = stringResource(R.string.dock_reorder_move_right)
     val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
     val saveLabel = stringResource(R.string.reorder_hint_done)
     val cancelLabel = stringResource(R.string.dock_hint_cancel)
-    val actions = if (reorder != null && !reorder.saving) {
+    return if (reorder != null && !reorder.saving) {
         buildList {
             for ((label, delta) in listOf(leftLabel to -direction, rightLabel to direction)) {
                 val target = reorder.targetIndex + delta
@@ -159,16 +180,6 @@ internal fun rememberDockReorderActions(
             add(CustomAccessibilityAction(cancelLabel) { onCancel(reorder.token); true })
         }
     } else emptyList()
-    LaunchedEffect(reorder?.targetIndex, drag.accessiblePackage) {
-        if (drag.accessiblePackage != null && reorder != null) {
-            val layout = listState.layoutInfo
-            val item = layout.visibleItemsInfo.firstOrNull { it.index == reorder.targetIndex }
-            if (item == null || item.offset < layout.viewportStartOffset || item.offset + item.size > layout.viewportEndOffset) {
-                listState.animateScrollToItem(reorder.targetIndex)
-            }
-        }
-    }
-    return actions
 }
 
 @Composable
