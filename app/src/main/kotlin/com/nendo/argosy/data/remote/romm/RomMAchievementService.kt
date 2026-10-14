@@ -2,7 +2,6 @@ package com.nendo.argosy.data.remote.romm
 
 import android.os.SystemClock
 import com.nendo.argosy.util.Logger
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
@@ -42,29 +41,6 @@ class RomMAchievementService @Inject constructor(
      * null while the cache holds nothing a refresh produced.
      */
     fun progressionRefreshedAt(): Instant? = progressionRefreshedAt
-
-    /**
-     * The signed-in user's RA rich-presence summary through RomM. Null when the server does not
-     * offer it, the user has no RA account there, RA is unreachable, or the request fails.
-     */
-    suspend fun fetchRaUserSummary(): RomMRaUserSummary? {
-        if (!connectionManager.getCapabilities().supportsRaUserSummary) return null
-        val currentApi = api ?: return null
-        return try {
-            val response = currentApi.getRaUserSummary()
-            if (response.isSuccessful) {
-                response.body()
-            } else {
-                Logger.debug(TAG, "RA user summary unavailable: HTTP ${response.code()}")
-                null
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Logger.debug(TAG, "RA user summary request failed: ${e.message}")
-            null
-        }
-    }
 
     fun getEarnedBadgeIds(raGameId: Long): Set<String> {
         return cachedRAProgression[raGameId]?.map { it.id }?.toSet() ?: emptySet()

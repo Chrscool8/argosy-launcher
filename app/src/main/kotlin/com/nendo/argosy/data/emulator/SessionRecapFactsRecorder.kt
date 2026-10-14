@@ -4,7 +4,7 @@ import com.nendo.argosy.data.local.dao.GameDao
 import com.nendo.argosy.data.local.dao.PlaySessionDao
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.preferences.SessionPreferencesRepository
-import com.nendo.argosy.data.remote.romm.RomMRaUserSummary
+import com.nendo.argosy.data.remote.ra.RAWebUserSummary
 import com.nendo.argosy.data.repository.RaMetadataSource
 import com.nendo.argosy.data.repository.RetroAchievementsRepository.GameUnlocks
 import com.nendo.argosy.util.Logger
@@ -197,7 +197,7 @@ class SessionRecapFactsRecorder @Inject constructor(
          * message, and a timestamp inside [start, end]. Anything else is another session's line.
          */
         fun acceptSummary(
-            summary: RomMRaUserSummary,
+            summary: RAWebUserSummary,
             raGameId: Long,
             start: Instant,
             end: Instant

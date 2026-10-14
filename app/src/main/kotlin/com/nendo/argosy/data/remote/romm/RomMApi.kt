@@ -50,9 +50,6 @@ interface RomMApi {
         @Body body: RomMRARefreshRequest = RomMRARefreshRequest()
     ): Response<Unit>
 
-    @GET(ROMM_RA_USER_SUMMARY_PATH)
-    suspend fun getRaUserSummary(): Response<RomMRaUserSummary>
-
     @GET("api/search/cover")
     suspend fun searchCovers(
         @Query("search_term") searchTerm: String,

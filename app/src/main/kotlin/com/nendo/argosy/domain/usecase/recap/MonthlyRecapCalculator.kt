@@ -2,6 +2,8 @@ package com.nendo.argosy.domain.usecase.recap
 
 import com.nendo.argosy.data.local.entity.PlaySessionEntity
 import com.nendo.argosy.data.remote.romm.RomMRAGameProgression
+import com.nendo.argosy.data.repository.RaGameAward
+import com.nendo.argosy.data.repository.RaMetadataSource.Companion.toGameAward
 import com.nendo.argosy.domain.model.MonthlyRecap
 import com.nendo.argosy.domain.model.RecapAward
 import com.nendo.argosy.domain.model.RecapAwardKind
@@ -21,7 +23,7 @@ object MonthlyRecapCalculator {
     /**
      * Sessions belong to the month their start falls in, in [zone]. [sessions] must cover [month]
      * and the month before it; [firstPlayed] is each game's earliest session across all history.
-     * Unlocks come from [progression], awards from [awardProgression].
+     * Unlocks come from [progression], awards from [awards]; an undated award is left out.
      */
     fun compute(
         month: YearMonth,
@@ -30,7 +32,7 @@ object MonthlyRecapCalculator {
         firstPlayed: Map<Long, Instant>,
         progression: List<RomMRAGameProgression>,
         topGamesLimit: Int = DEFAULT_TOP_GAMES,
-        awardProgression: List<RomMRAGameProgression> = progression
+        awards: List<RaGameAward> = progression.mapNotNull { it.toGameAward() }
     ): MonthlyRecap {
         val window = RecapEligibility.monthWindow(month, zone)
         val monthStart = window.start
@@ -58,7 +60,7 @@ object MonthlyRecapCalculator {
                     )
                 },
             unlocks = monthUnlocks(progression, monthStart, monthEnd),
-            awards = monthAwards(awardProgression, monthStart, monthEnd)
+            awards = monthAwards(awards, monthStart, monthEnd)
         )
     }
 
@@ -91,16 +93,15 @@ object MonthlyRecapCalculator {
     }
 
     private fun monthAwards(
-        progression: List<RomMRAGameProgression>,
+        awards: List<RaGameAward>,
         monthStart: Instant,
         monthEnd: Instant
     ): List<RecapAward> =
-        progression.mapNotNull { game ->
-            val raGameId = game.romRaId ?: return@mapNotNull null
-            val kind = RecapAwardKind.fromToken(game.highestAwardKind) ?: return@mapNotNull null
-            val awardedAt = game.highestAwardDate?.let { parseTimestamp(it) }?.let { Instant.ofEpochMilli(it) }
+        awards.mapNotNull { award ->
+            val kind = RecapAwardKind.fromToken(award.kind) ?: return@mapNotNull null
+            val awardedAt = award.awardedAt?.let { parseTimestamp(it) }?.let { Instant.ofEpochMilli(it) }
                 ?: return@mapNotNull null
             if (awardedAt.isBefore(monthStart) || !awardedAt.isBefore(monthEnd)) return@mapNotNull null
-            RecapAward(raGameId, kind, awardedAt)
+            RecapAward(award.raGameId, kind, awardedAt)
         }.sortedBy { it.awardedAt }
 }

@@ -11,7 +11,7 @@ import com.nendo.argosy.data.remote.ra.RAWebUserSummary
 import com.nendo.argosy.data.remote.romm.RomMAchievementService
 import com.nendo.argosy.data.remote.romm.RomMEarnedAchievement
 import com.nendo.argosy.data.remote.romm.RomMRAGameProgression
-import com.nendo.argosy.data.remote.romm.RomMRaUserSummary
+import com.nendo.argosy.domain.model.RecapAwardKind
 import com.nendo.argosy.domain.model.SnapshotUnlock
 import com.nendo.argosy.util.Logger
 import kotlinx.coroutines.flow.first
@@ -29,11 +29,21 @@ sealed interface RaUnlockEvidence {
 }
 
 /**
+ * A game's highest RetroAchievements award. [kind] is RA's award token; [awardedAt] is null when
+ * the source cannot date the award.
+ */
+data class RaGameAward(
+    val raGameId: Long,
+    val kind: String?,
+    val awardedAt: String?
+)
+
+/**
  * The one place that picks the source of RetroAchievements metadata for recaps. Unlocks try the
  * user's web API key first, then RomM's RA progression, then a session's stored unlock snapshots;
- * rich presence and awards try the web API key, then RomM. A failing source hands the call to the
- * next one. Reads the RA username and web API key once per call. Never calls `startsession` or
- * `ping` and never uses the RA password.
+ * awards try the web API key, then RomM; rich presence comes from the web API key alone. A failing
+ * source hands the call to the next one. Reads the RA username and web API key once per call.
+ * Never calls `startsession` or `ping` and never uses the RA password.
  */
 @Singleton
 class RaMetadataSource @Inject constructor(
@@ -44,14 +54,19 @@ class RaMetadataSource @Inject constructor(
     private val keyHealth: RAWebKeyHealth
 ) {
 
-    suspend fun userSummary(): RomMRaUserSummary? {
-        webCredentials()?.let { credentials ->
-            when (val result = webClient.userSummary(credentials).recordedFor(credentials)) {
-                is RAWebResult.Success -> return result.value.toRomMShape()
-                else -> Logger.debug(TAG, "Web user summary unavailable (${result.describe()}), asking RomM")
+    /**
+     * The user's rich-presence summary from the web API key, or null when no key is set or the
+     * call fails.
+     */
+    suspend fun userSummary(): RAWebUserSummary? {
+        val credentials = webCredentials() ?: return null
+        return when (val result = webClient.userSummary(credentials).recordedFor(credentials)) {
+            is RAWebResult.Success -> result.value
+            else -> {
+                Logger.debug(TAG, "Web user summary unavailable (${result.describe()})")
+                null
             }
         }
-        return achievementService.fetchRaUserSummary()
     }
 
     /**
@@ -80,17 +95,17 @@ class RaMetadataSource @Inject constructor(
     }
 
     /**
-     * Per-game award rows (highest award kind and date) through [through]: from the web API key
-     * when set and answering, else RomM's progression.
+     * Per-game highest awards through [through]: from the web API key when set and answering, else
+     * RomM's progression.
      */
-    suspend fun awardProgression(through: Instant): List<RomMRAGameProgression> {
+    suspend fun awardProgression(through: Instant): List<RaGameAward> {
         webCredentials()?.let { credentials ->
             when (val result = webClient.completionProgress(credentials).recordedFor(credentials)) {
-                is RAWebResult.Success -> return result.value.map { it.toRomMShape() }
+                is RAWebResult.Success -> return result.value.map { it.toGameAward() }
                 else -> Logger.debug(TAG, "Web completion progress unavailable (${result.describe()}), asking RomM")
             }
         }
-        return romMProgression(through)
+        return romMProgression(through).mapNotNull { it.toGameAward() }
     }
 
     /**
@@ -160,12 +175,6 @@ class RaMetadataSource @Inject constructor(
         fun needsRefresh(refreshedAt: Instant?, through: Instant): Boolean =
             refreshedAt == null || refreshedAt.isBefore(through)
 
-        fun RAWebUserSummary.toRomMShape(): RomMRaUserSummary = RomMRaUserSummary(
-            richPresenceMsg = richPresenceMsg,
-            richPresenceMsgDate = richPresenceMsgDate,
-            lastGameId = lastGameId
-        )
-
         /**
          * The earned achievements of a web progress answer, keyed by badge name as RomM keys them.
          * Achievements earned in neither mode are left out.
@@ -181,15 +190,32 @@ class RaMetadataSource @Inject constructor(
                 )
             }
 
-        fun RAWebCompletionEntry.toRomMShape(): RomMRAGameProgression = RomMRAGameProgression(
-            romRaId = gameId,
-            maxPossible = maxPossible,
-            numAwarded = numAwarded,
-            numAwardedHardcore = numAwardedHardcore,
-            mostRecentAwardedDate = mostRecentAwardedDate,
-            highestAwardKind = highestAwardKind,
-            highestAwardDate = highestAwardDate
+        fun RAWebCompletionEntry.toGameAward(): RaGameAward = RaGameAward(
+            raGameId = gameId,
+            kind = highestAwardKind,
+            awardedAt = highestAwardDate
         )
+
+        /**
+         * RomM's row as an award, or null without an RA game id. A mastery or completion is dated by
+         * the most recent unlock once every achievement is earned in that award's mode; any other
+         * award is undated.
+         */
+        fun RomMRAGameProgression.toGameAward(): RaGameAward? {
+            val raGameId = romRaId ?: return null
+            val earned = when (RecapAwardKind.fromToken(highestAwardKind)) {
+                RecapAwardKind.MASTERED -> numAwardedHardcore
+                RecapAwardKind.COMPLETED -> numAwarded
+                else -> null
+            }
+            val total = maxPossible ?: 0
+            val complete = earned != null && total > 0 && earned >= total
+            return RaGameAward(
+                raGameId = raGameId,
+                kind = highestAwardKind,
+                awardedAt = mostRecentAwardedDate.takeIf { complete }
+            )
+        }
 
         private fun RAWebResult<*>.describe(): String = when (this) {
             is RAWebResult.Success -> "ok"

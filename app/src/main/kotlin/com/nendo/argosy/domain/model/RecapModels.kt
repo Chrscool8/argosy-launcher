@@ -128,8 +128,8 @@ data class MonthWindow(
 }
 
 /**
- * One month of play. [topGames] is ordered by active time, most first. [unlocks] and [awards] come
- * from RomM's RetroAchievements progression and are oldest first. [longestSessionMs] is 0 for a
+ * One month of play. [topGames] is ordered by active time, most first. [unlocks] and [awards] are
+ * oldest first. [longestSessionMs] is 0 for a
  * month without sessions.
  */
 data class MonthlyRecap(

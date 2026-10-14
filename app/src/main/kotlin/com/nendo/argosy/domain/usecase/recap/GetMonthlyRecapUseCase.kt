@@ -52,7 +52,7 @@ class GetMonthlyRecapUseCase @Inject constructor(
             firstPlayed = firstPlayed,
             progression = progression.filterNot { it.romRaId in hiddenRaIds },
             topGamesLimit = Int.MAX_VALUE,
-            awardProgression = metadataSource.awardProgression(window.end).filterNot { it.romRaId in hiddenRaIds }
+            awards = metadataSource.awardProgression(window.end).filterNot { it.raGameId in hiddenRaIds }
         )
         val unlocks = webUnlocks?.let { MonthlyDigestAssembler.webUnlocks(it, window) }
             ?: resolveRomMUnlocks(recap.unlocks, owner)

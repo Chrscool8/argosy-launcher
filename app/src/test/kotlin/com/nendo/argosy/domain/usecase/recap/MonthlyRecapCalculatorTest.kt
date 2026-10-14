@@ -3,6 +3,7 @@ package com.nendo.argosy.domain.usecase.recap
 import com.nendo.argosy.data.local.entity.PlaySessionEntity
 import com.nendo.argosy.data.remote.romm.RomMEarnedAchievement
 import com.nendo.argosy.data.remote.romm.RomMRAGameProgression
+import com.nendo.argosy.data.repository.RaGameAward
 import com.nendo.argosy.domain.model.RecapAwardKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -203,19 +204,71 @@ class MonthlyRecapCalculatorTest {
 
     @Test
     fun `awards dated inside the month are kept and every other award is dropped`() {
-        val recap = compute(
-            sessions = emptyList(),
-            progression = listOf(
-                RomMRAGameProgression(romRaId = 1L, highestAwardKind = "mastered", highestAwardDate = "2026-10-20T10:00:00+00:00"),
-                RomMRAGameProgression(romRaId = 2L, highestAwardKind = "beaten-hardcore", highestAwardDate = "2026-10-02 08:00:00"),
-                RomMRAGameProgression(romRaId = 3L, highestAwardKind = "completed", highestAwardDate = "2026-09-20 10:00:00"),
-                RomMRAGameProgression(romRaId = 4L, highestAwardKind = "beaten-softcore", highestAwardDate = null),
-                RomMRAGameProgression(romRaId = 5L, highestAwardKind = "legendary", highestAwardDate = "2026-10-20 10:00:00"),
-                RomMRAGameProgression(romRaId = 6L, highestAwardKind = null, highestAwardDate = "2026-10-20 10:00:00")
+        val recap = MonthlyRecapCalculator.compute(
+            october, utc, emptyList(), emptyMap(), emptyList(),
+            awards = listOf(
+                RaGameAward(1L, "mastered", "2026-10-20T10:00:00+00:00"),
+                RaGameAward(2L, "beaten-hardcore", "2026-10-02 08:00:00"),
+                RaGameAward(3L, "completed", "2026-09-20 10:00:00"),
+                RaGameAward(4L, "beaten-softcore", null),
+                RaGameAward(5L, "legendary", "2026-10-20 10:00:00"),
+                RaGameAward(6L, null, "2026-10-20 10:00:00")
             )
         )
         assertEquals(listOf(2L, 1L), recap.awards.map { it.raGameId })
         assertEquals(listOf(RecapAwardKind.BEATEN_HARDCORE, RecapAwardKind.MASTERED), recap.awards.map { it.kind })
+    }
+
+    @Test
+    fun `a RomM mastery is dated by its most recent unlock when every achievement is hardcore`() {
+        val recap = compute(
+            sessions = emptyList(),
+            progression = listOf(
+                RomMRAGameProgression(
+                    romRaId = 1L, maxPossible = 20, numAwarded = 20, numAwardedHardcore = 20,
+                    mostRecentAwardedDate = "2026-10-20 10:00:00", highestAwardKind = "mastered"
+                )
+            )
+        )
+        val award = recap.awards.single()
+        assertEquals(RecapAwardKind.MASTERED, award.kind)
+        assertEquals(at("2026-10-20T10:00:00Z"), award.awardedAt)
+    }
+
+    @Test
+    fun `a RomM mastery short of the full set is not shown`() {
+        val recap = compute(
+            sessions = emptyList(),
+            progression = listOf(
+                RomMRAGameProgression(
+                    romRaId = 1L, maxPossible = 20, numAwarded = 20, numAwardedHardcore = 19,
+                    mostRecentAwardedDate = "2026-10-20 10:00:00", highestAwardKind = "mastered"
+                ),
+                RomMRAGameProgression(
+                    romRaId = 2L, maxPossible = 20, numAwarded = 18, numAwardedHardcore = 18,
+                    mostRecentAwardedDate = "2026-10-21 10:00:00", highestAwardKind = "completed"
+                )
+            )
+        )
+        assertTrue(recap.awards.isEmpty())
+    }
+
+    @Test
+    fun `RomM beaten awards are skipped`() {
+        val recap = compute(
+            sessions = emptyList(),
+            progression = listOf(
+                RomMRAGameProgression(
+                    romRaId = 1L, maxPossible = 20, numAwarded = 20, numAwardedHardcore = 20,
+                    mostRecentAwardedDate = "2026-10-20 10:00:00", highestAwardKind = "beaten-hardcore"
+                ),
+                RomMRAGameProgression(
+                    romRaId = 2L, maxPossible = 20, numAwarded = 5,
+                    mostRecentAwardedDate = "2026-10-21 10:00:00", highestAwardKind = "beaten-softcore"
+                )
+            )
+        )
+        assertTrue(recap.awards.isEmpty())
     }
 
     @Test

@@ -506,8 +506,7 @@ class RomMConnectionManager @Inject constructor(
             val body = response.body()
             val version = body?.version ?: "unknown"
             val capabilities = RomMCapabilities.from(
-                version, body?.libretroApiEnabled, body?.steamGridDbEnabled, body?.snapshotsEnabled == true,
-                body?.raUserSummaryEnabled == true
+                version, body?.libretroApiEnabled, body?.steamGridDbEnabled, body?.snapshotsEnabled == true
             )
             _connectionState.value = ConnectionState.Connected(version, capabilities)
             saveSyncRepository.get().setCapabilities(capabilities)
@@ -719,8 +718,7 @@ class RomMConnectionManager @Inject constructor(
             version,
             heartbeat?.body()?.libretroApiEnabled,
             heartbeat?.body()?.steamGridDbEnabled,
-            heartbeat?.body()?.snapshotsEnabled == true,
-            heartbeat?.body()?.raUserSummaryEnabled == true
+            heartbeat?.body()?.snapshotsEnabled == true
         )
 
         persistRommCredentials(base, body.accessToken, fetchCurrentUser(newApi))
@@ -896,8 +894,7 @@ class RomMConnectionManager @Inject constructor(
                 val body = response.body()
                 val version = body?.version ?: "unknown"
                 val capabilities = RomMCapabilities.from(
-                    version, body?.libretroApiEnabled, body?.steamGridDbEnabled, body?.snapshotsEnabled == true,
-                    body?.raUserSummaryEnabled == true
+                    version, body?.libretroApiEnabled, body?.steamGridDbEnabled, body?.snapshotsEnabled == true
                 )
                 _connectionState.value = ConnectionState.Connected(version, capabilities)
                 saveSyncRepository.get().setCapabilities(capabilities)

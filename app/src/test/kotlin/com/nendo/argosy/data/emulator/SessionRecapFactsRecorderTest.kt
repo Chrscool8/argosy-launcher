@@ -4,7 +4,7 @@ import com.nendo.argosy.data.local.dao.GameDao
 import com.nendo.argosy.data.local.dao.PlaySessionDao
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.preferences.SessionPreferencesRepository
-import com.nendo.argosy.data.remote.romm.RomMRaUserSummary
+import com.nendo.argosy.data.remote.ra.RAWebUserSummary
 import com.nendo.argosy.data.repository.RaMetadataSource
 import com.nendo.argosy.data.repository.RetroAchievementsRepository.GameUnlocks
 import io.mockk.coEvery
@@ -29,7 +29,7 @@ class SessionRecapFactsRecorderTest {
         message: String? = "Exploring Hyrule",
         date: String? = "2026-10-01T11:30:00+00:00",
         gameId: Long? = 55L
-    ) = RomMRaUserSummary(richPresenceMsg = message, richPresenceMsgDate = date, lastGameId = gameId)
+    ) = RAWebUserSummary(richPresenceMsg = message, richPresenceMsgDate = date, lastGameId = gameId)
 
     @Test
     fun `a line for this game dated inside the session is accepted`() {

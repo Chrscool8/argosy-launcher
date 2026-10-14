@@ -10,6 +10,7 @@ import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.remote.ra.RAWebEarnedAchievement
 import com.nendo.argosy.data.remote.romm.RomMEarnedAchievement
 import com.nendo.argosy.data.remote.romm.RomMRAGameProgression
+import com.nendo.argosy.data.repository.RaGameAward
 import com.nendo.argosy.data.repository.RaMetadataSource
 import com.nendo.argosy.data.social.uploader.PlaySessionPull
 import com.nendo.argosy.data.social.uploader.PlaySessionPullScheduler
@@ -126,8 +127,8 @@ class GetMonthlyRecapUseCaseTest {
         coEvery { gameDao.getByRaId(56L) } returns shown
         coEvery { achievementDao.getByGameId(any(), 7L) } returns emptyList()
         coEvery { metadataSource.awardProgression(any()) } returns listOf(
-            RomMRAGameProgression(romRaId = 55L, highestAwardKind = "mastered", highestAwardDate = "2025-12-05 10:00:00"),
-            RomMRAGameProgression(romRaId = 56L, highestAwardKind = "mastered", highestAwardDate = "2025-12-06 10:00:00")
+            RaGameAward(55L, "mastered", "2025-12-05 10:00:00"),
+            RaGameAward(56L, "mastered", "2025-12-06 10:00:00")
         )
     }
 

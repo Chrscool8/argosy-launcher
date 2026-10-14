@@ -4,6 +4,7 @@ import com.nendo.argosy.data.local.dao.PlayDayTotal
 import com.nendo.argosy.data.model.PlayDay
 import com.nendo.argosy.data.remote.ra.RAWebEarnedAchievement
 import com.nendo.argosy.data.repository.RA_BADGE_BASE_URL
+import com.nendo.argosy.data.repository.RaGameAward
 import com.nendo.argosy.domain.model.RecapAwardKind
 import com.nendo.argosy.domain.model.SessionUnlock
 import org.junit.Assert.assertEquals
@@ -139,13 +140,9 @@ class MonthlyDigestAssemblerTest {
             sessions = listOf(session(1L, Instant.parse("2026-09-05T10:00:00Z"), 60)),
             firstPlayed = mapOf(1L to Instant.parse("2026-09-05T10:00:00Z")),
             progression = emptyList(),
-            awardProgression = listOf(
-                com.nendo.argosy.data.remote.romm.RomMRAGameProgression(
-                    romRaId = 55L, highestAwardKind = "mastered", highestAwardDate = "2026-09-20 10:00:00"
-                ),
-                com.nendo.argosy.data.remote.romm.RomMRAGameProgression(
-                    romRaId = 56L, highestAwardKind = "completed", highestAwardDate = "2026-09-21 10:00:00"
-                )
+            awards = listOf(
+                RaGameAward(55L, "mastered", "2026-09-20 10:00:00"),
+                RaGameAward(56L, "completed", "2026-09-21 10:00:00")
             )
         )
         val digest = MonthlyDigestAssembler.assemble(

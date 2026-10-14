@@ -13,7 +13,6 @@ import com.nendo.argosy.data.remote.ra.RAWebUserSummary
 import com.nendo.argosy.data.remote.romm.RomMAchievementService
 import com.nendo.argosy.data.remote.romm.RomMEarnedAchievement
 import com.nendo.argosy.data.remote.romm.RomMRAGameProgression
-import com.nendo.argosy.data.remote.romm.RomMRaUserSummary
 import com.nendo.argosy.data.remote.romm.RomMResult
 import com.nendo.argosy.domain.model.SnapshotUnlock
 import io.mockk.coEvery
@@ -183,26 +182,20 @@ class RaMetadataSourceTest {
 
         val summary = source("key-1234").userSummary()
 
-        assertEquals(RomMRaUserSummary("Exploring", "2026-10-01 11:30:00", 55L), summary)
-        coVerify(exactly = 0) { achievementService.fetchRaUserSummary() }
+        assertEquals(RAWebUserSummary("Exploring", "2026-10-01 11:30:00", 55L), summary)
     }
 
     @Test
-    fun `a failing web summary falls back to RomM`() = runTest {
+    fun `a failing web summary yields no summary`() = runTest {
         coEvery { webClient.userSummary(any()) } returns RAWebResult.Rejected
-        val fromRomM = RomMRaUserSummary("From RomM", "2026-10-01T11:30:00+00:00", 55L)
-        coEvery { achievementService.fetchRaUserSummary() } returns fromRomM
 
-        assertEquals(fromRomM, source("key-1234").userSummary())
+        assertEquals(null, source("key-1234").userSummary())
     }
 
     @Test
-    fun `without a key the summary comes from RomM`() = runTest {
-        coEvery { achievementService.fetchRaUserSummary() } returns null
+    fun `without a key there is no summary and the web is never asked`() = runTest {
+        assertEquals(null, source(null).userSummary())
 
-        source(null).userSummary()
-
-        coVerify(exactly = 1) { achievementService.fetchRaUserSummary() }
         coVerify(exactly = 0) { webClient.userSummary(any()) }
     }
 
@@ -214,20 +207,74 @@ class RaMetadataSourceTest {
 
         val awards = source("key-1234").awardProgression(end)
 
-        assertEquals(
-            listOf(RomMRAGameProgression(romRaId = 55L, highestAwardKind = "mastered", highestAwardDate = "2026-10-01T11:00:00+00:00")),
-            awards
-        )
+        assertEquals(listOf(RaGameAward(55L, "mastered", "2026-10-01T11:00:00+00:00")), awards)
     }
 
     @Test
     fun `a failing web completion progress falls back to RomM's progression`() = runTest {
         coEvery { webClient.completionProgress(any()) } returns RAWebResult.Failed("HTTP 500")
         every { achievementService.progressionRefreshedAt() } returns end.plusSeconds(60)
-        val romM = listOf(RomMRAGameProgression(romRaId = 56L, highestAwardKind = "beaten-hardcore"))
-        every { achievementService.getProgression() } returns romM
+        every { achievementService.getProgression() } returns listOf(
+            RomMRAGameProgression(romRaId = 56L, highestAwardKind = "beaten-hardcore"),
+            RomMRAGameProgression(highestAwardKind = "mastered")
+        )
 
-        assertEquals(romM, source("key-1234").awardProgression(end))
+        assertEquals(listOf(RaGameAward(56L, "beaten-hardcore", null)), source("key-1234").awardProgression(end))
+    }
+
+    @Test
+    fun `a RomM mastery is dated by the last unlock once every achievement is hardcore`() {
+        val award = with(RaMetadataSource) {
+            RomMRAGameProgression(
+                romRaId = 55L, maxPossible = 10, numAwarded = 10, numAwardedHardcore = 10,
+                mostRecentAwardedDate = "2026-10-01 11:00:00", highestAwardKind = "mastered"
+            ).toGameAward()
+        }
+        assertEquals(RaGameAward(55L, "mastered", "2026-10-01 11:00:00"), award)
+    }
+
+    @Test
+    fun `a RomM mastery short of the full hardcore set stays undated`() {
+        val award = with(RaMetadataSource) {
+            RomMRAGameProgression(
+                romRaId = 55L, maxPossible = 10, numAwarded = 10, numAwardedHardcore = 9,
+                mostRecentAwardedDate = "2026-10-01 11:00:00", highestAwardKind = "mastered"
+            ).toGameAward()
+        }
+        assertEquals(null, award?.awardedAt)
+    }
+
+    @Test
+    fun `a RomM completion is dated once every achievement is earned in either mode`() {
+        val award = with(RaMetadataSource) {
+            RomMRAGameProgression(
+                romRaId = 55L, maxPossible = 10, numAwarded = 10, numAwardedHardcore = 2,
+                mostRecentAwardedDate = "2026-10-01 11:00:00", highestAwardKind = "completed"
+            ).toGameAward()
+        }
+        assertEquals("2026-10-01 11:00:00", award?.awardedAt)
+    }
+
+    @Test
+    fun `a RomM award with no achievements to count stays undated`() {
+        val award = with(RaMetadataSource) {
+            RomMRAGameProgression(
+                romRaId = 55L, maxPossible = 0, numAwarded = 0, numAwardedHardcore = 0,
+                mostRecentAwardedDate = "2026-10-01 11:00:00", highestAwardKind = "mastered"
+            ).toGameAward()
+        }
+        assertEquals(null, award?.awardedAt)
+    }
+
+    @Test
+    fun `a RomM beaten award stays undated`() {
+        val award = with(RaMetadataSource) {
+            RomMRAGameProgression(
+                romRaId = 55L, maxPossible = 10, numAwarded = 10, numAwardedHardcore = 10,
+                mostRecentAwardedDate = "2026-10-01 11:00:00", highestAwardKind = "beaten-hardcore"
+            ).toGameAward()
+        }
+        assertEquals(null, award?.awardedAt)
     }
 
     @Test
@@ -257,7 +304,6 @@ class RaMetadataSourceTest {
             RAWebResult.Rejected,
             RAWebResult.Success(RAWebUserSummary("Exploring", "2026-10-01 11:30:00", 55L))
         )
-        coEvery { achievementService.fetchRaUserSummary() } returns null
 
         source("key-1234").userSummary()
         assertEquals("key-1234", keyHealth.rejectedKey.value)

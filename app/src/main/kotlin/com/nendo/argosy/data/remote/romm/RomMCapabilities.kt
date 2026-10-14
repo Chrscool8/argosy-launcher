@@ -17,7 +17,6 @@ data class RomMCapabilities(
     val supportsMusicTrackRomFilter: Boolean = false,
     val supportsMusicGames: Boolean = false,
     val supportsSnapshots: Boolean = false,
-    val supportsRaUserSummary: Boolean = false,
 ) {
     companion object {
         /**
@@ -55,8 +54,7 @@ data class RomMCapabilities(
             version: String?,
             libretroEnabled: Boolean? = null,
             steamGridDbEnabled: Boolean? = null,
-            snapshotsEnabled: Boolean = false,
-            raUserSummaryEnabled: Boolean = false
+            snapshotsEnabled: Boolean = false
         ): RomMCapabilities {
             if (version.isNullOrBlank() || version == "unknown") return NONE
             val gate = comparableVersion(version)
@@ -80,7 +78,6 @@ data class RomMCapabilities(
                     compareVersions(gate, MUSIC_TRACK_ROM_FILTER_MIN_VERSION) >= 0,
                 supportsMusicGames = compareVersions(gate, MUSIC_GAMES_MIN_VERSION) >= 0,
                 supportsSnapshots = snapshotsEnabled,
-                supportsRaUserSummary = raUserSummaryEnabled,
             )
         }
 
