@@ -445,9 +445,13 @@ private fun GameHeroMetadata(detail: CompanionDetail, style: PresentationStyle, 
                 Text(text = it, style = MaterialTheme.typography.titleMedium, color = theme.textDim)
             }
         }
+        val friendsAfterRatings = friends.isNotEmpty() && rows.any { it.first == RailGroup.RATINGS }
         rows.forEachIndexed { index, row ->
             Box(Modifier.padding(top = if (index == 0) Dimens.spacingMd else Dimens.spacingSm)) {
                 ShowcaseRailRow(row.second)
+            }
+            if (friendsAfterRatings && row.first == RailGroup.RATINGS) {
+                ShowcaseFriendsPill(friends = friends, modifier = Modifier.padding(top = Dimens.spacingSm))
             }
         }
         journey?.let {
@@ -455,7 +459,7 @@ private fun GameHeroMetadata(detail: CompanionDetail, style: PresentationStyle, 
                 ShowcaseJourneyBar(journey = it)
             }
         }
-        if (friends.isNotEmpty()) {
+        if (friends.isNotEmpty() && !friendsAfterRatings) {
             ShowcaseFriendsPill(friends = friends, modifier = Modifier.padding(top = Dimens.spacingMd))
         }
     }
@@ -704,7 +708,25 @@ private fun ShowcaseCover(
                 repair(ArtSlot.COVER)
             }
         )
-        BoxArtRoute.TEXT -> Unit
+        BoxArtRoute.TEXT -> ShowcaseTitleCover(detail.title, Modifier.size(width, height))
+    }
+}
+
+@Composable
+private fun ShowcaseTitleCover(title: String, modifier: Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(Dimens.radiusLg))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(Dimens.spacingSm)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
