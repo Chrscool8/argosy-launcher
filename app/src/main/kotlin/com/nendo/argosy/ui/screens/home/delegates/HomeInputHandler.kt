@@ -724,9 +724,8 @@ class HomeInputHandler(
      * where arranging is its first entry, the game menu on a row, and the app menu in the app
      * drawer. On the dock it picks the focused app up to reorder, with its controls in the footer.
      *
-     * Committing on the second hold still matches the press that started an arrange. On a title
-     * the hold asks whether to start over instead, since a plain press already resumes, and a
-     * title with nothing stored is played rather than asked about twice.
+     * A second hold commits an arrange. On a title with something stored the hold asks whether to
+     * start over; a title with nothing stored plays.
      */
     override fun onLongConfirm(): InputResult {
         val state = actions.uiState.value

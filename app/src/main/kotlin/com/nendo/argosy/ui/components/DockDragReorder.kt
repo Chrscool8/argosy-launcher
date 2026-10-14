@@ -120,11 +120,6 @@ internal class DockDragReorderState(
     }
 }
 
-/**
- * Keeps the dock list in step with the reorder session: ends a touch drag the session no longer
- * owns, holds the scroll position while the app list changes under an edit, and brings the
- * accessibility target into view.
- */
 @Composable
 internal fun DockReorderEffects(
     listState: LazyListState,
