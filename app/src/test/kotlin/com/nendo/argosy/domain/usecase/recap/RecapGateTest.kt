@@ -66,36 +66,49 @@ class RecapGateTest {
         coVerify(exactly = 0) { playSessionDao.getLatestForGameAndOwner(any(), any()) }
     }
 
-    private fun monthlyGate(enabled: Boolean = true, lastShown: YearMonth? = null): RecapGate {
+    private fun monthlyGate(
+        enabled: Boolean = true,
+        lastShown: YearMonth? = null,
+        privateIds: List<Long> = emptyList()
+    ): RecapGate {
         every { preferencesRepository.userPreferences } returns flowOf(
             UserPreferences(rommUserId = 7L, monthlyRecapEnabled = enabled, lastMonthlyRecapShown = lastShown)
         )
         coEvery { preferencesRepository.setLastMonthlyRecapShown(any()) } returns Unit
+        coEvery { preferencesRepository.privateIgdbIds() } returns privateIds
         return RecapGate(preferencesRepository, playSessionDao, gameDao)
     }
 
     @Test
     fun `last month is due when it had sessions and was never shown`() = runTest {
-        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any()) } returns true
+        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any(), any()) } returns true
         assertEquals(YearMonth.of(2026, 9), monthlyGate().monthlyDigestDue(now, ZoneOffset.UTC))
     }
 
     @Test
     fun `a month already shown is not due again and the sessions are never queried`() = runTest {
         assertNull(monthlyGate(lastShown = YearMonth.of(2026, 9)).monthlyDigestDue(now, ZoneOffset.UTC))
-        coVerify(exactly = 0) { playSessionDao.hasSessionsForOwnerInRange(any(), any(), any()) }
+        coVerify(exactly = 0) { playSessionDao.hasSessionsForOwnerInRange(any(), any(), any(), any()) }
     }
 
     @Test
     fun `a month with no sessions is skipped`() = runTest {
-        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any()) } returns false
+        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any(), any()) } returns false
         assertNull(monthlyGate().monthlyDigestDue(now, ZoneOffset.UTC))
+    }
+
+    @Test
+    fun `games marked private are left out of the sessions that make a month due`() = runTest {
+        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any(), listOf(42L)) } returns false
+
+        assertNull(monthlyGate(privateIds = listOf(42L)).monthlyDigestDue(now, ZoneOffset.UTC))
+        coVerify(exactly = 1) { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any(), listOf(42L)) }
     }
 
     @Test
     fun `the setting off answers before the sessions are queried`() = runTest {
         assertNull(monthlyGate(enabled = false).monthlyDigestDue(now, ZoneOffset.UTC))
-        coVerify(exactly = 0) { playSessionDao.hasSessionsForOwnerInRange(any(), any(), any()) }
+        coVerify(exactly = 0) { playSessionDao.hasSessionsForOwnerInRange(any(), any(), any(), any()) }
     }
 
     @Test
@@ -107,7 +120,7 @@ class RecapGateTest {
     @Test
     fun `the sessions query covers the whole month from its first local midnight to the next month's`() = runTest {
         val tokyo = ZoneId.of("Asia/Tokyo")
-        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any()) } returns true
+        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any(), any()) } returns true
 
         monthlyGate().monthlyDigestDue(Instant.parse("2026-10-01T00:30:00+09:00"), tokyo)
 
@@ -115,14 +128,15 @@ class RecapGateTest {
             playSessionDao.hasSessionsForOwnerInRange(
                 7L,
                 Instant.parse("2026-08-31T15:00:00Z"),
-                Instant.parse("2026-09-30T15:00:00Z")
+                Instant.parse("2026-09-30T15:00:00Z"),
+                any()
             )
         }
     }
 
     @Test
     fun `the device zone decides which month is last month at the boundary`() = runTest {
-        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any()) } returns true
+        coEvery { playSessionDao.hasSessionsForOwnerInRange(7L, any(), any(), any()) } returns true
         val instant = Instant.parse("2026-10-31T23:30:00Z")
 
         assertEquals(YearMonth.of(2026, 9), monthlyGate().monthlyDigestDue(instant, ZoneOffset.UTC))

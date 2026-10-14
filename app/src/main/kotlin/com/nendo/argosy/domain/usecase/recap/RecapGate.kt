@@ -44,7 +44,12 @@ class RecapGate @Inject constructor(
             enabled = prefs.monthlyRecapEnabled
         ) ?: return null
         val window = RecapEligibility.monthWindow(candidate, zone)
-        val hadSessions = playSessionDao.hasSessionsForOwnerInRange(prefs.rommUserId, window.start, window.end)
+        val hadSessions = playSessionDao.hasSessionsForOwnerInRange(
+            prefs.rommUserId,
+            window.start,
+            window.end,
+            preferencesRepository.privateIgdbIds()
+        )
         return candidate.takeIf { hadSessions }
     }
 

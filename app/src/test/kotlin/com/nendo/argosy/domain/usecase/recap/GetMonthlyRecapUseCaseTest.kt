@@ -50,9 +50,10 @@ class GetMonthlyRecapUseCaseTest {
         val preferences = mockk<UserPreferences>(relaxed = true)
         every { preferences.rommUserId } returns 7L
         every { preferencesRepository.userPreferences } returns flowOf(preferences)
-        coEvery { playSessionDao.getSessionsForOwnerInRange(any(), any(), any()) } returns emptyList()
+        coEvery { preferencesRepository.privateIgdbIds() } returns emptyList()
+        coEvery { playSessionDao.getSessionsForOwnerInRange(any(), any(), any(), any()) } returns emptyList()
         coEvery { playSessionDao.getFirstPlayedPerGame(any()) } returns emptyList()
-        coEvery { playSessionDao.getActiveMsPerDay(any(), any(), any(), any()) } returns emptyList()
+        coEvery { playSessionDao.getActiveMsPerDay(any(), any(), any(), any(), any()) } returns emptyList()
         coEvery { metadataSource.webUnlocksBetween(any(), any()) } returns null
         coEvery { metadataSource.awardProgression(any()) } returns emptyList()
         coEvery { metadataSource.romMProgression(any()) } returns emptyList()
@@ -66,7 +67,7 @@ class GetMonthlyRecapUseCaseTest {
 
         coVerifyOrder {
             playSessionPullScheduler.pullWithin(4_000L)
-            playSessionDao.getSessionsForOwnerInRange(7L, any(), any())
+            playSessionDao.getSessionsForOwnerInRange(7L, any(), any(), any())
         }
     }
 
@@ -78,7 +79,7 @@ class GetMonthlyRecapUseCaseTest {
         val digest = useCase(YearMonth.of(2025, 12), ZoneOffset.UTC)
 
         assertTrue(digest.isEmpty)
-        coVerify(exactly = 1) { playSessionDao.getSessionsForOwnerInRange(7L, any(), any()) }
+        coVerify(exactly = 1) { playSessionDao.getSessionsForOwnerInRange(7L, any(), any(), any()) }
     }
 
     @Test

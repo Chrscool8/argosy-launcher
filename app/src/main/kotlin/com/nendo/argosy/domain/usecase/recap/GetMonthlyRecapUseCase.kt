@@ -38,7 +38,8 @@ class GetMonthlyRecapUseCase @Inject constructor(
         val owner = preferencesRepository.userPreferences.first().rommUserId
         val window = RecapEligibility.monthWindow(month, zone)
         val previousStart = RecapEligibility.monthWindow(month.minusMonths(1), zone).start
-        val sessions = playSessionDao.getSessionsForOwnerInRange(owner, previousStart, window.end)
+        val hidden = preferencesRepository.privateIgdbIds()
+        val sessions = playSessionDao.getSessionsForOwnerInRange(owner, previousStart, window.end, hidden)
         val firstPlayed = playSessionDao.getFirstPlayedPerGame(owner).associate { it.gameId to it.firstPlayed }
         val webUnlocks = metadataSource.webUnlocksBetween(window.start, window.end)
         val recap = MonthlyRecapCalculator.compute(
@@ -59,7 +60,7 @@ class GetMonthlyRecapUseCase @Inject constructor(
             .mapValues { (_, art) -> art.coverPath }
         val days = MonthlyDigestAssembler.monthDays(
             month,
-            playSessionDao.getActiveMsPerDay(owner, window.start, window.end, MIN_DISPLAY_MS)
+            playSessionDao.getActiveMsPerDay(owner, window.start, window.end, MIN_DISPLAY_MS, hidden)
         )
         return MonthlyDigestAssembler.assemble(recap, days, unlocks, covers, awardTitles)
     }

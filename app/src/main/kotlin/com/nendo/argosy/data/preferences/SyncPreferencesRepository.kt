@@ -812,6 +812,12 @@ class SyncPreferencesRepository @Inject constructor(
             ?: emptySet()
     }
 
+    /**
+     * The IGDB ids of games marked Private, in the shape play-time queries take to leave them
+     * out of every total.
+     */
+    suspend fun privateIgdbIds(): List<Long> = hiddenGameIds().first().map(Int::toLong)
+
     suspend fun setHiddenGameIds(ids: Set<Int>) {
         dataStore.edit { prefs ->
             if (ids.isEmpty()) prefs.remove(Keys.SOCIAL_HIDDEN_GAME_IDS)
