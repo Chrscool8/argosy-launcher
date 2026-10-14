@@ -1110,8 +1110,12 @@ fun ArgosyApp(
             dsm?.lastUserActivityAtMs
                 ?: remember { kotlinx.coroutines.flow.MutableStateFlow(0L) }
             ).collectAsState()
-        val dimmerEnabled = dsm != null &&
-            screenDimmerPrefs.enabled && !isEmulatorRunning && !uiState.isFirstRun
+        val mediaPlayback by (
+            dsm?.mediaPlayback
+                ?: remember { kotlinx.coroutines.flow.MutableStateFlow(null) }
+            ).collectAsState()
+        val dimmerEnabled = dsm != null && screenDimmerPrefs.enabled && !isEmulatorRunning &&
+            !uiState.isFirstRun && mediaPlayback == null
         val bottomReserved = gripReserveBottomInset()
 
         ScreenDimmerOverlay(
