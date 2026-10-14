@@ -32,11 +32,15 @@ val LocalModalPresence = staticCompositionLocalOf<InputDispatcher?> { null }
  * Modal input registration with optional cancellation when another owner removes the handler.
  */
 @Composable
-fun ModalInputEffect(active: Boolean, handler: InputHandler, onInputLost: (() -> Unit)? = null) {
-    val inputDispatcher = LocalInputDispatcher.current
+fun ModalInputEffect(
+    active: Boolean,
+    handler: InputHandler,
+    onInputLost: (() -> Unit)? = null,
+    inputDispatcher: InputDispatcher = LocalInputDispatcher.current
+) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnInputLost by rememberUpdatedState(onInputLost)
-    DisposableEffect(lifecycleOwner, handler, active) {
+    DisposableEffect(lifecycleOwner, handler, active, inputDispatcher) {
         if (!active) return@DisposableEffect onDispose { }
         inputDispatcher.pushModal(handler)
         val observer = LifecycleEventObserver { _, event ->

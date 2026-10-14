@@ -238,6 +238,7 @@ class SecondaryHomeActivity :
 
     override fun onStop() {
         super.onStop()
+        gamepadInputHandler.resetStickMotion()
         if (::dsm.isInitialized) {
             dsm.onCompanionStopped(hostDisplayId(), isFinishing, isChangingConfigurations)
         }
@@ -363,30 +364,30 @@ class SecondaryHomeActivity :
      * one a directly-delivered motion event gets.
      */
     override fun dispatchGenericMotionEvent(event: android.view.MotionEvent): Boolean {
-        if (event.isFromSource(android.view.InputDevice.SOURCE_JOYSTICK) &&
-            ::dsm.isInitialized && !dsm.companionHoldsPrimary.value
-        ) {
+        val isJoystick = event.isFromSource(android.view.InputDevice.SOURCE_CLASS_JOYSTICK)
+        if (isJoystick && ::dsm.isInitialized && !dsm.companionHoldsPrimary.value) {
+            gamepadInputHandler.resetStickMotion()
             handBackToPrimaryScreen()
             return true
         }
-        if (event.isFromSource(android.view.InputDevice.SOURCE_JOYSTICK) &&
-            ::dsm.isInitialized && !dsm.claimInput(event)
-        ) {
+        if (isJoystick && ::dsm.isInitialized && !dsm.claimInput(event)) {
             android.util.Log.d("SecondaryHome", "Joystick motion already handled by the primary display, dropped")
             return true
         }
         if (yieldsKeysToMediaPlayer()) {
             val forward = dsm.mediaPlayerMotionDispatcher
-            if (forward != null && forward(event)) return true
+            if (forward != null && forward(event)) {
+                gamepadInputHandler.resetStickMotion()
+                return true
+            }
         }
+        if (gamepadInputHandler.processStickMotion(event, steerRightStick = true, ::deliverStickEvent)) return true
         if (gamepadInputHandler.handleMotionEvent(event)) return true
-        gamepadInputHandler.processRightStickMotion(event)
-        val stickEvent = gamepadInputHandler.processStickMotion(event)
-        if (stickEvent != null) {
-            gamepadInputHandler.injectEvent(stickEvent)
-            return true
-        }
         return super.dispatchGenericMotionEvent(event)
+    }
+
+    private fun deliverStickEvent(stickEvent: GamepadEvent, isRepeat: Boolean) {
+        gamepadInputHandler.injectEvent(stickEvent, isRepeat)
     }
 
     private var lastHandBackAtMs = 0L
@@ -845,8 +846,7 @@ class SecondaryHomeActivity :
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) window.hideSystemBars()
-        if (!hasFocus) gamepadInputHandler.releaseRightStick()
+        if (hasFocus) window.hideSystemBars() else gamepadInputHandler.resetStickMotion()
         if (!::dsm.isInitialized) return
         if (hasFocus) {
             dsm.onLauncherWindowFocused(this)
