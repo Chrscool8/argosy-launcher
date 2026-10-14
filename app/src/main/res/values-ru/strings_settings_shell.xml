@@ -346,6 +346,8 @@
     <string name="settings_shell_footer_adjust_platformdetail">Настроить</string>
     <string name="settings_shell_footer_update_emulator">Обновить эмулятор</string>
     <string name="settings_shell_footer_reset_platformdetail">Сбросить</string>
+    <string name="settings_shell_footer_launch_targets_screen">Экран</string>
+    <string name="settings_shell_footer_launch_targets_reset">Сбросить</string>
     <string name="settings_shell_footer_toggle_label">Переключить</string>
     <string name="settings_shell_footer_open_label">Открыть</string>
     <string name="settings_shell_footer_select_label">Выбрать</string>

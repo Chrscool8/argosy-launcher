@@ -21,7 +21,6 @@ import com.nendo.argosy.DualScreenManagerHolder
 import com.nendo.argosy.R
 import com.nendo.argosy.data.preferences.DisplayRoleOverride
 import com.nendo.argosy.data.preferences.EmulatorDisplayTarget
-import com.nendo.argosy.domain.model.ScreenRole
 import com.nendo.argosy.hardware.DisplayBadgeSize
 import com.nendo.argosy.ui.components.CyclePreference
 import com.nendo.argosy.ui.components.NavigationPreference
@@ -32,6 +31,7 @@ import com.nendo.argosy.ui.screens.settings.LaunchTargetScreens
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
 import com.nendo.argosy.ui.screens.settings.components.SectionPaneLayout
+import com.nendo.argosy.ui.screens.settings.screenRole
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
 
@@ -159,13 +159,6 @@ private fun displayRoleLabelRes(mode: DisplayRoleOverride): Int = when (mode) {
     DisplayRoleOverride.STANDARD -> R.string.settings_displays_display_roles_standard
     DisplayRoleOverride.SWAPPED -> R.string.settings_displays_display_roles_swapped
 }
-
-private val EmulatorDisplayTarget.screenRole: ScreenRole
-    get() = when (this) {
-        EmulatorDisplayTarget.PRIMARY -> ScreenRole.PRIMARY
-        EmulatorDisplayTarget.APP_SCREEN -> ScreenRole.APP_TARGET
-        EmulatorDisplayTarget.PRESENTATION, EmulatorDisplayTarget.DEFAULT -> ScreenRole.PRESENTATION
-    }
 
 @Composable
 private fun launchTargetLabel(target: EmulatorDisplayTarget, screens: LaunchTargetScreens): String {
@@ -390,7 +383,7 @@ fun DisplaysSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                     )
                 },
                 isFocused = isFocused(item),
-                onClick = { viewModel.setFocusIndex(displaysLayout.focusIndexOf(item, layoutState)) }
+                onClick = { openFrom(item) { viewModel.navigateToLaunchTargets() } }
             )
         }
     }

@@ -750,13 +750,28 @@ class EmulatorSettingsDelegate @Inject constructor(
         val entries = EmulatorDisplayTarget.entries
         val currentIndex = entries.indexOf(config.displayTarget)
         val nextIndex = (currentIndex + direction).mod(entries.size)
-        val next = entries[nextIndex]
+        setDisplayTarget(scope, config.platform.id, entries[nextIndex], onLoadSettings)
+    }
+
+    fun setDisplayTarget(
+        scope: CoroutineScope,
+        platformId: Long,
+        target: EmulatorDisplayTarget,
+        onStored: suspend () -> Unit
+    ) {
+        _state.update { st ->
+            st.copy(
+                platforms = st.platforms.map {
+                    if (it.platform.id == platformId) it.copy(displayTarget = target) else it
+                }
+            )
+        }
         scope.launch {
             configureEmulatorUseCase.setDisplayTargetForPlatform(
-                config.platform.id,
-                if (next == EmulatorDisplayTarget.DEFAULT) null else next.name
+                platformId,
+                if (target == EmulatorDisplayTarget.DEFAULT) null else target.name
             )
-            onLoadSettings()
+            onStored()
         }
     }
 

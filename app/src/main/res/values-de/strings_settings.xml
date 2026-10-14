@@ -268,6 +268,29 @@
         <item quantity="one">%d einzeln festgelegt</item>
         <item quantity="other">%d einzeln festgelegt</item>
     </plurals>
+    <string name="settings_launch_targets_title">Zielbildschirme</string>
+    <string name="settings_launch_targets_intro">Gruppiert nach dem Bildschirm, auf dem jeder Eintrag jetzt öffnet.</string>
+    <string name="settings_launch_targets_rail">%1$s (Bildschirm %2$d)</string>
+    <string name="settings_launch_targets_heading_description">Bildschirm %1$d, %2$s</string>
+    <string name="settings_launch_targets_this_screen">Dieser Bildschirm</string>
+    <string name="settings_launch_targets_platforms">Plattformen</string>
+    <string name="settings_launch_targets_apps">Apps</string>
+    <string name="settings_launch_targets_tag_default">Standard</string>
+    <string name="settings_launch_targets_tag_set">Festgelegt</string>
+    <string name="settings_launch_targets_platform_set">Bleibt bei %1$s</string>
+    <string name="settings_launch_targets_app_set">Bleibt auf Bildschirm %1$d</string>
+    <string name="settings_launch_targets_app_missing">Sein Bildschirm ist nicht angeschlossen</string>
+    <string name="settings_launch_targets_app_off">Bildschirm %1$d ist aus</string>
+    <plurals name="settings_launch_targets_platform_game_overrides">
+        <item quantity="one">%d Spiel einzeln festgelegt</item>
+        <item quantity="other">%d Spiele einzeln festgelegt</item>
+    </plurals>
+    <string name="settings_launch_targets_empty">Hier öffnet nichts</string>
+    <string name="settings_launch_targets_loading_apps">Apps werden gesucht</string>
+    <string name="settings_launch_targets_use_default_role">Standard verwenden (%1$s)</string>
+    <string name="settings_launch_targets_use_default_screen">Standard verwenden (Bildschirm %1$d)</string>
+    <string name="settings_launch_targets_option_role">%1$s (Bildschirm %2$d)</string>
+    <string name="settings_launch_targets_option_screen">Bildschirm %1$d (%2$s)</string>
     <string name="settings_interface_presentation_title">Präsentation</string>
     <string name="settings_interface_presentation_subtitle">Wie der andere Bildschirm das gewählte Spiel zeigt</string>
     <string name="settings_interface_section_general">Allgemein</string>

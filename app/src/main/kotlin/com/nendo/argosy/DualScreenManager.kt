@@ -321,6 +321,10 @@ class DualScreenManager(
             val known = resolved.known
             val layout = resolved.layout
             val primary = attached.find { it.key == layout.primaryKey } ?: return@launch
+            displayAffinityHelper.offDisplayIds = attached
+                .filter { layout.roleFor(it.key) == com.nendo.argosy.domain.model.ScreenRole.OFF }
+                .map { it.displayId }
+                .toSet()
             applyScreenLayout(
                 primaryDisplayId = primary.displayId,
                 presentationDisplayId = attached.find { it.key == layout.presentationKey }?.displayId,

@@ -254,6 +254,28 @@
     <plurals name="settings_displays_by_platform_and_app_count">
         <item quantity="other">%d 项单独设置</item>
     </plurals>
+    <string name="settings_launch_targets_title">目标显示屏</string>
+    <string name="settings_launch_targets_intro">按各项当前打开所在的屏幕分组。</string>
+    <string name="settings_launch_targets_rail">%1$s（屏幕 %2$d）</string>
+    <string name="settings_launch_targets_heading_description">屏幕 %1$d，%2$s</string>
+    <string name="settings_launch_targets_this_screen">本屏幕</string>
+    <string name="settings_launch_targets_platforms">平台</string>
+    <string name="settings_launch_targets_apps">应用</string>
+    <string name="settings_launch_targets_tag_default">默认</string>
+    <string name="settings_launch_targets_tag_set">已设置</string>
+    <string name="settings_launch_targets_platform_set">跟随%1$s</string>
+    <string name="settings_launch_targets_app_set">固定在屏幕 %1$d</string>
+    <string name="settings_launch_targets_app_missing">其屏幕未连接</string>
+    <string name="settings_launch_targets_app_off">屏幕 %1$d 已关闭</string>
+    <plurals name="settings_launch_targets_platform_game_overrides">
+        <item quantity="other">%d 款游戏单独设置</item>
+    </plurals>
+    <string name="settings_launch_targets_empty">此处没有打开的内容</string>
+    <string name="settings_launch_targets_loading_apps">正在查找应用</string>
+    <string name="settings_launch_targets_use_default_role">使用默认（%1$s）</string>
+    <string name="settings_launch_targets_use_default_screen">使用默认（屏幕 %1$d）</string>
+    <string name="settings_launch_targets_option_role">%1$s（屏幕 %2$d）</string>
+    <string name="settings_launch_targets_option_screen">屏幕 %1$d（%2$s）</string>
     <string name="settings_interface_presentation_title">展示</string>
     <string name="settings_interface_presentation_subtitle">另一块屏幕如何展示选中的游戏</string>
     <string name="settings_interface_section_general">常规</string>

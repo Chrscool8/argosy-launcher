@@ -7,6 +7,16 @@ import androidx.room.Query
 import com.nendo.argosy.data.local.entity.EmulatorConfigEntity
 import kotlinx.coroutines.flow.Flow
 
+data class PlatformDisplayTarget(
+    val platformId: Long,
+    val displayTarget: String
+)
+
+data class PlatformGameTargetCount(
+    val platformId: Long,
+    val gameCount: Int
+)
+
 @Dao
 interface EmulatorConfigDao {
 
@@ -65,10 +75,20 @@ interface EmulatorConfigDao {
     suspend fun getDisplayTargetForPlatform(platformId: Long): String?
 
     @Query(
-        "SELECT displayTarget FROM emulator_configs " +
+        "SELECT platformId, displayTarget FROM emulator_configs " +
             "WHERE platformId IS NOT NULL AND gameId IS NULL AND isDefault = 1 AND displayTarget IS NOT NULL"
     )
-    suspend fun getPlatformDisplayTargets(): List<String>
+    suspend fun getPlatformDisplayTargets(): List<PlatformDisplayTarget>
+
+    @Query(
+        """
+        SELECT g.platformId AS platformId, COUNT(*) AS gameCount
+        FROM emulator_configs c INNER JOIN games g ON g.id = c.gameId
+        WHERE c.gameId IS NOT NULL AND c.displayTarget IS NOT NULL
+        GROUP BY g.platformId
+        """
+    )
+    suspend fun getGameDisplayTargetCounts(): List<PlatformGameTargetCount>
 
     @Query("SELECT displayTarget FROM emulator_configs WHERE gameId = :gameId LIMIT 1")
     suspend fun getDisplayTargetForGame(gameId: Long): String?

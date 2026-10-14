@@ -111,6 +111,7 @@ private fun routeApplySectionExit(vm: SettingsViewModel, section: SettingsSectio
         SettingsSection.STEAM_SETTINGS -> vm.cancelSteamQrAuth()
         SettingsSection.DRIVERS -> routeRefreshBuiltinGraphics(vm)
         SettingsSection.SCREENS -> routeRefreshLaunchTargets(vm)
+        SettingsSection.LAUNCH_TARGETS -> routeLeaveLaunchTargets(vm)
         else -> {}
     }
 }
@@ -161,6 +162,7 @@ private fun routeApplySectionEntry(vm: SettingsViewModel, section: SettingsSecti
         SettingsSection.DRIVERS -> vm.driversDelegate.loadDrivers(vm.viewModelScope)
         SettingsSection.SCREENS -> routeRefreshScreens(vm)
         SettingsSection.DISPLAYS -> routeRefreshLaunchTargets(vm)
+        SettingsSection.LAUNCH_TARGETS -> routeEnterLaunchTargets(vm)
         SettingsSection.MANAGED_INSTALLERS -> vm.openManagedInstallers()
         else -> {}
     }

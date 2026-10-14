@@ -32,23 +32,39 @@ class EmulatorLaunchTargetResolver @Inject constructor(
 
     suspend fun launchOptionsFor(gameId: Long, overrideDisplayId: Int? = null): Bundle? {
         val rolesSwapped = sessionStateStore.isRolesSwapped()
-        val target = placementTarget(
+        val displayId = overrideDisplayId ?: targetDisplayId(
             stored = EmulatorDisplayTarget.fromString(
                 emulatorConfigRepository.getEffectiveDisplayTarget(gameId)
             ),
-            gamesDefault = preferencesRepository.userPreferences.first().gamesDisplayTarget
+            gamesDefault = preferencesRepository.userPreferences.first().gamesDisplayTarget,
+            rolesSwapped = rolesSwapped
         )
-        val displayId = overrideDisplayId
-            ?: displayAffinityHelper.getDisplayTargetId(target, rolesSwapped)
-        DualScreenManagerHolder.instance?.setEmulatorDisplay(
-            displayId ?: displayAffinityHelper.getEmulatorDisplayId(rolesSwapped)
-        )
+        DualScreenManagerHolder.instance?.setEmulatorDisplay(placedOn(displayId, rolesSwapped))
         return displayAffinityHelper.getActivityOptions(
             forEmulator = true,
             rolesSwapped = rolesSwapped,
             overrideDisplayId = displayId
         )
     }
+
+    /**
+     * The display a game opens on when [stored] is its effective target, the way [launchOptionsFor]
+     * places it.
+     */
+    fun placementDisplayId(
+        stored: EmulatorDisplayTarget,
+        gamesDefault: EmulatorDisplayTarget,
+        rolesSwapped: Boolean
+    ): Int = placedOn(targetDisplayId(stored, gamesDefault, rolesSwapped), rolesSwapped)
+
+    private fun targetDisplayId(
+        stored: EmulatorDisplayTarget,
+        gamesDefault: EmulatorDisplayTarget,
+        rolesSwapped: Boolean
+    ): Int? = displayAffinityHelper.getDisplayTargetId(placementTarget(stored, gamesDefault), rolesSwapped)
+
+    private fun placedOn(displayId: Int?, rolesSwapped: Boolean): Int =
+        displayId ?: displayAffinityHelper.getEmulatorDisplayId(rolesSwapped)
 
     companion object {
         fun placementTarget(

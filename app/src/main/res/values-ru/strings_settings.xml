@@ -265,6 +265,31 @@
         <item quantity="many">%d с отдельной настройкой</item>
         <item quantity="other">%d с отдельной настройкой</item>
     </plurals>
+    <string name="settings_launch_targets_title">Целевые экраны</string>
+    <string name="settings_launch_targets_intro">Сгруппировано по экрану, на котором каждый пункт открывается сейчас.</string>
+    <string name="settings_launch_targets_rail">%1$s (экран %2$d)</string>
+    <string name="settings_launch_targets_heading_description">Экран %1$d, %2$s</string>
+    <string name="settings_launch_targets_this_screen">Этот экран</string>
+    <string name="settings_launch_targets_platforms">Платформы</string>
+    <string name="settings_launch_targets_apps">Приложения</string>
+    <string name="settings_launch_targets_tag_default">По умолчанию</string>
+    <string name="settings_launch_targets_tag_set">Задано</string>
+    <string name="settings_launch_targets_platform_set">Следует за ролью: %1$s</string>
+    <string name="settings_launch_targets_app_set">Остаётся на экране %1$d</string>
+    <string name="settings_launch_targets_app_missing">Его экран не подключён</string>
+    <string name="settings_launch_targets_app_off">Экран %1$d выключен</string>
+    <plurals name="settings_launch_targets_platform_game_overrides">
+        <item quantity="one">%d игра с отдельной настройкой</item>
+        <item quantity="few">%d игры с отдельной настройкой</item>
+        <item quantity="many">%d игр с отдельной настройкой</item>
+        <item quantity="other">%d игры с отдельной настройкой</item>
+    </plurals>
+    <string name="settings_launch_targets_empty">Здесь ничего не открывается</string>
+    <string name="settings_launch_targets_loading_apps">Поиск приложений</string>
+    <string name="settings_launch_targets_use_default_role">По умолчанию (%1$s)</string>
+    <string name="settings_launch_targets_use_default_screen">По умолчанию (экран %1$d)</string>
+    <string name="settings_launch_targets_option_role">%1$s (экран %2$d)</string>
+    <string name="settings_launch_targets_option_screen">Экран %1$d (%2$s)</string>
     <string name="settings_interface_presentation_title">Презентация</string>
     <string name="settings_interface_presentation_subtitle">Как другой экран показывает выбранную игру</string>
     <string name="settings_interface_section_general">Общие</string>

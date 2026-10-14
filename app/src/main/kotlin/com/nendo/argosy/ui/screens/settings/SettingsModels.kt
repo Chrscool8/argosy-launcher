@@ -115,6 +115,7 @@ enum class SettingsSection {
     LIBRARY_VIEW,
     DISPLAYS,
     SCREENS,
+    LAUNCH_TARGETS,
     AMBIENT_LED,
     NAVIGATION,
     PLATFORMS,
@@ -194,6 +195,10 @@ data class PlatformEmulatorConfig(
     val showDisplayTargetOption: Boolean get() = com.nendo.argosy.data.emulator.EmulatorSettingScope
         .showsDisplayTarget(hasSecondaryDisplay)
 }
+
+internal fun <T> List<T>.inPlatformsListOrder(platformOf: (T) -> PlatformEntity): List<T> =
+    filter { platformOf(it).slug != "steam" }
+        .sortedByDescending { platformOf(it).syncEnabled }
 
 data class EmulatorUpdateInfo(
     val emulatorId: String,
@@ -1895,6 +1900,7 @@ data class SettingsUiState(
     val rootScriptDialog: RootScriptDialogState? = null,
     val colorFocusIndex: Int = 0,
     val display: DisplayState = DisplayState(),
+    val launchTargets: LaunchTargetsState = LaunchTargetsState(),
     val controls: ControlsState = ControlsState(),
     val managedInstallers: ManagedInstallersState = ManagedInstallersState(),
     val sounds: SoundState = SoundState(),

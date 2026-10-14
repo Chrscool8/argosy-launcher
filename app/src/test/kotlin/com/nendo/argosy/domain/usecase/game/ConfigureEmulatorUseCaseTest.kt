@@ -171,6 +171,33 @@ class ConfigureEmulatorUseCaseTest {
         coVerify(exactly = 0) { saveSyncDao.clearLocalPathsForGame(any()) }
     }
 
+    @Test
+    fun `setDisplayTargetForPlatform patches the existing platform default row`() = runTest {
+        coEvery { emulatorConfigDao.getDefaultForPlatform(4L) } returns
+            EmulatorConfigEntity(id = 9L, platformId = 4L, gameId = null, packageName = "com.retroarch", displayName = "RetroArch", coreName = null, isDefault = true)
+
+        useCase.setDisplayTargetForPlatform(4L, "PRIMARY")
+
+        coVerify { emulatorConfigDao.updateDisplayTargetForPlatform(4L, "PRIMARY") }
+        coVerify(exactly = 0) { emulatorConfigDao.insert(any()) }
+    }
+
+    @Test
+    fun `setDisplayTargetForPlatform creates a platform default row when none exists`() = runTest {
+        coEvery { emulatorConfigDao.getDefaultForPlatform(4L) } returns null
+        val configSlot = slot<EmulatorConfigEntity>()
+        coEvery { emulatorConfigDao.insert(capture(configSlot)) } returns 1L
+
+        useCase.setDisplayTargetForPlatform(4L, "APP_SCREEN")
+
+        val config = configSlot.captured
+        assertEquals(4L, config.platformId)
+        assertNull(config.gameId)
+        assertNull(config.packageName)
+        assertTrue(config.isDefault)
+        assertEquals("APP_SCREEN", config.displayTarget)
+    }
+
     private fun createEmulator(packageName: String, displayName: String): InstalledEmulator {
         val def = EmulatorDef(
             id = packageName,

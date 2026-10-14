@@ -151,6 +151,8 @@ class SettingsViewModel @Inject constructor(
     internal val inputConfigRepository: com.nendo.argosy.data.repository.InputConfigRepository,
     internal val frameRegistry: com.nendo.argosy.libretro.frame.FrameRegistry,
     internal val displayAffinityHelper: com.nendo.argosy.util.DisplayAffinityHelper,
+    internal val emulatorLaunchTargetResolver: com.nendo.argosy.ui.screens.common.EmulatorLaunchTargetResolver,
+    internal val appsRepository: com.nendo.argosy.data.repository.AppsRepository,
     internal val socialRepository: SocialRepository,
     internal val discordPresenceManager: DiscordPresenceManager,
     internal val coreOptionsRepo: CoreOptionsRepository,
@@ -163,6 +165,7 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var jellyfinSignInJob: Job? = null
+    internal var launchTargetsJob: Job? = null
     private val ambientCovers = java.util.concurrent.ConcurrentHashMap<Long, List<String>>()
 
     suspend fun ambientShowcaseCovers(platformId: Long?): List<String> {
@@ -1469,6 +1472,23 @@ class SettingsViewModel @Inject constructor(
     fun selectGamesLaunchTarget(index: Int) = routeSelectLaunchTarget(this, LaunchTargetKind.GAMES, index)
 
     fun selectAppsLaunchTarget(index: Int) = routeSelectLaunchTarget(this, LaunchTargetKind.APPS, index)
+
+    fun navigateToLaunchTargets() = routeNavigateToLaunchTargets(this)
+
+    fun reloadLaunchTargetEntries() = routeLoadLaunchTargetEntries(this)
+
+    fun openLaunchTargetPicker(): Boolean = routeOpenLaunchTargetPicker(this)
+
+    fun openLaunchTargetPickerAt(focusIndex: Int) {
+        setFocusIndex(focusIndex)
+        routeOpenLaunchTargetPicker(this)
+    }
+
+    fun closeLaunchTargetPicker() = routeCloseLaunchTargetPicker(this)
+
+    fun pickLaunchTarget(index: Int) = routePickLaunchTarget(this, index)
+
+    fun resetLaunchTarget(key: String) = routeResetLaunchTarget(this, key)
 
     fun setSoundVolume(volume: Int) = soundsDelegate.setSoundVolume(viewModelScope, volume)
 

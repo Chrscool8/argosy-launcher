@@ -331,6 +331,8 @@
     <string name="settings_shell_footer_adjust_platformdetail">समायोजित करें</string>
     <string name="settings_shell_footer_update_emulator">एमुलेटर अपडेट करें</string>
     <string name="settings_shell_footer_reset_platformdetail">रीसेट करें</string>
+    <string name="settings_shell_footer_launch_targets_screen">स्क्रीन</string>
+    <string name="settings_shell_footer_launch_targets_reset">रीसेट करें</string>
     <string name="settings_shell_footer_toggle_label">टॉगल करें</string>
     <string name="settings_shell_footer_open_label">खोलें</string>
     <string name="settings_shell_footer_select_label">चुनें</string>

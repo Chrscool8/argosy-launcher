@@ -44,6 +44,12 @@ class DisplayAffinityHelper @Inject constructor(
     var appTargetDisplayId: Int? = null
 
     /**
+     * Displays the stored screen layout turns off. An app pinned to one of them launches where
+     * the Apps default puts it.
+     */
+    var offDisplayIds: Set<Int> = emptySet()
+
+    /**
      * The display the launcher window sits on while Samsung DeX is active, or null outside DeX.
      * The launcher pushes it on creation and on every configuration change. While set, the
      * launcher, the games and the apps all run on that one display, and no dual-screen surface
@@ -175,7 +181,7 @@ class DisplayAffinityHelper @Inject constructor(
         return resolveAppLaunchDisplayId(
             preferredDisplayId = preferredScreenKey?.let { key ->
                 screenCatalog.attachedScreens().find { it.key == key }?.displayId
-            },
+            }?.takeUnless { it in offDisplayIds },
             defaultDisplayId = resolveAppDefaultDisplayId(
                 target = defaultTarget,
                 roleDisplayIds = roles,

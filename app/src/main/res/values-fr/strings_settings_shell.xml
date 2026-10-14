@@ -342,6 +342,8 @@
     <string name="settings_shell_footer_adjust_platformdetail">Ajuster</string>
     <string name="settings_shell_footer_update_emulator">Mettre à jour l\'émulateur</string>
     <string name="settings_shell_footer_reset_platformdetail">Réinitialiser</string>
+    <string name="settings_shell_footer_launch_targets_screen">Écran</string>
+    <string name="settings_shell_footer_launch_targets_reset">Réinitialiser</string>
     <string name="settings_shell_footer_toggle_label">Activer/désactiver</string>
     <string name="settings_shell_footer_open_label">Ouvrir</string>
     <string name="settings_shell_footer_select_label">Sélectionner</string>

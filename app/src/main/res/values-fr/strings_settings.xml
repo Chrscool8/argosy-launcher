@@ -262,6 +262,30 @@
         <item quantity="many">%d réglés individuellement</item>
         <item quantity="other">%d réglés individuellement</item>
     </plurals>
+    <string name="settings_launch_targets_title">Écrans cibles</string>
+    <string name="settings_launch_targets_intro">Regroupés selon l\'écran sur lequel chacun s\'ouvre maintenant.</string>
+    <string name="settings_launch_targets_rail">%1$s (écran %2$d)</string>
+    <string name="settings_launch_targets_heading_description">Écran %1$d, %2$s</string>
+    <string name="settings_launch_targets_this_screen">Cet écran</string>
+    <string name="settings_launch_targets_platforms">Plateformes</string>
+    <string name="settings_launch_targets_apps">Applis</string>
+    <string name="settings_launch_targets_tag_default">Par défaut</string>
+    <string name="settings_launch_targets_tag_set">Réglé</string>
+    <string name="settings_launch_targets_platform_set">Suit %1$s</string>
+    <string name="settings_launch_targets_app_set">Reste sur l\'écran %1$d</string>
+    <string name="settings_launch_targets_app_missing">Son écran n\'est pas branché</string>
+    <string name="settings_launch_targets_app_off">L\'écran %1$d est éteint</string>
+    <plurals name="settings_launch_targets_platform_game_overrides">
+        <item quantity="one">%d jeu réglé individuellement</item>
+        <item quantity="many">%d jeux réglés individuellement</item>
+        <item quantity="other">%d jeux réglés individuellement</item>
+    </plurals>
+    <string name="settings_launch_targets_empty">Rien ne s\'ouvre ici</string>
+    <string name="settings_launch_targets_loading_apps">Recherche des applis</string>
+    <string name="settings_launch_targets_use_default_role">Par défaut (%1$s)</string>
+    <string name="settings_launch_targets_use_default_screen">Par défaut (écran %1$d)</string>
+    <string name="settings_launch_targets_option_role">%1$s (écran %2$d)</string>
+    <string name="settings_launch_targets_option_screen">Écran %1$d (%2$s)</string>
     <string name="settings_interface_presentation_title">Présentation</string>
     <string name="settings_interface_presentation_subtitle">Comment l\'autre écran affiche le jeu sélectionné</string>
     <string name="settings_interface_section_general">Général</string>

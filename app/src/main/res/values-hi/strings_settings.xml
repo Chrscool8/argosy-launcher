@@ -258,6 +258,29 @@
         <item quantity="one">%d अलग से सेट</item>
         <item quantity="other">%d अलग से सेट</item>
     </plurals>
+    <string name="settings_launch_targets_title">डिस्प्ले टार्गेट</string>
+    <string name="settings_launch_targets_intro">उस स्क्रीन के अनुसार समूहित जिस पर हर एक अभी खुलता है।</string>
+    <string name="settings_launch_targets_rail">%1$s (स्क्रीन %2$d)</string>
+    <string name="settings_launch_targets_heading_description">स्क्रीन %1$d, %2$s</string>
+    <string name="settings_launch_targets_this_screen">यह स्क्रीन</string>
+    <string name="settings_launch_targets_platforms">प्लेटफ़ॉर्म</string>
+    <string name="settings_launch_targets_apps">ऐप</string>
+    <string name="settings_launch_targets_tag_default">डिफ़ॉल्ट</string>
+    <string name="settings_launch_targets_tag_set">सेट</string>
+    <string name="settings_launch_targets_platform_set">%1$s के साथ रहता है</string>
+    <string name="settings_launch_targets_app_set">स्क्रीन %1$d पर रहता है</string>
+    <string name="settings_launch_targets_app_missing">इसकी स्क्रीन जुड़ी नहीं है</string>
+    <string name="settings_launch_targets_app_off">स्क्रीन %1$d बंद है</string>
+    <plurals name="settings_launch_targets_platform_game_overrides">
+        <item quantity="one">%d गेम अलग से सेट</item>
+        <item quantity="other">%d गेम अलग से सेट</item>
+    </plurals>
+    <string name="settings_launch_targets_empty">यहाँ कुछ नहीं खुलता</string>
+    <string name="settings_launch_targets_loading_apps">ऐप खोजे जा रहे हैं</string>
+    <string name="settings_launch_targets_use_default_role">डिफ़ॉल्ट उपयोग करें (%1$s)</string>
+    <string name="settings_launch_targets_use_default_screen">डिफ़ॉल्ट उपयोग करें (स्क्रीन %1$d)</string>
+    <string name="settings_launch_targets_option_role">%1$s (स्क्रीन %2$d)</string>
+    <string name="settings_launch_targets_option_screen">स्क्रीन %1$d (%2$s)</string>
     <string name="settings_interface_presentation_title">प्रस्तुति</string>
     <string name="settings_interface_presentation_subtitle">दूसरी स्क्रीन चुने गए गेम को कैसे दिखाए</string>
     <string name="settings_interface_section_general">सामान्य</string>

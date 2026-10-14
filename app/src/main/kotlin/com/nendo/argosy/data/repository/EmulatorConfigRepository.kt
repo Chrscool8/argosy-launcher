@@ -1,6 +1,8 @@
 package com.nendo.argosy.data.repository
 
 import com.nendo.argosy.data.local.dao.EmulatorConfigDao
+import com.nendo.argosy.data.local.dao.PlatformDisplayTarget
+import com.nendo.argosy.data.local.dao.PlatformGameTargetCount
 import com.nendo.argosy.data.local.entity.EmulatorConfigEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -55,8 +57,11 @@ class EmulatorConfigRepository @Inject constructor(
     suspend fun getDisplayTargetForPlatform(platformId: Long): String? =
         emulatorConfigDao.getDisplayTargetForPlatform(platformId)
 
-    suspend fun getPlatformDisplayTargets(): List<String> =
+    suspend fun getPlatformDisplayTargets(): List<PlatformDisplayTarget> =
         emulatorConfigDao.getPlatformDisplayTargets()
+
+    suspend fun getGameDisplayTargetCounts(): List<PlatformGameTargetCount> =
+        emulatorConfigDao.getGameDisplayTargetCounts()
 
     suspend fun getEffectiveDisplayTarget(gameId: Long): String? =
         emulatorConfigDao.getEffectiveDisplayTarget(gameId)

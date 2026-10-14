@@ -116,7 +116,7 @@ class AppsRepository @Inject constructor(
      * is running on, which ends the session that opened the drawer. That is a reason to demote
      * them, not to make them unreachable.
      */
-    private fun isArgosy(packageName: String): Boolean =
+    fun isArgosy(packageName: String): Boolean =
         packageName == context.packageName ||
             packageName == ARGOSY_BASE_PACKAGE ||
             packageName.startsWith("$ARGOSY_BASE_PACKAGE.")

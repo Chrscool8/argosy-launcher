@@ -696,9 +696,7 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
         ))
         vm.ambientAudioDelegate.refreshMusicDirPath(vm.viewModelScope)
 
-        val filteredPlatformConfigs = platformConfigs
-            .filter { it.platform.slug != "steam" }
-            .sortedByDescending { it.platform.syncEnabled }
+        val filteredPlatformConfigs = platformConfigs.inPlatformsListOrder { it.platform }
 
         val currentEmulatorState = vm.emulatorDelegate.state.value
         val anchoredPlatformId = vm._uiState.value.emulators.platforms

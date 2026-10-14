@@ -291,6 +291,11 @@ internal fun routeConfirm(vm: SettingsViewModel): InputResult {
             vm.openScreenRoleModal()
             InputResult.handled(SoundType.OPEN_MODAL)
         }
+        SettingsSection.LAUNCH_TARGETS -> if (vm.openLaunchTargetPicker()) {
+            InputResult.handled(SoundType.OPEN_MODAL)
+        } else {
+            InputResult.handled(SoundType.SILENT)
+        }
         SettingsSection.NAVIGATION -> routeNavigationConfirm(vm, state)
         SettingsSection.PLATFORMS -> routeEmulatorsConfirm(vm, state)
         SettingsSection.BUILTIN_EMULATOR -> routeBuiltinEmulatorConfirm(vm, state)
@@ -766,7 +771,7 @@ private fun routeDisplaysConfirm(vm: SettingsViewModel, state: SettingsUiState):
             vm.requestEnumPicker(DisplaysItem.AppsTarget.key)
             return InputResult.handled(SoundType.OPEN_MODAL)
         }
-        DisplaysItem.ByPlatformAndApp -> return InputResult.handled(SoundType.SILENT)
+        DisplaysItem.ByPlatformAndApp -> vm.navigateToLaunchTargets()
         else -> {}
     }
     return InputResult.HANDLED
@@ -1375,6 +1380,7 @@ private fun computeMaxFocusIndex(
     SettingsSection.DISPLAYS -> displaysMaxFocusIndex(DisplaysLayoutState.from(state))
     SettingsSection.AMBIENT_LED -> ambientLedMaxFocusIndex(state.display)
     SettingsSection.SCREENS -> screensMaxFocusIndex(state.display.screens)
+    SettingsSection.LAUNCH_TARGETS -> launchTargetsLayout(state.launchTargets).maxFocusIndex
     SettingsSection.NAVIGATION -> navigationMaxFocusIndex(state.controls)
     SettingsSection.MANAGED_INSTALLERS -> installersMaxFocusIndex(state.managedInstallers)
     SettingsSection.PLATFORMS -> emulatorsMaxFocusIndex(state.emulators.platforms)

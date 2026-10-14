@@ -272,6 +272,30 @@
         <item quantity="many">%d con ajuste propio</item>
         <item quantity="other">%d con ajuste propio</item>
     </plurals>
+    <string name="settings_launch_targets_title">Pantallas de destino</string>
+    <string name="settings_launch_targets_intro">Agrupados por la pantalla en la que se abre cada uno ahora.</string>
+    <string name="settings_launch_targets_rail">%1$s (Pantalla %2$d)</string>
+    <string name="settings_launch_targets_heading_description">Pantalla %1$d, %2$s</string>
+    <string name="settings_launch_targets_this_screen">Esta pantalla</string>
+    <string name="settings_launch_targets_platforms">Plataformas</string>
+    <string name="settings_launch_targets_apps">Apps</string>
+    <string name="settings_launch_targets_tag_default">Predeterminado</string>
+    <string name="settings_launch_targets_tag_set">Propio</string>
+    <string name="settings_launch_targets_platform_set">Sigue a %1$s</string>
+    <string name="settings_launch_targets_app_set">Se queda en la pantalla %1$d</string>
+    <string name="settings_launch_targets_app_missing">Su pantalla no está conectada</string>
+    <string name="settings_launch_targets_app_off">La pantalla %1$d está apagada</string>
+    <plurals name="settings_launch_targets_platform_game_overrides">
+        <item quantity="one">%d juego con ajuste propio</item>
+        <item quantity="many">%d juegos con ajuste propio</item>
+        <item quantity="other">%d juegos con ajuste propio</item>
+    </plurals>
+    <string name="settings_launch_targets_empty">Aquí no se abre nada</string>
+    <string name="settings_launch_targets_loading_apps">Buscando apps</string>
+    <string name="settings_launch_targets_use_default_role">Usar predeterminado (%1$s)</string>
+    <string name="settings_launch_targets_use_default_screen">Usar predeterminado (Pantalla %1$d)</string>
+    <string name="settings_launch_targets_option_role">%1$s (Pantalla %2$d)</string>
+    <string name="settings_launch_targets_option_screen">Pantalla %1$d (%2$s)</string>
     <string name="settings_interface_presentation_title">Presentación</string>
     <string name="settings_interface_presentation_subtitle">Cómo muestra la otra pantalla el juego seleccionado</string>
     <string name="settings_interface_section_general">General</string>

@@ -94,6 +94,7 @@ import com.nendo.argosy.ui.screens.settings.sections.AudioSection
 import com.nendo.argosy.ui.screens.settings.sections.BoxArtSection
 import com.nendo.argosy.ui.screens.settings.sections.DisplaysSection
 import com.nendo.argosy.ui.screens.settings.sections.ScreensSection
+import com.nendo.argosy.ui.screens.settings.sections.LaunchTargetsSection
 import com.nendo.argosy.ui.screens.settings.sections.ManagedInstallersSection
 import com.nendo.argosy.ui.screens.settings.sections.NavigationSection
 import com.nendo.argosy.ui.screens.settings.sections.navigationItemAtFocusIndex
@@ -673,6 +674,7 @@ fun SettingsScreen(
                     SettingsSection.LIBRARY_VIEW -> LibrarySection(uiState, viewModel)
                     SettingsSection.DISPLAYS -> DisplaysSection(uiState, viewModel)
                     SettingsSection.SCREENS -> ScreensSection(uiState, viewModel)
+                    SettingsSection.LAUNCH_TARGETS -> LaunchTargetsSection(uiState, viewModel)
                     SettingsSection.AMBIENT_LED -> AmbientLedSection(uiState, viewModel)
                     SettingsSection.NAVIGATION -> NavigationSection(uiState, viewModel)
                     SettingsSection.MANAGED_INSTALLERS -> ManagedInstallersSection(uiState, viewModel)
@@ -1481,6 +1483,7 @@ private fun settingsSectionTitle(uiState: SettingsUiState): String = when (uiSta
     SettingsSection.LIBRARY_VIEW -> stringResource(R.string.settings_shell_header_library_view)
     SettingsSection.DISPLAYS -> stringResource(R.string.settings_shell_header_displays)
     SettingsSection.SCREENS -> stringResource(R.string.settings_shell_header_screens)
+    SettingsSection.LAUNCH_TARGETS -> stringResource(R.string.settings_launch_targets_title)
     SettingsSection.AMBIENT_LED -> stringResource(R.string.settings_shell_header_ambient_led)
     SettingsSection.NAVIGATION -> stringResource(R.string.settings_shell_header_navigation)
     SettingsSection.MANAGED_INSTALLERS -> stringResource(R.string.settings_shell_header_installers)
@@ -1821,6 +1824,9 @@ private fun SettingsFooter(
     val resetBuiltinSavesOverrideHint = stringResource(R.string.settings_shell_footer_reset_builtinsaves_override)
     val backHint = stringResource(R.string.settings_shell_footer_back)
     val unassignShortcutHint = stringResource(R.string.settings_shell_footer_unassign_shortcut)
+    val launchTargetsScreenHint = stringResource(R.string.settings_shell_footer_launch_targets_screen)
+    val launchTargetsResetHint = stringResource(R.string.settings_shell_footer_launch_targets_reset)
+    val launchTargetRows = remember(uiState.launchTargets) { launchTargetsLayout(uiState.launchTargets) }
 
     val hints = buildList {
         if (uiState.currentSection != SettingsSection.BOX_ART &&
@@ -1936,6 +1942,14 @@ private fun SettingsFooter(
         }
         if (uiState.currentSection == SettingsSection.STORAGE_GAMES) {
             add(InputButton.X to sortHint)
+        }
+        if (uiState.currentSection == SettingsSection.LAUNCH_TARGETS && !uiState.launchTargets.pickerOpen) {
+            if (launchTargetRows.jumpSections.size >= 2) {
+                add(InputButton.LB_RB to launchTargetsScreenHint)
+            }
+            if (launchTargetRows.entryAt(uiState.focusedIndex)?.isSet == true) {
+                add(InputButton.Y to launchTargetsResetHint)
+            }
         }
         if (uiState.currentSection == SettingsSection.PLAY_TIME) {
             val focusedPlayTime = playTimeItemAtFocusIndex(uiState.focusedIndex, createPlayTimeLayoutInfo(uiState))

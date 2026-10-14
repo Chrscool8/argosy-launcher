@@ -322,7 +322,7 @@ fun SegmentedPreference(
 private const val INLINE_TRACK_MAX_SHARE = 0.6f
 
 @Composable
-private fun PreferenceResetButton(onReset: () -> Unit) {
+internal fun PreferenceResetButton(onReset: () -> Unit) {
     Box(
         modifier = Modifier
             .size(Dimens.iconMd)

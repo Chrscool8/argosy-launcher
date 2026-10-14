@@ -567,6 +567,59 @@
         <item quantity="one">%d set individually</item>
         <item quantity="other">%d set individually</item>
     </plurals>
+
+    <!-- Title of the screen listing every platform and app with the screen it opens on. Noun
+         phrase, "target" as in destination. -->
+    <string name="settings_launch_targets_title">Display Targets</string>
+    <!-- Line at the top of that screen explaining how the list is grouped. -->
+    <string name="settings_launch_targets_intro">Grouped by the screen each one opens on now.</string>
+    <!-- Side rail entry naming one screen group. %1$s is a screen role name (Primary,
+         Presentation, App Screen); %2$d is the number drawn on that screen. -->
+    <string name="settings_launch_targets_rail">%1$s (Screen %2$d)</string>
+    <!-- Spoken description of a screen group heading. %1$d is the number drawn on the screen;
+         %2$s is its role name. -->
+    <string name="settings_launch_targets_heading_description">Screen %1$d, %2$s</string>
+    <!-- Tag on the heading of the screen showing these settings. -->
+    <string name="settings_launch_targets_this_screen">This screen</string>
+    <!-- Label over the platforms in a screen group. Noun, plural. Shown in capitals. -->
+    <string name="settings_launch_targets_platforms">Platforms</string>
+    <!-- Label over the apps in a screen group. Noun, plural. Shown in capitals. -->
+    <string name="settings_launch_targets_apps">Apps</string>
+    <!-- Tag on a row that follows the global default screen. Adjective sense: the default one. -->
+    <string name="settings_launch_targets_tag_default">Default</string>
+    <!-- Tag on a row given its own screen. Past participle: chosen individually. -->
+    <string name="settings_launch_targets_tag_set">Set</string>
+    <!-- Second line of a platform row given its own screen. %1$s is a screen role name; the
+         platform follows that role wherever it moves. -->
+    <string name="settings_launch_targets_platform_set">Stays with %1$s</string>
+    <!-- Second line of an app row pinned to one screen. %1$d is the number drawn on that screen. -->
+    <string name="settings_launch_targets_app_set">Stays on Screen %1$d</string>
+    <!-- Second line of an app row pinned to a screen that is not connected now. -->
+    <string name="settings_launch_targets_app_missing">Its screen is not attached</string>
+    <!-- Second line of an app row pinned to a screen switched off in the screen layout. %1$d is
+         the number drawn on that screen. -->
+    <string name="settings_launch_targets_app_off">Screen %1$d is off</string>
+    <!-- Second line of a platform row when some of its games have their own screen. -->
+    <plurals name="settings_launch_targets_platform_game_overrides">
+        <item quantity="one">%d game set individually</item>
+        <item quantity="other">%d games set individually</item>
+    </plurals>
+    <!-- Line under a screen heading when nothing opens on that screen. -->
+    <string name="settings_launch_targets_empty">Nothing opens here</string>
+    <!-- Line under a screen heading while the installed apps are still being read. -->
+    <string name="settings_launch_targets_loading_apps">Finding apps</string>
+    <!-- First option in a platform's screen picker. %1$s is the role name the default sends
+         games to. -->
+    <string name="settings_launch_targets_use_default_role">Use default (%1$s)</string>
+    <!-- First option in an app's screen picker. %1$d is the number of the screen the default
+         sends apps to. -->
+    <string name="settings_launch_targets_use_default_screen">Use default (Screen %1$d)</string>
+    <!-- Option in a platform's screen picker. %1$s is a role name; %2$d is the number of the
+         screen holding it now. -->
+    <string name="settings_launch_targets_option_role">%1$s (Screen %2$d)</string>
+    <!-- Option in an app's screen picker. %1$d is a screen number; %2$s is the role it holds
+         now. -->
+    <string name="settings_launch_targets_option_screen">Screen %1$d (%2$s)</string>
     <!-- Row opening the settings for how the second screen draws the game focused on the first. -->
     <string name="settings_interface_presentation_title">Presentation</string>
     <!-- Second line of that row. -->

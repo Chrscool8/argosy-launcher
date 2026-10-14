@@ -334,6 +334,8 @@
     <string name="settings_shell_footer_adjust_platformdetail">調整</string>
     <string name="settings_shell_footer_update_emulator">更新模擬器</string>
     <string name="settings_shell_footer_reset_platformdetail">重設</string>
+    <string name="settings_shell_footer_launch_targets_screen">螢幕</string>
+    <string name="settings_shell_footer_launch_targets_reset">重設</string>
     <string name="settings_shell_footer_toggle_label">切換</string>
     <string name="settings_shell_footer_open_label">開啟</string>
     <string name="settings_shell_footer_select_label">選取</string>
