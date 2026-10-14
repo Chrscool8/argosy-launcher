@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import com.nendo.argosy.util.StorageAccess
+import com.nendo.argosy.util.openStorageAccessSettings
 
 @Composable
 fun rememberStorageAccessRequest(onResult: () -> Unit = {}): () -> Unit {
@@ -27,14 +28,14 @@ fun rememberStorageAccessRequest(onResult: () -> Unit = {}): () -> Unit {
             ActivityCompat.shouldShowRequestPermissionRationale(activity, it)
         }
         if (denied && promptSuppressed) {
-            context.startActivity(StorageAccess.settingsIntent(context))
+            context.openStorageAccessSettings()
         }
         currentOnResult()
     }
     return remember(context, launcher) {
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                context.startActivity(StorageAccess.settingsIntent(context))
+                context.openStorageAccessSettings()
             } else {
                 launcher.launch(StorageAccess.LEGACY_PERMISSIONS)
             }
