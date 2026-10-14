@@ -354,14 +354,12 @@ class DualScreenManager(
         if (swapped) refocusMain()
     }
 
-    /**
-     * Bumped whenever the launcher's display language changes. A locale override only takes
-     * effect for resources resolved through an Activity's own wrapped base Context, so both
-     * ArgosyActivity and SecondaryHomeActivity collect this and recreate themselves; a token rather
-     * than the language itself, since each Activity already reads the new value straight from
-     * SessionStateStore during its own attachBaseContext.
-     */
     private val _localeChangeToken = MutableStateFlow(0)
+
+    /**
+     * Bumped whenever the launcher's display language changes; ArgosyActivity and
+     * SecondaryHomeActivity recreate themselves on each new value.
+     */
     val localeChangeToken: StateFlow<Int> = _localeChangeToken
 
     fun notifyLocaleChanged() {

@@ -79,13 +79,9 @@ sealed interface StoreScanResult {
 }
 
 /**
- * Reads the Frontend Sync folders of GameNative (one per store) and DroidDeck (Steam only): one
- * `<Game Name>.<store>` file per installed game whose content is the store's numeric id. GOG, Epic
- * and Amazon markers own their library rows outright, creating them on appearance and deleting
- * them on absence. Steam markers from either launcher only mark install state, for that launcher,
- * onto rows Steam library sync already created; a row pinned by hand or already marked for another
- * launcher is left alone in both directions, so GameNative's folder, scanned first, claims a game
- * both launchers report.
+ * Reads the Frontend Sync folders of GameNative and DroidDeck. GOG, Epic and Amazon markers own
+ * their library rows; Steam markers only set install state for their launcher on existing Steam
+ * rows, leaving hand-pinned rows and rows another launcher already claimed untouched.
  */
 @Singleton
 class GameNativeStoreSync @Inject constructor(
