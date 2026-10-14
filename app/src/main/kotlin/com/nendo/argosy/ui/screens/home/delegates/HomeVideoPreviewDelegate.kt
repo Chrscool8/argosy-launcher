@@ -1,13 +1,10 @@
 package com.nendo.argosy.ui.screens.home.delegates
 
-import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.ui.audio.AmbientAudioManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class VideoPreviewState(
@@ -73,7 +70,11 @@ class HomeVideoPreviewDelegate @Inject constructor(
         }
     }
 
-    fun activateVideoPreview() {
+    fun activateVideoPreview(videoId: String, blocked: Boolean, isResumed: Boolean) {
+        val current = _state.value
+        if (blocked || !isResumed || !current.isVideoPreviewLoading ||
+            current.videoPreviewId != videoId
+        ) return
         _state.update {
             it.copy(
                 isVideoPreviewActive = true,

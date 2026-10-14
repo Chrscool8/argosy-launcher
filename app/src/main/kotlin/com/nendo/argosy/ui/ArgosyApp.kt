@@ -1243,6 +1243,7 @@ fun ArgosyApp(
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize()
                 ) {
+                    val monthlyRecapShowing = com.nendo.argosy.ui.components.recap.monthlyRecapShowing()
                     CompositionLocalProvider(
                         LocalTransientHomeStatusVisible provides (
                             currentRoute == Screen.Home.route && maxWidth <= maxHeight &&
@@ -1255,6 +1256,8 @@ fun ArgosyApp(
                             startDestination = startDestination,
                             onDrawerToggle = { if (isDrawerOpen) closeDrawer() else openDrawer() },
                             argosyViewModel = viewModel,
+                            videoPreviewBlocked = isDrawerOpen || isQuickSettingsOpen ||
+                                quickMenuState.isVisible || appPromptShowing || monthlyRecapShowing,
                             onPlayMedia = { itemId, startOver ->
                                 dsm?.playMediaItem(itemId, startOver)
                                     ?: PlayerActivity.start(

@@ -103,6 +103,13 @@ fun monthlyRecapBackdropBlur(): Dp {
 }
 
 @Composable
+fun monthlyRecapShowing(): Boolean {
+    val controller = rememberMonthlyRecapController()
+    val state by controller.state.collectAsState()
+    return state != null
+}
+
+@Composable
 private fun MonthlyRecapContent(
     state: MonthlyRecapCardState?,
     cursor: RecapCursor,

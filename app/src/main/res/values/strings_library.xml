@@ -295,6 +295,8 @@
     <string name="library_apps_hint_open">Open</string>
     <!-- Button hint on the apps screen. Verb, leaves the screen. -->
     <string name="library_apps_hint_back">Back</string>
+    <!-- Brief message on the apps screen when Android refuses to start the chosen app. -->
+    <string name="library_apps_launch_failed">Could not open app</string>
     <!-- Button hint on the apps screen. Verb, begins arranging the apps into a new order. -->
     <string name="library_apps_hint_reorder">Reorder</string>
     <!-- Footer hint on dual-screen devices, where Select swaps the two screens. Verb phrase. -->
