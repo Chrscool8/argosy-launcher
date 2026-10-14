@@ -595,7 +595,8 @@ fun GameCardWithNewBadge(
     onCoverLoaded: ((gameId: Long, bitmap: Bitmap) -> Unit)? = null,
     scaleOverride: Float? = null,
     alphaOverride: Float? = null,
-    useBoxArt: Boolean = false
+    useBoxArt: Boolean = false,
+    interactionModifier: Modifier = Modifier
 ) {
     val showNewBadge = game.isNew && !downloadIndicator.isActive
     val badgeWidthDp = ComponentDefaults.Carousel.newBadgeWidthDp.dp
@@ -654,7 +655,7 @@ fun GameCardWithNewBadge(
                 }
             )
             this.alpha = alpha
-        }
+        }.then(interactionModifier)
     ) { measurables, constraints ->
         val cardWidthPx = cardWidth.toPx().toInt()
         val cardHeightPx = cardHeight.toPx().toInt()

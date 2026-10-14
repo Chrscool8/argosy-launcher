@@ -28,6 +28,35 @@ class DockGeometryTest {
     )
 
     @Test
+    fun `empty dock reserves the same app area as three pinned apps`() {
+        val empty = widths(maximum = 1000f, preferredMaximum = 104f, appCount = 0)
+        val threeApps = widths(maximum = 1000f, preferredMaximum = 104f, appCount = 3)
+
+        assertEquals(48f * 3 + 8f * 2, empty.appsWidth)
+        assertEquals(threeApps, empty)
+    }
+
+    @Test
+    fun `empty dock shrinks the reserved app area on narrow screens`() {
+        val dock = widths(maximum = 200f, preferredMaximum = 104f, appCount = 0)
+
+        assertTrue(dock.appsWidth > 0f)
+        assertTrue(dock.width <= 200f)
+    }
+
+    @Test
+    fun `empty dock without tools keeps only the apps button`() {
+        val dock = dockWidths(
+            maximum = 1000f, preferredMaximum = 104f, appCount = 0,
+            slot = 48f, gap = 8f, padding = 16f, appIconSize = 48f, controlIconSize = 24f,
+            controlCount = 1
+        )
+
+        assertEquals(0f, dock.appsWidth)
+        assertEquals(48f + 16f * 2, dock.width)
+    }
+
+    @Test
     fun `narrow preferred width still fits three pinned apps`() {
         val dock = widths(maximum = 1000f, preferredMaximum = 104f, appCount = 5)
 

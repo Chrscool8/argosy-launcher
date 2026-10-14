@@ -42,6 +42,7 @@ import com.nendo.argosy.domain.model.MediaTilePlayback
 import com.nendo.argosy.ui.components.AutoGridMove
 import com.nendo.argosy.ui.components.autoGridMove
 import com.nendo.argosy.ui.screens.home.delegates.GameMenuAction
+import com.nendo.argosy.ui.screens.home.delegates.HomeDockDelegate
 import com.nendo.argosy.ui.screens.home.delegates.HomeDownloadDelegate
 import com.nendo.argosy.ui.screens.home.delegates.HomeGameMenuDelegate
 import com.nendo.argosy.ui.screens.home.delegates.HomeInputActions
@@ -119,6 +120,7 @@ class HomeViewModel @Inject constructor(
     val gameMenuDelegate: HomeGameMenuDelegate,
     val mediaDelegate: HomeMediaDelegate,
     val tilePickerDelegate: HomeTilePickerDelegate,
+    private val dockDelegate: HomeDockDelegate,
     private val steamContentManager: com.nendo.argosy.data.steam.SteamContentManager,
     private val steamDownloadPromptController: com.nendo.argosy.data.steam.SteamDownloadPromptController,
     private val appsRepository: com.nendo.argosy.data.repository.AppsRepository,
@@ -247,6 +249,9 @@ class HomeViewModel @Inject constructor(
     private val achievementRefetchThresholdMs = 5 * 60 * 1000L
     private var currentBorderStyle: BoxArtBorderStyle = BoxArtBorderStyle.SOLID
     private var lastShowsEveryGame: Boolean? = null
+    val dockReorder: StateFlow<com.nendo.argosy.ui.components.DockReorderSession?> = dockDelegate.reorder
+
+    fun createDockReorderInputHandler(isRtl: Boolean): InputHandler = dockDelegate.createInputHandler(isRtl)
 
     init {
         modalResetSignal.signal.onEach {
@@ -280,6 +285,7 @@ class HomeViewModel @Inject constructor(
             onFavoritesRefreshed = { libraryDelegate.loadFavorites() }
         )
         observeBackgroundSettings()
+        observeDockApps()
         observeGradientChanges()
         observeSyncOverlay()
         observePlatformChanges()
@@ -474,8 +480,7 @@ class HomeViewModel @Inject constructor(
         autoGridConfig = prefs.homeLayout.autoGrid,
         boxArt3d = prefs.homeLayout.boxArt3d,
         customGridConfig = prefs.homeLayout.customGrid,
-        layoutKind = prefs.homeLayout.selected,
-        homeApps = prefs.secondaryHomeApps.toList()
+        layoutKind = prefs.homeLayout.selected
     )
 
     private fun saveCurrentState() {
@@ -910,16 +915,29 @@ class HomeViewModel @Inject constructor(
     private fun appBarSlotCount(): Int =
         _uiState.value.homeApps.size + 1
 
-    private fun appBarIsDrawn(): Boolean =
+    override fun appBarIsDrawn(): Boolean =
         DualScreenManagerHolder.instance?.presentationShowsHints?.value == true
 
     override fun focusAppBar(): Boolean {
         if (!appBarIsDrawn()) return false
-        _uiState.update { it.copy(appBarFocused = true, appBarIndex = 0) }
+        _uiState.update { it.copy(appBarFocused = true, appBarIndex = it.appBarIndex.coerceIn(-1, it.homeApps.size)) }
         return true
     }
 
+    override fun startAppBarReorder(): Boolean {
+        val state = _uiState.value
+        val packageName = state.homeApps.getOrNull(state.appBarIndex) ?: return false
+        return dockDelegate.startReorder(packageName)
+    }
+
+    fun cancelAppBarReorder() = dockDelegate.cancelReorder()
+
+    private fun observeDockApps() {
+        dockDelegate.observe(viewModelScope) { apps -> _uiState.update { it.withDockApps(apps) } }
+    }
+
     override fun releaseAppBar() {
+        cancelAppBarReorder()
         _uiState.update { it.copy(appBarFocused = false, appBarToolsOpen = false) }
     }
 
@@ -929,6 +947,7 @@ class HomeViewModel @Inject constructor(
     }
 
     override fun activateAppBarSlot() {
+        if (dockDelegate.isReordering()) return
         if (!appBarIsDrawn()) {
             releaseAppBar()
             return
@@ -1591,9 +1610,7 @@ class HomeViewModel @Inject constructor(
 
     override fun openAppBarAppMenu(): Boolean {
         val state = _uiState.value
-        val packageName = state.appDrawer?.focusedPackage
-            ?: state.homeApps.getOrNull(state.appBarIndex)
-            ?: return false
+        val packageName = state.appDrawer?.focusedPackage ?: return false
         return openAppMenuFor(packageName)
     }
 
@@ -1883,7 +1900,8 @@ class HomeViewModel @Inject constructor(
         val state = _uiState.value
         if (index < 0 || index >= state.currentItems.size) return
 
-        if (index != state.focusedGameIndex) {
+        if (state.appBarFocused || index != state.focusedGameIndex) {
+            releaseAppBar()
             setFocusIndex(index)
             return
         }
@@ -1904,6 +1922,7 @@ class HomeViewModel @Inject constructor(
     fun handleItemLongPress(index: Int) {
         val state = _uiState.value
         if (index < 0 || index >= state.currentItems.size) return
+        releaseAppBar()
         val item = state.currentItems[index]
         if (item is HomeRowItem.Media) {
             if (index != state.focusedGameIndex) {
@@ -2284,14 +2303,16 @@ class HomeViewModel @Inject constructor(
         onGameSelect: (Long) -> Unit,
         onNavigateToDefault: () -> Unit,
         onDrawerToggle: () -> Unit,
-        onScrollOverflow: ((Int) -> Boolean)? = null
+        onScrollOverflow: ((Int) -> Boolean)? = null,
+        dockIsRtl: Boolean = false
     ): InputHandler = HomeInputHandler(
         actions = this,
         isDefaultView = isDefaultView,
         onGameSelect = onGameSelect,
         onNavigateToDefault = onNavigateToDefault,
         onDrawerToggle = onDrawerToggle,
-        onScrollOverflow = onScrollOverflow
+        onScrollOverflow = onScrollOverflow,
+        dockIsRtl = dockIsRtl
     )
 
     // --- HomeInputActions Implementation ---

@@ -310,8 +310,7 @@ internal fun carouselContentPadding(
  * layout and card rendering only; the focus index, the list state and the scroll effects stay with
  * the caller, which must snap using [CarouselMetrics.anchor]'s `snapOffsetPx`.
  *
- * @param showFocusVisuals false suppresses the focus treatment on game cards while another region
- * holds input. The trailing View All card keeps its own focus marker either way.
+ * @param showFocusVisuals false suppresses focus treatment while another region holds input.
  */
 @Composable
 fun CarouselRail(
@@ -408,7 +407,6 @@ fun CarouselRail(
             val indicator by remember(item) { derivedStateOf { indicatorFor(item) } }
             when (item) {
                 is CarouselItem.Game -> {
-                    val cardModifier = placementModifier.then(tapModifier)
                     CarouselGameCard(
                         item = item,
                         isFocused = isFocused,
@@ -423,7 +421,8 @@ fun CarouselRail(
                         useBoxArt = useBoxArt,
                         onCoverLoadFailed = onCoverLoadFailed,
                         onCoverLoaded = onCoverLoaded,
-                        modifier = cardModifier
+                        modifier = placementModifier,
+                        interactionModifier = tapModifier
                     )
                 }
                 is CarouselItem.Media -> {
@@ -436,8 +435,8 @@ fun CarouselRail(
                         overrides = overrides,
                         onPosterLoaded = onPosterLoaded,
                         modifier = placementModifier
-                            .padding(top = NEW_BADGE_TOP_OVERFLOW)
-                            .then(tapModifier)
+                            .padding(top = NEW_BADGE_TOP_OVERFLOW),
+                        interactionModifier = tapModifier
                     )
                 }
                 is CarouselItem.ViewAll -> {
@@ -447,12 +446,13 @@ fun CarouselRail(
                         label = "carouselViewAllAlpha"
                     )
                     ViewAllCard(
-                        isFocused = isFocused,
+                        isFocused = isFocused && showFocusVisuals,
                         onClick = { onItemTap(index) },
                         style = viewAllStyle,
                         tapMode = tapMode,
                         remainingCount = item.remainingCount,
                         focusScale = metrics.focusScale,
+                        scaleOverride = if (isFocused) metrics.focusScale else null,
                         scalePivotY = metrics.scalePivotY,
                         modifier = Modifier
                             .graphicsLayer {
@@ -499,7 +499,8 @@ private fun CarouselMediaCard(
     metrics: CarouselMetrics,
     overrides: CarouselOverrides,
     onPosterLoaded: ((String, Bitmap) -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    interactionModifier: Modifier = Modifier
 ) {
     val maxWidth = if (isFocused) metrics.focusedCardWidth else metrics.cardWidth
     val maxHeight = if (isFocused) metrics.focusedCardHeight else metrics.cardHeight
@@ -510,11 +511,12 @@ private fun CarouselMediaCard(
         isFocused = isFocused && showFocusVisuals,
         focusScale = metrics.focusScale,
         scalePivotY = metrics.scalePivotY,
-        scaleOverride = if (isFocused) overrides.focusedScale else null,
+        scaleOverride = if (isFocused) overrides.focusedScale ?: metrics.focusScale else null,
         alphaOverride = if (isFocused) overrides.focusedAlpha else overrides.unfocusedAlpha,
         downloadIndicator = downloadIndicator,
         onPosterLoaded = onPosterLoaded,
-        modifier = modifier.size(cardSize.width, cardSize.height)
+        modifier = modifier.size(cardSize.width, cardSize.height),
+        interactionModifier = interactionModifier
     )
 }
 
@@ -533,7 +535,8 @@ private fun CarouselGameCard(
     useBoxArt: Boolean,
     onCoverLoadFailed: ((Long, String) -> Unit)?,
     onCoverLoaded: ((Long, Bitmap) -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    interactionModifier: Modifier = Modifier
 ) {
     val maxWidth = if (isFocused) metrics.focusedCardWidth else metrics.cardWidth
     val maxHeight = if (isFocused) metrics.focusedCardHeight else metrics.cardHeight
@@ -548,7 +551,7 @@ private fun CarouselGameCard(
     } else {
         DpSize(maxWidth, maxHeight)
     }
-    val scaleOverride = if (isFocused) overrides.focusedScale else null
+    val scaleOverride = if (isFocused) overrides.focusedScale ?: metrics.focusScale else null
     val alphaOverride = if (isFocused) overrides.focusedAlpha else overrides.unfocusedAlpha
 
     GameCardWithNewBadge(
@@ -566,6 +569,7 @@ private fun CarouselGameCard(
         onCoverLoaded = onCoverLoaded,
         scaleOverride = scaleOverride,
         alphaOverride = alphaOverride,
-        modifier = modifier
+        modifier = modifier,
+        interactionModifier = interactionModifier
     )
 }

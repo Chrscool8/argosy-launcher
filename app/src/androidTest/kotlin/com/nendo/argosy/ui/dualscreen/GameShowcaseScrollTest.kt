@@ -1,15 +1,16 @@
 package com.nendo.argosy.ui.dualscreen
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.nendo.argosy.domain.model.PresentationStyle
@@ -49,7 +50,7 @@ class GameShowcaseScrollTest {
         )
         compose.setContent {
             MaterialTheme {
-                Box(Modifier.fillMaxWidth().height(160.dp)) {
+                Box(Modifier.width(320.dp).height(240.dp)) {
                     GameShowcase(
                         detail = selected.value,
                         style = PresentationStyle(hiddenStats = emptySet()),
@@ -66,7 +67,7 @@ class GameShowcaseScrollTest {
             .config[SemanticsProperties.VerticalScrollAxisRange]
 
         assertTrue("Game A should have scrollable metadata", scrollRange().maxValue() > 0f)
-        metadata.performScrollToIndex(1)
+        metadata.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100f) }
         compose.waitForIdle()
         assertTrue(scrollRange().value() > 0f)
 
@@ -77,7 +78,7 @@ class GameShowcaseScrollTest {
         assertEquals(0f, scrollRange().value(), 0f)
 
         assertTrue("Game B should have scrollable metadata", scrollRange().maxValue() > 0f)
-        metadata.performScrollToIndex(1)
+        metadata.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100f) }
         compose.waitForIdle()
         val beforeRefresh = scrollRange().value()
         assertTrue(beforeRefresh > 0f)
@@ -86,5 +87,10 @@ class GameShowcaseScrollTest {
         }
         compose.waitForIdle()
         assertEquals(beforeRefresh, scrollRange().value(), 0f)
+
+        val end = scrollRange().maxValue()
+        metadata.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, end) }
+        compose.waitForIdle()
+        assertEquals(end, scrollRange().value(), 0f)
     }
 }

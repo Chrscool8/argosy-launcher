@@ -469,4 +469,5 @@
     <string name="dual_showcase_played">Сыграно %1$s</string>
     <string name="dual_showcase_journey_header">Ваш прогресс</string>
     <string name="dual_showcase_journey_main">Основной сюжет %1$s</string>
+    <string name="dual_showcase_completionist">Полное прохождение %1$s</string>
 </resources>

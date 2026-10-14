@@ -73,6 +73,8 @@ class InputDispatcher(
 
     fun hasActiveModal(): Boolean = modalStack.isNotEmpty()
 
+    fun hasModal(handler: InputHandler): Boolean = handler in modalStack
+
     fun hasCapturingOverlay(): Boolean =
         criticalInputHandler != null || modalStack.isNotEmpty() || shownModals.isNotEmpty()
 

@@ -45,11 +45,6 @@ sealed interface PresentationSlot {
         val rows: List<PlayShareRow>
     ) : PresentationSlot
 
-    data class GameHero(
-        val game: com.nendo.argosy.ui.screens.gamedetail.GameDetailUi,
-        val friends: List<com.nendo.argosy.data.social.FriendActivity> = emptyList()
-    ) : PresentationSlot
-
     data class Detail(val detail: CompanionDetail) : PresentationSlot
 
     data class Breakdown(

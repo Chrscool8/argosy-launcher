@@ -15,9 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
@@ -68,12 +67,16 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.nendo.argosy.R
 import com.nendo.argosy.data.social.FriendActivity
+import com.nendo.argosy.domain.model.CompletionStatus
 import com.nendo.argosy.domain.model.PresentationArt
 import com.nendo.argosy.domain.model.PresentationLayout
 import com.nendo.argosy.domain.model.PresentationScrim
 import com.nendo.argosy.domain.model.PresentationStat
 import com.nendo.argosy.domain.model.PresentationStyle
 import com.nendo.argosy.ui.common.backgroundBlurDp
+import com.nendo.argosy.ui.common.color
+import com.nendo.argosy.ui.common.icon
+import com.nendo.argosy.ui.common.labelRes
 import com.nendo.argosy.ui.common.playerCountGlyph
 import com.nendo.argosy.ui.common.rememberFileImageModel
 import com.nendo.argosy.data.model.ArtSlot
@@ -89,7 +92,9 @@ import com.nendo.argosy.ui.components.friends.FriendsActivityBadge
 import com.nendo.argosy.ui.theme.ALauncherColors
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
+import com.nendo.argosy.ui.theme.LocalBoxArtStyle
 import com.nendo.argosy.ui.theme.LocalLauncherTheme
+import com.nendo.argosy.ui.theme.LocalUiScale
 import com.nendo.argosy.ui.theme.Motion
 import com.nendo.argosy.ui.theme.generated.ColorTokens
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
@@ -130,11 +135,14 @@ fun GameShowcase(
     GameShowcaseContent(liveDetail, style, bottomInset, backgroundBlur, modifier)
 }
 
-private fun CompanionDetail.withLiveArt(art: com.nendo.argosy.data.model.ResolvedGameArt?): CompanionDetail {
+internal fun CompanionDetail.withLiveArt(art: com.nendo.argosy.data.model.ResolvedGameArt?): CompanionDetail {
     if (art == null) return this
     return copy(
         artUrl = art.coverPath ?: artUrl,
         backdropUrl = art.backgroundPath ?: backdropUrl,
+        spineUrl = art.boxSpinePath ?: spineUrl,
+        box3dUrl = art.box3dPath ?: box3dUrl,
+        backUrl = art.boxBackPath ?: backUrl,
         logoUrl = art.logoPath?.takeIf { it.startsWith("/") } ?: logoUrl
     )
 }
@@ -212,7 +220,6 @@ private fun GameShowcaseContent(
             PresentationLayout.CINEMATIC -> CinematicShowcase(
                 detail = detail,
                 style = style,
-                friends = friends,
                 bottom = bottomInset,
                 viewportWidth = maxWidth,
                 viewportHeight = maxHeight,
@@ -332,16 +339,14 @@ private const val LOGO_GLOW_HOLD_FADE = 0.7f
 private fun CinematicShowcase(
     detail: CompanionDetail,
     style: PresentationStyle,
-    friends: List<FriendActivity>,
     bottom: Dp,
     viewportWidth: Dp,
     viewportHeight: Dp,
     onTitleBoundsChanged: (Rect) -> Unit
 ) {
-    val theme = LocalArgosyTheme.current
-    val scrollState = rememberLazyListState()
+    val scrollState = rememberScrollState()
     LaunchedEffect(detail.gameId) {
-        scrollState.scrollToItem(0)
+        scrollState.scrollTo(0)
     }
     val gutter = if (viewportWidth.value < ComponentDefaults.Carousel.compactWidthDp) {
         Dimens.spacingMd
@@ -350,75 +355,109 @@ private fun CinematicShowcase(
     }
     val zero = 0.dp
     val availableHeight = (viewportHeight - bottom - gutter * 2).coerceAtLeast(zero)
-    val availableWidth = (viewportWidth - gutter * 2).coerceAtLeast(zero)
+    GameHero(
+        detail = detail,
+        style = style,
+        coverMaxHeight = availableHeight,
+        modifier = Modifier.fillMaxSize().padding(bottom = bottom).padding(gutter),
+        metadataModifier = Modifier.heightIn(max = availableHeight).verticalScroll(scrollState)
+            .onGloballyPositioned {
+                onTitleBoundsChanged(Rect(it.positionInRoot(), Size(it.size.width.toFloat(), it.size.height.toFloat())))
+            }
+    )
+}
+
+@Composable
+internal fun GameHero(
+    detail: CompanionDetail,
+    style: PresentationStyle,
+    coverMaxHeight: Dp,
+    modifier: Modifier = Modifier,
+    metadataModifier: Modifier = Modifier,
+    interactiveCover: Boolean = false
+) {
     val textDirection = LocalLayoutDirection.current
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.CenterStart) {
+            val gap = Dimens.spacingXl
+            val stacked = !LocalUiScale.current.aspectRatioClass.isWide
+            val boundedHeight = constraints.hasBoundedHeight
+            val coverWidth = if (stacked) maxWidth / 2 else ((maxWidth - gap) / 3).coerceAtLeast(0.dp)
+            val coverHeight = if (stacked) {
+                minOf(coverMaxHeight, coverWidth / LocalBoxArtStyle.current.aspectRatio,
+                    if (boundedHeight) maxHeight / 3 else coverMaxHeight)
+            } else coverMaxHeight
+            val cover: @Composable () -> Unit = {
+                if (style.art != PresentationArt.TITLE) {
+                    Box(Modifier.width(coverWidth).height(coverHeight), contentAlignment = Alignment.CenterStart) {
+                        ShowcaseCover(detail, style.art, coverHeight, coverWidth, interactiveCover)
+                    }
+                }
+            }
+            val metadata: @Composable (Modifier) -> Unit = { containerModifier ->
+                Box(containerModifier) {
+                    CompositionLocalProvider(LocalLayoutDirection provides textDirection) {
+                        GameHeroMetadata(detail, style, metadataModifier)
+                    }
+                }
+            }
+            if (stacked) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                    cover()
+                    metadata(if (boundedHeight) Modifier.weight(1f, fill = false) else Modifier)
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(gap),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    cover()
+                    metadata(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameHeroMetadata(detail: CompanionDetail, style: PresentationStyle, modifier: Modifier) {
+    val theme = LocalArgosyTheme.current
+    val friends = detail.stats?.friends.orEmpty().takeIf { style.shows(PresentationStat.FRIENDS) }.orEmpty()
     val journey = rememberJourney(detail.stats, style)
     val items = detail.stats?.let { showcaseRailItems(it, style, journeyShown = journey != null) }.orEmpty()
     val developer = items.firstOrNull { it.first == PresentationStat.DEVELOPER }?.second?.text
+    val progressDetails = detail.stats?.let { showcaseProgressDetails(it, style) }.orEmpty()
     val rows = if (detail.stats == null) {
         listOf(RailGroup.FACTS to detail.facts.map { RailItem(null, null, it.value) })
             .filter { it.second.isNotEmpty() }
     } else {
         RailGroup.entries.mapNotNull { group ->
-            items.filter { it.first.railGroup == group && it.first != PresentationStat.DEVELOPER }
-                .map { it.second }.takeIf { it.isNotEmpty() }
-                ?.let { group to it }
+            val groupItems = items.filter { it.first.railGroup == group && it.first != PresentationStat.DEVELOPER }
+                .map { it.second } + if (group == RailGroup.PROGRESS) progressDetails else emptyList()
+            groupItems.takeIf { it.isNotEmpty() }?.let { group to it }
         }
     }
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-      Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = bottom)
-            .padding(gutter),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.spacingXl),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ShowcaseCover(
-            detail = detail,
-            art = style.art,
-            height = availableHeight,
-            width = ((availableWidth - Dimens.spacingXl) / 3).coerceAtLeast(zero)
-        )
-        Box(Modifier.weight(1f).heightIn(max = availableHeight)) {
-          CompositionLocalProvider(LocalLayoutDirection provides textDirection) {
-            LazyColumn(
-                state = scrollState,
-                modifier = Modifier.onGloballyPositioned {
-                    onTitleBoundsChanged(
-                        Rect(it.positionInRoot(), Size(it.size.width.toFloat(), it.size.height.toFloat()))
-                    )
-                }
-            ) {
-                item(key = "heading") {
-                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
-                        ShowcaseTitle(detail = detail)
-                        developer?.let {
-                            Text(text = it, style = MaterialTheme.typography.titleMedium, color = theme.textDim)
-                        }
-                    }
-                }
-                itemsIndexed(rows, key = { _, row -> row.first.name }) { index, row ->
-                    Box(Modifier.padding(top = if (index == 0) Dimens.spacingMd else Dimens.spacingSm)) {
-                        ShowcaseRailRow(row.second)
-                    }
-                }
-                journey?.let {
-                    item(key = "journey") {
-                        Box(Modifier.padding(top = Dimens.spacingMd)) {
-                            ShowcaseJourneyBar(journey = it)
-                        }
-                    }
-                }
-                if (friends.isNotEmpty()) {
-                    item(key = "friends") {
-                        ShowcaseFriendsPill(friends = friends, modifier = Modifier.padding(top = Dimens.spacingMd))
-                    }
-                }
+    Column(modifier = modifier) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
+            ShowcaseTitle(detail = detail)
+            developer?.let {
+                Text(text = it, style = MaterialTheme.typography.titleMedium, color = theme.textDim)
             }
-          }
         }
-      }
+        rows.forEachIndexed { index, row ->
+            Box(Modifier.padding(top = if (index == 0) Dimens.spacingMd else Dimens.spacingSm)) {
+                ShowcaseRailRow(row.second)
+            }
+        }
+        journey?.let {
+            Box(Modifier.padding(top = Dimens.spacingMd)) {
+                ShowcaseJourneyBar(journey = it)
+            }
+        }
+        if (friends.isNotEmpty()) {
+            ShowcaseFriendsPill(friends = friends, modifier = Modifier.padding(top = Dimens.spacingMd))
+        }
     }
 }
 
@@ -492,7 +531,8 @@ private fun JournalJourneyCard(stats: CompanionGameStats, style: PresentationSty
         null
     }
     val achievements = stats.takeIf { style.shows(PresentationStat.ACHIEVEMENTS) && it.achievementCount > 0 }
-    if (played == null && mainStoryLabel == null && achievements == null) return
+    val progressDetails = showcaseProgressDetails(stats, style)
+    if (played == null && mainStoryLabel == null && achievements == null && progressDetails.isEmpty()) return
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -534,6 +574,7 @@ private fun JournalJourneyCard(stats: CompanionGameStats, style: PresentationSty
                 }
             }
         }
+        if (progressDetails.isNotEmpty()) ShowcaseRailRow(progressDetails)
         achievements?.let {
             ShowcaseProgressBar(
                 fraction = it.earnedAchievementCount.toFloat() / it.achievementCount,
@@ -614,9 +655,16 @@ private fun ShowcaseSubtitle(subtitle: String, platformSlug: String?, pill: Bool
 }
 
 @Composable
-private fun ShowcaseCover(detail: CompanionDetail, art: PresentationArt, height: Dp, width: Dp) {
+private fun ShowcaseCover(
+    detail: CompanionDetail,
+    art: PresentationArt,
+    height: Dp,
+    width: Dp,
+    interactive: Boolean = false
+) {
     if (art == PresentationArt.TITLE) return
     val artUrl = detail.artUrl
+    val boxArtStyle = LocalBoxArtStyle.current
     val repairArt = com.nendo.argosy.ui.common.rememberArtRepair()
     val repair: (ArtSlot) -> Unit = { slot -> detail.gameId?.let { repairArt(it, slot) } }
     var failedRoutes by remember(detail.spineUrl, detail.box3dUrl, artUrl) {
@@ -627,7 +675,8 @@ private fun ShowcaseCover(detail: CompanionDetail, art: PresentationArt, height:
         BoxArtRoute.SPINE_RENDER -> Box3dCover(
             frontPath = artUrl.orEmpty(),
             spinePath = detail.spineUrl.orEmpty(),
-            isInteractive = false,
+            backPath = detail.backUrl?.takeIf { it.startsWith("/") },
+            isInteractive = interactive,
             modifier = Modifier.heightIn(max = height).widthIn(max = width),
             onUnavailable = {
                 failedRoutes = failedRoutes + BoxArtRoute.SPINE_RENDER
@@ -648,6 +697,7 @@ private fun ShowcaseCover(detail: CompanionDetail, art: PresentationArt, height:
             model = rememberFileImageModel(artUrl),
             width = width,
             height = height,
+            aspectRatio = boxArtStyle.aspectRatio.takeUnless { boxArtStyle.nativeAspectRatio },
             modifier = Modifier.clip(RoundedCornerShape(Dimens.radiusLg)),
             onError = {
                 failedRoutes = failedRoutes + BoxArtRoute.FLAT_COVER
@@ -663,15 +713,16 @@ private fun ShowcaseImage(
     model: Any?,
     width: Dp,
     height: Dp,
+    aspectRatio: Float? = null,
     modifier: Modifier = Modifier,
     onError: () -> Unit
 ) {
     var nativeRatio by remember(model) { mutableStateOf<Float?>(null) }
-    val fitted = nativeRatio?.let { fitPresentationArt(width.value, height.value, it) }
+    val fitted = (aspectRatio ?: nativeRatio)?.let { fitPresentationArt(width.value, height.value, it) }
     AsyncImage(
         model = model,
         contentDescription = null,
-        contentScale = ContentScale.Fit,
+        contentScale = if (aspectRatio == null) ContentScale.Fit else ContentScale.Crop,
         modifier = modifier.then(
             if (fitted == null) Modifier.widthIn(max = width).heightIn(max = height)
             else Modifier.size(fitted.width.dp, fitted.height.dp)
@@ -700,6 +751,17 @@ private fun ShowcaseFriendsPill(friends: List<FriendActivity>, modifier: Modifie
 }
 
 private data class RailItem(val icon: ImageVector?, val tint: Color?, val text: String)
+
+@Composable
+private fun showcaseProgressDetails(stats: CompanionGameStats, style: PresentationStyle): List<RailItem> {
+    val completionist = stats.timeToBeatCompletionistSec
+        ?.takeIf { it > 0 && style.shows(PresentationStat.TIME_TO_BEAT) }
+        ?.let { formatTimeToBeat(LocalContext.current, it) }
+        ?.let { RailItem(Icons.Default.Schedule, null, stringResource(R.string.dual_showcase_completionist, it)) }
+    val status = CompletionStatus.fromApiValue(stats.status)
+        ?.let { RailItem(it.icon, it.color, stringResource(it.labelRes)) }
+    return listOfNotNull(completionist, status)
+}
 
 private enum class RailGroup { FACTS, RATINGS, PROGRESS }
 

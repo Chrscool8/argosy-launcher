@@ -21,7 +21,7 @@ data class AppPreferences(
     val betaUpdatesEnabled: Boolean = false,
     val closeEmulatorOnSessionEnd: Boolean = false,
     val hiddenApps: Set<String> = emptySet(),
-    val secondaryHomeApps: Set<String> = emptySet(),
+    val secondaryHomeApps: List<String> = emptyList(),
     val visibleSystemApps: Set<String> = emptySet(),
     val appOrder: List<String> = emptyList(),
     val lastSeenVersion: String? = null,
@@ -82,11 +82,7 @@ class AppPreferencesRepository @Inject constructor(
                 ?.filter { it.isNotBlank() }
                 ?.toSet()
                 ?: emptySet(),
-            secondaryHomeApps = prefs[Keys.SECONDARY_HOME_APPS]
-                ?.split(",")
-                ?.filter { it.isNotBlank() }
-                ?.toSet()
-                ?: emptySet(),
+            secondaryHomeApps = parseDockPins(prefs[Keys.SECONDARY_HOME_APPS]),
             visibleSystemApps = prefs[Keys.VISIBLE_SYSTEM_APPS]
                 ?.split(",")
                 ?.filter { it.isNotBlank() }
@@ -140,12 +136,33 @@ class AppPreferencesRepository @Inject constructor(
         }
     }
 
-    suspend fun setSecondaryHomeApps(apps: Set<String>) {
+    suspend fun toggleDockPin(packageName: String): Boolean {
+        require(packageName.isNotBlank())
+        var pinned = false
         dataStore.edit { prefs ->
-            if (apps.isEmpty()) prefs.remove(Keys.SECONDARY_HOME_APPS)
-            else prefs[Keys.SECONDARY_HOME_APPS] = apps.joinToString(",")
+            val current = parseDockPins(prefs[Keys.SECONDARY_HOME_APPS])
+            pinned = packageName !in current
+            val pins = if (pinned) current + packageName else current - packageName
+            if (pins.isEmpty()) prefs.remove(Keys.SECONDARY_HOME_APPS)
+            else prefs[Keys.SECONDARY_HOME_APPS] = pins.joinToString(",")
         }
+        return pinned
     }
+
+    suspend fun reorderDockPins(expected: List<String>, order: List<String>): Boolean {
+        var accepted = false
+        dataStore.edit { prefs ->
+            val current = parseDockPins(prefs[Keys.SECONDARY_HOME_APPS])
+            if (current == expected && order.size == current.size && order.toSet() == current.toSet()) {
+                accepted = true
+                if (order != current) prefs[Keys.SECONDARY_HOME_APPS] = order.joinToString(",")
+            }
+        }
+        return accepted
+    }
+
+    private fun parseDockPins(value: String?): List<String> =
+        value?.split(",")?.filter { it.isNotBlank() }?.distinct() ?: emptyList()
 
     suspend fun setVisibleSystemApps(apps: Set<String>) {
         dataStore.edit { prefs ->

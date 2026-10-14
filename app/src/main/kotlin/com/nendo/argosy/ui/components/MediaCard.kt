@@ -96,7 +96,8 @@ fun MediaCard(
     scaleOverride: Float? = null,
     alphaOverride: Float? = null,
     downloadIndicator: GameDownloadIndicator = GameDownloadIndicator.NONE,
-    onPosterLoaded: ((itemId: String, bitmap: Bitmap) -> Unit)? = null
+    onPosterLoaded: ((itemId: String, bitmap: Bitmap) -> Unit)? = null,
+    interactionModifier: Modifier = Modifier
 ) {
     val theme = LocalArgosyTheme.current
 
@@ -109,7 +110,7 @@ fun MediaCard(
             alphaOverride = alphaOverride,
             artworkGradient = media.gradientColors,
             background = SolidColor(theme.surfaceRaised)
-        )
+        ).then(interactionModifier)
     ) {
         val showLabel = maxWidth >= Dimens.mediaPosterWidth * MEDIA_LABEL_MIN_WIDTH_FRACTION
         var artworkFailed by remember(media.posterUrl) { mutableStateOf(false) }

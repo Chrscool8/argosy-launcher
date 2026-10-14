@@ -18,6 +18,7 @@ data class CompanionDetail(
     val facts: List<CompanionFact> = emptyList(),
     val isGameTitle: Boolean = false,
     val spineUrl: String? = null,
+    val backUrl: String? = null,
     val box3dUrl: String? = null,
     val logoUrl: String? = null,
     val stats: CompanionGameStats? = null,
@@ -38,6 +39,8 @@ data class CompanionGameStats(
     val userDifficulty: Int = 0,
     val playTimeMinutes: Int = 0,
     val timeToBeatMainSec: Int? = null,
+    val timeToBeatCompletionistSec: Int? = null,
+    val status: String? = null,
     val achievementCount: Int = 0,
     val earnedAchievementCount: Int = 0,
     val friends: List<com.nendo.argosy.data.social.FriendActivity> = emptyList()
@@ -53,5 +56,6 @@ data class CompanionFact(
  */
 data class CompanionHint(
     val button: com.nendo.argosy.ui.components.InputButton,
-    val label: String
+    val label: String,
+    val forced: Boolean = false
 )

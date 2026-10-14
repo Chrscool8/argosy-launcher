@@ -557,7 +557,9 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setBetaUpdatesEnabled(enabled: Boolean) = appPrefs.setBetaUpdatesEnabled(enabled)
     suspend fun setCloseEmulatorOnSessionEnd(enabled: Boolean) = appPrefs.setCloseEmulatorOnSessionEnd(enabled)
     suspend fun setHiddenApps(apps: Set<String>) = appPrefs.setHiddenApps(apps)
-    suspend fun setSecondaryHomeApps(apps: Set<String>) = appPrefs.setSecondaryHomeApps(apps)
+    suspend fun toggleDockPin(packageName: String) = appPrefs.toggleDockPin(packageName)
+    suspend fun reorderDockPins(expected: List<String>, order: List<String>) =
+        appPrefs.reorderDockPins(expected, order)
     suspend fun setVisibleSystemApps(apps: Set<String>) = appPrefs.setVisibleSystemApps(apps)
     suspend fun setAppOrder(order: List<String>) = appPrefs.setAppOrder(order)
     suspend fun setLastSeenVersion(version: String) = appPrefs.setLastSeenVersion(version)
@@ -850,7 +852,7 @@ data class UserPreferences(
     val uploadScreenshotsEnabled: Boolean = true,
     val boxArtCacheEnabled: Boolean = true,
     val hiddenApps: Set<String> = emptySet(),
-    val secondaryHomeApps: Set<String> = emptySet(),
+    val secondaryHomeApps: List<String> = emptyList(),
     val visibleSystemApps: Set<String> = emptySet(),
     val appOrder: List<String> = emptyList(),
     val maxConcurrentDownloads: Int = 1,

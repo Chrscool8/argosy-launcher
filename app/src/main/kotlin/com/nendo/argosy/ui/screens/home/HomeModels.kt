@@ -856,6 +856,14 @@ sealed class HomeEvent {
 fun HomeUiState.movedTo(row: HomeRow): HomeUiState =
     if (row == currentRow) this else copy(currentRow = row, focusedGameIndex = 0)
 
+fun HomeUiState.withDockApps(apps: List<String>): HomeUiState {
+    val packageName = homeApps.getOrNull(appBarIndex)
+    val index = packageName?.let { apps.indexOf(it) }?.takeIf { it >= 0 }
+        ?: if (appBarFocused && appBarIndex == homeApps.size) apps.size
+        else appBarIndex.coerceIn(-1, apps.size)
+    return copy(homeApps = apps, appBarIndex = index)
+}
+
 fun HomeUiState.keepingFocusOn(gameId: Long?): HomeUiState {
     if (layoutKind == com.nendo.argosy.domain.model.HomeLayoutKind.CUSTOM_GRID) return this
     val items = currentItems

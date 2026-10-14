@@ -42,20 +42,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.nendo.argosy.ui.ScreenDimmerPreferences
+import com.nendo.argosy.ui.toScreenDimmerPreferences
 import com.nendo.argosy.ui.common.rememberFileImageModel
-import com.nendo.argosy.ui.components.FooterBar
+import com.nendo.argosy.ui.components.FooterBarWithState
+import com.nendo.argosy.ui.components.FooterHintItem
 import com.nendo.argosy.ui.components.LocalFrostedBackdrop
 import com.nendo.argosy.ui.components.rememberFrostedBackdrop
 import com.nendo.argosy.ui.components.frostedBackdropSource
 import com.nendo.argosy.ui.components.HomeLayoutPreview
 import com.nendo.argosy.ui.components.ScreenNumberBadge
+import com.nendo.argosy.ui.components.ScreenDimmerOverlay
 import com.nendo.argosy.ui.components.animateScrollToItemCentered
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
@@ -63,11 +66,12 @@ import com.nendo.argosy.ui.theme.backdrop.BackdropRole
 import com.nendo.argosy.ui.theme.backdrop.surfaceBackdrop
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 private const val TIMELINE_SCROLL_DELAY_MS = 1500L
 private const val PLAY_SHARE_COLUMNS = 2
 private const val PLAY_SHARE_TOP_GAMES = 2
-private const val GAME_HERO_SCRIM = 0.88f
 
 @Composable
 fun PresentationSlotContent(
@@ -75,14 +79,31 @@ fun PresentationSlotContent(
     showControlHints: Boolean = true,
     showsNotifications: Boolean = false
 ) {
+    val manager = com.nendo.argosy.DualScreenManagerHolder.instance
+    val dimmerPrefs = remember(manager) {
+        manager?.preferencesRepository?.userPreferences
+            ?.map { it.toScreenDimmerPreferences() }?.distinctUntilChanged()
+    }?.collectAsState(ScreenDimmerPreferences())?.value ?: ScreenDimmerPreferences()
+    val lastActivity = manager?.lastUserActivityAtMs?.collectAsState()?.value ?: 0L
+    val gameActive = manager?.swappedIsGameActive?.collectAsState()?.value ?: false
+    val mediaPlayback = manager?.mediaPlayback?.collectAsState()?.value
+    val wizardActive = manager?.isWizardActive?.collectAsState()?.value ?: false
     val artSource = com.nendo.argosy.ui.common.LocalImageCacheManager.current
-        ?: com.nendo.argosy.DualScreenManagerHolder.instance?.imageCacheManager
+        ?: manager?.imageCacheManager
     val frostedBackdrop = rememberFrostedBackdrop()
     androidx.compose.runtime.CompositionLocalProvider(
         LocalFrostedBackdrop provides frostedBackdrop,
         com.nendo.argosy.ui.common.LocalImageCacheManager provides artSource
     ) {
-        PresentationSlotBody(slot, showControlHints, showsNotifications)
+        ScreenDimmerOverlay(
+            enabled = dimmerPrefs.enabled && !gameActive && mediaPlayback == null && !wizardActive,
+            timeoutMs = dimmerPrefs.timeoutMinutes * 60_000L,
+            dimLevel = dimmerPrefs.level / 100f,
+            lastActivityAtMs = lastActivity,
+            onWake = { manager?.notifyUserActivity("presentationDimmerTap") }
+        ) {
+            PresentationSlotBody(slot, showControlHints, showsNotifications)
+        }
     }
 }
 
@@ -121,7 +142,7 @@ private fun PresentationSlotBody(
                         .align(Alignment.BottomCenter)
                         .onSizeChanged { measuredHintsHeight = with(density) { it.height.toDp() } }
                 ) {
-                    FooterBar(hints = hints.map { it.button to it.label })
+                    PresentationControlHints(hints)
                 }
             }
             com.nendo.argosy.ui.components.recap.MonthlyRecapMirror()
@@ -167,7 +188,6 @@ private fun PresentationSlotScene(
             is PresentationSlot.PlayTime -> PlayTimeSlot(slot)
             is PresentationSlot.PlayTimeline -> PlayTimelineSlot(slot)
             is PresentationSlot.PlayShare -> PlayShareSlot(slot)
-            is PresentationSlot.GameHero -> GameHeroSlot(slot)
             is PresentationSlot.Breakdown -> BreakdownSlot(slot)
             is PresentationSlot.Detail -> {
                 val style = com.nendo.argosy.DualScreenManagerHolder.instance
@@ -197,11 +217,19 @@ private fun PresentationSlotScene(
                     sessionTimer = manager.swappedSessionTimer,
                     reader = manager.dashboardReader,
                     actions = actions,
-                    appBar = { if (bar != null) InGameAppBar(bar) }
+                    appBar = { modifier -> if (bar != null) InGameAppBar(bar, modifier) }
                 )
             }
         }
     }
+}
+
+@Composable
+internal fun PresentationControlHints(hints: List<CompanionHint>) {
+    FooterBarWithState(
+        hints = hints.map { FooterHintItem(it.button, it.label) },
+        forceVisible = hints.any { it.forced }
+    )
 }
 
 private fun dashboardActions(manager: com.nendo.argosy.DualScreenManager) =
@@ -243,6 +271,7 @@ private fun rememberInGameAppBarState(): InGameAppBarState? {
 @Composable
 private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier) {
     val manager = state.manager
+    val reorder by manager.dockReorder.collectAsState()
     var menuPackage by remember { mutableStateOf<String?>(null) }
     var drawerOpen by remember { mutableStateOf(false) }
     var toolsOpen by remember { mutableStateOf(false) }
@@ -261,12 +290,12 @@ private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier
     com.nendo.argosy.ui.components.CompanionAppBar(
         apps = state.apps,
         onAppClick = { manager.launchCompanionApp(it) },
+        reorder = reorder,
+        onReorderStart = { manager.beginDockReorder(it, false) },
+        onReorderTarget = manager::targetDockReorder,
+        onReorderSave = manager::saveDockReorder,
+        onReorderCancel = manager::cancelDockReorder,
         focusedIndex = com.nendo.argosy.ui.components.APP_BAR_NOTHING_FOCUSED,
-        onAppLongPress = if (state.displays.size > 1) {
-            { packageName -> menuPackage = packageName }
-        } else {
-            null
-        },
         onOpenDrawer = { drawerOpen = true },
         focusDisplays = state.displays,
         focusPickerOpen = state.pickerOpen,
@@ -290,7 +319,12 @@ private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier
         onToolFocus = { toolIndex = it },
         onToolsDismiss = { toolsOpen = false },
         controllerInputEnabled = false,
-        modifier = modifier.padding(horizontal = Dimens.spacingMd, vertical = Dimens.spacingMd)
+        modifier = modifier.padding(
+            start = Dimens.spacingMd,
+            top = Dimens.spacingMd,
+            end = Dimens.spacingMd,
+            bottom = ComponentDefaults.Carousel.headerEdgePaddingDp.dp
+        )
     )
 
     if (drawerOpen) {
@@ -334,30 +368,6 @@ private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier
                 if (row != null) manager.runAppMenuRow(packageName, row)
             },
             onDismiss = { menuPackage = null }
-        )
-    }
-}
-
-@Composable
-private fun GameHeroSlot(slot: PresentationSlot.GameHero) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        com.nendo.argosy.ui.common.rememberResolvedBackgroundPath(slot.game.id, slot.game.backgroundPath)?.let { backdrop ->
-            AsyncImage(
-                model = rememberFileImageModel(backdrop),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = GAME_HERO_SCRIM))
-        )
-        com.nendo.argosy.ui.screens.gamedetail.components.ExpandedHeader(
-            game = slot.game,
-            friends = slot.friends,
-            modifier = Modifier.align(Alignment.Center).padding(Dimens.spacingXl)
         )
     }
 }

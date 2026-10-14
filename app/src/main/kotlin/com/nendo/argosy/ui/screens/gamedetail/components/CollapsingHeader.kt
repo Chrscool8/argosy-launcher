@@ -7,70 +7,57 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Whatshot
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.nendo.argosy.domain.model.PresentationArt
+import com.nendo.argosy.domain.model.PresentationLayout
+import com.nendo.argosy.domain.model.PresentationStyle
 import com.nendo.argosy.R
-import com.nendo.argosy.ui.common.rememberCoverAspectRatio
 import com.nendo.argosy.ui.common.rememberFileImageModel
-import com.nendo.argosy.data.model.ArtSlot
-import com.nendo.argosy.ui.common.rememberArtRepair
 import com.nendo.argosy.ui.common.rememberResolvedArt
-import com.nendo.argosy.ui.components.BoxArtRoute
-import com.nendo.argosy.ui.components.boxArtRoutes
-import com.nendo.argosy.ui.components.firstWorking
 import com.nendo.argosy.ui.common.rememberResolvedCoverPath
-import com.nendo.argosy.ui.components.Box3dCover
-import com.nendo.argosy.ui.components.GameTitle
+import com.nendo.argosy.ui.dualscreen.GameHero
+import com.nendo.argosy.ui.dualscreen.withLiveArt
 import com.nendo.argosy.ui.screens.gamedetail.GameDetailUi
+import com.nendo.argosy.ui.screens.gamedetail.toCompanionDetail
 import com.nendo.argosy.ui.theme.ALauncherColors
-import com.nendo.argosy.ui.theme.AspectRatioClass
 import com.nendo.argosy.ui.theme.Dimens
-import com.nendo.argosy.ui.theme.LocalBoxArtStyle
-import com.nendo.argosy.ui.theme.LocalUiScale
-import com.nendo.argosy.ui.common.playerCountGlyph
 import com.nendo.argosy.util.formatPlayTime
-import com.nendo.argosy.util.formatTimeToBeat
 
-private val EXPANDED_COVER_WIDTH = 200.dp
 private val COLLAPSED_THUMBNAIL_SIZE = 48.dp
 private val COLLAPSED_BAR_HEIGHT = 64.dp
+private val DETAIL_HERO_STYLE = PresentationStyle(
+    layout = PresentationLayout.CINEMATIC,
+    art = PresentationArt.BOX_3D,
+    hiddenStats = emptySet()
+)
 
 data class CollapsingHeaderState(
     val isCollapsed: Boolean = false
@@ -130,395 +117,15 @@ fun ExpandedHeader(
     modifier: Modifier = Modifier,
     friends: List<com.nendo.argosy.data.social.FriendActivity> = emptyList()
 ) {
-    val aspectRatioClass = LocalUiScale.current.aspectRatioClass
-    val isWideDisplay = aspectRatioClass == AspectRatioClass.WIDE ||
-        aspectRatioClass == AspectRatioClass.ULTRA_WIDE
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        if (isWideDisplay) {
-            LandscapeExpandedHeader(game = game, friends = friends)
-        } else {
-            PortraitExpandedHeader(game = game, friends = friends, maxWidth = maxWidth)
-        }
-    }
-}
-
-@Composable
-private fun LandscapeExpandedHeader(
-    game: GameDetailUi,
-    friends: List<com.nendo.argosy.data.social.FriendActivity>,
-    modifier: Modifier = Modifier
-) {
-    val boxArtStyle = LocalBoxArtStyle.current
-    val coverPath = rememberResolvedCoverPath(game.id, game.coverPath)
-    val coverAspectRatio = if (boxArtStyle.nativeAspectRatio) {
-        rememberCoverAspectRatio(coverPath, boxArtStyle.aspectRatio)
-    } else {
-        boxArtStyle.aspectRatio
-    }
-    val coverHeight = EXPANDED_COVER_WIDTH / coverAspectRatio
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.spacingXl)
-    ) {
-        HeaderBoxArt(
-            game = game,
-            coverPath = coverPath,
-            coverHeight = coverHeight,
-            flatModifier = Modifier
-                .width(EXPANDED_COVER_WIDTH)
-                .height(coverHeight)
-        )
-
-        Column(modifier = Modifier.weight(1f)) {
-            TitleSection(game = game)
-            Spacer(modifier = Modifier.height(Dimens.spacingSm))
-            RatingsRow(game = game)
-            if (friends.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(Dimens.spacingSm))
-                com.nendo.argosy.ui.components.friends.FriendsActivityBadge(friends = friends)
-            }
-            Spacer(modifier = Modifier.height(Dimens.spacingSm))
-            PlayStatsRow(game = game)
-        }
-    }
-}
-
-@Composable
-private fun HeaderBoxArt(
-    game: GameDetailUi,
-    coverPath: String?,
-    coverHeight: androidx.compose.ui.unit.Dp,
-    flatModifier: Modifier
-) {
     val art = rememberResolvedArt(game.id)
-    val spinePath = art?.boxSpinePath ?: game.boxSpinePath
-    val backPath = (art?.boxBackPath ?: game.boxBackPath)?.takeIf { it.startsWith("/") }
-    val box3dPath = art?.box3dPath
-    val repairArt = rememberArtRepair()
-    var failedRoutes by remember(spinePath, box3dPath, coverPath) { mutableStateOf(emptySet<BoxArtRoute>()) }
-    when (boxArtRoutes(useBoxArt = true, spinePath, box3dPath, coverPath).firstWorking(failedRoutes)) {
-        BoxArtRoute.SPINE_RENDER -> Box3dCover(
-            frontPath = coverPath.orEmpty(),
-            spinePath = spinePath.orEmpty(),
-            backPath = backPath,
-            modifier = Modifier.height(coverHeight),
-            onUnavailable = {
-                failedRoutes = failedRoutes + BoxArtRoute.SPINE_RENDER
-                repairArt(game.id, ArtSlot.BOX_SPINE)
-                repairArt(game.id, ArtSlot.COVER)
-            }
-        )
-        BoxArtRoute.BOX_3D_IMAGE -> AsyncImage(
-            model = rememberFileImageModel(box3dPath),
-            contentDescription = game.title,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.height(coverHeight),
-            onError = {
-                failedRoutes = failedRoutes + BoxArtRoute.BOX_3D_IMAGE
-                repairArt(game.id, ArtSlot.BOX_3D)
-            }
-        )
-        BoxArtRoute.FLAT_COVER -> CoverArtImage(
-            coverPath = coverPath,
-            contentDescription = game.title,
-            modifier = flatModifier,
-            onError = {
-                failedRoutes = failedRoutes + BoxArtRoute.FLAT_COVER
-                repairArt(game.id, ArtSlot.COVER)
-            }
-        )
-        BoxArtRoute.TEXT -> TitleCover(title = game.title, modifier = flatModifier)
-    }
-}
-
-@Composable
-private fun TitleCover(title: String, modifier: Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .clip(RoundedCornerShape(Dimens.radiusLg))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(Dimens.spacingSm)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun PortraitExpandedHeader(
-    game: GameDetailUi,
-    friends: List<com.nendo.argosy.data.social.FriendActivity>,
-    maxWidth: androidx.compose.ui.unit.Dp,
-    modifier: Modifier = Modifier
-) {
-    val boxArtStyle = LocalBoxArtStyle.current
-    val coverPath = rememberResolvedCoverPath(game.id, game.coverPath)
-    val coverAspectRatio = if (boxArtStyle.nativeAspectRatio) {
-        rememberCoverAspectRatio(coverPath, boxArtStyle.aspectRatio)
-    } else {
-        boxArtStyle.aspectRatio
-    }
-    val coverWidth = maxWidth * 0.4f
-    val coverHeight = coverWidth / coverAspectRatio
-
-    Column(
+    val detail = remember(game, friends, art) { game.toCompanionDetail(friends).withLiveArt(art) }
+    GameHero(
+        detail = detail,
+        style = DETAIL_HERO_STYLE,
+        coverMaxHeight = Dimens.gameCardHeight,
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-    ) {
-        TitleSection(game = game)
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-        ) {
-            HeaderBoxArt(
-                game = game,
-                coverPath = coverPath,
-                coverHeight = coverHeight,
-                flatModifier = Modifier
-                    .widthIn(max = coverWidth)
-                    .height(coverHeight)
-            )
-
-            PortraitStatChips(game = game, friends = friends, modifier = Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun CoverArtImage(
-    coverPath: String?,
-    contentDescription: String,
-    modifier: Modifier = Modifier,
-    onError: () -> Unit = {}
-) {
-    AsyncImage(
-        model = rememberFileImageModel(coverPath),
-        contentDescription = contentDescription,
-        contentScale = ContentScale.Crop,
-        modifier = modifier
-            .clip(RoundedCornerShape(Dimens.radiusLg))
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        onError = { onError() }
+        interactiveCover = true
     )
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun TitleSection(
-    game: GameDetailUi,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        GameTitle(
-            title = game.title,
-            titleStyle = MaterialTheme.typography.displaySmall,
-            titleColor = MaterialTheme.colorScheme.onSurface,
-            adaptiveSize = true
-        )
-
-        Spacer(modifier = Modifier.height(Dimens.spacingSm))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            EndWeightedText(
-                text = game.platformName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f, fill = false)
-            )
-            game.releaseYear?.let { year ->
-                Text(
-                    text = "|",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-                Text(
-                    text = year.toString(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                )
-            }
-            game.players?.let { players ->
-                Text(
-                    text = "|",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-                Icon(
-                    imageVector = playerCountGlyph(players),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                    modifier = Modifier.size(Dimens.iconSm)
-                )
-                Text(
-                    text = players,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(Dimens.spacingXs))
-
-        game.developer?.let { dev ->
-            Text(
-                text = dev,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        game.genre?.let { genreString ->
-            val genres = genreString.split(",").map { it.trim() }.filter { it.isNotBlank() }
-            if (genres.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(Dimens.spacingXs))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.spacingXs),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.spacingXs),
-                    maxLines = 2
-                ) {
-                    genres.forEach { genre ->
-                        Text(
-                            text = genre,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .background(
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    RoundedCornerShape(Dimens.radiusSm)
-                                )
-                                .padding(horizontal = Dimens.spacingSm, vertical = 2.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ScoreChips(game: GameDetailUi, chipModifier: Modifier = Modifier) {
-    game.rating?.let { rating ->
-        CommunityRatingChip(rating = rating, modifier = chipModifier)
-    }
-    RatingChip(
-        label = stringResource(R.string.gamedetail_chip_my_rating_label),
-        value = game.userRating,
-        icon = Icons.Default.Star,
-        iconColor = ALauncherColors.StarGold,
-        modifier = chipModifier
-    )
-    RatingChip(
-        label = stringResource(R.string.gamedetail_chip_difficulty_label),
-        value = game.userDifficulty,
-        icon = Icons.Default.Whatshot,
-        iconColor = ALauncherColors.DifficultyRed,
-        modifier = chipModifier
-    )
-}
-
-@Composable
-private fun TimeToBeatChips(game: GameDetailUi) {
-    val context = LocalContext.current
-    formatTimeToBeat(context, game.timeToBeatMainSec)?.let { time ->
-        MetadataChip(
-            label = stringResource(R.string.gamedetail_chip_main_story_label),
-            value = time
-        )
-    }
-    formatTimeToBeat(context, game.timeToBeatCompletionistSec)?.let { time ->
-        MetadataChip(
-            label = stringResource(R.string.gamedetail_chip_completionist_label),
-            value = time
-        )
-    }
-}
-
-private fun GameDetailUi.hasTimeToBeat(): Boolean =
-    (timeToBeatMainSec ?: 0) > 0 || (timeToBeatCompletionistSec ?: 0) > 0
-
-@Composable
-private fun RatingsRow(
-    game: GameDetailUi,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-        ) {
-            ScoreChips(game, chipModifier = Modifier.weight(1f))
-        }
-        if (game.hasTimeToBeat()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
-                TimeToBeatChips(game)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun PortraitStatChips(
-    game: GameDetailUi,
-    friends: List<com.nendo.argosy.data.social.FriendActivity>,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
-    ) {
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm),
-            verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
-        ) {
-            ScoreChips(game)
-            TimeToBeatChips(game)
-            game.status?.let { status ->
-                StatusChip(statusValue = status)
-            }
-        }
-        if (friends.isNotEmpty()) {
-            com.nendo.argosy.ui.components.friends.FriendsActivityBadge(friends = friends)
-        }
-        if (game.playTimeMinutes > 0) {
-            PlayTimeChip(minutes = game.playTimeMinutes)
-        }
-    }
-}
-
-@Composable
-private fun PlayStatsRow(
-    game: GameDetailUi,
-    modifier: Modifier = Modifier
-) {
-    if (game.playTimeMinutes > 0 || game.status != null) {
-        Column(
-            modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
-        ) {
-            game.status?.let { status ->
-                StatusChip(statusValue = status)
-            }
-            if (game.playTimeMinutes > 0) {
-                PlayTimeChip(minutes = game.playTimeMinutes)
-            }
-        }
-    }
 }
 
 @Composable

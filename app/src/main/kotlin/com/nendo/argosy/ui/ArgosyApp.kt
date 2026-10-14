@@ -56,6 +56,7 @@ import com.nendo.argosy.ui.components.revealOnBottomEdgeTouch
 import com.nendo.argosy.ui.components.FooterHost
 import com.nendo.argosy.ui.components.FooterHostController
 import com.nendo.argosy.ui.components.LocalFooterHost
+import com.nendo.argosy.ui.components.LocalFooterHostVisible
 import com.nendo.argosy.ui.components.LocalFrostedBackdrop
 import com.nendo.argosy.ui.components.frostedBackdropSource
 import com.nendo.argosy.ui.components.rememberFrostedBackdrop
@@ -187,7 +188,7 @@ fun ArgosyApp(
     val isOnWizard = currentRoute == Screen.FirstRun.route
     var wasOnWizard by remember { mutableStateOf(isOnWizard) }
     LaunchedEffect(uiState.isFirstRun, isOnWizard) {
-        dsm?.broadcastWizardState(uiState.isFirstRun || isOnWizard)
+        dsm?.recordWizardState(uiState.isFirstRun || isOnWizard)
         if (wasOnWizard && !isOnWizard) {
             viewModel.triggerPostWizardSync()
         }
@@ -1086,6 +1087,7 @@ fun ArgosyApp(
         LocalXYIconsSwapped provides uiState.xyIconsSwapped,
         LocalSwapStartSelect provides uiState.swapStartSelect,
         LocalFooterHost provides footerHostController,
+        LocalFooterHostVisible provides (!presentationShowsHints && !navRingState.isBarVisible),
         LocalFrostedBackdrop provides frostedBackdrop,
         com.nendo.argosy.ui.common.LocalImageCacheManager provides viewModel.imageCacheManager,
         com.nendo.argosy.ui.components.LocalArtworkScraping provides isScrapingArtwork,
@@ -1441,7 +1443,7 @@ fun ArgosyApp(
             if (presentationShowsHints) {
                 val topEntry = footerHostController.top
                 val relayed = topEntry?.hints.orEmpty().map {
-                    com.nendo.argosy.ui.dualscreen.CompanionHint(it.button, it.action)
+                    com.nendo.argosy.ui.dualscreen.CompanionHint(it.button, it.action, forced = topEntry?.forced == true)
                 }
                 LaunchedEffect(relayed) {
                     com.nendo.argosy.DualScreenManagerHolder.instance?.publishControlHints(relayed)

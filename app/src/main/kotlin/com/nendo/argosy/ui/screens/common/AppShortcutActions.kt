@@ -17,10 +17,7 @@ class AppShortcutActions @Inject constructor(
         packageName in preferencesRepository.preferences.first().secondaryHomeApps
 
     suspend fun togglePinned(packageName: String) {
-        val pinned = preferencesRepository.preferences.first().secondaryHomeApps
-        preferencesRepository.setSecondaryHomeApps(
-            if (packageName in pinned) pinned - packageName else pinned + packageName
-        )
+        preferencesRepository.toggleDockPin(packageName)
     }
 
     suspend fun isHidden(packageName: String): Boolean {

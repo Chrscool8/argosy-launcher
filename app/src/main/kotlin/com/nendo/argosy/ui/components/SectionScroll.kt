@@ -26,7 +26,7 @@ private const val FAR_JUMP_VIEWPORTS = 2
 
 @Composable
 private fun footerOverlapPx(): Int {
-    val footerVisible = LocalFooterHost.current.isBarVisible
+    val footerVisible = LocalFooterHostVisible.current && LocalFooterHost.current.isBarVisible
     val footerPx = with(LocalDensity.current) { Dimens.footerClearance.roundToPx() }
     return if (footerVisible) footerPx else 0
 }

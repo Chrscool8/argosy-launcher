@@ -80,12 +80,6 @@ class SessionStateStore(context: Context) {
 
     fun isSaveDirty(): Boolean = prefs.getBoolean(KEY_SAVE_DIRTY, false)
 
-    fun setHomeApps(apps: Set<String>) {
-        prefs.edit().putStringSet(KEY_HOME_APPS, apps).apply()
-    }
-
-    fun getHomeApps(): Set<String> = prefs.getStringSet(KEY_HOME_APPS, emptySet()) ?: emptySet()
-
     fun setArgosyForeground(isForeground: Boolean) {
         prefs.edit().putBoolean(KEY_ARGOSY_FOREGROUND, isForeground).apply()
     }
@@ -173,12 +167,6 @@ class SessionStateStore(context: Context) {
 
     fun isRolesSwapped(): Boolean = prefs.getBoolean(KEY_ROLES_SWAPPED, false)
 
-    fun setWizardActive(active: Boolean) {
-        prefs.edit().putBoolean(KEY_WIZARD_ACTIVE, active).apply()
-    }
-
-    fun isWizardActive(): Boolean = prefs.getBoolean(KEY_WIZARD_ACTIVE, false)
-
     fun setFirstRunComplete(complete: Boolean) {
         prefs.edit().putBoolean(KEY_FIRST_RUN_COMPLETE, complete).apply()
     }
@@ -250,7 +238,6 @@ class SessionStateStore(context: Context) {
         private const val KEY_CHANNEL_NAME = "channel_name"
         private const val KEY_IS_HARDCORE = "is_hardcore"
         private const val KEY_SAVE_DIRTY = "save_dirty"
-        private const val KEY_HOME_APPS = "home_apps"
         private const val KEY_ARGOSY_FOREGROUND = "argosy_foreground"
         private const val KEY_FOREIGN_APP_ON_SECONDARY = "foreign_app_on_secondary"
         private const val KEY_PRIMARY_COLOR = "primary_color"
@@ -264,7 +251,6 @@ class SessionStateStore(context: Context) {
         private const val KEY_SESSION_START_TIME = "session_start_time"
         private const val KEY_EMULATOR_PACKAGE = "emulator_package"
         private const val KEY_EMULATOR_DISPLAY_ID = "emulator_display_id"
-        private const val KEY_WIZARD_ACTIVE = "wizard_active"
         private const val KEY_FIRST_RUN_COMPLETE = "first_run_complete"
         private const val KEY_DUAL_SCREEN_ENABLED = "dual_screen_enabled"
         private const val KEY_SECONDARY_DISPLAY_USABLE = "secondary_display_usable"

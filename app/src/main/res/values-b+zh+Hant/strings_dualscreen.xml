@@ -441,4 +441,5 @@
     <string name="dual_showcase_played">已遊玩 %1$s</string>
     <string name="dual_showcase_journey_header">你的旅程</string>
     <string name="dual_showcase_journey_main">主線 %1$s</string>
+    <string name="dual_showcase_completionist">完全攻略 %1$s</string>
 </resources>

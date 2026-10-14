@@ -22,7 +22,6 @@ import com.nendo.argosy.ui.theme.CustomFontFamilies
 import com.nendo.argosy.ui.theme.CustomFontLoader
 import com.nendo.argosy.ui.theme.ThemeState
 import com.nendo.argosy.ui.theme.toThemeState
-import com.nendo.argosy.ui.toScreenDimmerPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.Lifecycle
@@ -32,8 +31,6 @@ import com.nendo.argosy.DualScreenManagerHolder
 import com.nendo.argosy.core.game.AchievementUi
 import com.nendo.argosy.data.preferences.SessionStateStore
 import com.nendo.argosy.data.repository.AppsRepository
-import com.nendo.argosy.ui.ScreenDimmerPreferences
-import com.nendo.argosy.ui.components.ScreenDimmerOverlay
 import com.nendo.argosy.ui.dualscreen.CompanionDetail
 import com.nendo.argosy.ui.dualscreen.CompanionDetailScreen
 import com.nendo.argosy.ui.input.GamepadEvent
@@ -84,11 +81,8 @@ class SecondaryHomeActivity :
         private set
     var isGameActive by mutableStateOf(false)
         private set
-    private var isWizardActive by mutableStateOf(false)
     private var currentChannelName by mutableStateOf<String?>(null)
     private var isHardcore by mutableStateOf(false)
-    var homeApps by mutableStateOf<List<String>>(emptyList())
-        private set
     private var companionAchievements by mutableStateOf<List<AchievementUi>>(emptyList())
     private var companionSessionTimer: CompanionSessionTimer? = null
     private var homeRestoreSettled = false
@@ -154,7 +148,6 @@ class SecondaryHomeActivity :
         setContent {
             val themeState = remember { mutableStateOf(ThemeState()) }
             val customFonts = remember { mutableStateOf(CustomFontFamilies()) }
-            val screenDimmerPrefs = remember { mutableStateOf(ScreenDimmerPreferences()) }
             val statusBarItems = remember {
                 mutableStateOf(com.nendo.argosy.ui.components.StatusBarItems())
             }
@@ -163,7 +156,6 @@ class SecondaryHomeActivity :
                 dsm.preferencesRepository.userPreferences.collect { prefs ->
                     themeState.value = prefs.toThemeState()
                     customFonts.value = resolveCustomFonts(prefs.displayFontPath, prefs.bodyFontPath)
-                    screenDimmerPrefs.value = prefs.toScreenDimmerPreferences()
                     statusBarItems.value = com.nendo.argosy.ui.components.statusBarItemsOf(prefs)
                 }
             }
@@ -180,25 +172,12 @@ class SecondaryHomeActivity :
                             androidx.compose.runtime.derivedStateOf { state.value.isProcessing }
                         }
                     }
-                val lastUserActivityAtMs by dsm.lastUserActivityAtMs.collectAsState()
-                val mediaPlayback by dsm.mediaPlayback.collectAsState()
-                val dimmerPrefs = screenDimmerPrefs.value
-                val dimmerEnabled = dimmerPrefs.enabled &&
-                    !isGameActive && !isWizardActive && mediaPlayback == null
                 androidx.compose.runtime.CompositionLocalProvider(
                     com.nendo.argosy.ui.components.LocalArtworkScraping provides scrapingArtwork,
                     com.nendo.argosy.ui.components.LocalStatusBarItems provides statusBarItems.value
                 ) {
                     com.nendo.argosy.ui.input.ProvideButtonGlyphs(dsm.preferencesRepository.userPreferences) {
-                        ScreenDimmerOverlay(
-                            enabled = dimmerEnabled,
-                            timeoutMs = dimmerPrefs.timeoutMinutes * 60_000L,
-                            dimLevel = dimmerPrefs.level / 100f,
-                            lastActivityAtMs = lastUserActivityAtMs,
-                            onWake = { dsm.notifyUserActivity("companionDimmerTap") }
-                        ) {
-                            CompanionRoleContent()
-                        }
+                        CompanionRoleContent()
                     }
                 }
             }
@@ -459,10 +438,6 @@ class SecondaryHomeActivity :
         return dsm.emulatorDisplayId?.let { it != Display.DEFAULT_DISPLAY } ?: false
     }
 
-    override fun onWizardStateChanged(isActive: Boolean) {
-        isWizardActive = isActive
-    }
-
     override fun onSessionStarted(
         gameId: Long, isHardcore: Boolean, channelName: String?
     ) {
@@ -490,10 +465,6 @@ class SecondaryHomeActivity :
         companionSessionTimer?.stop(applicationContext)
         companionSessionTimer = null
         isInitialized = true
-    }
-
-    override fun onHomeAppsChanged(apps: List<String>) {
-        homeApps = apps
     }
 
     override fun onLibraryRefresh() = Unit
@@ -732,7 +703,6 @@ class SecondaryHomeActivity :
         val store = dsm.sessionStateStore
         isArgosyForeground = store.isArgosyForeground()
         isGameActive = store.hasActiveSession()
-        isWizardActive = store.isWizardActive() || !store.isFirstRunComplete()
         currentChannelName = store.getChannelName()
         isHardcore = store.isHardcore()
 

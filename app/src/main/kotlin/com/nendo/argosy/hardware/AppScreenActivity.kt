@@ -77,6 +77,11 @@ class AppScreenActivity : ComponentActivity(), DualScreenManager.AppScreenHost {
         }
     }
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        DualScreenManagerHolder.instance?.notifyUserActivity("appScreenUserInteraction")
+    }
+
     override fun onResume() {
         super.onResume()
         window.hideSystemBars()

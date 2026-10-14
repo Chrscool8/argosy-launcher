@@ -496,4 +496,5 @@
     <string name="dual_showcase_played">%1$s de jeu</string>
     <string name="dual_showcase_journey_header">Votre progression</string>
     <string name="dual_showcase_journey_main">Histoire principale %1$s</string>
+    <string name="dual_showcase_completionist">Complétionniste %1$s</string>
 </resources>
