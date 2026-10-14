@@ -586,22 +586,25 @@ private fun shareSegments(
     val context = LocalContext.current
     val series = remember(theme.isDark) { ChartPalette.series(theme.isDark) }
     val thisDevice = stringResource(R.string.settings_play_time_this_device)
-    return buildShareSegments(
-        entries = entries.map { entry ->
-            ShareEntry(
-                label = entry.name,
-                activeMs = entry.activeMs,
-                platformSlug = entry.key.takeIf { withGlyph },
-                badge = thisDevice.takeIf { entry.isThisDevice }
-            )
-        },
-        limit = ComponentDefaults.PlayTimeChart.seriesSlots,
-        series = series,
-        othersLabel = othersLabel,
-        othersColor = theme.textMute,
-        valueLabel = { ms -> formatPlayTime(context, Duration.ofMillis(ms).toMinutes().toInt()) },
-        shareLabel = { percent -> context.getString(R.string.settings_play_time_share_percent, percent) }
-    )
+    val othersColor = theme.textMute
+    return remember(entries, othersLabel, withGlyph, series, othersColor, thisDevice, context) {
+        buildShareSegments(
+            entries = entries.map { entry ->
+                ShareEntry(
+                    label = entry.name,
+                    activeMs = entry.activeMs,
+                    platformSlug = entry.key.takeIf { withGlyph },
+                    badge = thisDevice.takeIf { entry.isThisDevice }
+                )
+            },
+            limit = ComponentDefaults.PlayTimeChart.seriesSlots,
+            series = series,
+            othersLabel = othersLabel,
+            othersColor = othersColor,
+            valueLabel = { ms -> formatPlayTime(context, Duration.ofMillis(ms).toMinutes().toInt()) },
+            shareLabel = { percent -> context.getString(R.string.settings_play_time_share_percent, percent) }
+        )
+    }
 }
 
 @Composable

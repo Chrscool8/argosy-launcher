@@ -162,6 +162,7 @@
     <string name="library_apps_menu_pin_to_app_bar">Закрепить на панели приложений</string>
     <string name="library_apps_menu_show">Показать</string>
     <string name="library_apps_menu_hide">Скрыть</string>
+    <string name="library_apps_menu_reorder">Изменение порядка приложений</string>
     <string name="library_apps_menu_uninstall">Удалить приложение</string>
 
     <string name="library_search_placeholder_games_and_media">Поиск игр и медиа...</string>

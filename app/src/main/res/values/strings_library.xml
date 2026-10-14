@@ -339,6 +339,7 @@
     <string name="library_apps_menu_hide">Hide</string>
     <!-- Entry in an app's action menu. Verb phrase, begins arranging the apps into a new
          order. Same phrase as the reorder heading, deliberately a separate key. -->
+    <string name="library_apps_menu_reorder">Reorder Apps</string>
     <!-- Entry in an app's action menu. Verb, removes the app from the device. Same word as
          the game quick menu entry, deliberately a separate key. -->
     <string name="library_apps_menu_uninstall">Uninstall</string>

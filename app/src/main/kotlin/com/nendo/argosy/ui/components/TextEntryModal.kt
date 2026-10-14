@@ -2,7 +2,8 @@ package com.nendo.argosy.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import com.nendo.argosy.ui.primitives.ModalActionButton
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
@@ -46,10 +48,13 @@ data class TextEntryFocus(
     val buttonIndex: Int = TEXT_ENTRY_CONFIRM_BUTTON
 )
 
+data class TextEntryAction(val label: String, val onClick: () -> Unit)
+
 /**
- * One-field editor with Cancel and confirm. Pure visuals: it captures no input, and the
- * caller owns [text] so a host that routes gamepad input can submit what it holds.
+ * One-field editor with [leadingActions], Cancel and confirm, in that order; [TextEntryFocus.buttonIndex]
+ * counts across all of them. Pure visuals: it captures no input, and the caller owns [text].
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TextEntryModal(
     title: String,
@@ -62,16 +67,25 @@ fun TextEntryModal(
     onSubmit: () -> Unit,
     focus: TextEntryFocus?,
     placeholder: String? = null,
+    message: String? = null,
     errorMessage: String? = null,
+    statusMessage: String? = null,
     canSubmit: Boolean = text.isNotBlank(),
-    keyboardType: KeyboardType = KeyboardType.Text
+    enabled: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    leadingActions: List<TextEntryAction> = emptyList()
 ) {
     val theme = LocalArgosyTheme.current
     var fieldValue by remember { mutableStateOf(TextFieldValue(text, TextRange(text.length))) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val fieldFocused = focus == null || focus.row == TextEntryRow.FIELD
-    val submit = { if (canSubmit) onSubmit() }
+    val confirmEnabled = enabled && canSubmit
+    val submit = { if (confirmEnabled) onSubmit() }
+    val cancelIndex = leadingActions.size + TEXT_ENTRY_CANCEL_BUTTON
+    val confirmIndex = leadingActions.size + TEXT_ENTRY_CONFIRM_BUTTON
+    fun buttonFocused(index: Int): Boolean = focus?.row == TextEntryRow.BUTTONS && focus.buttonIndex == index
 
     LaunchedEffect(text) {
         if (fieldValue.text != text) fieldValue = TextFieldValue(text, TextRange(text.length))
@@ -83,6 +97,10 @@ fun TextEntryModal(
 
     val fieldShape = RoundedCornerShape(Dimens.radiusMd)
     Modal(title = title, onDismiss = onDismiss) {
+        if (message != null) {
+            Text(text = message, style = MaterialTheme.typography.bodySmall, color = theme.textDim)
+            Spacer(modifier = Modifier.height(Dimens.spacingMd))
+        }
         OutlinedTextField(
             value = fieldValue,
             onValueChange = { next ->
@@ -93,6 +111,8 @@ fun TextEntryModal(
             label = { Text(label) },
             placeholder = placeholder?.let { { Text(it) } },
             singleLine = true,
+            enabled = enabled,
+            visualTransformation = visualTransformation,
             shape = fieldShape,
             modifier = Modifier
                 .fillMaxWidth()
@@ -107,33 +127,46 @@ fun TextEntryModal(
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { submit() })
         )
-        if (errorMessage != null) {
+        val shownStatus = errorMessage ?: statusMessage
+        if (shownStatus != null) {
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
             Text(
-                text = errorMessage,
+                text = shownStatus,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
+                color = if (errorMessage != null) MaterialTheme.colorScheme.error else theme.textDim
             )
         }
         Spacer(modifier = Modifier.height(Dimens.spacingLg))
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm, Alignment.End)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm, Alignment.End),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
         ) {
+            leadingActions.forEachIndexed { index, action ->
+                ModalActionButton(
+                    label = action.label,
+                    tint = theme.focusAccent,
+                    restLabelColor = theme.textPrimary,
+                    focused = buttonFocused(index),
+                    onClick = action.onClick,
+                    enabled = enabled
+                )
+            }
             ModalActionButton(
                 label = cancelLabel,
                 tint = theme.focusAccent,
                 restLabelColor = theme.textPrimary,
-                focused = focus?.row == TextEntryRow.BUTTONS && focus.buttonIndex == TEXT_ENTRY_CANCEL_BUTTON,
-                onClick = onDismiss
+                focused = buttonFocused(cancelIndex),
+                onClick = onDismiss,
+                enabled = enabled
             )
             ModalActionButton(
                 label = confirmLabel,
                 tint = theme.focusAccent,
                 restLabelColor = theme.textPrimary,
-                focused = focus?.row == TextEntryRow.BUTTONS && focus.buttonIndex == TEXT_ENTRY_CONFIRM_BUTTON,
+                focused = buttonFocused(confirmIndex),
                 onClick = submit,
-                enabled = canSubmit
+                enabled = confirmEnabled
             )
         }
     }

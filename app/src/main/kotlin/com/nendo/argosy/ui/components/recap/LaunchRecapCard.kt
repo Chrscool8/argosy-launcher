@@ -66,7 +66,7 @@ fun LaunchRecapCard(
     onCurrent: (Int) -> Unit
 ) {
     BoxWithConstraints(contentAlignment = Alignment.Center) {
-        val short = RecapHeightClass.of(maxHeight.value) == RecapHeightClass.SHORT
+        val short = RecapLayout.isShort(maxHeight.value)
         val spotlight = RecapSpotlight.of(recap.unlocks, cursor.currentIndex)
         RecapCardFrame(
             maxWidth = ComponentDefaults.UnlockRecap.cardMaxWidthDp.dp,

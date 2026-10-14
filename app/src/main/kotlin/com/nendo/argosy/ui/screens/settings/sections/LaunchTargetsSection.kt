@@ -1,5 +1,6 @@
 package com.nendo.argosy.ui.screens.settings.sections
 
+import android.content.Context
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -72,9 +73,10 @@ fun LaunchTargetsSection(uiState: SettingsUiState, viewModel: SettingsViewModel)
     val context = LocalContext.current
     val layout = remember(state) { launchTargetsLayout(state) }
     val hereDisplayId = remember(context) { ContextCompat.getDisplayOrDefault(context).displayId }
-    val railLabels = layout.groups.map { railLabel(it.screen) }
-    val sections = remember(layout, railLabels) {
-        layout.sections.mapIndexed { index, section -> section.copy(name = railLabels.getOrNull(index)) }
+    val sections = remember(layout, context) {
+        layout.sections.mapIndexed { index, section ->
+            section.copy(name = layout.groups.getOrNull(index)?.let { railLabel(context, it.screen) })
+        }
     }
 
     DisposableEffect(Unit) {
@@ -130,9 +132,10 @@ fun LaunchTargetsSection(uiState: SettingsUiState, viewModel: SettingsViewModel)
     }
 
     state.pickerEntry?.let { entry ->
+        val options = remember(state, entry, context) { pickerOptions(context, state, entry) }
         EnumPickerModal(
             title = entry.label,
-            options = pickerOptions(state, entry),
+            options = options,
             selectedIndex = state.pickerSelection(entry),
             onSelect = { viewModel.pickLaunchTarget(it) },
             onDismiss = { viewModel.closeLaunchTargetPicker() },
@@ -144,23 +147,32 @@ fun LaunchTargetsSection(uiState: SettingsUiState, viewModel: SettingsViewModel)
 @Composable
 private fun roleTitle(role: ScreenRole): String = stringResource(screenRoleTitleRes(role))
 
-@Composable
-private fun railLabel(screen: LaunchTargetScreen): String =
-    stringResource(R.string.settings_launch_targets_rail, roleTitle(screen.role), screen.number)
+private fun roleTitle(context: Context, role: ScreenRole): String = context.getString(screenRoleTitleRes(role))
 
-@Composable
-private fun pickerOptions(state: LaunchTargetsState, entry: LaunchTargetEntry): List<String> = when (entry) {
-    is LaunchTargetPlatformEntry ->
-        listOf(stringResource(R.string.settings_launch_targets_use_default_role, roleTitle(state.platformDefaultRole))) +
-            state.screens.map {
-                stringResource(R.string.settings_launch_targets_option_role, roleTitle(it.role), it.number)
+private fun railLabel(context: Context, screen: LaunchTargetScreen): String =
+    context.getString(R.string.settings_launch_targets_rail, roleTitle(context, screen.role), screen.number)
+
+private fun pickerOptions(context: Context, state: LaunchTargetsState, entry: LaunchTargetEntry): List<String> =
+    when (entry) {
+        is LaunchTargetPlatformEntry ->
+            listOf(
+                context.getString(
+                    R.string.settings_launch_targets_use_default_role,
+                    roleTitle(context, state.platformDefaultRole)
+                )
+            ) + state.screens.map {
+                context.getString(R.string.settings_launch_targets_option_role, roleTitle(context, it.role), it.number)
             }
-    is LaunchTargetAppEntry ->
-        listOf(stringResource(R.string.settings_launch_targets_use_default_screen, state.appDefaultNumber)) +
-            state.screens.map {
-                stringResource(R.string.settings_launch_targets_option_screen, it.number, roleTitle(it.role))
-            }
-}
+        is LaunchTargetAppEntry ->
+            listOf(context.getString(R.string.settings_launch_targets_use_default_screen, state.appDefaultNumber)) +
+                state.screens.map {
+                    context.getString(
+                        R.string.settings_launch_targets_option_screen,
+                        it.number,
+                        roleTitle(context, it.role)
+                    )
+                }
+    }
 
 @Composable
 private fun ScreenHeading(screen: LaunchTargetScreen, isHere: Boolean) {

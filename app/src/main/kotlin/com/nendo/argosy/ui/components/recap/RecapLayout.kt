@@ -3,21 +3,9 @@ package com.nendo.argosy.ui.components.recap
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import kotlin.math.roundToInt
 
-enum class RecapHeightClass {
-    SHORT,
-    REGULAR,
-    TALL;
-
-    companion object {
-        fun of(heightDp: Float): RecapHeightClass = when {
-            heightDp < ComponentDefaults.UnlockRecap.shortHeightDp -> SHORT
-            heightDp >= ComponentDefaults.UnlockRecap.tallHeightDp -> TALL
-            else -> REGULAR
-        }
-    }
-}
-
 object RecapLayout {
+    fun isShort(heightDp: Float): Boolean = heightDp < ComponentDefaults.UnlockRecap.shortHeightDp
+
     fun unlockRowFits(count: Int, tileDp: Float, gapDp: Float, widthDp: Float): Boolean {
         if (count <= 0) return true
         return count * tileDp + (count - 1) * gapDp <= widthDp

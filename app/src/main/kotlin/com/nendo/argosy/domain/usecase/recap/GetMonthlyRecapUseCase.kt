@@ -21,7 +21,7 @@ import javax.inject.Inject
 /**
  * The monthly recap for [YearMonth] in the device's zone. Unlocks come from the RetroAchievements
  * web API key when it answers, else from RomM's progression resolved against the local
- * achievement rows. Waits briefly for the other devices' play sessions before reading, then
+ * achievement rows. Games marked Private stay out of play time, unlocks and awards alike. Waits briefly for the other devices' play sessions before reading, then
  * reads the RomM owner once per call.
  */
 class GetMonthlyRecapUseCase @Inject constructor(
@@ -41,15 +41,18 @@ class GetMonthlyRecapUseCase @Inject constructor(
         val hidden = preferencesRepository.privateIgdbIds()
         val sessions = playSessionDao.getSessionsForOwnerInRange(owner, previousStart, window.end, hidden)
         val firstPlayed = playSessionDao.getFirstPlayedPerGame(owner).associate { it.gameId to it.firstPlayed }
+        val hiddenRaIds = privateRaIds(hidden)
         val webUnlocks = metadataSource.webUnlocksBetween(window.start, window.end)
+            ?.filterNot { it.gameId in hiddenRaIds }
+        val progression = if (webUnlocks == null) metadataSource.romMProgression(window.end) else emptyList()
         val recap = MonthlyRecapCalculator.compute(
             month = month,
             zone = zone,
             sessions = sessions,
             firstPlayed = firstPlayed,
-            progression = if (webUnlocks == null) metadataSource.romMProgression(window.end) else emptyList(),
+            progression = progression.filterNot { it.romRaId in hiddenRaIds },
             topGamesLimit = Int.MAX_VALUE,
-            awardProgression = metadataSource.awardProgression(window.end)
+            awardProgression = metadataSource.awardProgression(window.end).filterNot { it.romRaId in hiddenRaIds }
         )
         val unlocks = webUnlocks?.let { MonthlyDigestAssembler.webUnlocks(it, window) }
             ?: resolveRomMUnlocks(recap.unlocks, owner)
@@ -64,6 +67,10 @@ class GetMonthlyRecapUseCase @Inject constructor(
         )
         return MonthlyDigestAssembler.assemble(recap, days, unlocks, covers, awardTitles)
     }
+
+    private suspend fun privateRaIds(privateIgdbIds: List<Long>): Set<Long> =
+        privateIgdbIds.flatMap { igdbId -> gameDao.getAllByIgdbId(igdbId) }
+            .mapNotNullTo(mutableSetOf()) { it.effectiveRaId }
 
     private suspend fun resolveRomMUnlocks(unlocks: List<RecapMonthUnlock>, owner: Long?): List<SessionUnlock> =
         unlocks.groupBy { it.raGameId }

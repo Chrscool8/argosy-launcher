@@ -146,6 +146,7 @@
     <string name="library_apps_menu_pin_to_app_bar">An App-Leiste anheften</string>
     <string name="library_apps_menu_show">Einblenden</string>
     <string name="library_apps_menu_hide">Ausblenden</string>
+    <string name="library_apps_menu_reorder">Apps neu anordnen</string>
     <string name="library_apps_menu_uninstall">Deinstallieren</string>
 
     <string name="library_search_placeholder_games_and_media">Spiele und Medien suchen...</string>

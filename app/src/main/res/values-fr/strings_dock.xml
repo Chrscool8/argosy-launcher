@@ -7,4 +7,5 @@
     <string name="dock_hint_move">Déplacer</string>
     <string name="dock_hint_cancel">Annuler</string>
     <string name="dock_reorder_action">Réorganiser</string>
+    <string name="dock_menu_reorder">Réorganiser</string>
 </resources>

@@ -7,4 +7,5 @@
     <string name="dock_hint_move">移動</string>
     <string name="dock_hint_cancel">取消</string>
     <string name="dock_reorder_action">調整順序</string>
+    <string name="dock_menu_reorder">調整順序</string>
 </resources>

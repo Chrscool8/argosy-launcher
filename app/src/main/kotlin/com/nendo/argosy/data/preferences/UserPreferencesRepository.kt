@@ -1269,7 +1269,7 @@ enum class EmulatorDisplayTarget {
 
         /**
          * The global Games target. Never [DEFAULT]: a missing or unknown token reads as
-         * [PRESENTATION], where games went before the setting existed.
+         * [PRESENTATION].
          */
         fun gamesDefaultFrom(value: String?): EmulatorDisplayTarget =
             fromString(value).takeUnless { it == DEFAULT } ?: PRESENTATION

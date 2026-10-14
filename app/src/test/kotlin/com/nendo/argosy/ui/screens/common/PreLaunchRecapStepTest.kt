@@ -108,6 +108,7 @@ class PreLaunchRecapStepTest {
         coEvery { getSessionUnlocks.inWindow(any(), any(), any(), any(), any()) } returns emptyList()
 
         assertTrue(step().run(ticket(tracker), 1L, "Game"))
+        assertEquals(LaunchStep.Launching, tracker.progress.value?.step)
     }
 
     @Test
@@ -163,6 +164,7 @@ class PreLaunchRecapStepTest {
         val tracker = LaunchProgressTracker(backgroundScope)
 
         assertTrue(step(setOf(Requested(null, 1L))).run(ticket(tracker), 1L, "Game"))
+        assertEquals(LaunchStep.Launching, tracker.progress.value?.step)
         coVerify(exactly = 0) { recapGate.preLaunchRecap(any(), any()) }
     }
 }

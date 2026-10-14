@@ -26,6 +26,7 @@ import com.nendo.argosy.ui.input.SoundFeedbackManager
 import com.nendo.argosy.ui.input.stepOption
 import com.nendo.argosy.ui.screens.settings.sections.input.toggleLeftRight
 import com.nendo.argosy.util.PServerExecutor
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -88,10 +89,9 @@ class QuickSettingsController(
     private val soundManager: SoundFeedbackManager,
     private val quickFriends: QuickFriendsController,
     private val wrapMode: () -> MenuWrapMode,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val deviceDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(1)
 ) {
-    private val deviceDispatcher = Dispatchers.IO.limitedParallelism(1)
-
     private val _isOpen = MutableStateFlow(false)
     val isOpen: StateFlow<Boolean> = _isOpen.asStateFlow()
 

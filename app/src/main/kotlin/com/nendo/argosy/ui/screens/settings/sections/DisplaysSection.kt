@@ -1,5 +1,6 @@
 package com.nendo.argosy.ui.screens.settings.sections
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -160,11 +161,10 @@ private fun displayRoleLabelRes(mode: DisplayRoleOverride): Int = when (mode) {
     DisplayRoleOverride.SWAPPED -> R.string.settings_displays_display_roles_swapped
 }
 
-@Composable
-private fun launchTargetLabel(target: EmulatorDisplayTarget, screens: LaunchTargetScreens): String {
-    val role = stringResource(screenRoleTitleRes(target.screenRole))
+private fun launchTargetLabel(context: Context, target: EmulatorDisplayTarget, screens: LaunchTargetScreens): String {
+    val role = context.getString(screenRoleTitleRes(target.screenRole))
     val number = screens.numberFor(target) ?: return role
-    return stringResource(R.string.settings_displays_launch_target_value, role, number)
+    return context.getString(R.string.settings_displays_launch_target_value, role, number)
 }
 
 @Composable
@@ -177,23 +177,28 @@ private fun LaunchTargetPreference(
     onSelect: (Int) -> Unit,
     pickerRequestToken: Int
 ) {
+    val context = LocalContext.current
     val shown = screens.shown(stored)
-    val noAppScreenSubtitle = if (screens.lacksAppScreen(shown)) {
-        stringResource(
-            R.string.settings_displays_launch_target_no_app_screen,
-            launchTargetLabel(EmulatorDisplayTarget.PRESENTATION, screens)
-        )
-    } else {
-        null
+    val value = remember(shown, screens, context) { launchTargetLabel(context, shown, screens) }
+    val noAppScreenSubtitle = remember(shown, screens, context) {
+        if (screens.lacksAppScreen(shown)) {
+            context.getString(
+                R.string.settings_displays_launch_target_no_app_screen,
+                launchTargetLabel(context, EmulatorDisplayTarget.PRESENTATION, screens)
+            )
+        } else {
+            null
+        }
     }
+    val options = remember(screens, context) { screens.options.map { launchTargetLabel(context, it, screens) } }
     CyclePreference(
         title = title,
-        value = launchTargetLabel(shown, screens),
+        value = value,
         subtitle = noAppScreenSubtitle,
         isFocused = isFocused,
         onClick = { onCycle(1) },
         onPrev = { onCycle(-1) },
-        options = screens.options.map { launchTargetLabel(it, screens) },
+        options = options,
         onSelect = onSelect,
         pickerRequestToken = pickerRequestToken,
         onPickerVisibilityChange = { visible ->

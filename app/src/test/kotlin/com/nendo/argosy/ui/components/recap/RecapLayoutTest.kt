@@ -9,29 +9,17 @@ import org.junit.Test
 class RecapLayoutTest {
 
     private val shortEdge = ComponentDefaults.UnlockRecap.shortHeightDp.toFloat()
-    private val tallEdge = ComponentDefaults.UnlockRecap.tallHeightDp.toFloat()
 
     @Test
     fun `heights below the short edge are short`() {
-        assertEquals(RecapHeightClass.SHORT, RecapHeightClass.of(shortEdge - 1f))
-        assertEquals(RecapHeightClass.SHORT, RecapHeightClass.of(360f))
+        assertTrue(RecapLayout.isShort(shortEdge - 1f))
+        assertTrue(RecapLayout.isShort(360f))
     }
 
     @Test
-    fun `the short edge itself is regular`() {
-        assertEquals(RecapHeightClass.REGULAR, RecapHeightClass.of(shortEdge))
-    }
-
-    @Test
-    fun `heights between the edges are regular`() {
-        assertEquals(RecapHeightClass.REGULAR, RecapHeightClass.of(480f))
-        assertEquals(RecapHeightClass.REGULAR, RecapHeightClass.of(tallEdge - 1f))
-    }
-
-    @Test
-    fun `the tall edge and above are tall`() {
-        assertEquals(RecapHeightClass.TALL, RecapHeightClass.of(tallEdge))
-        assertEquals(RecapHeightClass.TALL, RecapHeightClass.of(1080f))
+    fun `the short edge itself and above are not short`() {
+        assertFalse(RecapLayout.isShort(shortEdge))
+        assertFalse(RecapLayout.isShort(1080f))
     }
 
     @Test

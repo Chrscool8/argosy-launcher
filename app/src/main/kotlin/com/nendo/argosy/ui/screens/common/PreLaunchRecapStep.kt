@@ -47,7 +47,10 @@ class PreLaunchRecapStep @Inject constructor(
 
     private suspend fun offer(ticket: LaunchProgressTracker.Ticket, recap: LaunchRecap?): Boolean {
         if (ticket.isCancelled) return false
-        if (recap == null) return true
+        if (recap == null) {
+            ticket.step(LaunchStep.Launching)
+            return true
+        }
         val started = ticket.offerRecap(recap)
         if (started) ticket.step(LaunchStep.Launching)
         return started

@@ -154,6 +154,7 @@
     <string name="library_apps_menu_pin_to_app_bar">Épingler à la barre d\'applis</string>
     <string name="library_apps_menu_show">Afficher</string>
     <string name="library_apps_menu_hide">Masquer</string>
+    <string name="library_apps_menu_reorder">Réorganiser les applications</string>
     <string name="library_apps_menu_uninstall">Désinstaller</string>
 
     <string name="library_search_placeholder_games_and_media">Rechercher des jeux et des médias...</string>

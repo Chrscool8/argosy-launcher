@@ -11,4 +11,6 @@
     <string name="dock_hint_cancel">Cancel</string>
     <!-- TalkBack long-press label on one dock app: picks it up to change its position -->
     <string name="dock_reorder_action">Reorder</string>
+    <!-- Dock app menu row that starts moving this app to a new place in the dock. Verb. -->
+    <string name="dock_menu_reorder">Reorder</string>
 </resources>

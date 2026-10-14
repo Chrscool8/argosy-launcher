@@ -70,7 +70,9 @@ import com.nendo.argosy.ui.primitives.ActionButton
 import com.nendo.argosy.ui.primitives.ArgosyProgressBar
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalLauncherTheme
+import com.nendo.argosy.ui.theme.LocalMotionTier
 import com.nendo.argosy.ui.theme.Motion
+import com.nendo.argosy.ui.theme.MotionTier
 import com.nendo.argosy.ui.theme.generated.ComponentDefaults
 import com.nendo.argosy.ui.util.clickableNoFocus
 import dagger.hilt.EntryPoint
@@ -159,11 +161,18 @@ fun launchRecapBackdropBlur(): Dp {
     val progress by tracker.progress.collectAsState()
     val blur by animateDpAsState(
         targetValue = if (progress?.step is LaunchStep.Recap) Motion.blurRadiusDrawer else 0.dp,
-        animationSpec = tween(ComponentDefaults.LaunchOverlay.fadeMs),
+        animationSpec = tween(launchOverlayFadeMs()),
         label = "launchRecapBlur"
     )
     return blur
 }
+
+/**
+ * The launch overlay's fade length, zero under reduced motion.
+ */
+@Composable
+fun launchOverlayFadeMs(): Int =
+    if (LocalMotionTier.current == MotionTier.Reduced) 0 else ComponentDefaults.LaunchOverlay.fadeMs
 
 private const val NO_PROMPT_FOCUS = -1
 
@@ -187,11 +196,12 @@ private fun LaunchOverlayContent(
         ComponentDefaults.LaunchOverlay.scrimAlphaLight
     }
     val scrimColor = MaterialTheme.colorScheme.background.copy(alpha = scrimAlpha)
+    val fadeMs = launchOverlayFadeMs()
 
     AnimatedVisibility(
         visible = progress != null,
-        enter = fadeIn(tween(ComponentDefaults.LaunchOverlay.fadeMs)),
-        exit = fadeOut(tween(ComponentDefaults.LaunchOverlay.fadeMs)),
+        enter = fadeIn(tween(fadeMs)),
+        exit = fadeOut(tween(fadeMs)),
         modifier = modifier.fillMaxSize().focusProperties { canFocus = false }
     ) {
         val shown = progress ?: lastShown ?: return@AnimatedVisibility

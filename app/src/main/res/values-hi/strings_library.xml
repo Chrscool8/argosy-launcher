@@ -146,6 +146,7 @@
     <string name="library_apps_menu_pin_to_app_bar">ऐप बार में पिन करें</string>
     <string name="library_apps_menu_show">दिखाएं</string>
     <string name="library_apps_menu_hide">छिपाएं</string>
+    <string name="library_apps_menu_reorder">ऐप्स फिर से व्यवस्थित करें</string>
     <string name="library_apps_menu_uninstall">अनइंस्टॉल करें</string>
 
     <string name="library_search_placeholder_games_and_media">गेम और मीडिया खोजें...</string>

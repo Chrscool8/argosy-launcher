@@ -428,14 +428,16 @@ private fun GameHeroMetadata(detail: CompanionDetail, style: PresentationStyle, 
     val items = detail.stats?.let { showcaseRailItems(it, style, journeyShown = journey != null) }.orEmpty()
     val developer = items.firstOrNull { it.first == PresentationStat.DEVELOPER }?.second?.text
     val progressDetails = detail.stats?.let { showcaseProgressDetails(it, style) }.orEmpty()
-    val rows = if (detail.stats == null) {
-        listOf(RailGroup.FACTS to detail.facts.map { RailItem(null, null, it.value) })
-            .filter { it.second.isNotEmpty() }
-    } else {
-        RailGroup.entries.mapNotNull { group ->
-            val groupItems = items.filter { it.first.railGroup == group && it.first != PresentationStat.DEVELOPER }
-                .map { it.second } + if (group == RailGroup.PROGRESS) progressDetails else emptyList()
-            groupItems.takeIf { it.isNotEmpty() }?.let { group to it }
+    val rows = remember(detail.stats == null, detail.facts, items, progressDetails) {
+        if (detail.stats == null) {
+            listOf(RailGroup.FACTS to detail.facts.map { RailItem(null, null, it.value) })
+                .filter { it.second.isNotEmpty() }
+        } else {
+            RailGroup.entries.mapNotNull { group ->
+                val groupItems = items.filter { it.first.railGroup == group && it.first != PresentationStat.DEVELOPER }
+                    .map { it.second } + if (group == RailGroup.PROGRESS) progressDetails else emptyList()
+                groupItems.takeIf { it.isNotEmpty() }?.let { group to it }
+            }
         }
     }
     Column(modifier = modifier) {

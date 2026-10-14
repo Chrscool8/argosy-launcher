@@ -344,7 +344,6 @@ object ComponentDefaults {
         const val monthlyCardMaxWidthDp = 640
         const val monthlyStackWidthDp = 560
         const val shortHeightDp = 400
-        const val tallHeightDp = 520
         const val rowHeightDp = 104
         const val shortRowHeightDp = 88
         const val tileSizeDp = 80

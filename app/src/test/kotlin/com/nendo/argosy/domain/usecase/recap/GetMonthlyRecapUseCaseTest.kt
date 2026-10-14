@@ -7,6 +7,7 @@ import com.nendo.argosy.data.local.dao.PlaySessionDao
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.preferences.UserPreferences
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
+import com.nendo.argosy.data.remote.ra.RAWebEarnedAchievement
 import com.nendo.argosy.data.remote.romm.RomMEarnedAchievement
 import com.nendo.argosy.data.remote.romm.RomMRAGameProgression
 import com.nendo.argosy.data.repository.RaMetadataSource
@@ -107,5 +108,73 @@ class GetMonthlyRecapUseCaseTest {
 
         assertEquals(listOf("00042", "00043"), digest.unlocks.map { it.badgeId })
         assertEquals(listOf("Donkey Kong Country", null), digest.unlocks.map { it.gameTitle })
+    }
+
+    private fun stubPrivateAndPublicGames() {
+        val secret = mockk<GameEntity> {
+            every { id } returns 1L
+            every { title } returns "Secret Game"
+            every { effectiveRaId } returns 55L
+        }
+        val shown = mockk<GameEntity> {
+            every { id } returns 2L
+            every { title } returns "Shown Game"
+        }
+        coEvery { preferencesRepository.privateIgdbIds() } returns listOf(900L)
+        coEvery { gameDao.getAllByIgdbId(900L) } returns listOf(secret)
+        coEvery { gameDao.getByRaId(55L) } returns secret
+        coEvery { gameDao.getByRaId(56L) } returns shown
+        coEvery { achievementDao.getByGameId(any(), 7L) } returns emptyList()
+        coEvery { metadataSource.awardProgression(any()) } returns listOf(
+            RomMRAGameProgression(romRaId = 55L, highestAwardKind = "mastered", highestAwardDate = "2025-12-05 10:00:00"),
+            RomMRAGameProgression(romRaId = 56L, highestAwardKind = "mastered", highestAwardDate = "2025-12-06 10:00:00")
+        )
+    }
+
+    @Test
+    fun `a private game's romm unlocks and awards stay out of the digest`() = runTest {
+        stubEmptyMonth()
+        stubPrivateAndPublicGames()
+        coEvery { metadataSource.romMProgression(any()) } returns listOf(
+            RomMRAGameProgression(
+                romRaId = 55L,
+                earnedAchievements = listOf(RomMEarnedAchievement("00042", date = "2025-12-03 10:00:00"))
+            ),
+            RomMRAGameProgression(
+                romRaId = 56L,
+                earnedAchievements = listOf(RomMEarnedAchievement("00043", date = "2025-12-04 10:00:00"))
+            )
+        )
+
+        val digest = useCase(YearMonth.of(2025, 12), ZoneOffset.UTC)
+
+        assertEquals(listOf("00043"), digest.unlocks.map { it.badgeId })
+        assertEquals(listOf(56L), digest.awards.map { it.raGameId })
+    }
+
+    @Test
+    fun `a private game's web unlocks and awards stay out of the digest`() = runTest {
+        stubEmptyMonth()
+        stubPrivateAndPublicGames()
+        coEvery { metadataSource.webUnlocksBetween(any(), any()) } returns listOf(
+            RAWebEarnedAchievement(
+                date = "2025-12-03 10:00:00",
+                badgeName = "00042",
+                gameId = 55L,
+                gameTitle = "Secret Game"
+            ),
+            RAWebEarnedAchievement(
+                date = "2025-12-04 10:00:00",
+                badgeName = "00043",
+                gameId = 56L,
+                gameTitle = "Shown Game"
+            )
+        )
+
+        val digest = useCase(YearMonth.of(2025, 12), ZoneOffset.UTC)
+
+        assertEquals(listOf("00043"), digest.unlocks.map { it.badgeId })
+        assertEquals(listOf("Shown Game"), digest.awards.map { it.gameTitle })
+        coVerify(exactly = 0) { metadataSource.romMProgression(any()) }
     }
 }

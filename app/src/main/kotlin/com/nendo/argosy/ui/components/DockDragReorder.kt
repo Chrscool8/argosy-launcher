@@ -45,6 +45,9 @@ internal class DockDragReorderState(
     var draggingPackage by mutableStateOf<String?>(null)
         private set
     private var moved = false
+    private var heldPackage: String? = null
+    val isHolding: Boolean
+        get() = heldPackage != null
     var accessiblePackage by mutableStateOf<String?>(null)
         private set
     private var center by mutableFloatStateOf(0f)
@@ -61,10 +64,11 @@ internal class DockDragReorderState(
             x >= it.offset && x < it.offset + it.size
         } ?: return
         val packageName = item.key as? String ?: return
+        heldPackage = packageName
+        moved = false
         val started = onStart(packageName) ?: return
         token = started
         draggingPackage = packageName
-        moved = false
         target = item.index
         center = item.offset + item.size / 2f
         lastCenter = center
@@ -89,7 +93,8 @@ internal class DockDragReorderState(
     }
 
     fun release(save: Boolean) {
-        val held = draggingPackage
+        val held = heldPackage
+        heldPackage = null
         if (held != null && !moved) {
             finish(false)
             onHold(held)
@@ -100,6 +105,7 @@ internal class DockDragReorderState(
 
     fun finish(save: Boolean) {
         autoscroller.stop()
+        heldPackage = null
         val finished = token ?: return
         token = null
         draggingPackage = null
@@ -225,8 +231,8 @@ internal fun Modifier.dockDragContainer(state: DockDragReorderState): Modifier =
                 state.drag(amount.x)
             }
         },
-        onDragEnd = { if (state.draggingPackage != null) state.release(save = true) },
-        onDragCancel = { if (state.draggingPackage != null) state.release(save = false) }
+        onDragEnd = { if (state.isHolding) state.release(save = true) },
+        onDragCancel = { if (state.isHolding) state.release(save = false) }
     )
 }
 

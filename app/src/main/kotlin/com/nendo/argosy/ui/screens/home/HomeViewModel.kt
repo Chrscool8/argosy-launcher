@@ -1719,9 +1719,7 @@ class HomeViewModel @Inject constructor(
             is com.nendo.argosy.ui.components.AppMenuRow.OpenOnScreen ->
                 launchApp(packageName, pinnedScreenKey = row.screenKey)
             is com.nendo.argosy.ui.components.AppMenuRow.Action -> when (row.item) {
-                com.nendo.argosy.ui.components.AppContextMenuItem.REORDER -> {
-                    dockDelegate.startReorder(packageName)
-                }
+                com.nendo.argosy.ui.components.AppContextMenuItem.REORDER -> startDockReorder(packageName)
                 com.nendo.argosy.ui.components.AppContextMenuItem.TOGGLE_SECONDARY_HOME ->
                     viewModelScope.launch { appShortcutActions.togglePinned(packageName) }
                 com.nendo.argosy.ui.components.AppContextMenuItem.TOGGLE_VISIBILITY ->
@@ -1735,6 +1733,13 @@ class HomeViewModel @Inject constructor(
                 else -> Unit
             }
         }
+    }
+
+    private fun startDockReorder(packageName: String) {
+        val index = _uiState.value.homeApps.indexOf(packageName)
+        if (index < 0) return
+        _uiState.update { it.copy(appBarFocused = true, appBarIndex = index) }
+        dockDelegate.startReorder(packageName)
     }
 
     override fun dismissAppBarAppMenu() {

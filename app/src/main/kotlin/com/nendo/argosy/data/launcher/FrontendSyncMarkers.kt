@@ -1,6 +1,7 @@
 package com.nendo.argosy.data.launcher
 
 import com.nendo.argosy.data.preferences.StoragePreferencesRepository
+import com.nendo.argosy.util.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -14,6 +15,7 @@ import javax.inject.Singleton
  * else in the folder, such as DroidDeck's inventory json and images directory, are skipped.
  */
 object FrontendSyncMarkers {
+    private const val TAG = "FrontendSyncMarkers"
     private const val MAX_MARKER_BYTES = 128L
     private val MARKER_ID = Regex("[1-9][0-9]{0,19}")
 
@@ -30,7 +32,9 @@ object FrontendSyncMarkers {
 
     private fun readId(file: File): Int? {
         if (file.length() > MAX_MARKER_BYTES) return null
-        val content = runCatching { file.readText() }.getOrNull() ?: return null
+        val content = runCatching { file.readText() }
+            .onFailure { Logger.debug(TAG, "readId: unreadable marker | file=${file.name}, error=${it.message}") }
+            .getOrNull() ?: return null
         return parseId(content)
     }
 }

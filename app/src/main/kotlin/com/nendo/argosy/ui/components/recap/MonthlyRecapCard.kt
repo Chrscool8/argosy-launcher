@@ -65,7 +65,7 @@ fun MonthlyRecapCard(
     onCurrent: (Int) -> Unit
 ) {
     BoxWithConstraints(contentAlignment = Alignment.Center) {
-        val short = RecapHeightClass.of(maxHeight.value) == RecapHeightClass.SHORT
+        val short = RecapLayout.isShort(maxHeight.value)
         RecapCardFrame(
             maxWidth = ComponentDefaults.UnlockRecap.monthlyCardMaxWidthDp.dp,
             cursor = cursor,

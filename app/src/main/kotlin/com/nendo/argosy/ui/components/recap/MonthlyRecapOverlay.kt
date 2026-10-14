@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nendo.argosy.ui.components.FooterHints
+import com.nendo.argosy.ui.components.launchOverlayFadeMs
 import com.nendo.argosy.ui.input.ModalInputEffect
 import com.nendo.argosy.ui.theme.LocalLauncherTheme
 import com.nendo.argosy.ui.theme.Motion
@@ -95,7 +96,7 @@ fun monthlyRecapBackdropBlur(): Dp {
     val state by controller.state.collectAsState()
     val blur by animateDpAsState(
         targetValue = if (state != null) Motion.blurRadiusDrawer else 0.dp,
-        animationSpec = tween(ComponentDefaults.LaunchOverlay.fadeMs),
+        animationSpec = tween(launchOverlayFadeMs()),
         label = "monthlyRecapBlur"
     )
     return blur
@@ -118,10 +119,11 @@ private fun MonthlyRecapContent(
         ComponentDefaults.LaunchOverlay.scrimAlphaLight
     }
     val scrimColor = MaterialTheme.colorScheme.background.copy(alpha = scrimAlpha)
+    val fadeMs = launchOverlayFadeMs()
     AnimatedVisibility(
         visible = state != null,
-        enter = fadeIn(tween(ComponentDefaults.LaunchOverlay.fadeMs)),
-        exit = fadeOut(tween(ComponentDefaults.LaunchOverlay.fadeMs)),
+        enter = fadeIn(tween(fadeMs)),
+        exit = fadeOut(tween(fadeMs)),
         modifier = modifier.fillMaxSize().focusProperties { canFocus = false }
     ) {
         val shown = state ?: lastShown ?: return@AnimatedVisibility

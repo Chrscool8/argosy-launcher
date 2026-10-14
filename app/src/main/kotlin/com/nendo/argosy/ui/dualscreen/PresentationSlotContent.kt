@@ -226,10 +226,9 @@ private fun PresentationSlotScene(
 
 @Composable
 internal fun PresentationControlHints(hints: List<CompanionHint>) {
-    FooterBarWithState(
-        hints = hints.map { FooterHintItem(it.button, it.label) },
-        forceVisible = hints.any { it.forced }
-    )
+    val items = remember(hints) { hints.map { FooterHintItem(it.button, it.label) } }
+    val forced = remember(hints) { hints.any { it.forced } }
+    FooterBarWithState(hints = items, forceVisible = forced)
 }
 
 private fun dashboardActions(manager: com.nendo.argosy.DualScreenManager) =

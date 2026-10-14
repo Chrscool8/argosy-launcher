@@ -1,5 +1,6 @@
 package com.nendo.argosy.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -107,6 +108,7 @@ fun AppMenuItemRow(
     isAppHidden: Boolean = false,
     isOnHome: Boolean = false,
     isOnSecondaryHome: Boolean = false,
+    @StringRes reorderLabel: Int = R.string.dock_menu_reorder,
     onClick: () -> Unit = {}
 ) {
     if (row is AppMenuRow.OpenOnScreen) {
@@ -133,7 +135,7 @@ fun AppMenuItemRow(
             Icons.Default.VisibilityOff to stringResource(R.string.library_apps_menu_hide)
         }
         AppContextMenuItem.REORDER ->
-            Icons.Default.SwapVert to stringResource(R.string.dock_reorder_action)
+            Icons.Default.SwapVert to stringResource(reorderLabel)
         AppContextMenuItem.UNINSTALL ->
             Icons.Default.Delete to stringResource(R.string.library_apps_menu_uninstall)
     }

@@ -138,6 +138,7 @@
     <string name="library_apps_menu_pin_to_app_bar">固定到应用栏</string>
     <string name="library_apps_menu_show">显示</string>
     <string name="library_apps_menu_hide">隐藏</string>
+    <string name="library_apps_menu_reorder">重新排列应用</string>
     <string name="library_apps_menu_uninstall">卸载</string>
 
     <string name="library_search_placeholder_games_and_media">搜索游戏和媒体内容...</string>
