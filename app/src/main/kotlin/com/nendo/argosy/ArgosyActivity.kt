@@ -445,7 +445,11 @@ class ArgosyActivity : ComponentActivity() {
         } else {
             if (displayAffinityHelper.hasSecondaryDisplay && !dualScreenManager.isRolesSwapped.value) {
                 window.decorView.postDelayed({
-                    dualScreenManager.controlCompanion?.refocusSelf()
+                    if (!sessionStateStore.hasActiveSession() &&
+                        !dualScreenManager.swappedIsGameActive.value
+                    ) {
+                        dualScreenManager.controlCompanion?.refocusSelf()
+                    }
                 }, 500)
             }
         }
