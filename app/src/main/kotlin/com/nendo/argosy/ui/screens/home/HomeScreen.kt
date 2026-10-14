@@ -1016,16 +1016,14 @@ fun HomeScreen(
                     )
                     FooterSpacer()
                 } else if (uiState.appBarFocused) {
-                    FooterHints(
-                        forced = true,
-                        hints = buildList {
-                            add(InputButton.A to stringResource(R.string.dock_hint_open))
-                            if (uiState.appBarIndex in uiState.homeApps.indices && uiState.homeApps.size > 1) {
-                                add(InputButton.A to stringResource(R.string.dock_hint_hold_reorder))
-                            }
-                        }
-                    )
-                    FooterSpacer()
+                    if (uiState.appBarIndex in uiState.homeApps.indices && uiState.homeApps.size > 1) {
+                        FooterHints(
+                            forced = true,
+                            hints = listOf(InputButton.A to stringResource(R.string.dock_hint_hold_reorder)),
+                            onHintClick = { if (it == InputButton.A) viewModel.startAppBarReorder() }
+                        )
+                        FooterSpacer()
+                    }
                 } else if (isCustomGrid) {
                     val grid = uiState.customGrid
                     val gridPageLabel = stringResource(R.string.home_footer_grid_page)

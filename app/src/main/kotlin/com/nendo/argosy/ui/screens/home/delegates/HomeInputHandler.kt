@@ -720,12 +720,9 @@ class HomeInputHandler(
         state.focusedItem is HomeRowItem.Media
 
     /**
-     * Holding confirm opens the menu for whatever is under the cursor: the tile menu on the grid,
-     * where arranging is its first entry, the game menu on a row, and the app menu in the app
-     * drawer. On the dock it picks the focused app up to reorder, with its controls in the footer.
-     *
-     * A second hold commits an arrange. On a title with something stored the hold asks whether to
-     * start over; a title with nothing stored plays.
+     * Holding confirm opens the menu under the cursor: the tile menu on the grid, the game menu on
+     * a row, the app menu in the app drawer. On the dock it picks the focused app up to reorder.
+     * A second hold commits an arrange; on a title with something stored it asks to start over.
      */
     override fun onLongConfirm(): InputResult {
         val state = actions.uiState.value

@@ -1,5 +1,4 @@
 <resources>
-    <string name="dock_hint_open">開啟</string>
     <string name="dock_reorder_save_failed">無法儲存停駐列順序。請重試。</string>
     <string name="dock_hint_hold_reorder">長按以調整順序</string>
     <string name="dock_reorder_move_left">向左移動</string>

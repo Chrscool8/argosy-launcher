@@ -1,6 +1,5 @@
 <resources>
     <string name="dock_reorder_save_failed">Couldn’t save dock order. Please try again.</string>
-    <string name="dock_hint_open">Open</string>
     <string name="dock_hint_hold_reorder">Hold to reorder</string>
     <string name="dock_reorder_move_left">Move left</string>
     <string name="dock_reorder_move_right">Move right</string>

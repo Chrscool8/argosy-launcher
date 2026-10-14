@@ -1,5 +1,4 @@
 <resources>
-    <string name="dock_hint_open">खोलें</string>
     <string name="dock_reorder_save_failed">डॉक का क्रम सेव नहीं हो सका। फिर से कोशिश करें।</string>
     <string name="dock_hint_hold_reorder">क्रम बदलने के लिए दबाए रखें</string>
     <string name="dock_reorder_move_left">बाईं ओर ले जाएँ</string>

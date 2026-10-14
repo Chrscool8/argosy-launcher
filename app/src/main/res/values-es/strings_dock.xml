@@ -1,5 +1,4 @@
 <resources>
-    <string name="dock_hint_open">Abrir</string>
     <string name="dock_reorder_save_failed">No se pudo guardar el orden del dock. Inténtalo de nuevo.</string>
     <string name="dock_hint_hold_reorder">Mantén pulsado para reordenar</string>
     <string name="dock_reorder_move_left">Mover a la izquierda</string>
