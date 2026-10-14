@@ -138,7 +138,6 @@
     <string name="library_apps_menu_pin_to_app_bar">釘選到應用程式列</string>
     <string name="library_apps_menu_show">顯示</string>
     <string name="library_apps_menu_hide">隱藏</string>
-    <string name="library_apps_menu_reorder">重新排序應用程式</string>
     <string name="library_apps_menu_uninstall">解除安裝</string>
 
     <string name="library_search_placeholder_games_and_media">搜尋遊戲與媒體...</string>

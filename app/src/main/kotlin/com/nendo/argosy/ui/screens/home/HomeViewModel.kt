@@ -1637,8 +1637,11 @@ class HomeViewModel @Inject constructor(
         if (dockDelegate.isReordering()) return false
         val state = _uiState.value
         val packageName = state.homeApps.getOrNull(state.appBarIndex) ?: return false
-        return openAppMenuFor(packageName, reorderable = state.homeApps.size > 1)
+        return openDockAppMenuFor(packageName)
     }
+
+    fun openDockAppMenuFor(packageName: String): Boolean =
+        openAppMenuFor(packageName, reorderable = _uiState.value.homeApps.size > 1)
 
     private fun launchableScreens(): List<com.nendo.argosy.ui.components.AppMenuRow.OpenOnScreen> =
         DualScreenManagerHolder.instance

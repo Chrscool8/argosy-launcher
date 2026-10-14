@@ -133,7 +133,7 @@ fun AppMenuItemRow(
             Icons.Default.VisibilityOff to stringResource(R.string.library_apps_menu_hide)
         }
         AppContextMenuItem.REORDER ->
-            Icons.Default.SwapVert to stringResource(R.string.library_apps_menu_reorder)
+            Icons.Default.SwapVert to stringResource(R.string.dock_reorder_action)
         AppContextMenuItem.UNINSTALL ->
             Icons.Default.Delete to stringResource(R.string.library_apps_menu_uninstall)
     }

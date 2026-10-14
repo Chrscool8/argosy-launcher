@@ -79,7 +79,7 @@ fun LaunchTargetsSection(uiState: SettingsUiState, viewModel: SettingsViewModel)
 
     DisposableEffect(Unit) {
         val manager = DualScreenManagerHolder.instance
-        manager?.showScreenNumbers(DisplayBadgeSize.LARGE)
+        manager?.showScreenNumbers(DisplayBadgeSize.SMALL)
         onDispose { manager?.hideScreenNumbers() }
     }
     LaunchedEffect(Unit) {

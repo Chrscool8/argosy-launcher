@@ -39,10 +39,12 @@ internal class DockDragReorderState(
     private val onStart: (String) -> Long?,
     private val onTarget: (Long, Int) -> Unit,
     private val onSave: (Long) -> Unit,
-    private val onCancel: (Long) -> Unit
+    private val onCancel: (Long) -> Unit,
+    private val onHold: (String) -> Unit
 ) {
     var draggingPackage by mutableStateOf<String?>(null)
         private set
+    private var moved = false
     var accessiblePackage by mutableStateOf<String?>(null)
         private set
     private var center by mutableFloatStateOf(0f)
@@ -62,6 +64,7 @@ internal class DockDragReorderState(
         val started = onStart(packageName) ?: return
         token = started
         draggingPackage = packageName
+        moved = false
         target = item.index
         center = item.offset + item.size / 2f
         lastCenter = center
@@ -83,6 +86,16 @@ internal class DockDragReorderState(
 
     fun reconcile(session: DockReorderSession?) {
         if (token != null && session?.token != token) finish(false)
+    }
+
+    fun release(save: Boolean) {
+        val held = draggingPackage
+        if (held != null && !moved) {
+            finish(false)
+            onHold(held)
+        } else {
+            finish(save)
+        }
     }
 
     fun finish(save: Boolean) {
@@ -107,6 +120,7 @@ internal class DockDragReorderState(
         val next = dockDragTarget(target, lastCenter - scrolled, center, centers)
         if (next != target) {
             target = next
+            moved = true
             listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
             onTarget(active, next)
         }
@@ -184,7 +198,8 @@ internal fun rememberDockDragReorderState(
     onStart: (String) -> Long?,
     onTarget: (Long, Int) -> Unit,
     onSave: (Long) -> Unit,
-    onCancel: (Long) -> Unit
+    onCancel: (Long) -> Unit,
+    onHold: (String) -> Unit
 ): DockDragReorderState {
     val scope = rememberCoroutineScope()
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -192,9 +207,10 @@ internal fun rememberDockDragReorderState(
     val target by rememberUpdatedState(onTarget)
     val save by rememberUpdatedState(onSave)
     val cancel by rememberUpdatedState(onCancel)
+    val hold by rememberUpdatedState(onHold)
     val state = remember(listState, scope, edge, isRtl) {
         DockDragReorderState(listState, scope, edge, isRtl, { start(it) }, { token, index -> target(token, index) },
-            { save(it) }, { cancel(it) })
+            { save(it) }, { cancel(it) }, { hold(it) })
     }
     DisposableEffect(state) { onDispose { state.finish(false) } }
     return state
@@ -209,8 +225,8 @@ internal fun Modifier.dockDragContainer(state: DockDragReorderState): Modifier =
                 state.drag(amount.x)
             }
         },
-        onDragEnd = { if (state.draggingPackage != null) state.finish(true) },
-        onDragCancel = { if (state.draggingPackage != null) state.finish(false) }
+        onDragEnd = { if (state.draggingPackage != null) state.release(save = true) },
+        onDragCancel = { if (state.draggingPackage != null) state.release(save = false) }
     )
 }
 

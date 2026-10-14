@@ -107,6 +107,7 @@ fun CompanionAppBar(
     onReorderTarget: (Long, Int) -> Unit = { _, _ -> },
     onReorderSave: (Long) -> Unit = {},
     onReorderCancel: (Long) -> Unit = {},
+    onAppHold: (String) -> Unit = {},
     onOpenDrawer: () -> Unit = {},
     onKeyboardToggle: (() -> Unit)? = null,
     focusDisplays: List<DisplayFocusTarget> = emptyList(),
@@ -142,7 +143,8 @@ fun CompanionAppBar(
         val drag = rememberDockDragReorderState(
             listState, with(density) { padding.toPx() },
             onStart = { onReorderStart(it) },
-            onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel
+            onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel,
+            onHold = onAppHold
         )
         DockReorderEffects(listState, drag, apps, reorder)
         val reorderActions = dockReorderActions(

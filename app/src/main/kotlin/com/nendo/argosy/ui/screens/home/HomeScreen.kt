@@ -1362,6 +1362,7 @@ fun HomeScreen(
                 onReorderTarget = { token, target -> com.nendo.argosy.DualScreenManagerHolder.instance?.targetDockReorder(token, target) },
                 onReorderSave = { com.nendo.argosy.DualScreenManagerHolder.instance?.saveDockReorder(it) },
                 onReorderCancel = { com.nendo.argosy.DualScreenManagerHolder.instance?.cancelDockReorder(it) },
+                onAppHold = { viewModel.openDockAppMenuFor(it) },
                 focusedIndex = if (uiState.appBarFocused) {
                     uiState.appBarIndex
                 } else {

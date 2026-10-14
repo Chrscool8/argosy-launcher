@@ -295,6 +295,7 @@ private fun InGameAppBar(state: InGameAppBarState, modifier: Modifier = Modifier
         onReorderTarget = manager::targetDockReorder,
         onReorderSave = manager::saveDockReorder,
         onReorderCancel = manager::cancelDockReorder,
+        onAppHold = { packageName -> if (state.displays.size > 1) menuPackage = packageName },
         focusedIndex = com.nendo.argosy.ui.components.APP_BAR_NOTHING_FOCUSED,
         onOpenDrawer = { drawerOpen = true },
         focusDisplays = state.displays,
