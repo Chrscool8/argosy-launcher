@@ -215,8 +215,8 @@ class HomeInputHandler(
             isCustomGrid(state) -> customMove(GridDirection2D.UP)
             isGrid(state) -> gridMove(GridDirection.UP)
             else -> {
-                if (actions.appBarIsDrawn()) return InputResult.handled(SoundType.BOUNDARY)
                 if (onScrollOverflow?.invoke(-1) == true) return InputResult.HANDLED
+                if (actions.appBarIsDrawn()) return InputResult.handled(SoundType.BOUNDARY)
                 actions.previousRow()
                 InputResult.handled(SoundType.SECTION_CHANGE)
             }
@@ -272,10 +272,10 @@ class HomeInputHandler(
             isCustomGrid(state) -> customMove(GridDirection2D.DOWN)
             isGrid(state) -> gridMove(GridDirection.DOWN)
             else -> {
+                if (onScrollOverflow?.invoke(1) == true) return InputResult.HANDLED
                 if (actions.focusAppBar()) {
                     return InputResult.handled(SoundType.SECTION_CHANGE)
                 }
-                if (onScrollOverflow?.invoke(1) == true) return InputResult.HANDLED
                 actions.nextRow()
                 InputResult.handled(SoundType.SECTION_CHANGE)
             }

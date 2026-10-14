@@ -103,7 +103,7 @@ class HomeOverflowScrollInputTest {
             platforms = listOf(mockk(), mockk()), currentRow = HomeRow.Platform(0), focusedGameIndex = 3
         )
         val fixture = Fixture(selected, dockAvailable = true)
-        val handler = fixture.handler { error("Dual screen vertical input reached carousel scrolling") }
+        val handler = fixture.handler { false }
 
         assertEquals(InputResult.handled(SoundType.BOUNDARY), handler.onUp())
         assertFalse(fixture.state.value.appBarFocused)
@@ -115,6 +115,35 @@ class HomeOverflowScrollInputTest {
         assertEquals(selected.currentRow, fixture.state.value.currentRow)
         assertEquals(selected.focusedGameIndex, fixture.state.value.focusedGameIndex)
         assertEquals(1, fixture.row)
+    }
+
+    @Test
+    fun `with the dock drawn, overflowing content scrolls before the dock takes focus`() {
+        val fixture = Fixture(
+            HomeUiState(platforms = listOf(mockk(), mockk()), currentRow = HomeRow.Platform(0)),
+            dockAvailable = true
+        )
+        var scrollOffset = 0
+        val handler = fixture.handler { direction ->
+            val next = (scrollOffset + direction).coerceIn(0, 1)
+            val moved = next != scrollOffset
+            scrollOffset = next
+            moved
+        }
+
+        assertEquals(InputResult.HANDLED, handler.onDown())
+        assertEquals(1, scrollOffset)
+        assertFalse(fixture.state.value.appBarFocused)
+
+        assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), handler.onDown())
+        assertTrue(fixture.state.value.appBarFocused)
+
+        assertEquals(InputResult.handled(SoundType.SECTION_CHANGE), handler.onUp())
+        assertFalse(fixture.state.value.appBarFocused)
+
+        assertEquals(InputResult.HANDLED, handler.onUp())
+        assertEquals(0, scrollOffset)
+        assertEquals(InputResult.handled(SoundType.BOUNDARY), handler.onUp())
     }
 
     @Test
