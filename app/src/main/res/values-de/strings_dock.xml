@@ -5,4 +5,7 @@
     <string name="dock_reorder_move_left">Nach links verschieben</string>
     <string name="dock_reorder_move_right">Nach rechts verschieben</string>
     <string name="dock_accessibility_label">Dock</string>
+    <string name="dock_hint_move">Verschieben</string>
+    <string name="dock_hint_cancel">Abbrechen</string>
+    <string name="dock_reorder_action">Neu anordnen</string>
 </resources>

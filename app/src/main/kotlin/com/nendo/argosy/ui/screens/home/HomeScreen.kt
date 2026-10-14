@@ -1001,8 +1001,8 @@ fun HomeScreen(
                 if (dockReorder?.controller == true) {
                     FooterHints(
                         hints = com.nendo.argosy.ui.components.liftedReorderHints(
-                            move = stringResource(R.string.library_apps_hint_move),
-                            cancel = stringResource(R.string.library_apps_hint_cancel),
+                            move = stringResource(R.string.dock_hint_move),
+                            cancel = stringResource(R.string.dock_hint_cancel),
                             moveButton = InputButton.DPAD_HORIZONTAL
                         ),
                         forced = true,

@@ -750,7 +750,6 @@ class DualScreenManager(
     }
     interface CompanionHost {
         fun onForegroundChanged(isForeground: Boolean)
-        fun onWizardStateChanged(isActive: Boolean)
         fun onSessionStarted(gameId: Long, isHardcore: Boolean, channelName: String?)
         fun onSessionHardcoreChanged(isHardcore: Boolean, channelName: String?)
         fun onSessionEnded()
@@ -2040,15 +2039,11 @@ class DualScreenManager(
             if (!_isCompanionActive.value && displayAffinityHelper.hasSecondaryDisplay) {
                 ensureCompanionLaunched()
             }
-            val isWizard = sessionStateStore.isWizardActive()
-            if (isWizard) eachCompanion { it.onWizardStateChanged(true) }
         }
     }
 
-    fun broadcastWizardState(isActive: Boolean) {
-        sessionStateStore.setWizardActive(isActive)
+    fun recordWizardState(isActive: Boolean) {
         if (!isActive) sessionStateStore.setFirstRunComplete(true)
-        eachCompanion { it.onWizardStateChanged(isActive) }
     }
 
     private var lastSwapTimeMs = 0L
@@ -2284,7 +2279,6 @@ class DualScreenManager(
         private const val EMULATOR_RELEASE_ATTEMPTS = 6
         private const val EMULATOR_RELEASE_INTERVAL_MS = 5_000L
         const val ACTION_WIZARD_STATE = "com.nendo.argosy.WIZARD_STATE"
-        const val EXTRA_WIZARD_ACTIVE = "wizard_active"
         const val OVERLAY_MENU = "com.nendo.argosy.OVERLAY_MENU"
         const val OVERLAY_QUICK_MENU = "com.nendo.argosy.OVERLAY_QUICK_MENU"
         const val OVERLAY_QUICK_SETTINGS = "com.nendo.argosy.OVERLAY_QUICK_SETTINGS"

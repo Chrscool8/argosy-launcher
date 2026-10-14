@@ -1631,9 +1631,7 @@ class HomeViewModel @Inject constructor(
 
     override fun openAppBarAppMenu(): Boolean {
         val state = _uiState.value
-        val packageName = state.appDrawer?.focusedPackage
-            ?: state.homeApps.getOrNull(state.appBarIndex)
-            ?: return false
+        val packageName = state.appDrawer?.focusedPackage ?: return false
         return openAppMenuFor(packageName)
     }
 

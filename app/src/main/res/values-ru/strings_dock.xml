@@ -5,4 +5,7 @@
     <string name="dock_reorder_move_left">Переместить влево</string>
     <string name="dock_reorder_move_right">Переместить вправо</string>
     <string name="dock_accessibility_label">Док-панель</string>
+    <string name="dock_hint_move">Переместить</string>
+    <string name="dock_hint_cancel">Отмена</string>
+    <string name="dock_reorder_action">Изменить порядок</string>
 </resources>

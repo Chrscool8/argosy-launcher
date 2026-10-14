@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,9 +36,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.nendo.argosy.domain.model.PresentationArt
 import com.nendo.argosy.domain.model.PresentationLayout
 import com.nendo.argosy.domain.model.PresentationStyle
-import com.nendo.argosy.DualScreenManagerHolder
 import com.nendo.argosy.R
 import com.nendo.argosy.ui.common.rememberFileImageModel
 import com.nendo.argosy.ui.common.rememberResolvedArt
@@ -54,6 +53,11 @@ import com.nendo.argosy.util.formatPlayTime
 
 private val COLLAPSED_THUMBNAIL_SIZE = 48.dp
 private val COLLAPSED_BAR_HEIGHT = 64.dp
+private val DETAIL_HERO_STYLE = PresentationStyle(
+    layout = PresentationLayout.CINEMATIC,
+    art = PresentationArt.BOX_3D,
+    hiddenStats = emptySet()
+)
 
 data class CollapsingHeaderState(
     val isCollapsed: Boolean = false
@@ -115,10 +119,9 @@ fun ExpandedHeader(
 ) {
     val art = rememberResolvedArt(game.id)
     val detail = remember(game, friends, art) { game.toCompanionDetail(friends).withLiveArt(art) }
-    val style = DualScreenManagerHolder.instance?.presentationStyle?.collectAsState()?.value ?: PresentationStyle()
     GameHero(
         detail = detail,
-        style = style.copy(layout = PresentationLayout.CINEMATIC),
+        style = DETAIL_HERO_STYLE,
         coverMaxHeight = Dimens.gameCardHeight,
         modifier = modifier.fillMaxWidth(),
         interactiveCover = true

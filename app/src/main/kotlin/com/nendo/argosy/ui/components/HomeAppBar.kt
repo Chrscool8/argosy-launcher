@@ -105,9 +105,8 @@ fun CompanionAppBar(
     onAppClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     focusedIndex: Int = APP_BAR_NOTHING_FOCUSED,
-    onAppLongPress: ((String) -> Unit)? = null,
     reorder: DockReorderSession? = null,
-    onReorderStart: ((String) -> Long?)? = null,
+    onReorderStart: (String) -> Long? = { null },
     onReorderTarget: (Long, Int) -> Unit = { _, _ -> },
     onReorderSave: (Long) -> Unit = {},
     onReorderCancel: (Long) -> Unit = {},
@@ -145,7 +144,7 @@ fun CompanionAppBar(
         val density = LocalDensity.current
         val drag = rememberDockDragReorderState(
             listState, with(density) { padding.toPx() },
-            onStart = { onReorderStart?.invoke(it) },
+            onStart = { onReorderStart(it) },
             onTarget = onReorderTarget, onSave = onReorderSave, onCancel = onReorderCancel
         )
         LaunchedEffect(reorder?.token) { drag.reconcile(reorder) }
@@ -162,7 +161,7 @@ fun CompanionAppBar(
         val rightLabel = stringResource(R.string.dock_reorder_move_right)
         val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
         val saveLabel = stringResource(R.string.reorder_hint_done)
-        val cancelLabel = stringResource(R.string.library_apps_hint_cancel)
+        val cancelLabel = stringResource(R.string.dock_hint_cancel)
         val dockLabel = stringResource(R.string.dock_accessibility_label)
         val reorderActions = key("dock-actions") {
             if (reorder != null && !reorder.saving) {
@@ -244,7 +243,7 @@ fun CompanionAppBar(
                         Modifier.width(widths.appsWidth.dp)
                             .height(slot)
                             .semantics { contentDescription = dockLabel; customActions = reorderActions }
-                            .let { if (onReorderStart != null) it.dockDragContainer(drag) else it }
+                            .dockDragContainer(drag)
                     ) {
                         LazyRow(
                             state = listState,
@@ -260,8 +259,7 @@ fun CompanionAppBar(
                                     packageName = app,
                                     isFocused = if (reorder != null) app == reorder.heldPackage else index == focusedIndex,
                                     onClick = { if (reorder == null && drag.draggingPackage == null) onAppClick(app) },
-                                    onLongPress = if (onReorderStart == null) onAppLongPress?.let { press -> { press(app) } } else null,
-                                    onSemanticReorder = if (onReorderStart != null) ({ drag.startAccessible(app) }) else null,
+                                    onSemanticReorder = { drag.startAccessible(app) },
                                     reorderActions = if (reorder?.heldPackage == app) reorderActions else emptyList(),
                                     modifier = Modifier
                                         .animateItem(
@@ -557,11 +555,10 @@ internal fun CompanionAppItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isFocused: Boolean = false,
-    onLongPress: (() -> Unit)? = null,
-    onSemanticReorder: (() -> Boolean)? = null,
+    onSemanticReorder: () -> Boolean,
     reorderActions: List<CustomAccessibilityAction> = emptyList()
 ) {
-    val reorderLabel = stringResource(R.string.library_apps_menu_reorder)
+    val reorderLabel = stringResource(R.string.dock_reorder_action)
     val context = LocalContext.current
     var label by remember(packageName) { mutableStateOf<String?>(null) }
     LaunchedEffect(packageName) {
@@ -574,15 +571,11 @@ internal fun CompanionAppItem(
     }
     Box(
         modifier = modifier.size(maxOf(minimumTouchTarget, Dimens.iconXl))
-            .let { base ->
-                if (onLongPress == null) base.touchOnly(onClick)
-                else base.touchOnly(onClick = onClick, onLongPress = onLongPress)
-            }
+            .touchOnly(onClick)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 semanticClick { onClick(); true }
-                if (onSemanticReorder != null) semanticLongClick(label = reorderLabel) { onSemanticReorder() }
-                else if (onLongPress != null) semanticLongClick { onLongPress(); true }
+                semanticLongClick(label = reorderLabel) { onSemanticReorder() }
                 customActions = reorderActions
             },
         contentAlignment = Alignment.Center

@@ -721,8 +721,8 @@ class HomeInputHandler(
 
     /**
      * Holding confirm opens the menu for whatever is under the cursor: the tile menu on the grid,
-     * where arranging is its first entry, and the game menu on a row. A menu that names its
-     * actions is reachable in a way a hold that silently starts a drag never was.
+     * where arranging is its first entry, the game menu on a row, and the app menu in the app
+     * drawer. On the dock it picks the focused app up to reorder, with its controls in the footer.
      *
      * Committing on the second hold still matches the press that started an arrange. On a title
      * the hold asks whether to start over instead, since a plain press already resumes, and a

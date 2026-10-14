@@ -83,7 +83,6 @@ class SecondaryHomeActivity :
         private set
     private var currentChannelName by mutableStateOf<String?>(null)
     private var isHardcore by mutableStateOf(false)
-        private set
     private var companionAchievements by mutableStateOf<List<AchievementUi>>(emptyList())
     private var companionSessionTimer: CompanionSessionTimer? = null
     private var homeRestoreSettled = false
@@ -438,8 +437,6 @@ class SecondaryHomeActivity :
         if (isShowcaseRole || dsm.isMovingGame) return true
         return dsm.emulatorDisplayId?.let { it != Display.DEFAULT_DISPLAY } ?: false
     }
-
-    override fun onWizardStateChanged(isActive: Boolean) = Unit
 
     override fun onSessionStarted(
         gameId: Long, isHardcore: Boolean, channelName: String?

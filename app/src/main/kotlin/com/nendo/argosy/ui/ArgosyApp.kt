@@ -188,7 +188,7 @@ fun ArgosyApp(
     val isOnWizard = currentRoute == Screen.FirstRun.route
     var wasOnWizard by remember { mutableStateOf(isOnWizard) }
     LaunchedEffect(uiState.isFirstRun, isOnWizard) {
-        dsm?.broadcastWizardState(uiState.isFirstRun || isOnWizard)
+        dsm?.recordWizardState(uiState.isFirstRun || isOnWizard)
         if (wasOnWizard && !isOnWizard) {
             viewModel.triggerPostWizardSync()
         }
