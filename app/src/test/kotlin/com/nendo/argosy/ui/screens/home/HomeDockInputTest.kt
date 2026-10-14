@@ -44,6 +44,7 @@ class HomeDockInputTest {
         every { actions.uiState } returns state
         every { actions.releaseAppBar() } answers { state.value = state.value.copy(appBarFocused = false) }
         every { actions.toggleGameMenu() } answers { state.value = state.value.copy(showGameMenu = true) }
+        every { actions.pressSelect(any()) } answers { firstArg<() -> Unit>().invoke() }
         var detailsId: Long? = null
         var favoriteId: Long? = null
         every { actions.toggleFavorite(any()) } answers { favoriteId = firstArg() }

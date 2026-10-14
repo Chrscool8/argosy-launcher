@@ -495,7 +495,7 @@ internal fun HardcoreConflictContent(
 }
 
 @Composable
-private fun CancelLaunchOption(isFocused: Boolean, onClick: () -> Unit) {
+internal fun CancelLaunchOption(isFocused: Boolean, onClick: () -> Unit) {
     ConflictOption(
         label = stringResource(R.string.ui_launch_overlay_cancel_option),
         subtitle = stringResource(R.string.ui_launch_overlay_cancel_option_subtitle),
@@ -822,7 +822,7 @@ private fun TimestampLabel(
 }
 
 @Composable
-private fun ConflictOption(
+internal fun ConflictOption(
     label: String,
     subtitle: String,
     isFocused: Boolean,

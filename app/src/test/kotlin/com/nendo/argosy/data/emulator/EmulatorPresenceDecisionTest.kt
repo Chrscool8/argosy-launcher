@@ -60,7 +60,7 @@ class EmulatorPresenceDecisionTest {
         val events = listOf(
             resumed(10_000, emulatorPackage, emulatorActivity),
             stopped(50_000, emulatorPackage, emulatorActivity),
-            resumed(50_010, ownPackage, "com.nendo.argosy.MainActivity")
+            resumed(50_010, ownPackage, "com.nendo.argosy.ArgosyActivity")
         )
         assertEquals(PresenceVerdict.OWN_APP_IN_FRONT, verdict(events))
     }
@@ -185,7 +185,7 @@ class EmulatorPresenceDecisionTest {
         val events = listOf(
             resumed(10_000, ownPackage, builtin.className!!),
             stopped(50_000, ownPackage, builtin.className!!),
-            resumed(50_010, ownPackage, "com.nendo.argosy.MainActivity")
+            resumed(50_010, ownPackage, "com.nendo.argosy.ArgosyActivity")
         )
         assertEquals(PresenceVerdict.OWN_APP_IN_FRONT, verdict(events, emulator = builtin))
     }
@@ -203,8 +203,8 @@ class EmulatorPresenceDecisionTest {
     @Test
     fun `builtin core resumed after argosy home is present`() {
         val events = listOf(
-            resumed(5_000, ownPackage, "com.nendo.argosy.MainActivity"),
-            paused(10_000, ownPackage, "com.nendo.argosy.MainActivity"),
+            resumed(5_000, ownPackage, "com.nendo.argosy.ArgosyActivity"),
+            paused(10_000, ownPackage, "com.nendo.argosy.ArgosyActivity"),
             resumed(10_000, ownPackage, builtin.className!!)
         )
         assertEquals(PresenceVerdict.PRESENT, verdict(events, emulator = builtin))

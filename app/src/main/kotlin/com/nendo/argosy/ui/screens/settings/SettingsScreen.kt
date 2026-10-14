@@ -120,6 +120,7 @@ import com.nendo.argosy.ui.screens.settings.sections.JellyfinSection
 import com.nendo.argosy.ui.screens.settings.sections.MainSettingsSection
 import com.nendo.argosy.ui.screens.settings.sections.PermissionsSection
 import com.nendo.argosy.ui.screens.settings.sections.RASettingsSection
+import com.nendo.argosy.ui.screens.settings.sections.RAWebApiKeyModal
 import com.nendo.argosy.ui.screens.settings.sections.ShaderStackSection
 import com.nendo.argosy.ui.screens.settings.sections.SocialSection
 import com.nendo.argosy.ui.screens.settings.sections.SteamSection
@@ -388,7 +389,7 @@ fun SettingsScreen(
 
     LaunchedEffect(Unit) {
         viewModel.requestScreenCapturePermissionEvent.collect {
-            (context as? com.nendo.argosy.MainActivity)?.requestScreenCapturePermission()
+            (context as? com.nendo.argosy.ArgosyActivity)?.requestScreenCapturePermission()
         }
     }
 
@@ -1209,6 +1210,15 @@ fun SettingsScreen(
                 keyboardType = KeyboardType.Uri
             )
         }
+    }
+
+    uiState.retroAchievements.webApiKeyEditor?.let { editor ->
+        RAWebApiKeyModal(
+            editor = editor,
+            onDraftChange = { viewModel.setRAWebApiKeyDraft(it) },
+            onAction = { viewModel.runRAWebApiKeyAction(it) },
+            onDismiss = { viewModel.closeRAWebApiKeyEditor() }
+        )
     }
 
     val addressPrompt = uiState.server.rommAddressVerifyPrompt

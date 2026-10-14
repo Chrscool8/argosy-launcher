@@ -5,6 +5,7 @@ import com.nendo.argosy.BuildConfig
 import com.nendo.argosy.ui.theme.ALauncherColors
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.remote.romm.RomMRepository
+import com.nendo.argosy.data.social.uploader.PlaySessionPullScheduler
 import com.nendo.argosy.data.steam.SteamAuthManager
 import com.nendo.argosy.domain.model.Changelog
 import com.nendo.argosy.domain.model.ChangelogEntry
@@ -31,7 +32,8 @@ class HomeSyncDelegate @Inject constructor(
     private val romMRepository: RomMRepository,
     private val platformSyncQueue: PlatformSyncQueue,
     private val preferencesRepository: UserPreferencesRepository,
-    private val steamAuthManager: SteamAuthManager
+    private val steamAuthManager: SteamAuthManager,
+    private val playSessionPullScheduler: PlaySessionPullScheduler
 ) {
     private val _state = MutableStateFlow(SyncState())
     val state: StateFlow<SyncState> = _state.asStateFlow()
@@ -75,6 +77,8 @@ class HomeSyncDelegate @Inject constructor(
             }
         }
     }
+
+    fun pullPlaySessionsIfDue() = playSessionPullScheduler.requestIfDue()
 
     suspend fun checkForChangelog() {
         val prefs = preferencesRepository.preferences.first()

@@ -1070,7 +1070,7 @@ internal fun routeSetRAProxyEnabled(vm: SettingsViewModel, enabled: Boolean) {
     vm.raDelegate.setProxyEnabled(vm.viewModelScope, enabled)
     if (!enabled) {
         vm._uiState.update {
-            val proxyToggleIndex = if (it.retroAchievements.isLoggedIn) 2 else 1
+            val proxyToggleIndex = if (it.retroAchievements.isLoggedIn) RA_LOGGED_IN_PROXY_TOGGLE_INDEX else RA_PROXY_TOGGLE_INDEX
             if (it.focusedIndex > proxyToggleIndex) it.copy(focusedIndex = proxyToggleIndex) else it
         }
     }

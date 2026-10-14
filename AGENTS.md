@@ -148,7 +148,7 @@ folder resolution); "tidying" them breaks resolution.
 - Input: InputDispatcher + per-screen InputHandler; index wrap via .mod().
   No Compose focus for navigation or selection - focusable() appears nowhere
   except the root key sinks, one per rendered surface: ArgosyApp for the control
-  surface, the presentation branch of MainActivity and of
+  surface, the presentation branch of ArgosyActivity and of
   SecondaryHomeActivity, and AppScreenActivity on the app-target display. Both
   activities render either ArgosyApp or
   PresentationSlotContent, so both need a sink on the presentation side. A

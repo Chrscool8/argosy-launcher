@@ -8,6 +8,7 @@ import com.nendo.argosy.data.repository.PlayStatsRepository
 import com.nendo.argosy.data.social.uploader.PlaySessionBackfill
 import com.nendo.argosy.data.social.uploader.PlaySessionPull
 import com.nendo.argosy.ui.common.DisplayText
+import com.nendo.argosy.ui.components.recap.MonthlyRecapController
 import com.nendo.argosy.ui.screens.settings.PlayTimeEntryUi
 import com.nendo.argosy.ui.screens.settings.PlayTimeFigure
 import com.nendo.argosy.ui.screens.settings.PlayTimeGamesSortMode
@@ -30,12 +31,15 @@ class PlayTimeSettingsDelegate @Inject constructor(
     private val platformRepository: PlatformRepository,
     private val gameRepository: GameRepository,
     private val backfill: PlaySessionBackfill,
-    private val pull: PlaySessionPull
+    private val pull: PlaySessionPull,
+    private val monthlyRecap: MonthlyRecapController
 ) {
     private val _state = MutableStateFlow(PlayTimeState())
     val state: StateFlow<PlayTimeState> = _state.asStateFlow()
 
     private var loadJob: Job? = null
+
+    fun openLastMonthRecap() = monthlyRecap.openLastMonth()
 
     fun load(scope: CoroutineScope) {
         loadJob?.cancel()

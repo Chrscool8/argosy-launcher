@@ -51,8 +51,9 @@ data class CalendarGrid(
 fun buildCalendarGrid(days: List<PlayDay>): CalendarGrid {
     if (days.isEmpty()) return CalendarGrid(0, List(DAYS_IN_WEEK) { emptyList() }, emptyMap())
     val first = days.first().date
+    val last = days.last().date
     val gridStart = first.minusDays((first.dayOfWeek.value - 1).toLong())
-    val span = ChronoUnit.DAYS.between(gridStart, days.last().date).toInt()
+    val span = ChronoUnit.DAYS.between(gridStart, last).toInt()
     val weeks = span / DAYS_IN_WEEK + 1
     val indexByOffset = days.indices.associateBy { index ->
         ChronoUnit.DAYS.between(gridStart, days[index].date).toInt()
@@ -64,7 +65,8 @@ fun buildCalendarGrid(days: List<PlayDay>): CalendarGrid {
         var seen: YearMonth? = null
         (0 until weeks).forEach { week ->
             val date = gridStart.plusDays((week * DAYS_IN_WEEK).toLong())
-            val month = YearMonth.from(date.plusDays((DAYS_IN_WEEK - 1).toLong()))
+            val weekEnd = date.plusDays((DAYS_IN_WEEK - 1).toLong())
+            val month = YearMonth.from(if (weekEnd.isAfter(last)) last else weekEnd)
             if (month != seen) {
                 seen = month
                 put(week, month)

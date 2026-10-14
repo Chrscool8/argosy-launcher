@@ -109,6 +109,10 @@
     <string name="settings_interface_compact_footer_subtitle">पतली कंट्रोल गाइड बार का उपयोग करें</string>
     <string name="settings_interface_lock_screen_art_title">लॉक स्क्रीन चित्र</string>
     <string name="settings_interface_lock_screen_art_subtitle">जब Argosy आपका होम ऐप हो, लॉक स्क्रीन पर आपकी लाइब्रेरी या चालू छोड़ा गया गेम दिखता है। यह आपके लॉक स्क्रीन वॉलपेपर की जगह हमेशा के लिए ले लेता है।</string>
+    <string name="settings_interface_home_app_title">होम ऐप के रूप में उपलब्ध</string>
+    <string name="settings_interface_home_app_subtitle">Android को Argosy को आपकी होम स्क्रीन के रूप में पेश करने देता है। Samsung DeX में Argosy तभी खुलता है जब यह बंद हो।</string>
+    <string name="settings_interface_home_app_locked_value">चालू</string>
+    <string name="settings_interface_home_app_locked_subtitle">Argosy आपका होम ऐप है। इसे बंद करने के लिए Android सेटिंग्स में कोई दूसरा होम ऐप चुनें।</string>
     <string name="settings_interface_controller_grip_title">कंट्रोलर ग्रिप</string>
     <string name="settings_interface_controller_grip_subtitle">ग्रिप वाले हिस्से से UI को ऊपर खिसकाएँ</string>
     <string name="settings_interface_home_screen_title">होम स्क्रीन</string>
@@ -248,6 +252,7 @@
     <string name="settings_interface_section_general">सामान्य</string>
     <string name="settings_interface_section_screens">स्क्रीन</string>
     <string name="settings_interface_section_status_bar">स्टेटस बार</string>
+    <string name="settings_interface_section_recaps">रीकैप</string>
     <string name="settings_presentation_layout_title">लेआउट</string>
     <string name="settings_presentation_layout_cinematic">सिनेमैटिक</string>
     <string name="settings_presentation_layout_journal">जर्नल</string>
@@ -321,6 +326,10 @@
     <string name="settings_interface_status_battery_subtitle">स्टेटस बार में बैटरी स्तर दिखाएँ</string>
     <string name="settings_interface_status_network_title">नेटवर्क</string>
     <string name="settings_interface_status_network_subtitle">स्टेटस बार में वर्तमान कनेक्शन दिखाएँ</string>
+    <string name="settings_interface_pre_launch_recaps_title">लॉन्च से पहले रीकैप</string>
+    <string name="settings_interface_pre_launch_recaps_subtitle">जिस RetroAchievements गेम को आपने एक हफ़्ते से नहीं खेला, उसे शुरू करने से पहले दिखाएँ कि आपने कहाँ छोड़ा था</string>
+    <string name="settings_interface_monthly_recap_title">मासिक रीकैप</string>
+    <string name="settings_interface_monthly_recap_subtitle">हर महीने की शुरुआत में होम पर पिछले महीने का सारांश दिखाएँ</string>
 
     <string name="settings_home_screen_background_title">बैकग्राउंड</string>
     <string name="settings_home_screen_background_subtitle">गेम आर्ट या बैकड्रॉप पैटर्न</string>
@@ -445,6 +454,27 @@
     <string name="settings_ra_logout_title">लॉगआउट</string>
     <string name="settings_ra_logout_title_busy">लॉगआउट हो रहा है...</string>
     <string name="settings_ra_logout_subtitle">RetroAchievements से साइन आउट करें</string>
+    <string name="settings_ra_web_api_key_title">वेब API की (वैकल्पिक)</string>
+    <string name="settings_ra_web_api_key_subtitle">यह आपके RetroAchievements कंट्रोल पैनल के Keys सेक्शन में मिलेगी। इससे रीकैप तेज़ और ज़्यादा विस्तृत होते हैं।</string>
+    <string name="settings_ra_web_api_key_value_not_set">सेट नहीं है</string>
+    <string name="settings_ra_web_api_key_value_saved_short">सेव है</string>
+    <string name="settings_ra_web_api_key_value_rejected">की अस्वीकार हुई</string>
+    <string name="settings_ra_web_api_key_modal_title">RetroAchievements वेब API की</string>
+    <string name="settings_ra_web_api_key_modal_message">अपने RetroAchievements कंट्रोल पैनल के Keys सेक्शन से वेब API की कॉपी करें और यहाँ पेस्ट करें। सेव करने से पहले Argosy इसे एक बार जाँचता है।</string>
+    <string name="settings_ra_web_api_key_field_label">वेब API की</string>
+    <string name="settings_ra_web_api_key_paste">पेस्ट करें</string>
+    <string name="settings_ra_web_api_key_clear">हटाएँ</string>
+    <string name="settings_ra_web_api_key_cancel">रद्द करें</string>
+    <string name="settings_ra_web_api_key_save">सेव करें</string>
+    <string name="settings_ra_web_api_key_save_busy">जाँच हो रही है...</string>
+    <string name="settings_ra_web_api_key_status_validating">RetroAchievements से की जाँची जा रही है...</string>
+    <string name="settings_ra_web_api_key_status_rejected">RetroAchievements ने यह की स्वीकार नहीं की।</string>
+    <string name="settings_ra_web_api_key_status_unreachable">RetroAchievements से संपर्क नहीं हो सका। फिर से कोशिश करें।</string>
+    <string name="settings_ra_web_api_key_status_clipboard_empty">क्लिपबोर्ड में पेस्ट करने के लिए कोई टेक्स्ट नहीं है।</string>
+    <string name="settings_ra_web_api_key_saved_title">वेब API की सेव हुई</string>
+    <string name="settings_ra_web_api_key_saved_subtitle">रीकैप अब RetroAchievements को सीधे पढ़ते हैं।</string>
+    <string name="settings_ra_web_api_key_cleared_title">वेब API की हटाई गई</string>
+    <string name="settings_ra_web_api_key_cleared_subtitle">यह की अब इस डिवाइस पर सेव नहीं है।</string>
 
     <string name="settings_ra_play_mode_title">प्ले मोड प्राथमिकता</string>
     <string name="settings_ra_play_mode_subtitle_locked">सिक्योर सेव आवश्यक है</string>
@@ -1733,8 +1763,8 @@
 
     <!-- ===== GameNative folders panel ===== -->
 
-    <string name="settings_gamenative_folders_title">GameNative फ़ोल्डर</string>
-    <string name="settings_gamenative_folders_subtitle">हर स्टोर को उस फ़ोल्डर पर सेट करें जहाँ GameNative अपने इंस्टॉल एक्सपोर्ट करता है। Steam मार्कर केवल ओन किए गए गेम को इंस्टॉल्ड मार्क करते हैं; बाकी स्टोर अपने गेम मिलाने के लिए जोड़ते-हटाते हैं।</string>
+    <string name="settings_gamenative_folders_title">लॉन्चर सिंक फ़ोल्डर</string>
+    <string name="settings_gamenative_folders_subtitle">हर स्टोर को उस फ़ोल्डर पर सेट करें जहाँ GameNative अपने इंस्टॉल एक्सपोर्ट करता है, और DroidDeck को उसके गेम फ़ाइल फ़ोल्डर पर। Steam मार्कर केवल ओन किए गए गेम को इंस्टॉल्ड मार्क करते हैं; बाकी स्टोर अपने गेम मिलाने के लिए जोड़ते-हटाते हैं।</string>
     <string name="settings_gamenative_folders_hint_set">सेट / साफ़</string>
     <string name="settings_gamenative_folders_hint_select">चुनें</string>
     <string name="settings_gamenative_folders_hint_back">वापस</string>
@@ -2467,6 +2497,8 @@
     <string name="settings_play_time_section_where">डिवाइस</string>
     <string name="settings_play_time_section_what">आप क्या खेलते हैं</string>
     <string name="settings_play_time_section_facts">त्वरित तथ्य</string>
+    <string name="settings_play_time_last_month_title">पिछले महीने का रीकैप</string>
+    <string name="settings_play_time_last_month_subtitle">पिछले महीने का खेलने का समय, नए पसंदीदा और उपलब्धियाँ</string>
     <string name="settings_play_time_loading_title">सत्र पढ़े जा रहे हैं...</string>
     <string name="settings_play_time_loading_message">आपके खेलने के पैटर्न कुछ ही पल में दिखेंगे।</string>
     <string name="settings_play_time_empty_title">अभी कोई खेल सत्र नहीं</string>

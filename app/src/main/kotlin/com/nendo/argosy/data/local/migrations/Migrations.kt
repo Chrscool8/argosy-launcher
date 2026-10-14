@@ -4211,6 +4211,20 @@ object Migration_210_211 : Migration(210, 211) {
     }
 }
 
+object Migration_211_212 : Migration(211, 212) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `play_sessions` ADD COLUMN `raGameId` INTEGER")
+        db.execSQL("ALTER TABLE `play_sessions` ADD COLUMN `richPresence` TEXT")
+        db.execSQL("ALTER TABLE `play_sessions` ADD COLUMN `richPresenceAt` INTEGER")
+    }
+}
+
+object Migration_212_213 : Migration(212, 213) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `play_sessions` ADD COLUMN `raSnapshotUnlocks` TEXT")
+    }
+}
+
 object Migration_203_204 : Migration(203, 204) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(

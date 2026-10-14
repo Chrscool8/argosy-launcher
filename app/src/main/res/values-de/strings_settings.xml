@@ -119,6 +119,10 @@
     <string name="settings_interface_compact_footer_subtitle">Schmalere Bedienleiste verwenden</string>
     <string name="settings_interface_lock_screen_art_title">Sperrbildschirm-Motiv</string>
     <string name="settings_interface_lock_screen_art_subtitle">Solange Argosy deine Startbildschirm-App ist, zeigt der Sperrbildschirm deine Bibliothek oder das laufende Spiel. Ersetzt dein Sperrbildschirm-Hintergrundbild dauerhaft.</string>
+    <string name="settings_interface_home_app_title">Als Startbildschirm-App verfügbar</string>
+    <string name="settings_interface_home_app_subtitle">Android kann Argosy als Startbildschirm anbieten. Samsung DeX öffnet Argosy nur, wenn dies aus ist.</string>
+    <string name="settings_interface_home_app_locked_value">An</string>
+    <string name="settings_interface_home_app_locked_subtitle">Argosy ist deine Startbildschirm-App. Wähle in den Android-Einstellungen eine andere Startbildschirm-App, um dies auszuschalten.</string>
     <string name="settings_interface_controller_grip_title">Controller-Griff</string>
     <string name="settings_interface_controller_grip_subtitle">Schiebt die Oberfläche aus dem vom Griff verdeckten Bereich</string>
     <string name="settings_interface_home_screen_title">Startbildschirm</string>
@@ -258,6 +262,7 @@
     <string name="settings_interface_section_general">Allgemein</string>
     <string name="settings_interface_section_screens">Bildschirme</string>
     <string name="settings_interface_section_status_bar">Statusleiste</string>
+    <string name="settings_interface_section_recaps">Rückblicke</string>
     <string name="settings_presentation_layout_title">Layout</string>
     <string name="settings_presentation_layout_cinematic">Kino</string>
     <string name="settings_presentation_layout_journal">Journal</string>
@@ -331,6 +336,10 @@
     <string name="settings_interface_status_battery_subtitle">Akkustand in der Statusleiste anzeigen</string>
     <string name="settings_interface_status_network_title">Netzwerk</string>
     <string name="settings_interface_status_network_subtitle">Aktuelle Verbindung in der Statusleiste anzeigen</string>
+    <string name="settings_interface_pre_launch_recaps_title">Rückblick vor dem Start</string>
+    <string name="settings_interface_pre_launch_recaps_subtitle">Vor einem RetroAchievements-Spiel, das du eine Woche nicht gespielt hast, zeigen, wo du aufgehört hast</string>
+    <string name="settings_interface_monthly_recap_title">Monatsrückblick</string>
+    <string name="settings_interface_monthly_recap_subtitle">Zu Monatsbeginn auf dem Startbildschirm eine Zusammenfassung des Vormonats zeigen</string>
 
     <string name="settings_home_screen_background_title">Hintergrund</string>
     <string name="settings_home_screen_background_subtitle">Spielgrafik oder Hintergrundmuster</string>
@@ -455,6 +464,27 @@
     <string name="settings_ra_logout_title">Abmelden</string>
     <string name="settings_ra_logout_title_busy">Wird abgemeldet…</string>
     <string name="settings_ra_logout_subtitle">Von RetroAchievements abmelden</string>
+    <string name="settings_ra_web_api_key_title">Web-API-Schlüssel (optional)</string>
+    <string name="settings_ra_web_api_key_subtitle">Zu finden im Bereich Keys deines RetroAchievements-Kontrollzentrums. Macht Rückblicke schneller und ausführlicher.</string>
+    <string name="settings_ra_web_api_key_value_not_set">Nicht festgelegt</string>
+    <string name="settings_ra_web_api_key_value_saved_short">Gespeichert</string>
+    <string name="settings_ra_web_api_key_value_rejected">Schlüssel abgelehnt</string>
+    <string name="settings_ra_web_api_key_modal_title">RetroAchievements-Web-API-Schlüssel</string>
+    <string name="settings_ra_web_api_key_modal_message">Kopiere den Web-API-Schlüssel aus dem Bereich Keys deines RetroAchievements-Kontrollzentrums und füge ihn hier ein. Argosy prüft ihn einmal vor dem Speichern.</string>
+    <string name="settings_ra_web_api_key_field_label">Web-API-Schlüssel</string>
+    <string name="settings_ra_web_api_key_paste">Einfügen</string>
+    <string name="settings_ra_web_api_key_clear">Entfernen</string>
+    <string name="settings_ra_web_api_key_cancel">Abbrechen</string>
+    <string name="settings_ra_web_api_key_save">Speichern</string>
+    <string name="settings_ra_web_api_key_save_busy">Wird geprüft...</string>
+    <string name="settings_ra_web_api_key_status_validating">Schlüssel wird bei RetroAchievements geprüft...</string>
+    <string name="settings_ra_web_api_key_status_rejected">RetroAchievements hat diesen Schlüssel nicht akzeptiert.</string>
+    <string name="settings_ra_web_api_key_status_unreachable">RetroAchievements ist nicht erreichbar. Versuche es erneut.</string>
+    <string name="settings_ra_web_api_key_status_clipboard_empty">Die Zwischenablage enthält keinen Text.</string>
+    <string name="settings_ra_web_api_key_saved_title">Web-API-Schlüssel gespeichert</string>
+    <string name="settings_ra_web_api_key_saved_subtitle">Rückblicke lesen RetroAchievements jetzt direkt.</string>
+    <string name="settings_ra_web_api_key_cleared_title">Web-API-Schlüssel entfernt</string>
+    <string name="settings_ra_web_api_key_cleared_subtitle">Der Schlüssel ist nicht mehr auf diesem Gerät gespeichert.</string>
 
     <string name="settings_ra_play_mode_title">Bevorzugter Spielmodus</string>
     <string name="settings_ra_play_mode_subtitle_locked">Erfordert Sichere Spielstände</string>
@@ -1743,8 +1773,8 @@
 
     <!-- ===== GameNative folders panel ===== -->
 
-    <string name="settings_gamenative_folders_title">GameNative-Ordner</string>
-    <string name="settings_gamenative_folders_subtitle">Weisen Sie jedem Store den Ordner zu, in den GameNative seine Installationen exportiert. Steam-Markierungen kennzeichnen nur besessene Spiele als installiert; die anderen Stores fügen ihre Spiele hinzu und entfernen sie entsprechend.</string>
+    <string name="settings_gamenative_folders_title">Launcher-Sync-Ordner</string>
+    <string name="settings_gamenative_folders_subtitle">Weisen Sie jedem Store den Ordner zu, in den GameNative seine Installationen exportiert, und DroidDeck seinen Spieldateien-Ordner. Steam-Markierungen kennzeichnen nur besessene Spiele als installiert; die anderen Stores fügen ihre Spiele hinzu und entfernen sie entsprechend.</string>
     <string name="settings_gamenative_folders_hint_set">Festlegen / Löschen</string>
     <string name="settings_gamenative_folders_hint_select">Auswählen</string>
     <string name="settings_gamenative_folders_hint_back">Zurück</string>
@@ -2477,6 +2507,8 @@
     <string name="settings_play_time_section_where">GERÄTE</string>
     <string name="settings_play_time_section_what">WAS DU SPIELST</string>
     <string name="settings_play_time_section_facts">KURZE FAKTEN</string>
+    <string name="settings_play_time_last_month_title">Rückblick auf den letzten Monat</string>
+    <string name="settings_play_time_last_month_subtitle">Spielzeit, neue Favoriten und Erfolge aus dem letzten Monat</string>
     <string name="settings_play_time_loading_title">Sitzungen werden gelesen...</string>
     <string name="settings_play_time_loading_message">Deine Spielmuster erscheinen gleich.</string>
     <string name="settings_play_time_empty_title">Noch keine Spielsitzungen</string>

@@ -5,6 +5,8 @@ import android.app.KeyguardManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
 import android.view.Choreographer
@@ -12,10 +14,15 @@ import android.view.SurfaceHolder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
+private const val SURFACE_RELEASE_WAIT_MS = 500L
 
 @AndroidEntryPoint
 class LockScreenWallpaperService : WallpaperService() {
@@ -27,8 +34,11 @@ class LockScreenWallpaperService : WallpaperService() {
 
     private inner class MosaicEngine : Engine(), Choreographer.FrameCallback {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+        private val renderThread = HandlerThread("LockScreenWallpaper").apply { start() }
+        private val renderer = Handler(renderThread.looper)
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         private val keyguard = getSystemService(KeyguardManager::class.java)
+        private var preview: Job? = null
         private var scene: LockScreenScene? = null
         private var visible = false
         private var animating = false
@@ -37,34 +47,45 @@ class LockScreenWallpaperService : WallpaperService() {
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
             scope.launch {
-                scenes.scene.collect {
-                    scene = it
-                    startedAt = SystemClock.uptimeMillis()
-                    update()
+                scenes.scene.collect { next ->
+                    renderer.post {
+                        scene = next
+                        startedAt = SystemClock.uptimeMillis()
+                        update()
+                    }
                 }
             }
-            if (isPreview) artManager.prepareLivePreview() else artManager.onLiveWallpaperBound()
+            if (isPreview) preview = artManager.prepareLivePreview() else artManager.onLiveWallpaperBound()
         }
 
         override fun onDestroy() {
-            stop()
+            preview?.cancel()
             scope.cancel()
+            renderer.post { stop() }
+            renderThread.quitSafely()
             super.onDestroy()
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
-            this.visible = visible
-            update()
+            renderer.post {
+                this.visible = visible
+                update()
+            }
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
             super.onSurfaceChanged(holder, format, width, height)
-            update()
+            renderer.post { update() }
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder) {
-            visible = false
-            stop()
+            val released = CountDownLatch(1)
+            val posted = renderer.post {
+                visible = false
+                stop()
+                released.countDown()
+            }
+            if (posted) released.await(SURFACE_RELEASE_WAIT_MS, TimeUnit.MILLISECONDS)
             super.onSurfaceDestroyed(holder)
         }
 

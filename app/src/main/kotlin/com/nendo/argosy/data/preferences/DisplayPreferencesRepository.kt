@@ -79,6 +79,7 @@ data class DisplayPreferences(
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
     val lockScreenArt: Boolean = true,
+    val homeAppAvailable: Boolean = true,
     val iconPack: String? = null,
     val boxArtShape: BoxArtShape = BoxArtShape.STANDARD,
     val boxArtCornerRadius: BoxArtCornerRadius = BoxArtCornerRadius.MEDIUM,
@@ -182,6 +183,8 @@ class DisplayPreferencesRepository @Inject constructor(
         val LOCK_SCREEN_ART = booleanPreferencesKey("lock_screen_art")
         val LOCK_SCREEN_ART_APPLIED = booleanPreferencesKey("lock_screen_art_applied")
         val LIVE_WALLPAPER_OFFERED = booleanPreferencesKey("live_wallpaper_offered")
+        val HOME_APP_AVAILABLE = booleanPreferencesKey("home_app_available")
+        val HOME_APP_DEFAULT_APPLIED = booleanPreferencesKey("home_app_default_applied")
         val ICON_PACK = stringPreferencesKey("icon_pack")
         val GRIP_AUTO_CONTROLLERS = stringPreferencesKey("grip_auto_controllers")
         val GRIP_RESERVE_MODE = stringPreferencesKey("grip_reserve_mode")
@@ -288,6 +291,7 @@ class DisplayPreferencesRepository @Inject constructor(
             useAccentColorFooter = prefs[Keys.USE_ACCENT_COLOR_FOOTER] ?: false,
             compactFooter = prefs[Keys.COMPACT_FOOTER] ?: false,
             lockScreenArt = prefs[Keys.LOCK_SCREEN_ART] ?: true,
+            homeAppAvailable = prefs[Keys.HOME_APP_AVAILABLE] ?: true,
             iconPack = prefs[Keys.ICON_PACK],
             boxArtShape = BoxArtShape.fromString(prefs[Keys.BOX_ART_SHAPE]),
             boxArtCornerRadius = BoxArtCornerRadius.fromString(prefs[Keys.BOX_ART_CORNER_RADIUS]),
@@ -612,6 +616,16 @@ class DisplayPreferencesRepository @Inject constructor(
     suspend fun setLiveWallpaperOffered() {
         dataStore.edit { it[Keys.LIVE_WALLPAPER_OFFERED] = true }
     }
+
+    suspend fun setHomeAppAvailable(available: Boolean) {
+        dataStore.edit {
+            it[Keys.HOME_APP_AVAILABLE] = available
+            it[Keys.HOME_APP_DEFAULT_APPLIED] = true
+        }
+    }
+
+    suspend fun isHomeAppDefaultApplied(): Boolean =
+        dataStore.data.first()[Keys.HOME_APP_DEFAULT_APPLIED] ?: false
 
     suspend fun setGripAutoControllers(
         controllers: com.nendo.argosy.domain.model.GripAutoControllers

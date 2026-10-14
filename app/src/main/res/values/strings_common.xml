@@ -1424,6 +1424,120 @@
     <string name="ui_launch_overlay_cancel">Cancel</string>
     <string name="ui_launch_overlay_cancel_option">Cancel launch</string>
     <string name="ui_launch_overlay_cancel_option_subtitle">Go back without starting the game</string>
+    <!-- Title of the question shown when two installed Steam launchers both have this game installed. -->
+    <string name="ui_launch_overlay_launcher_choice_title">Choose a Launcher</string>
+    <!-- Body of that question. %1$s is the game title. "Change Launcher" must match the translation
+         of gamedetail_more_options_change_launcher. -->
+    <string name="ui_launch_overlay_launcher_choice_message">%1$s is installed in more than one launcher. Pin one with Change Launcher on the game\'s page to stop this question.</string>
+    <!-- Second line under each launcher choice. %1$s is the launcher's product name (GameNative, DroidDeck); leave it untranslated. -->
+    <string name="ui_launch_overlay_launcher_choice_option_subtitle">Start the game in %1$s</string>
+    <!-- Launch step shown while the summary of the player's last session of this game loads. -->
+    <string name="ui_launch_overlay_step_loading_recap">Loading your last session</string>
+    <!-- Line under the game title in the summary shown before a game starts. %1$s is when the
+         player's last session of this game ended, such as "Yesterday" or "2 weeks ago". -->
+    <string name="ui_launch_recap_meta">Last session &#183; %1$s</string>
+    <!-- Same line with the session's length. %1$s is when it ended, such as "Yesterday", %2$s is a
+         play time such as "1h 20m". -->
+    <string name="ui_launch_recap_meta_duration">Last session &#183; %1$s &#183; %2$s</string>
+    <!-- That line on short screens, with the count of RetroAchievements earned in the session
+         added. %1$s is the line itself, %2$d is the number of achievements. -->
+    <plurals name="ui_launch_recap_meta_unlocked">
+        <item quantity="one">%1$s &#183; %2$d unlocked</item>
+        <item quantity="other">%1$s &#183; %2$d unlocked</item>
+    </plurals>
+    <!-- Small label above the game's own description of where the player stopped last time,
+         such as "Exploring the Water Temple". -->
+    <string name="ui_launch_recap_presence_eyebrow">Where you left off</string>
+    <!-- Heading above the row of RetroAchievements badges the player earned last session. The
+         number of badges sits after the heading. -->
+    <string name="ui_launch_recap_unlocks_section">Unlocked last session</string>
+    <!-- Button in that summary that starts the game. Verb phrase. -->
+    <string name="ui_launch_recap_start">Start Game</string>
+    <!-- Points a RetroAchievements achievement is worth, in the summary's detail panel for the
+         highlighted achievement. %d is the number of points. -->
+    <plurals name="ui_launch_recap_points">
+        <item quantity="one">%d point</item>
+        <item quantity="other">%d points</item>
+    </plurals>
+    <!-- Short marker in that detail panel: the achievement was earned in RetroAchievements
+         hardcore mode (no save states, no cheats). -->
+    <string name="ui_launch_recap_tier_hardcore">Hardcore</string>
+    <!-- Short marker in that detail panel: the achievement was earned in RetroAchievements
+         softcore mode, the relaxed mode that allows save states. -->
+    <string name="ui_launch_recap_tier_softcore">Softcore</string>
+    <!-- RetroAchievements achievement type in that detail panel: an achievement that marks
+         progress through the game's story. -->
+    <string name="ui_launch_recap_type_progression">Progression</string>
+    <!-- RetroAchievements achievement type in that detail panel: the achievement for beating the
+         game. -->
+    <string name="ui_launch_recap_type_win_condition">Win Condition</string>
+    <!-- Small label above the month name on the card that sums up the player's previous month. -->
+    <string name="ui_monthly_recap_eyebrow">Monthly recap</string>
+    <!-- Shown on that card while the month's numbers load. %1$s is the month's name, such as
+         "September". -->
+    <string name="ui_monthly_recap_loading">Gathering %1$s\'s play</string>
+    <!-- Shown on that card when the player did not play at all that month. %1$s is the month's
+         name, such as "September". -->
+    <string name="ui_monthly_recap_empty">No games played in %1$s</string>
+    <!-- Shown on that card when the month's numbers could not be read. %1$s is the month's name,
+         such as "September". -->
+    <string name="ui_monthly_recap_failed">Couldn\'t load %1$s\'s recap</string>
+    <!-- Caption under the month's total play time, such as "12h 30m". %1$s is the month's name,
+         such as "September". -->
+    <string name="ui_monthly_recap_hero_caption">played in %1$s</string>
+    <!-- Label before the title of the game the player played longest that month. -->
+    <string name="ui_monthly_recap_most_played">Most played</string>
+    <!-- Label above the number of play sessions that month. Noun, plural. -->
+    <string name="ui_monthly_recap_stat_sessions">Sessions</string>
+    <!-- Label above the number of distinct days the player played that month. -->
+    <string name="ui_monthly_recap_stat_days">Days played</string>
+    <!-- Days the player played out of the days in the month. %1$d is the days played, %2$d is
+         the number of days in the month. -->
+    <string name="ui_monthly_recap_days_value">%1$d of %2$d</string>
+    <!-- Label above the length of the player's longest single play session that month. -->
+    <string name="ui_monthly_recap_stat_longest">Longest session</string>
+    <!-- Caption under the month's calendar. %1$s is a short date such as "Sep 14", %2$s is the
+         time played that day, such as "5h 40m". -->
+    <string name="ui_monthly_recap_busiest_day">Busiest day: %1$s &#183; %2$s</string>
+    <!-- Play time shorter than one minute, in the same letter units as "5h 40m". -->
+    <string name="ui_monthly_recap_playtime_under_minute">&lt;1m</string>
+    <!-- Heading above the games the player played most that month. -->
+    <string name="ui_monthly_recap_top_games_heading">Top games</string>
+    <!-- One share of the month's play, standing for every game past the ones listed by name. -->
+    <string name="ui_monthly_recap_top_games_others">Other games</string>
+    <!-- Badge beside a game that reached the month's top three without being in the top three of
+         the month before. Adjective. -->
+    <string name="ui_monthly_recap_top_games_new">New</string>
+    <!-- A game's share of the month's play time. %1$d is a whole percentage. -->
+    <string name="ui_monthly_recap_share_percent">%1$d%%</string>
+    <!-- Heading above the month's RetroAchievements badges and milestones. -->
+    <string name="ui_monthly_recap_achievements_heading">Achievements</string>
+    <!-- Count after that heading. %d is the number of achievements earned that month. -->
+    <plurals name="ui_monthly_recap_unlocked_count">
+        <item quantity="one">%d unlocked</item>
+        <item quantity="other">%d unlocked</item>
+    </plurals>
+    <!-- Count after that heading. %d is the number of games the player mastered that month:
+         every achievement earned in RetroAchievements hardcore mode. -->
+    <plurals name="ui_monthly_recap_mastery_count">
+        <item quantity="one">%d mastery</item>
+        <item quantity="other">%d masteries</item>
+    </plurals>
+    <!-- Both counts after that heading. %1$s is the achievement count, such as "12 unlocked",
+         %2$s is the mastery count, such as "1 mastery". -->
+    <string name="ui_monthly_recap_achievements_trailing">%1$s &#183; %2$s</string>
+    <!-- One milestone chip. %1$s is the milestone, such as "Mastered", %2$s is the game's title. -->
+    <string name="ui_monthly_recap_award_line">%1$s &#183; %2$s</string>
+    <!-- RetroAchievements milestone: every achievement of the game earned in hardcore mode. -->
+    <string name="ui_monthly_recap_award_mastered">Mastered</string>
+    <!-- RetroAchievements milestone: every achievement of the game earned in softcore mode. -->
+    <string name="ui_monthly_recap_award_completed">Completed</string>
+    <!-- RetroAchievements milestone: the game was beaten in hardcore mode. Past participle. -->
+    <string name="ui_monthly_recap_award_beaten_hardcore">Beaten (Hardcore)</string>
+    <!-- RetroAchievements milestone: the game was beaten in softcore mode. Past participle. -->
+    <string name="ui_monthly_recap_award_beaten_softcore">Beaten (Softcore)</string>
+    <!-- Button that closes the monthly recap card. -->
+    <string name="ui_monthly_recap_done">Done</string>
     <!-- Heading of the prompt shown before a game launches when its save data could not be put
          back in place. "Save" is the noun: the game's save data, not the verb. -->
     <string name="ui_sync_overlay_restore_failed_title">Save Couldn\'t Be Restored</string>

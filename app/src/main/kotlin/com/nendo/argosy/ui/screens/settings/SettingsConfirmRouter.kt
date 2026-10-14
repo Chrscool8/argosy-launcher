@@ -205,16 +205,21 @@ internal fun routeConfirm(vm: SettingsViewModel): InputResult {
                 }
             } else {
                 if (ra.isLoggedIn) {
+                    val pushIndex = raLoggedInPushIndex(ra.proxyEnabled)
                     when (state.focusedIndex) {
-                        0 -> vm.logoutFromRA()
-                        1 -> {
+                        RA_LOGGED_IN_LOGOUT_INDEX -> vm.logoutFromRA()
+                        RA_LOGGED_IN_WEB_API_KEY_INDEX -> {
+                            vm.openRAWebApiKeyEditor()
+                            return InputResult.handled(SoundType.OPEN_MODAL)
+                        }
+                        RA_LOGGED_IN_PLAY_MODE_INDEX -> {
                             if (!state.syncSettings.secureSaves) return InputResult.HANDLED
                             vm.cycleRADefaultMode(1)
                             return InputResult.handled(SoundType.SELECT)
                         }
-                        2 -> vm.setRAProxyEnabled(!ra.proxyEnabled)
-                        3 -> if (ra.proxyEnabled) vm.raDelegate.setFocusField(3) else if (ra.canPushToRetroArch) vm.pushRACredentialsToRetroArch()
-                        4 -> if (ra.proxyEnabled && ra.canPushToRetroArch) vm.pushRACredentialsToRetroArch()
+                        RA_LOGGED_IN_PROXY_TOGGLE_INDEX -> vm.setRAProxyEnabled(!ra.proxyEnabled)
+                        pushIndex -> if (ra.canPushToRetroArch) vm.pushRACredentialsToRetroArch()
+                        RA_LOGGED_IN_PROXY_FIELD_INDEX -> if (ra.proxyEnabled) vm.raDelegate.setFocusField(RA_LOGGED_IN_PROXY_FIELD_INDEX)
                     }
                 } else {
                     when (state.focusedIndex) {
@@ -603,6 +608,10 @@ private fun routePlayTimeConfirm(vm: SettingsViewModel, state: SettingsUiState):
         PlayTimeItem.PlatformsTile -> vm.navigateToPlayTimePlatforms()
         PlayTimeItem.DevicesTile -> vm.navigateToPlayTimeDevices()
         PlayTimeItem.MosaicCard, PlayTimeItem.GamesTile -> vm.navigateToPlayTimeGames()
+        PlayTimeItem.LastMonthRecap -> {
+            vm.openLastMonthRecap()
+            return InputResult.handled(SoundType.OPEN_MODAL)
+        }
         PlayTimeItem.UploadNow -> {
             if (!isOnline || playTime.isUploading) return InputResult.handled(SoundType.SILENT)
             vm.uploadPlaySessionsNow()
@@ -717,9 +726,12 @@ private fun routeInterfaceConfirm(vm: SettingsViewModel, state: SettingsUiState)
         }
         InterfaceItem.CompactFooter -> vm.setCompactFooter(!state.display.compactFooter)
         InterfaceItem.LockScreenArt -> vm.setLockScreenArt(!state.display.lockScreenArt)
+        InterfaceItem.HomeApp -> vm.setHomeAppAvailable(!state.display.homeAppAvailable)
         InterfaceItem.StatusClock -> vm.setShowStatusClock(!state.display.showStatusClock)
         InterfaceItem.StatusBattery -> vm.setShowStatusBattery(!state.display.showStatusBattery)
         InterfaceItem.StatusNetwork -> vm.setShowStatusNetwork(!state.display.showStatusNetwork)
+        InterfaceItem.PreLaunchRecaps -> vm.setPreLaunchRecaps(!state.display.preLaunchRecaps)
+        InterfaceItem.MonthlyRecap -> vm.setMonthlyRecap(!state.display.monthlyRecap)
         InterfaceItem.ControllerGrip -> vm.navigateToControllerGrip()
         InterfaceItem.HomeScreen -> vm.navigateToHomeScreen()
         InterfaceItem.LibraryView -> vm.navigateToLibraryView()
@@ -1227,6 +1239,7 @@ private fun routeDismissTopOverlay(vm: SettingsViewModel): Boolean {
         state.server.rommConfiguring -> { vm.cancelRommConfig(); true }
         state.jellyfin.configuring -> { vm.cancelJellyfinConfig(); true }
         state.jellyfin.showLoginForm -> { vm.hideJellyfinLoginForm(); true }
+        state.retroAchievements.webApiKeyEditor != null -> { vm.closeRAWebApiKeyEditor(); true }
         state.retroAchievements.showLoginForm -> { vm.hideRALoginForm(); true }
         state.currentSection == SettingsSection.PLATFORM_DETAIL && state.platformDetail.showRemoveConfirm -> {
             vm._uiState.update { it.copy(platformDetail = it.platformDetail.copy(showRemoveConfirm = false)) }; true
@@ -1322,10 +1335,10 @@ private fun computeMaxFocusIndex(
     }
     SettingsSection.RETRO_ACHIEVEMENTS -> when {
         state.retroAchievements.showLoginForm -> 3
-        state.retroAchievements.isLoggedIn -> {
-            val lastBeforePush = if (state.retroAchievements.proxyEnabled) 3 else 2
-            if (state.retroAchievements.canPushToRetroArch) lastBeforePush + 1 else lastBeforePush
-        }
+        state.retroAchievements.isLoggedIn -> raLoggedInMaxFocusIndex(
+            proxyEnabled = state.retroAchievements.proxyEnabled,
+            canPushToRetroArch = state.retroAchievements.canPushToRetroArch
+        )
         state.retroAchievements.proxyEnabled -> RA_PROXY_FIELD_INDEX
         else -> RA_PROXY_TOGGLE_INDEX
     }

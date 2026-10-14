@@ -2,6 +2,7 @@ package com.nendo.argosy
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -44,6 +45,7 @@ import com.nendo.argosy.ui.screens.common.GameActionsDelegate
 import com.nendo.argosy.ui.theme.ALauncherTheme
 import android.view.Display
 import com.nendo.argosy.hardware.SecondaryHomeActivity
+import com.nendo.argosy.util.DesktopMode
 import com.nendo.argosy.util.DisplayAffinityHelper
 import com.nendo.argosy.util.Logger
 import com.nendo.argosy.util.hideSystemBars
@@ -58,14 +60,26 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val TAG = "MainActivity"
+private const val TAG = "ArgosyActivity"
 private const val AUDIO_FOCUS_WINDOW = "main"
 private val LAUNCH_EXTRA_KEYS = listOf("path", "romm_id", "game_id", "channel")
 internal fun shouldInitializeScreenCapture(prefs: UserPreferences): Boolean =
     prefs.ambientLedEnabled && prefs.ambientLedScreenEnabled
 
+internal enum class NonDefaultDisplayLaunch { RUN_HERE, YIELD, HAND_TO_COMPANION }
+
+internal fun nonDefaultDisplayLaunch(
+    desktopMode: Boolean,
+    dualScreenEnabled: Boolean,
+    docked: Boolean
+): NonDefaultDisplayLaunch = when {
+    desktopMode -> NonDefaultDisplayLaunch.RUN_HERE
+    !docked && !dualScreenEnabled -> NonDefaultDisplayLaunch.YIELD
+    else -> NonDefaultDisplayLaunch.HAND_TO_COMPANION
+}
+
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class ArgosyActivity : ComponentActivity() {
 
     private var languageTag: String = com.nendo.argosy.core.locale.LocaleHelper.SYSTEM_LANGUAGE_TAG
 
@@ -171,7 +185,7 @@ class MainActivity : ComponentActivity() {
     private val sessionStateStore by lazy {
         com.nendo.argosy.data.preferences.SessionStateStore(this)
     }
-    private val activityScope = SafeCoroutineScope(Dispatchers.Main, "MainActivity")
+    private val activityScope = SafeCoroutineScope(Dispatchers.Main, "ArgosyActivity")
 
     private lateinit var preferencesObserver: MainActivityPreferencesObserver
 
@@ -181,16 +195,11 @@ class MainActivity : ComponentActivity() {
 
     var isOnHomeScreen = false
 
-    // --- Delegated properties for external consumers (ArgosyApp.kt) ---
-
     var isOverlayFocused: Boolean
         get() = dualScreenManager.isOverlayFocused
         set(value) {
             dualScreenManager.isOverlayFocused = value
         }
-
-
-    // --- Screen Capture ---
 
     private var screenCapturePromptedThisSession = false
     private val screenCaptureLauncher = registerForActivityResult(
@@ -206,38 +215,32 @@ class MainActivity : ComponentActivity() {
         screenCaptureManager.requestPermission(this, screenCaptureLauncher)
     }
 
-    // --- Lifecycle State ---
-
     private var hasResumedBefore = false
     private var yieldedFocusToGame = false
-
-    // --- Lifecycle ---
 
     @SuppressLint("NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (display != null && display!!.displayId != Display.DEFAULT_DISPLAY) {
-            val docked = com.nendo.argosy.util.DisplayAffinityHelper.dockedExternalDisplayId(this) != null
-            if (!docked && !sessionStateStore.isDualScreenEnabled()) {
-                Log.d(TAG, "MainActivity on non-default display with dual-screen disabled, finishing")
+        val desktopMode = DesktopMode.isActive(resources.configuration)
+        val ownDisplayId = display?.displayId ?: Display.DEFAULT_DISPLAY
+        if (ownDisplayId != Display.DEFAULT_DISPLAY) {
+            val launch = nonDefaultDisplayLaunch(
+                desktopMode = desktopMode,
+                dualScreenEnabled = sessionStateStore.isDualScreenEnabled(),
+                docked = !desktopMode && DisplayAffinityHelper.dockedExternalDisplayId(this) != null
+            )
+            if (launch == NonDefaultDisplayLaunch.YIELD) {
+                Log.d(TAG, "ArgosyActivity on non-default display with dual-screen disabled, finishing")
                 finish()
                 return
             }
-            val companionIntent = Intent(this, SecondaryHomeActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            if (launch == NonDefaultDisplayLaunch.HAND_TO_COMPANION) {
+                handDisplayToCompanion(ownDisplayId)
+                return
             }
-            val options = android.app.ActivityOptions.makeBasic()
-                .setLaunchDisplayId(display!!.displayId)
-                .toBundle()
-            try {
-                startActivity(companionIntent, options)
-            } catch (e: android.content.ActivityNotFoundException) {
-                Log.w(TAG, "Companion activity unavailable on this install, yielding display", e)
-            }
-            finish()
-            return
         }
+        val desktopModeChanged = recordDesktopMode(desktopMode, ownDisplayId)
 
         installImmersiveMode()
         keepAwakeWhileUserActive()
@@ -255,6 +258,7 @@ class MainActivity : ComponentActivity() {
         if (existingDsm != null) {
             dualScreenManager = existingDsm
             dualScreenManager.rebind(this, activityScope)
+            if (desktopModeChanged) dualScreenManager.onDesktopModeChanged()
             dualScreenManager.setRolesSwapped(initialSwapped)
         } else {
             dualScreenManager = DualScreenManager(
@@ -465,7 +469,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // --- Input Dispatch ---
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!::dualScreenManager.isInitialized) return
+        val ownDisplayId = window.decorView.display?.displayId ?: Display.DEFAULT_DISPLAY
+        if (recordDesktopMode(DesktopMode.isActive(newConfig), ownDisplayId)) {
+            dualScreenManager.onDesktopModeChanged()
+        }
+    }
 
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -531,13 +542,6 @@ class MainActivity : ComponentActivity() {
 
     private var mediaDimSwallowsTouch = false
 
-    /**
-     * The finger going down is the wake, not the finger coming up: the activity signal fires here
-     * directly rather than waiting on the framework's own interaction callback, so a dimmed screen
-     * brightens the moment it is touched. A gesture that begins while the media dim holds this
-     * window, at either stage, is a wake and nothing else: it is swallowed through its final up or
-     * cancel so the content underneath never sees it, and the next gesture flows through normally.
-     */
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (event.actionMasked == MotionEvent.ACTION_DOWN) {
             val dimmed = isMediaDimmed()
@@ -564,11 +568,6 @@ class MainActivity : ComponentActivity() {
         return super.dispatchTouchEvent(event)
     }
 
-    /**
-     * The media dim is the sole writer of this window's brightness override, so an override in
-     * place is exactly "this window is currently dimmed", at the partial stage as well as the dark
-     * one.
-     */
     private fun isMediaDimmed(): Boolean =
         window.attributes.screenBrightness !=
             android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
@@ -630,8 +629,6 @@ class MainActivity : ComponentActivity() {
         return super.dispatchGenericMotionEvent(event)
     }
 
-    // --- Window Focus ---
-
     @SuppressLint("NewApi")
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -670,7 +667,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // --- Private Helpers ---
+    private fun handDisplayToCompanion(displayId: Int) {
+        val companionIntent = Intent(this, SecondaryHomeActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        val options = android.app.ActivityOptions.makeBasic()
+            .setLaunchDisplayId(displayId)
+            .toBundle()
+        try {
+            startActivity(companionIntent, options)
+        } catch (e: android.content.ActivityNotFoundException) {
+            Log.w(TAG, "Companion activity unavailable on this install, yielding display", e)
+        }
+        finish()
+    }
+
+    private fun recordDesktopMode(active: Boolean, ownDisplayId: Int): Boolean {
+        val desktopDisplayId = if (active) ownDisplayId else null
+        if (displayAffinityHelper.desktopModeDisplayId == desktopDisplayId) return false
+        displayAffinityHelper.desktopModeDisplayId = desktopDisplayId
+        return true
+    }
 
     private fun isGameOnOtherDisplay(): Boolean {
         val emulatorDisplay = dualScreenManager.emulatorDisplayId ?: return false
@@ -695,7 +712,6 @@ class MainActivity : ComponentActivity() {
         return !holdsPrimaryRole || dualScreenManager.primaryShowsDashboard(ownDisplayId, gameDisplayId)
     }
 
-    /** Relinks companion input forwarding when input arrives on home but the link is stale (companion marked inactive or overlay focus latched) after a game, sleep/wake, or a foreground app yielding the secondary display. */
     private fun reassertCompanionForwarding() {
         if (!::dualScreenManager.isInitialized) return
         if (!displayAffinityHelper.hasSecondaryDisplay) return
@@ -713,12 +729,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * Re-checks localPath for every downloaded game whenever the user returns to
-     * the launcher. Catches manual deletions performed outside the app (e.g. via
-     * a file manager) so stale "installed" badges clear without requiring a cold
-     * restart. Cost is one File.exists per downloaded game; acceptable on resume.
-     */
     private fun revalidateDownloadedFiles() {
         activityScope.launch(Dispatchers.IO) {
             runCatching { gameRepository.validateLocalFiles() }
@@ -789,14 +799,14 @@ class MainActivity : ComponentActivity() {
                 } else if (!screenCaptureManager.hasPermission.value && !screenCapturePromptedThisSession) {
                     screenCapturePromptedThisSession = true
                     screenCaptureManager.requestPermission(
-                        this@MainActivity, screenCaptureLauncher
+                        this@ArgosyActivity, screenCaptureLauncher
                     )
                 }
             }
 
             if (shouldOfferLiveWallpaper(prefs)) {
                 displayPreferencesRepository.setLiveWallpaperOffered()
-                runCatching { startActivity(LockScreenScenes.pickerIntent(this@MainActivity)) }
+                runCatching { startActivity(LockScreenScenes.pickerIntent(this@ArgosyActivity)) }
                     .onFailure { Log.w(TAG, "Live wallpaper picker unavailable: ${it.message}") }
             }
         }
@@ -838,18 +848,6 @@ class MainActivity : ComponentActivity() {
         return false
     }
 
-    /**
-     * Holds this window awake while the person is using either screen, and for the whole of a
-     * playback.
-     *
-     * Input only counts as activity on the display it landed on, so without this the screen that
-     * is not being driven dims underneath a session the user is very much still in. During a
-     * playback the hold outlasts the idle signal because the launcher runs its own dim on this
-     * window: its darkest stage is a powered screen that looks off and wakes on any input, and
-     * dropping the flag mid-viewing invites the system to sleep the display underneath that ramp -
-     * at which point the ramp's later stages land on a screen that cannot show them and the waking
-     * touch is spent on the system's own wake instead of reaching the window.
-     */
     private fun keepAwakeWhileUserActive() {
         activityScope.launch {
             kotlinx.coroutines.flow.combine(
@@ -866,12 +864,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * Fades this window towards dark while a playback on another display runs unattended, so it
-     * neither distracts from the film nor burns battery. The override is the window's own, never a
-     * display power-down, and any input clears it through the same activity signal that holds the
-     * screens awake. The screen the player itself reported never dims.
-     */
     private fun dimWhileMediaIdle() {
         activityScope.launch {
             kotlinx.coroutines.flow.combine(
@@ -885,22 +877,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * A window brightness of zero drives the panel to its MINIMUM backlight, not off - the
-     * platform has no attribute value that blanks a panel. The manager therefore fades an opaque
-     * black cover over the window across the ramp's second leg, and this window renders it as a
-     * foreground drawable: it draws over everything and consumes no input itself. The waking tap
-     * is swallowed in dispatchTouchEvent for its whole gesture, so it clears the brightness
-     * override and starts the cover's fade-out without reaching the content underneath. The cover
-     * follows the display split rather than a live dim stage, because the wake fade runs after
-     * the override has already been released and the manager's alpha is the sole authority on how
-     * much cover remains.
-     *
-     * The player's display is the window's own report when one is current, otherwise the display
-     * the relocation rules place the player on: the report is cleared when a playback closes, and
-     * an episode switch reuses the window without restarting it, so a missing report during a live
-     * playback means stale bookkeeping, never "no player".
-     */
     private fun applyMediaDim(playerDisplayId: Int?, dim: Float?, coverAlpha: Float) {
         val ownDisplayId = window.decorView.display?.displayId
         val resolvedPlayerId = playerDisplayId ?: dualScreenManager.mediaPlayerRelocationDisplayId()
@@ -926,12 +902,6 @@ class MainActivity : ComponentActivity() {
 
     private var mediaDimDeclineKey: String? = null
 
-    /**
-     * Logs a dim stage this window received and chose not to apply, once per stage and reason, so
-     * a ramp whose output is being discarded shows up in the MediaDimRamp channel instead of
-     * failing silently. Declining because this display shows the playback is the expected case and
-     * is still logged - it is the positive proof of which window abstained and why.
-     */
     private fun logMediaDimDecline(
         dimsThisWindow: Boolean,
         ownDisplayId: Int?,
@@ -983,15 +953,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * Takes key focus back after a swap has made this the screen being driven.
-     *
-     * The companion does the same for itself when the roles go the other way. Without the matching
-     * move, a swap into this role leaves focus on the window that just became the showcase, and the
-     * pad reads as dead until a touch hands focus over.
-     */
     private fun refocusSelf() = startActivity(
-        Intent(this, MainActivity::class.java).apply {
+        Intent(this, ArgosyActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
     )

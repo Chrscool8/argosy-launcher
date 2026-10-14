@@ -48,6 +48,24 @@ class RomMCapabilitiesTest {
     }
 
     @Test
+    fun `the heartbeat reads the ra user summary flag from RETROACHIEVEMENTS`() {
+        val adapter = com.squareup.moshi.Moshi.Builder().build().adapter(RomMHeartbeatResponse::class.java)
+        val on = adapter.fromJson("""{"SYSTEM":{"VERSION":"5.5.0"},"RETROACHIEVEMENTS":{"USER_SUMMARY":true}}""")
+        val off = adapter.fromJson("""{"SYSTEM":{"VERSION":"5.5.0"},"RETROACHIEVEMENTS":{"USER_SUMMARY":false}}""")
+        val absent = adapter.fromJson("""{"SYSTEM":{"VERSION":"5.4.0"}}""")
+        assertTrue(on!!.raUserSummaryEnabled)
+        assertFalse(off!!.raUserSummaryEnabled)
+        assertFalse(absent!!.raUserSummaryEnabled)
+    }
+
+    @Test
+    fun `the ra user summary follows the heartbeat flag, not the version`() {
+        assertTrue(RomMCapabilities.from("5.4.0", raUserSummaryEnabled = true).supportsRaUserSummary)
+        assertFalse(RomMCapabilities.from("9.0.0").supportsRaUserSummary)
+        assertFalse("disconnected", RomMCapabilities.NONE.supportsRaUserSummary)
+    }
+
+    @Test
     fun `snapshots follow the heartbeat flag, not the version`() {
         assertTrue(RomMCapabilities.from("5.4.0", snapshotsEnabled = true).supportsSnapshots)
         assertTrue(RomMCapabilities.from("development", snapshotsEnabled = true).supportsSnapshots)

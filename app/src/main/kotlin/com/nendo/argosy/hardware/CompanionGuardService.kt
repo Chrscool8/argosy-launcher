@@ -12,11 +12,12 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.nendo.argosy.ArgosyActivity
 import com.nendo.argosy.DualScreenManagerHolder
-import com.nendo.argosy.MainActivity
 import com.nendo.argosy.R
 import com.nendo.argosy.core.service.ServiceNotificationIds
 import com.nendo.argosy.core.service.startForegroundServiceSafely
+import com.nendo.argosy.util.HomeAppComponent
 import com.nendo.argosy.util.SecondaryHomeComponent
 
 class CompanionGuardService : Service() {
@@ -72,7 +73,7 @@ class CompanionGuardService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        if (rootIntent?.component?.className != MainActivity::class.java.name) return
+        if (!HomeAppComponent.isLauncherActivity(rootIntent?.component?.className)) return
         if (SecondaryHomeComponent.isDefaultHome(this)) return
         val dsm = DualScreenManagerHolder.instance
         val sessionLive = dsm?.hasLiveSession() == true
@@ -124,7 +125,7 @@ class CompanionGuardService : Service() {
     }
 
     private fun createContentIntent(): PendingIntent {
-        val intent = Intent(this, MainActivity::class.java).apply {
+        val intent = Intent(this, ArgosyActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         return PendingIntent.getActivity(

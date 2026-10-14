@@ -5,6 +5,7 @@ import com.nendo.argosy.R
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Instant
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -28,6 +29,15 @@ fun formatMonthDay(instant: Instant): String {
         .withZone(ZoneId.systemDefault())
         .format(instant)
 }
+
+fun formatMonthYear(month: YearMonth): String {
+    val locale = Locale.getDefault()
+    val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "MMMMyyyy")
+    return DateTimeFormatter.ofPattern(pattern, locale).format(month)
+}
+
+fun formatMonthName(month: YearMonth): String =
+    month.month.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, Locale.getDefault())
 
 fun formatPlayTime(context: Context, minutes: Int): String = when {
     minutes < MINUTES_PER_HOUR -> context.getString(R.string.util_formatters_playtime_minutes, minutes)

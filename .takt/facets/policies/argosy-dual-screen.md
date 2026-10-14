@@ -28,7 +28,7 @@ Source: dual-screen skill, AGENTS.md. All rules are blocking.
 ## Displays and input
 
 - Code under `ArgosyApp` reaches DSM through `DualScreenManagerHolder.instance`, not
-  `context as? MainActivity`.
+  `context as? ArgosyActivity`.
 - Screen layout resolves only in `DualScreenManager.applyStoredScreenLayout`.
 - Displays enumerate through `ScreenCatalog.attachedScreens()`; `getRealSize()` is not used for a
   target panel's size. Screens are not addressed by display id.

@@ -65,23 +65,25 @@ class PlayStatsRepository @Inject constructor(
      */
     suspend fun loadSnapshot(rangeDays: Int): PlayTimeSnapshot = withContext(Dispatchers.IO) {
         val ownerUserId = syncPreferencesRepository.getRommUserId()
+        val hidden = syncPreferencesRepository.privateIgdbIds()
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
         val firstDay = today.minusDays((rangeDays - 1).toLong())
         val since = firstDay.atStartOfDay(zone).toInstant()
+        val until = today.plusDays(1).atStartOfDay(zone).toInstant()
 
-        val dayTotals = playSessionDao.getActiveMsPerDay(ownerUserId, since, MIN_DISPLAY_MS)
+        val dayTotals = playSessionDao.getActiveMsPerDay(ownerUserId, since, until, MIN_DISPLAY_MS, hidden)
             .associate { it.day to it.activeMs }
         val days = (0 until rangeDays).map { offset ->
             val date = firstDay.plusDays(offset.toLong())
             PlayDay(date = date, activeMs = dayTotals[date.toString()] ?: 0L)
         }
-        val playDays = playSessionDao.getPlayDays(ownerUserId, MIN_DISPLAY_MS).mapNotNull { day ->
+        val playDays = playSessionDao.getPlayDays(ownerUserId, MIN_DISPLAY_MS, hidden).mapNotNull { day ->
             runCatching { LocalDate.parse(day) }.getOrNull()
         }
-        val rangeSessions = playSessionDao.getSessionsForOwnerSince(ownerUserId, since)
+        val rangeSessions = playSessionDao.getSessionsForOwnerSince(ownerUserId, since, hidden)
         val weekHourMs = PlayWeekHourMatrix.build(rangeSessions, zone)
-        val shape = playSessionDao.getSessionShape(ownerUserId, since)
+        val shape = playSessionDao.getSessionShape(ownerUserId, since, hidden)
         val localDeviceId = localDeviceId()
         PlayTimeSnapshot(
             days = days,
@@ -89,9 +91,9 @@ class PlayStatsRepository @Inject constructor(
             weekHourMs = weekHourMs,
             rangeSessions = rangeSessions,
             summary = PlayTimeSummaryCalculator.compute(rangeSessions, weekHourMs),
-            platforms = playSessionDao.getActiveMsPerPlatform(ownerUserId, since, MIN_DISPLAY_MS),
-            devices = playSessionDao.getActiveMsPerDevice(ownerUserId, since, MIN_DISPLAY_MS),
-            games = playSessionDao.getActiveMsPerGame(ownerUserId, since, MIN_DISPLAY_MS, GAME_TOTALS_LIMIT),
+            platforms = playSessionDao.getActiveMsPerPlatform(ownerUserId, since, MIN_DISPLAY_MS, hidden),
+            devices = playSessionDao.getActiveMsPerDevice(ownerUserId, since, MIN_DISPLAY_MS, hidden),
+            games = playSessionDao.getActiveMsPerGame(ownerUserId, since, MIN_DISPLAY_MS, GAME_TOTALS_LIMIT, hidden),
             localDeviceId = localDeviceId,
             sessionCount = shape.sessionCount,
             syncCounts = playSessionDao.getRommSyncCounts(ownerUserId, localDeviceId),

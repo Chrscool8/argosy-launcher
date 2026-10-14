@@ -90,7 +90,17 @@ data class DualScreenOutput(
             secondaryAspect = 256f / 192f
         )
 
-        private val byCore = listOf(AZAHAR, MELONDS).associateBy { it.coreId }
+        private val MELONDS_DS = MELONDS.copy(
+            coreId = "melondsds",
+            coreOptions = mapOf(
+                "melonds_number_of_screen_layouts" to "1",
+                "melonds_screen_layout1" to "top-bottom",
+                "melonds_screen_gap" to "0",
+                "melonds_touch_mode" to "touch"
+            )
+        )
+
+        private val byCore = listOf(AZAHAR, MELONDS, MELONDS_DS).associateBy { it.coreId }
 
         fun forCore(coreId: String?): DualScreenOutput? = coreId?.let { byCore[it] }
     }

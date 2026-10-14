@@ -139,8 +139,26 @@ class HomeViewModel @Inject constructor(
     private val siblingChoice: com.nendo.argosy.ui.screens.common.SiblingChoiceDelegate,
     private val showcaseSource: com.nendo.argosy.ui.common.PresentationShowcaseSource,
     private val quickNavigationSource: com.nendo.argosy.data.preferences.QuickNavigationSource,
-    private val firstFrameCache: HomeFirstFrameCache
+    private val firstFrameCache: HomeFirstFrameCache,
+    private val monthlyRecap: com.nendo.argosy.ui.components.recap.MonthlyRecapController
 ) : ViewModel(), HomeInputActions {
+
+    private val selectDoubleTap = com.nendo.argosy.ui.screens.home.delegates.SelectDoubleTap(
+        scope = viewModelScope,
+        windowMs = com.nendo.argosy.ui.theme.generated.InputTokens.Debounce.selectDoubleTapMs,
+        clock = android.os.SystemClock::uptimeMillis
+    )
+
+    override fun pressSelect(onSingle: () -> Unit) {
+        selectDoubleTap.press(onSingle = onSingle, onDouble = { monthlyRecap.openLastMonth() })
+    }
+
+    fun onHomeShown() = monthlyRecap.onHomeShown()
+
+    fun onHomeHidden() {
+        selectDoubleTap.cancel()
+        monthlyRecap.onHomeHidden()
+    }
 
     val quickNavigationEnabled: StateFlow<Boolean> get() = quickNavigationSource.enabled
 
@@ -705,11 +723,13 @@ class HomeViewModel @Inject constructor(
         libraryDelegate.observeRecentlyPlayedChanges(viewModelScope) { validated ->
             _uiState.update { state ->
                 val newState = state.copy(recentGames = validated)
-                if (state.currentRow == HomeRow.Continue && validated.isEmpty()) {
-                    val newRow = newState.availableRows.firstOrNull() ?: HomeRow.Continue
-                    newState.copy(currentRow = newRow, focusedGameIndex = 0)
-                } else {
-                    newState
+                when {
+                    state.currentRow != HomeRow.Continue -> newState
+                    validated.isEmpty() -> {
+                        val newRow = newState.availableRows.firstOrNull() ?: HomeRow.Continue
+                        newState.copy(currentRow = newRow, focusedGameIndex = 0)
+                    }
+                    else -> newState.keepingFocusOn(state.focusedGame?.id)
                 }
             }
             refreshTileGamesAndFeatures()
@@ -2292,6 +2312,7 @@ class HomeViewModel @Inject constructor(
         syncDelegate.refreshFavoritesIfConnected(viewModelScope) {
             libraryDelegate.loadFavorites()
         }
+        syncDelegate.pullPlaySessionsIfDue()
         viewModelScope.launch {
             libraryDelegate.refreshRecommendationsIfNeeded()
             syncDelegate.checkForChangelog()

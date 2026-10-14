@@ -41,6 +41,8 @@ class QuickSettingsInputRouter(
     override fun onRightStickClick() = route { it.onRightStickClick() }
     override fun onRightStickUp() = route { it.onRightStickUp() }
     override fun onRightStickDown() = route { it.onRightStickDown() }
+    override fun onRightStickLeft() = route { it.onRightStickLeft() }
+    override fun onRightStickRight() = route { it.onRightStickRight() }
     override fun onLongConfirm() = route { it.onLongConfirm() }
     override fun onLongSelect() = route { it.onLongSelect() }
 }

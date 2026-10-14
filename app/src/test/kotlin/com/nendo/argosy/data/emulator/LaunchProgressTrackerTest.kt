@@ -1,6 +1,7 @@
 package com.nendo.argosy.data.emulator
 
 import com.nendo.argosy.domain.model.LaunchPromptOption
+import com.nendo.argosy.domain.model.LaunchRecap
 import com.nendo.argosy.domain.model.LaunchStep
 import com.nendo.argosy.domain.model.SyncProgress
 import kotlinx.coroutines.async
@@ -19,6 +20,8 @@ class LaunchProgressTrackerTest {
     private fun TestScope.tracker() = LaunchProgressTracker(backgroundScope)
 
     private val conflict = SyncProgress.LocalModified(gameId = 1L, localSavePath = "/save", channelName = null)
+
+    private val recap = LaunchRecap(gameTitle = "Game", lastSession = null, unlocks = emptyList())
 
     @Test
     fun `a launch reports its steps under the game title`() = runTest {
@@ -73,6 +76,42 @@ class LaunchProgressTrackerTest {
         tracker.answer(LaunchPromptOption.RESTORE_SERVER)
 
         assertEquals(LaunchPromptOption.RESTORE_SERVER, answer.await())
+    }
+
+    @Test
+    fun `starting from the recap continues the launch`() = runTest {
+        val tracker = tracker()
+        val ticket = tracker.begin("Game")!!
+        val started = async { ticket.offerRecap(recap) }
+        runCurrent()
+
+        assertEquals(LaunchStep.Recap(recap), tracker.progress.value?.step)
+        tracker.answer(LaunchPromptOption.START_GAME)
+
+        assertTrue(started.await())
+    }
+
+    @Test
+    fun `cancelling from the recap stops the launch`() = runTest {
+        val tracker = tracker()
+        val ticket = tracker.begin("Game")!!
+        val started = async { ticket.offerRecap(recap) }
+        runCurrent()
+
+        tracker.cancel()
+
+        assertFalse(started.await())
+        assertTrue(ticket.isCancelled)
+    }
+
+    @Test
+    fun `a recap offered after a cancel is never shown`() = runTest {
+        val tracker = tracker()
+        val ticket = tracker.begin("Game")!!
+        tracker.cancel()
+
+        assertFalse(ticket.offerRecap(recap))
+        assertNull(tracker.progress.value)
     }
 
     @Test

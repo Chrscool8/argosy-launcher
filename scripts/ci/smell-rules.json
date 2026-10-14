@@ -187,13 +187,13 @@
     {
       "id": "compose-focusable",
       "summary": "Compose focus added for navigation or selection",
-      "message": "Gamepad navigation is index-driven through InputHandler with a focus index the ViewModel owns. Compose focus decides nothing about selection. The only focusable() calls are root key sinks, one per rendered surface: ArgosyApp for the control surface, the presentation branch of MainActivity and SecondaryHomeActivity, and AppScreenActivity. A surface with no sink leaves its window unfocusable and Android ANRs the activity with 'does not have a focused window'. See AGENTS.md (Input) and CONTRIBUTING.md (dual-modality).",
+      "message": "Gamepad navigation is index-driven through InputHandler with a focus index the ViewModel owns. Compose focus decides nothing about selection. The only focusable() calls are root key sinks, one per rendered surface: ArgosyApp for the control surface, the presentation branch of ArgosyActivity and SecondaryHomeActivity, and AppScreenActivity. A surface with no sink leaves its window unfocusable and Android ANRs the activity with 'does not have a focused window'. See AGENTS.md (Input) and CONTRIBUTING.md (dual-modality).",
       "path_include": [
         "app/src/main/**/*.kt"
       ],
       "path_exclude": [
         "app/src/main/**/ArgosyApp.kt",
-        "app/src/main/**/MainActivity.kt",
+        "app/src/main/**/ArgosyActivity.kt",
         "app/src/main/**/SecondaryHomeActivity.kt",
         "app/src/main/**/AppScreenActivity.kt"
       ],

@@ -310,7 +310,9 @@ object SettingsBackupKeys {
     )
 
     private val SESSIONS = listOf(
-        SettingsBackupKey("close_emulator_on_session_end", SettingsBackupType.BOOLEAN)
+        SettingsBackupKey("close_emulator_on_session_end", SettingsBackupType.BOOLEAN),
+        SettingsBackupKey("pre_launch_recaps_enabled", SettingsBackupType.BOOLEAN),
+        SettingsBackupKey("monthly_recap_enabled", SettingsBackupType.BOOLEAN)
     )
 
     val EXPORTED: List<SettingsBackupKey> =

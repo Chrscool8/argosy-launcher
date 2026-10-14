@@ -352,17 +352,20 @@ fun HomeScreen(
                 viewModel.refreshFavorites()
                 viewModel.refreshRecentGames()
                 viewModel.republishCompanionDetail()
+                viewModel.onHomeShown()
             }
             if (event == Lifecycle.Event.ON_STOP) viewModel.cancelAppBarReorder()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         inputDispatcher.subscribeView(inputHandler, forRoute = Screen.ROUTE_HOME)
         viewModel.republishCompanionDetail()
+        viewModel.onHomeShown()
         onDispose {
             viewModel.cancelAppBarReorder()
             lifecycleOwner.lifecycle.removeObserver(observer)
             viewModel.clearCompanionDetail()
             viewModel.dismissAppBarTools()
+            viewModel.onHomeHidden()
         }
     }
 

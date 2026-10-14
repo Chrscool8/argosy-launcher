@@ -719,6 +719,19 @@ object PlatformDefinitions {
         return combined to combined
     }
 
+    /**
+     * The display and short names derived for a RomM platform, or null to use its own names.
+     * The folder slug names a platform only when RomM's slug is not one the registry knows.
+     */
+    fun importDisplayNames(remoteSlug: String, fsSlug: String?, effectiveSlug: String): Pair<String, String>? {
+        if (!effectiveSlug.equals(remoteSlug, ignoreCase = true)) {
+            return getAliasDisplayName(effectiveSlug) ?: deriveDisplayName(effectiveSlug)
+        }
+        return getAliasDisplayName(remoteSlug)
+            ?: deriveDisplayName(remoteSlug)
+            ?: deriveDisplayName(fsSlug).takeUnless { isKnownSlug(remoteSlug.lowercase()) }
+    }
+
     private val aliasDisplayNames: Map<String, Pair<String, String>> = mapOf(
         "mame" to ("MAME" to "MAME"),
         "fbneo" to ("FB Neo" to "FBNeo"),

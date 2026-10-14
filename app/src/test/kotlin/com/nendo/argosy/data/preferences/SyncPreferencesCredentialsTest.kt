@@ -10,6 +10,7 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.time.Instant
 
 /**
  * The device id identifies this device to one RomM instance. An instance answers on more than
@@ -52,6 +53,29 @@ class SyncPreferencesCredentialsTest {
         assertNull(prefs.rommDeviceId)
         assertNull(prefs.rommDeviceClientVersion)
         assertEquals(8L, prefs.rommUserId)
+    }
+
+    @Test
+    fun `a different user drops the play-session pull time`() = runTest {
+        val repo = repository(CoroutineScope(StandardTestDispatcher(testScheduler)))
+        repo.setRomMCredentials("https://romm.example.com/", "token", "player", 7)
+        repo.setRommPlaySessionLastPull(Instant.parse("2026-10-13T12:00:00Z"))
+
+        repo.setRomMCredentials("https://romm.example.com/", "other-token", "other", 8)
+
+        assertNull(repo.getRommPlaySessionLastPull())
+    }
+
+    @Test
+    fun `the same user keeps the play-session pull time`() = runTest {
+        val repo = repository(CoroutineScope(StandardTestDispatcher(testScheduler)))
+        val lastPull = Instant.parse("2026-10-13T12:00:00Z")
+        repo.setRomMCredentials("https://romm.example.com/", "token", "player", 7)
+        repo.setRommPlaySessionLastPull(lastPull)
+
+        repo.setRomMCredentials("http://192.168.1.10:8080/", "token", "player", 7)
+
+        assertEquals(lastPull, repo.getRommPlaySessionLastPull())
     }
 
     @Test

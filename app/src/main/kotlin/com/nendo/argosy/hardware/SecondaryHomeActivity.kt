@@ -109,6 +109,14 @@ class SecondaryHomeActivity :
         installImmersiveMode()
         keepAwakeWhileUserActive()
 
+        if (com.nendo.argosy.util.DesktopMode.isActive(this)) {
+            android.util.Log.i("SecondaryHome", "Samsung DeX active, releasing this display")
+            com.nendo.argosy.util.SecondaryHomeComponent.setEnabled(this, false)
+            CompanionGuardService.stop(this)
+            finish()
+            return
+        }
+
         val docked = com.nendo.argosy.util.DisplayAffinityHelper.dockedExternalDisplayId(this) != null
         if (!docked && !SessionStateStore(applicationContext).isDualScreenEnabled()) {
             android.util.Log.d("SecondaryHome", "dualScreenEnabled=false, finishing")
@@ -135,7 +143,7 @@ class SecondaryHomeActivity :
             )
             awaitSessionEnd()
         } else {
-            recoverThroughMainActivity()
+            recoverThroughArgosyActivity()
         }
 
         setContent {
@@ -744,7 +752,7 @@ class SecondaryHomeActivity :
             while (sessionHoldsThisDisplay()) {
                 kotlinx.coroutines.delay(SESSION_END_POLL_MS)
             }
-            recoverThroughMainActivity()
+            recoverThroughArgosyActivity()
         }
     }
 
@@ -754,10 +762,10 @@ class SecondaryHomeActivity :
      * finishes this one on failure, and the OS respawning a pinned home activity turns that into a
      * loop if a game is what it keeps landing behind.
      */
-    private fun recoverThroughMainActivity() {
-        android.util.Log.w("SecondaryHome", "DSM not available, launching MainActivity")
+    private fun recoverThroughArgosyActivity() {
+        android.util.Log.w("SecondaryHome", "DSM not available, launching ArgosyActivity")
         startActivity(
-            Intent(this, com.nendo.argosy.MainActivity::class.java).apply {
+            Intent(this, com.nendo.argosy.ArgosyActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             },
             android.app.ActivityOptions.makeBasic()

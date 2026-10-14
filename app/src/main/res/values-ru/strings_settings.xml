@@ -112,6 +112,10 @@
     <string name="settings_interface_compact_footer_subtitle">Использовать более тонкую панель подсказок</string>
     <string name="settings_interface_lock_screen_art_title">Картинка экрана блокировки</string>
     <string name="settings_interface_lock_screen_art_subtitle">Пока Argosy — ваше приложение главного экрана, на экране блокировки показывается ваша библиотека или незакрытая игра. Заменяет обои экрана блокировки безвозвратно.</string>
+    <string name="settings_interface_home_app_title">Доступно как приложение главного экрана</string>
+    <string name="settings_interface_home_app_subtitle">Android сможет предлагать Argosy в качестве главного экрана. Samsung DeX открывает Argosy, только если этот параметр выключен.</string>
+    <string name="settings_interface_home_app_locked_value">Вкл.</string>
+    <string name="settings_interface_home_app_locked_subtitle">Argosy сейчас ваше приложение главного экрана. Чтобы выключить этот параметр, выберите другое приложение главного экрана в настройках Android.</string>
     <string name="settings_interface_controller_grip_title">Хват контроллера</string>
     <string name="settings_interface_controller_grip_subtitle">Сдвинуть интерфейс выше зоны, занимаемой хватом</string>
     <string name="settings_interface_home_screen_title">Главный экран</string>
@@ -253,6 +257,7 @@
     <string name="settings_interface_section_general">Общие</string>
     <string name="settings_interface_section_screens">Экраны</string>
     <string name="settings_interface_section_status_bar">Строка состояния</string>
+    <string name="settings_interface_section_recaps">Итоги</string>
     <string name="settings_presentation_layout_title">Макет</string>
     <string name="settings_presentation_layout_cinematic">Кино</string>
     <string name="settings_presentation_layout_journal">Дневник</string>
@@ -328,6 +333,10 @@
     <string name="settings_interface_status_battery_subtitle">Показывать уровень заряда в строке состояния</string>
     <string name="settings_interface_status_network_title">Сеть</string>
     <string name="settings_interface_status_network_subtitle">Показывать текущее подключение в строке состояния</string>
+    <string name="settings_interface_pre_launch_recaps_title">Итоги перед запуском</string>
+    <string name="settings_interface_pre_launch_recaps_subtitle">Перед игрой RetroAchievements, в которую вы не играли неделю, показывать, на чём вы остановились</string>
+    <string name="settings_interface_monthly_recap_title">Итоги месяца</string>
+    <string name="settings_interface_monthly_recap_subtitle">В начале каждого месяца показывать на главном экране сводку за прошлый месяц</string>
 
     <string name="settings_home_screen_background_title">Фон</string>
     <string name="settings_home_screen_background_subtitle">Арт игры или фоновый узор</string>
@@ -462,6 +471,27 @@
     <string name="settings_ra_logout_title">Выйти</string>
     <string name="settings_ra_logout_title_busy">Выход...</string>
     <string name="settings_ra_logout_subtitle">Выйти из RetroAchievements</string>
+    <string name="settings_ra_web_api_key_title">Ключ веб-API (необязательно)</string>
+    <string name="settings_ra_web_api_key_subtitle">Находится в разделе Keys панели управления RetroAchievements. Делает итоги быстрее и подробнее.</string>
+    <string name="settings_ra_web_api_key_value_not_set">Не задан</string>
+    <string name="settings_ra_web_api_key_value_saved_short">Сохранён</string>
+    <string name="settings_ra_web_api_key_value_rejected">Ключ отклонён</string>
+    <string name="settings_ra_web_api_key_modal_title">Ключ веб-API RetroAchievements</string>
+    <string name="settings_ra_web_api_key_modal_message">Скопируйте ключ веб-API из раздела Keys панели управления RetroAchievements и вставьте его сюда. Argosy один раз проверит его перед сохранением.</string>
+    <string name="settings_ra_web_api_key_field_label">Ключ веб-API</string>
+    <string name="settings_ra_web_api_key_paste">Вставить</string>
+    <string name="settings_ra_web_api_key_clear">Удалить</string>
+    <string name="settings_ra_web_api_key_cancel">Отмена</string>
+    <string name="settings_ra_web_api_key_save">Сохранить</string>
+    <string name="settings_ra_web_api_key_save_busy">Проверка...</string>
+    <string name="settings_ra_web_api_key_status_validating">Проверка ключа в RetroAchievements...</string>
+    <string name="settings_ra_web_api_key_status_rejected">RetroAchievements не принял этот ключ.</string>
+    <string name="settings_ra_web_api_key_status_unreachable">Не удалось связаться с RetroAchievements. Попробуйте ещё раз.</string>
+    <string name="settings_ra_web_api_key_status_clipboard_empty">В буфере обмена нет текста.</string>
+    <string name="settings_ra_web_api_key_saved_title">Ключ веб-API сохранён</string>
+    <string name="settings_ra_web_api_key_saved_subtitle">Итоги теперь читают RetroAchievements напрямую.</string>
+    <string name="settings_ra_web_api_key_cleared_title">Ключ веб-API удалён</string>
+    <string name="settings_ra_web_api_key_cleared_subtitle">Ключ больше не хранится на этом устройстве.</string>
 
     <string name="settings_ra_play_mode_title">Предпочитаемый режим игры</string>
     <string name="settings_ra_play_mode_subtitle_locked">Требуются защищённые сохранения</string>
@@ -1830,8 +1860,8 @@
 
     <!-- ===== GameNative folders panel ===== -->
 
-    <string name="settings_gamenative_folders_title">Папки GameNative</string>
-    <string name="settings_gamenative_folders_subtitle">Укажите для каждого магазина папку, куда GameNative экспортирует свои установки. Steam только отмечает купленные игры как установленные; остальные магазины добавляют и удаляют свои игры в соответствии с папкой.</string>
+    <string name="settings_gamenative_folders_title">Папки синхронизации лаунчеров</string>
+    <string name="settings_gamenative_folders_subtitle">Укажите для каждого магазина папку, куда GameNative экспортирует свои установки, а для DroidDeck - его папку файлов игр. Steam только отмечает купленные игры как установленные; остальные магазины добавляют и удаляют свои игры в соответствии с папкой.</string>
     <string name="settings_gamenative_folders_hint_set">Задать / Очистить</string>
     <string name="settings_gamenative_folders_hint_select">Выбрать</string>
     <string name="settings_gamenative_folders_hint_back">Назад</string>
@@ -2579,6 +2609,8 @@
     <string name="settings_play_time_section_where">УСТРОЙСТВА</string>
     <string name="settings_play_time_section_what">ВО ЧТО ВЫ ИГРАЕТЕ</string>
     <string name="settings_play_time_section_facts">КОРОТКО О ГЛАВНОМ</string>
+    <string name="settings_play_time_last_month_title">Итоги прошлого месяца</string>
+    <string name="settings_play_time_last_month_subtitle">Время в игре, новые любимые игры и достижения за прошлый месяц</string>
     <string name="settings_play_time_loading_title">Чтение сессий...</string>
     <string name="settings_play_time_loading_message">Ваши игровые привычки появятся через мгновение.</string>
     <string name="settings_play_time_empty_title">Игровых сессий пока нет</string>

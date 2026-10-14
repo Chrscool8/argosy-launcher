@@ -112,7 +112,8 @@ class PlaySessionTracker @Inject constructor(
     private val savePathAuthority: com.nendo.argosy.data.emulator.savepath.SavePathAuthority,
     private val sessionSaveFinalizer: SessionSaveFinalizer,
     private val gameArtDao: com.nendo.argosy.data.local.dao.GameArtDao,
-    private val snapshotRouter: dagger.Lazy<com.nendo.argosy.data.sync.snapshot.SnapshotSyncRouter>
+    private val snapshotRouter: dagger.Lazy<com.nendo.argosy.data.sync.snapshot.SnapshotSyncRouter>,
+    private val sessionRecapFactsRecorder: SessionRecapFactsRecorder
 ) {
     companion object {
         private const val TAG = "PlaySessionTracker"
@@ -219,13 +220,12 @@ class PlaySessionTracker @Inject constructor(
         registerScreenReceiver()
     }
 
-    private suspend fun insertPlaySessionIfAbsent(entity: PlaySessionEntity): Boolean {
+    private suspend fun insertPlaySessionIfAbsent(entity: PlaySessionEntity): Long? {
         if (playSessionDao.existsByGameAndStart(entity.gameId, entity.startTime)) {
             Logger.debug(TAG, "[SaveSync] SESSION gameId=${entity.gameId} | Play session already recorded for startTime=${entity.startTime}, skipping duplicate")
-            return false
+            return null
         }
-        playSessionDao.insert(entity)
-        return true
+        return playSessionDao.insert(entity)
     }
 
     private suspend fun recordOrphanedPlaySession(orphaned: PersistedSession, endTime: Instant): Boolean {
@@ -235,7 +235,8 @@ class PlaySessionTracker @Inject constructor(
             val game = gameDao.getById(orphaned.gameId)
             val prefs = preferencesRepository.userPreferences.first()
             val deviceId = Settings.Secure.getString(application.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
-            val inserted = insertPlaySessionIfAbsent(
+            val recapFacts = sessionRecapFactsRecorder.factsFor(game, orphaned.emulatorPackage, orphaned.startTime, endTime)
+            val sessionId = insertPlaySessionIfAbsent(
                 PlaySessionEntity(
                     userId = prefs.socialUserId,
                     ownerUserId = prefs.rommUserId,
@@ -250,10 +251,16 @@ class PlaySessionTracker @Inject constructor(
                     deviceManufacturer = Build.MANUFACTURER,
                     deviceModel = Build.MODEL,
                     activePlayMs = activePlayMs,
-                    standbyMs = standbyMs
+                    standbyMs = standbyMs,
+                    raGameId = recapFacts.raGameId,
+                    richPresence = recapFacts.richPresence,
+                    richPresenceAt = recapFacts.richPresenceAt
                 )
             )
-            if (inserted) {
+            if (sessionId != null) {
+                sessionRecapFactsRecorder.onSessionRecorded(
+                    scope, sessionId, orphaned.gameId, orphaned.emulatorPackage, recapFacts, orphaned.startTime, endTime
+                )
                 Logger.info(TAG, "[SaveSync] ORPHAN gameId=${orphaned.gameId} | Play session entity created | activePlayMs=$activePlayMs, standbyMs=$standbyMs")
                 socialRepository.get().syncPlaySessions()
                 reconcileAchievementsInBackground(orphaned.gameId)
@@ -268,7 +275,7 @@ class PlaySessionTracker @Inject constructor(
                     Duration.ofMillis(activePlayMs)
                 )
             }
-            inserted
+            sessionId != null
         } catch (e: Exception) {
             Logger.error(TAG, "[SaveSync] ORPHAN gameId=${orphaned.gameId} | Failed to create play session entity", e)
             false
@@ -509,6 +516,7 @@ class PlaySessionTracker @Inject constructor(
         longestMarathonSegment = Duration.ZERO
 
         val startTime = Instant.now()
+        sessionRecapFactsRecorder.onSessionStarted(scope, gameId, emulatorPackage, startTime)
         _activeSession.value = ActiveSession(
             gameId = gameId,
             startTime = startTime,
@@ -701,7 +709,8 @@ class PlaySessionTracker @Inject constructor(
                 val game = gameDao.getById(session.gameId)
                 val prefs = preferencesRepository.userPreferences.first()
                 val deviceId = Settings.Secure.getString(application.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
-                val inserted = insertPlaySessionIfAbsent(
+                val recapFacts = sessionRecapFactsRecorder.factsFor(game, session.emulatorPackage, session.startTime, endTime)
+                val sessionId = insertPlaySessionIfAbsent(
                     PlaySessionEntity(
                         userId = prefs.socialUserId,
                         ownerUserId = prefs.rommUserId,
@@ -716,10 +725,16 @@ class PlaySessionTracker @Inject constructor(
                         deviceManufacturer = Build.MANUFACTURER,
                         deviceModel = Build.MODEL,
                         activePlayMs = activePlayMs,
-                        standbyMs = standbyMs
+                        standbyMs = standbyMs,
+                        raGameId = recapFacts.raGameId,
+                        richPresence = recapFacts.richPresence,
+                        richPresenceAt = recapFacts.richPresenceAt
                     )
                 )
-                if (inserted) {
+                if (sessionId != null) {
+                    sessionRecapFactsRecorder.onSessionRecorded(
+                        scope, sessionId, session.gameId, session.emulatorPackage, recapFacts, session.startTime, endTime
+                    )
                     Logger.debug(TAG, "[SaveSync] SESSION gameId=${session.gameId} | Play session entity created | activePlayMs=$activePlayMs, standbyMs=$standbyMs")
                     socialRepository.get().syncPlaySessions()
                 }

@@ -116,7 +116,7 @@ class CoreSystemDataManager @Inject constructor(
         Logger.info(TAG, "Downloading ARMSX2 resources (version $currentVersion)")
         val complete = ARMSX2_RESOURCE_FILES.all { (source, target) ->
             try {
-                downloadFile("$ARMSX2_RAW_BASE/$source", File(targetDir, target))
+                downloadFile(source, File(targetDir, target))
                 true
             } catch (e: Exception) {
                 Logger.warn(TAG, "Failed to download ARMSX2 resource $source: ${e.message}")
@@ -181,9 +181,12 @@ class CoreSystemDataManager @Inject constructor(
         const val ARMSX2_RAW_BASE = "https://raw.githubusercontent.com/ARMSX2/ARMSX2/$ARMSX2_UPSTREAM_COMMIT"
         const val ARMSX2_RESOURCES_PATH = "pcsx2/resources"
 
+        const val PCSX2_PATCHES_URL = "https://github.com/PCSX2/pcsx2_patches/releases/download/latest/patches.zip"
+
         val ARMSX2_RESOURCE_FILES: List<Pair<String, String>> = listOf(
-            "bin/resources-overlay/armsx2_overrides.yaml" to "armsx2_overrides.yaml",
-            "bin/resources/fonts/Roboto-Regular.ttf" to "fonts/Roboto-Regular.ttf"
+            "$ARMSX2_RAW_BASE/bin/resources-overlay/armsx2_overrides.yaml" to "armsx2_overrides.yaml",
+            "$ARMSX2_RAW_BASE/bin/resources/fonts/Roboto-Regular.ttf" to "fonts/Roboto-Regular.ttf",
+            PCSX2_PATCHES_URL to "patches.zip"
         )
     }
 }

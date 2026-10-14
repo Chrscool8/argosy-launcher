@@ -37,6 +37,18 @@ object Armsx2Manifest : CoreOptionManifest {
             defaultValue = "Automatic"
         ),
         CoreOptionDef(
+            key = "armsx2_no_interlacing_patches",
+            displayName = "No-Interlacing Patches",
+            values = listOf("disabled", "enabled"),
+            defaultValue = "disabled"
+        ),
+        CoreOptionDef(
+            key = "armsx2_widescreen_patches",
+            displayName = "Widescreen Patches",
+            values = listOf("disabled", "enabled"),
+            defaultValue = "disabled"
+        ),
+        CoreOptionDef(
             key = "armsx2_blending_accuracy",
             displayName = "Blending Accuracy",
             values = listOf("Minimum", "Basic", "Medium", "High", "Full", "Maximum"),

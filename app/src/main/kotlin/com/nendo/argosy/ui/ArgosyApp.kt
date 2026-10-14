@@ -165,7 +165,7 @@ fun ArgosyApp(
     val navRingState by viewModel.navRingState.collectAsState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val activity = context as? com.nendo.argosy.MainActivity
+    val activity = context as? com.nendo.argosy.ArgosyActivity
     val dsm = remember { com.nendo.argosy.DualScreenManagerHolder.instance }
 
     val companionActive by dsm?.isCompanionActive?.collectAsState()
@@ -1232,7 +1232,9 @@ fun ArgosyApp(
                     animationSpec = androidx.compose.animation.core.tween(200),
                     label = "quickMenuBlur"
                 )
-                val contentBlur = maxOf(drawerBlur, quickMenuBlur)
+                val launchRecapBlur = com.nendo.argosy.ui.components.launchRecapBackdropBlur()
+                val monthlyRecapBlur = com.nendo.argosy.ui.components.recap.monthlyRecapBackdropBlur()
+                val contentBlur = maxOf(drawerBlur, quickMenuBlur, launchRecapBlur, monthlyRecapBlur)
 
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize()
@@ -1281,6 +1283,8 @@ fun ArgosyApp(
                     )
                 }
             }
+
+            com.nendo.argosy.ui.components.recap.MonthlyRecapOverlay()
 
             com.nendo.argosy.ui.components.LaunchOverlay()
 

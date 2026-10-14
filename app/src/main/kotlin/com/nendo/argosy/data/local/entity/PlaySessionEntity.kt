@@ -43,7 +43,19 @@ data class PlaySessionEntity(
      * reported the session as already held without saying under which id. Null means the RomM
      * ingest has not accepted the row yet; that is the whole selection rule for what to upload.
      */
-    val rommSessionId: Long? = null
+    val rommSessionId: Long? = null,
+    val raGameId: Long? = null,
+    /**
+     * The last RetroAchievements rich-presence line seen for this session, and when it was
+     * current. Null for sessions recorded on another device or before the line was captured.
+     */
+    val richPresence: String? = null,
+    val richPresenceAt: Instant? = null,
+    /**
+     * The achievements unlocked between this session's launch and end snapshots, in the encoding
+     * of RaUnlockSnapshots. Null when no pair of snapshots was taken.
+     */
+    val raSnapshotUnlocks: String? = null
 ) {
     companion object {
         const val ROMM_SESSION_ID_UNKNOWN = -1L

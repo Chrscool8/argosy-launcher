@@ -1,6 +1,7 @@
 package com.nendo.argosy.data.launcher
 
 import android.content.Context
+import com.nendo.argosy.domain.model.LaunchPromptOption
 
 object SteamLaunchers {
     val all: List<SteamLauncher> = listOf(
@@ -29,6 +30,32 @@ object SteamLaunchers {
 
     fun getPreferred(context: Context): SteamLauncher? =
         getInstalled(context).firstOrNull()
+
+    private val promptOptions: Map<SteamLauncher, LaunchPromptOption> = mapOf(
+        GameNativeLauncher to LaunchPromptOption.LAUNCH_WITH_GAMENATIVE,
+        DroidDeckLauncher to LaunchPromptOption.LAUNCH_WITH_DROIDDECK
+    )
+
+    fun promptOptionFor(packageName: String): LaunchPromptOption? =
+        promptOptions.entries.find { it.key.packageName == packageName }?.value
+
+    fun forPromptOption(option: LaunchPromptOption): SteamLauncher? =
+        promptOptions.entries.find { it.value == option }?.key
+
+    /**
+     * The launchers to ask between at launch, in [reporting] order: every installed launcher whose
+     * Frontend Sync folder reports the game, when there are two or more and the game is not
+     * pinned. Empty means launch without asking.
+     */
+    fun launchChoices(
+        pinned: Boolean,
+        reporting: List<String>,
+        isInstalled: (String) -> Boolean
+    ): List<String> {
+        if (pinned) return emptyList()
+        val installed = reporting.distinct().filter { promptOptionFor(it) != null && isInstalled(it) }
+        return if (installed.size > 1) installed else emptyList()
+    }
 
     /**
      * User-facing grouping for the Mark-as-Installed modal. GameHub variants

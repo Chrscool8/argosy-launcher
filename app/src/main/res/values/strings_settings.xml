@@ -310,6 +310,15 @@
     <!-- Setting subtitle. Explains what the switch does and warns that it takes over the lock
          screen wallpaper. "Home app" is the app the device shows when Home is pressed. -->
     <string name="settings_interface_lock_screen_art_subtitle">While Argosy is your home app, the lock screen shows your library, or the game you left running. Replaces your lock screen wallpaper for good.</string>
+    <!-- Setting title. Whether Android lists Argosy among the apps it can use as the home screen.
+         "Home app" is the app the device shows when Home is pressed. -->
+    <string name="settings_interface_home_app_title">Available as Home App</string>
+    <!-- Second line of that row while the switch can be changed. -->
+    <string name="settings_interface_home_app_subtitle">Lets Android offer Argosy as your home screen. Samsung DeX only opens Argosy while this is off.</string>
+    <!-- Value shown in place of the switch while Argosy is the device's home app. Adjective. -->
+    <string name="settings_interface_home_app_locked_value">On</string>
+    <!-- Second line of that row while Argosy is the device's home app and the switch is locked. -->
+    <string name="settings_interface_home_app_locked_subtitle">Argosy is your home app. Choose another home app in Android settings to turn this off.</string>
 
     <!-- Row title. Noun: the time of day shown in the status bar. -->
     <string name="settings_interface_status_clock_title">Clock</string>
@@ -323,6 +332,15 @@
     <string name="settings_interface_status_network_title">Network</string>
     <!-- Second line of that row. Wi-Fi, Ethernet and mobile data each get their own icon. -->
     <string name="settings_interface_status_network_subtitle">Show the current connection in the status bar</string>
+    <!-- Row title. Noun phrase: a short summary of the last play session, shown just before a
+         game starts. -->
+    <string name="settings_interface_pre_launch_recaps_title">Pre-launch Recaps</string>
+    <!-- Second line of that row. RetroAchievements is a product name and stays untranslated. -->
+    <string name="settings_interface_pre_launch_recaps_subtitle">Before a RetroAchievements game you have not played for a week, show where you left off</string>
+    <!-- Row title. Noun phrase: a summary of the previous calendar month of play. -->
+    <string name="settings_interface_monthly_recap_title">Monthly Recap</string>
+    <!-- Second line of that row. -->
+    <string name="settings_interface_monthly_recap_subtitle">At the start of each month, show a summary of last month on Home</string>
     <!-- Row opening the settings for handhelds with a clip-on grip. Noun phrase. -->
     <string name="settings_interface_controller_grip_title">Controller Grip</string>
     <!-- Second line of that row. -->
@@ -534,6 +552,8 @@
     <string name="settings_interface_section_general">General</string>
     <string name="settings_interface_section_screens">Screens</string>
     <string name="settings_interface_section_status_bar">Status Bar</string>
+    <!-- Group heading for the settings that show a summary of past play. Noun, plural. -->
+    <string name="settings_interface_section_recaps">Recaps</string>
 
     <!-- Row choosing how the presentation screen arranges the focused game. -->
     <string name="settings_presentation_layout_title">Layout</string>
@@ -880,6 +900,51 @@
     <string name="settings_ra_logout_title_busy">Logging out...</string>
     <!-- Second line of that row. -->
     <string name="settings_ra_logout_subtitle">Sign out of RetroAchievements</string>
+
+    <!-- Row title. "Web API Key" is the name RetroAchievements gives this key on its site. -->
+    <string name="settings_ra_web_api_key_title">Web API Key (optional)</string>
+    <!-- Second line of that row: where the key is found and what it does. -->
+    <string name="settings_ra_web_api_key_subtitle">Find it in the Keys section of your RetroAchievements control panel. Makes recaps faster and richer.</string>
+    <!-- Trailing value of that row when no key is stored. -->
+    <string name="settings_ra_web_api_key_value_not_set">Not set</string>
+    <string name="settings_ra_web_api_key_value_saved" translatable="false">****%1$s</string>
+    <!-- Trailing value when a key is stored but too short to show its end. Adjective. -->
+    <string name="settings_ra_web_api_key_value_saved_short">Saved</string>
+    <!-- Trailing value when RetroAchievements answered that the stored key is not valid. The key
+         stays stored until the player replaces or clears it. -->
+    <string name="settings_ra_web_api_key_value_rejected">Key rejected</string>
+    <!-- Title of the key entry dialog. -->
+    <string name="settings_ra_web_api_key_modal_title">RetroAchievements Web API Key</string>
+    <!-- Body of the key entry dialog. -->
+    <string name="settings_ra_web_api_key_modal_message">Copy the Web API Key from the Keys section of your RetroAchievements control panel and paste it here. Argosy checks it once before saving.</string>
+    <!-- Label of the key text field. -->
+    <string name="settings_ra_web_api_key_field_label">Web API Key</string>
+    <!-- Button. Verb: paste the clipboard text into the key field. -->
+    <string name="settings_ra_web_api_key_paste">Paste</string>
+    <!-- Button. Verb: remove the stored key. -->
+    <string name="settings_ra_web_api_key_clear">Clear</string>
+    <!-- Button. Verb: close the dialog without changes. -->
+    <string name="settings_ra_web_api_key_cancel">Cancel</string>
+    <!-- Button. Verb: check the key and store it. -->
+    <string name="settings_ra_web_api_key_save">Save</string>
+    <!-- The same button while the key is being checked. -->
+    <string name="settings_ra_web_api_key_save_busy">Checking...</string>
+    <!-- Status line while the key is being checked. -->
+    <string name="settings_ra_web_api_key_status_validating">Checking the key with RetroAchievements...</string>
+    <!-- Status line when RetroAchievements refuses the key. -->
+    <string name="settings_ra_web_api_key_status_rejected">RetroAchievements did not accept this key.</string>
+    <!-- Status line when the check could not reach RetroAchievements. -->
+    <string name="settings_ra_web_api_key_status_unreachable">Could not reach RetroAchievements. Try again.</string>
+    <!-- Status line when Paste finds no text on the clipboard. -->
+    <string name="settings_ra_web_api_key_status_clipboard_empty">The clipboard has no text to paste.</string>
+    <!-- Notification title after the key is checked and stored. -->
+    <string name="settings_ra_web_api_key_saved_title">Web API Key saved</string>
+    <!-- Notification line under that title. -->
+    <string name="settings_ra_web_api_key_saved_subtitle">Recaps now read RetroAchievements directly.</string>
+    <!-- Notification title after the key is removed. -->
+    <string name="settings_ra_web_api_key_cleared_title">Web API Key removed</string>
+    <!-- Notification line under that title. -->
+    <string name="settings_ra_web_api_key_cleared_subtitle">The key is no longer stored on this device.</string>
 
     <!-- Row title. Noun phrase: which mode a game starts in. -->
     <string name="settings_ra_play_mode_title">Play Mode Preference</string>
@@ -3288,12 +3353,11 @@
 
     <!-- ===== GameNative folders panel ===== -->
 
-    <!-- Heading of the panel naming a folder for each store. "GameNative" is another app's
-         name. -->
-    <string name="settings_gamenative_folders_title">GameNative Folders</string>
-    <!-- Line under that heading. "Frontend Sync" is that app's own setting name and "Steam" a
-         store's; leave both untranslated. -->
-    <string name="settings_gamenative_folders_subtitle">Point each store at the folder GameNative exports its installs to. Steam markers only mark owned games as installed; the other stores add and remove their games to match.</string>
+    <!-- Heading of the panel naming the folder each launcher exports its installed games to. -->
+    <string name="settings_gamenative_folders_title">Launcher Sync Folders</string>
+    <!-- Line under that heading. "GameNative" and "DroidDeck" are other apps' names and "Steam" a
+         store's; leave them untranslated. -->
+    <string name="settings_gamenative_folders_subtitle">Point each store at the folder GameNative exports its installs to, and DroidDeck at its game files folder. Steam markers only mark owned games as installed; the other stores add and remove their games to match.</string>
     <!-- Footer hint on that panel. Two verbs joined by a slash: the directions either choose a
          folder or forget one. -->
     <string name="settings_gamenative_folders_hint_set">Set / Clear</string>
@@ -4767,6 +4831,10 @@
     <string name="settings_play_time_section_what">WHAT YOU PLAY</string>
     <!-- Heading over the grid of single-number readings. Caps in English. -->
     <string name="settings_play_time_section_facts">QUICK FACTS</string>
+    <!-- Row on the play time screen that opens the card summing up the previous calendar month. -->
+    <string name="settings_play_time_last_month_title">Last Month\'s Recap</string>
+    <!-- Second line of that row. -->
+    <string name="settings_play_time_last_month_subtitle">Play time, new favorites and achievements from last month</string>
     <!-- Heading over the server rows. Product name, never translated. -->
     <string name="settings_play_time_section_romm" translatable="false">ROMM</string>
 

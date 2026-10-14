@@ -842,7 +842,7 @@ class SocialRepository @Inject constructor(
         val ownerUserId = prefs.rommUserId
         val sessions = playSessionDao.getUnsyncedForSocial(prefs.lastPlaySessionSync, ownerUserId)
 
-        scope.launch { playSessionBackfill.run() }
+        scope.launch { playSessionBackfill.uploadThenPull() }
 
         if (sessions.isEmpty()) {
             return SyncResult.Success(0)
