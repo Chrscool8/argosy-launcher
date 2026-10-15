@@ -49,11 +49,13 @@ import androidx.compose.ui.res.stringResource
 import com.nendo.argosy.libretro.ui.RAConnectionNotification
 import com.nendo.argosy.core.input.ConnectedControllerTracker
 import com.nendo.argosy.core.input.ControllerDetector
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.core.input.isPhysicalGamepad
 import com.nendo.argosy.core.input.VirtualPad
 import com.nendo.argosy.ui.input.LocalABIconsSwapped
 import com.nendo.argosy.ui.input.LocalSwapStartSelect
 import com.nendo.argosy.ui.input.LocalXYIconsSwapped
+import com.nendo.argosy.ui.input.buttonGlyphSwaps
 import androidx.lifecycle.lifecycleScope
 import com.nendo.argosy.BuildConfig
 import com.nendo.argosy.R
@@ -152,8 +154,11 @@ import com.nendo.argosy.data.local.entity.GameCoreOptionOverrideEntity
 import com.nendo.argosy.ui.screens.settings.CoreOptionViewItem
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -300,6 +305,7 @@ class LibretroActivity : ComponentActivity() {
     private var menuFocusIndex by mutableStateOf(0)
     private lateinit var menuInputHandler: LibretroMenuInputHandler
     private lateinit var gamepadInputBridge: LibretroGamepadInputHandler
+    private lateinit var connectedControllers: StateFlow<List<com.nendo.argosy.data.repository.ControllerInfo>>
     private var activeMenuHandler: InputHandler? = null
 
     private var restoredSram: ByteArray? = null
@@ -833,14 +839,22 @@ class LibretroActivity : ComponentActivity() {
         }
     }
 
+    private fun applyGlyphSwaps(swaps: com.nendo.argosy.ui.input.ButtonGlyphSwaps) {
+        swapAB = swaps.ab
+        swapXY = swaps.xy
+        swapStartSelect = swaps.startSelect
+    }
+
     private fun initializeInputHandlers() {
         val inputPrefs = launchPreferences
         menuWrapMode = inputPrefs.menuWrapMode
-        val detectedLayout = ControllerDetector.detectFromActiveGamepad().layout
-        val isNintendoLayout = ControllerDetector.isNintendoLayout(inputPrefs.controllerLayout, detectedLayout)
-        swapAB = isNintendoLayout xor inputPrefs.swapAB
-        swapXY = isNintendoLayout xor inputPrefs.swapXY
-        swapStartSelect = inputPrefs.swapStartSelect
+        lifecycleScope.launch {
+            connectedControllerTracker.activeLayout.collect { layout ->
+                applyGlyphSwaps(inputPrefs.buttonGlyphSwaps(layout))
+            }
+        }
+        connectedControllers = inputConfigRepository.observeConnectedControllers()
+            .stateIn(lifecycleScope, SharingStarted.Eagerly, emptyList())
         menuInputHandler = LibretroMenuInputHandler(
             inputPrefs.swapAB,
             inputPrefs.swapXY,
@@ -2385,13 +2399,15 @@ class LibretroActivity : ComponentActivity() {
         return InGameModalCallbacks(
             controllerSeats = controllerSeats,
             hotkeys = inputConfig.hotkeyList,
-            connectedControllers = repo.getConnectedControllers(),
-            lockedProfileIndex = repo.getConnectedControllers()
-                .firstNotNullOfOrNull { InputDevice.getDevice(it.deviceId) }
-                ?.let { device ->
+            connectedControllers = connectedControllers,
+            activeController = connectedControllerTracker.activeController,
+            onHoldActiveController = connectedControllerTracker::holdActiveController,
+            lockedProfileIndexFor = { controller ->
+                InputDevice.getDevice(controller.deviceId)?.let { device ->
                     MappingPlatforms.ALL.indexOfFirst { it == inputConfig.profileForDevice(device) }
                         .takeIf { index -> index >= 0 }
-                },
+                }
+            },
             onGetMapping = { controller, mappingPlatformId ->
                 val device = InputDevice.getDevice(controller.deviceId)
                 if (device != null) {
@@ -3175,7 +3191,7 @@ class LibretroActivity : ComponentActivity() {
         val connected = InputDevice.getDeviceIds().toList()
             .mapNotNull { InputDevice.getDevice(it) }
             .filter { it.isPhysicalGamepad() }
-            .map { SeatedPad(getControllerId(it), ControllerDetector.isBuiltInPad(it)) }
+            .map { SeatedPad(controllerIdOf(it), ControllerDetector.isBuiltInPad(it)) }
             .distinctBy { it.controllerId }
         val savedIds = savedOrder.mapTo(mutableSetOf()) { it.controllerId }
         if (!ControllerSeating.shouldPromptForSeats(connected, savedIds)) return
@@ -3230,6 +3246,7 @@ class LibretroActivity : ComponentActivity() {
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         observeVirtualPad(event)
+        connectedControllerTracker.noteInput(event)
         return dispatchKeyFrom(event, KeyPressGate.Source.Key, coreBound = true)
     }
 
@@ -3248,7 +3265,7 @@ class LibretroActivity : ComponentActivity() {
         } else if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0 &&
             !isAnyMenuOpen && ::hotkeyDispatcher.isInitialized
         ) {
-            val controllerId = event.device?.let { getControllerId(it) }
+            val controllerId = event.device?.let { controllerIdOf(it) }
             val forward = keyPressGate.onDown(event.deviceId, event.keyCode, source, coreBound) {
                 hotkeyDispatcher.onKeyDown(event.keyCode, controllerId)
             }
@@ -3267,7 +3284,7 @@ class LibretroActivity : ComponentActivity() {
 
     private fun isMenuHotkeyEvent(event: KeyEvent): Boolean {
         if (!::hotkeyDispatcher.isInitialized) return false
-        val controllerId = event.device?.let { getControllerId(it) }
+        val controllerId = event.device?.let { controllerIdOf(it) }
         return hotkeyDispatcher.isMenuToggleKey(event.keyCode, controllerId)
     }
 
@@ -3300,7 +3317,7 @@ class LibretroActivity : ComponentActivity() {
         if (event.repeatCount > 0 && keyPressGate.isWithheld(event.deviceId, keyCode)) return true
         if (event.repeatCount > 0 && deferredCoreKeys.isHolding(keyCode)) return true
         if (event.repeatCount == 0) {
-            val controllerId = event.device?.let { getControllerId(it) }
+            val controllerId = event.device?.let { controllerIdOf(it) }
             if (hotkeyDispatcher.isPotentialComboKey(keyCode, controllerId)) {
                 deferredCoreKeys.hold(keyCode, event)
                 return true
@@ -3339,6 +3356,7 @@ class LibretroActivity : ComponentActivity() {
 
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         observeVirtualPad(event)
+        connectedControllerTracker.noteInput(event)
         val device = event.device
         triggerAxisKeyEmitter.emitByAxis(event).forEach { (axis, key) ->
             val analogMapped = device != null && inputMapper.hasAnalogMappingForAxis(device, axis)
@@ -3776,10 +3794,6 @@ class LibretroActivity : ComponentActivity() {
     private fun rightStickDeadzoneForPlatform(): Float {
         val canonical = com.nendo.argosy.data.platform.PlatformDefinitions.getCanonicalSlug(platformSlug)
         return if (canonical in PLATFORMS_WITH_DIGITAL_RIGHT_STICK) DIGITAL_RIGHT_STICK_DEADZONE else 0f
-    }
-
-    private fun getControllerId(device: InputDevice): String {
-        return "${device.vendorId}:${device.productId}:${device.descriptor}"
     }
 
     private fun coreVariablesFromIntent(): Array<Variable> {

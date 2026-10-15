@@ -30,6 +30,7 @@ import com.nendo.argosy.util.hideSystemBars
 import com.nendo.argosy.util.installImmersiveMode
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -78,6 +79,9 @@ class PlayerActivity : ComponentActivity() {
 
     @Inject
     lateinit var triggerAxisKeyEmitter: com.nendo.argosy.ui.input.TriggerAxisKeyEmitter
+
+    @Inject
+    lateinit var connectedControllerTracker: com.nendo.argosy.core.input.ConnectedControllerTracker
 
     private val viewModel: PlayerViewModel by viewModels()
     private val inputHandler by lazy { PlayerInputHandler(viewModel) }
@@ -261,6 +265,7 @@ class PlayerActivity : ComponentActivity() {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val dsm = DualScreenManagerHolder.instance
         if (dsm != null && !dsm.claimInput(event)) return true
+        connectedControllerTracker.noteInput(event)
         val gamepadEvent = mapKeycodeToGamepadEvent(event.keyCode, swapAB, swapXY, swapStartSelect)
             ?: return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_DOWN) {
@@ -275,6 +280,7 @@ class PlayerActivity : ComponentActivity() {
      * is the same conversion the launcher's own window performs.
      */
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        connectedControllerTracker.noteInput(event)
         triggerAxisKeyEmitter.emit(event).forEach { dispatchKeyEvent(it) }
         return super.dispatchGenericMotionEvent(event)
     }
@@ -313,15 +319,14 @@ class PlayerActivity : ComponentActivity() {
      */
     private fun observeButtonSwaps() {
         lifecycleScope.launch {
-            userPreferencesRepository.preferences.collectLatest { prefs ->
-                swapAB = prefs.swapAB
-                swapXY = prefs.swapXY
-                swapStartSelect = prefs.swapStartSelect
-                isNintendoLayout = ControllerDetector.isNintendoLayout(
-                    prefs.controllerLayout,
-                    ControllerDetector.detectFromActiveGamepad().layout
-                )
-            }
+            userPreferencesRepository.preferences
+                .combine(connectedControllerTracker.activeLayout) { prefs, layout -> prefs to layout }
+                .collectLatest { (prefs, layout) ->
+                    swapAB = prefs.swapAB
+                    swapXY = prefs.swapXY
+                    swapStartSelect = prefs.swapStartSelect
+                    isNintendoLayout = ControllerDetector.isNintendoLayout(prefs.controllerLayout, layout)
+                }
         }
     }
 

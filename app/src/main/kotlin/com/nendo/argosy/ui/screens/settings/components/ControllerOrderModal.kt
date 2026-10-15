@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.nendo.argosy.R
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.core.input.isPhysicalGamepad
-import com.nendo.argosy.libretro.ControllerPortResolver
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.components.Modal
 import com.nendo.argosy.ui.components.animateScrollToItemCentered
@@ -51,7 +51,7 @@ fun ControllerOrderModal(
             if (event.action == KeyEvent.ACTION_DOWN) {
                 val pressingPad = event.device
                     ?.takeIf { it.isPhysicalGamepad() }
-                    ?.let(ControllerPortResolver::getControllerId)
+                    ?.let(::controllerIdOf)
                 val gamepadEvent = gamepadInputHandler?.mapKeyToEvent(event.keyCode)
                 if (controller.onPadPress(gamepadEvent, pressingPad)) currentOnDismiss.value()
             }

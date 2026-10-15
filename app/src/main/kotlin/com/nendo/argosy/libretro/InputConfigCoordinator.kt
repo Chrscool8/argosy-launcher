@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.data.local.entity.ControllerOrderEntity
 import com.nendo.argosy.data.local.entity.HotkeyEntity
 import com.nendo.argosy.data.repository.CoreDeviceProfiles
@@ -59,7 +60,7 @@ class InputConfigCoordinator(
                     profileIdForDevice(device),
                     gameId
                 )
-                mappings[ControllerPortResolver.getControllerId(device)] = mapping
+                mappings[controllerIdOf(device)] = mapping
             }
             inputMapper.setExtendedMappings(mappings)
             inputMapper.setPortResolver { device -> portResolver.getPort(device) }

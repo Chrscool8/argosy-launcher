@@ -24,6 +24,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.nendo.argosy.R
 import com.nendo.argosy.data.platform.PlatformWeightRegistry
+import com.nendo.argosy.data.repository.ControllerInfo
 import com.nendo.argosy.data.repository.MappingPlatforms
 import com.nendo.argosy.libretro.LibretroCoreRegistry
 import com.nendo.argosy.libretro.coreoptions.CoreControlManifestRegistry
@@ -515,14 +516,19 @@ fun BuiltinControlsSection(
         }
 
         if (controlsState.showInputMappingModal) {
+            val controllers by viewModel.connectedControllers.collectAsState()
+            val activeController by viewModel.activeController.collectAsState()
+            val lockedPlatformIndex = if (!isGlobal && platformSlug != null) {
+                MappingPlatforms.indexForPlatformSlug(platformSlug)
+            } else {
+                null
+            }
             InputMappingModal(
-                controllers = viewModel.getConnectedControllers(),
+                controllers = controllers,
+                activeController = activeController,
+                onHoldActiveController = viewModel::holdActiveController,
                 inputDispatcher = LocalInputDispatcher.current,
-                lockedPlatformIndex = if (!isGlobal && platformSlug != null) {
-                    MappingPlatforms.indexForPlatformSlug(platformSlug)
-                } else {
-                    null
-                },
+                lockedPlatformIndexFor = lockedPlatformIndex?.let { index -> { _: ControllerInfo -> index } },
                 onGetMapping = { controller, platformId ->
                     viewModel.getControllerMapping(controller, platformId)
                 },

@@ -1,9 +1,7 @@
 package com.nendo.argosy.ui
 
 import android.app.Application
-import android.content.Context
 import android.database.ContentObserver
-import android.hardware.input.InputManager
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -45,7 +43,6 @@ import com.nendo.argosy.ui.components.QuickSettingsController
 import com.nendo.argosy.ui.components.friends.QuickFriendsController
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.data.repository.GameRepository
-import com.nendo.argosy.core.input.ControllerDetector
 import com.nendo.argosy.ui.input.InputDispatcher.Companion.computeWrappedIndex
 import com.nendo.argosy.ui.input.GamepadInputHandler
 import com.nendo.argosy.ui.input.HapticFeedbackManager
@@ -192,7 +189,8 @@ class ArgosyViewModel @Inject constructor(
     private val pendingConflictDao: com.nendo.argosy.data.local.dao.PendingConflictDao,
     val saveConflicts: com.nendo.argosy.ui.conflict.SaveConflictPrompts,
     private val deepLinkLaunchCoordinator: com.nendo.argosy.ui.deeplink.DeepLinkLaunchCoordinator,
-    private val gameStartRouter: com.nendo.argosy.ui.screens.common.GameStartRouter
+    private val gameStartRouter: com.nendo.argosy.ui.screens.common.GameStartRouter,
+    private val connectedControllerTracker: com.nendo.argosy.core.input.ConnectedControllerTracker
 ) : ViewModel() {
 
     suspend fun resolveDeepLinkLaunch(
@@ -217,15 +215,6 @@ class ArgosyViewModel @Inject constructor(
         }
     }
 
-    private val _detectedLayout = MutableStateFlow(ControllerDetector.detectFromActiveGamepad().layout)
-
-    private val inputManager = application.getSystemService(Context.INPUT_SERVICE) as InputManager
-    private val inputDeviceListener = object : InputManager.InputDeviceListener {
-        override fun onInputDeviceAdded(deviceId: Int) = refreshControllerDetection()
-        override fun onInputDeviceChanged(deviceId: Int) = refreshControllerDetection()
-        override fun onInputDeviceRemoved(deviceId: Int) = refreshControllerDetection()
-    }
-
 
     init {
         downloadNotificationObserver.observe(viewModelScope)
@@ -233,7 +222,6 @@ class ArgosyViewModel @Inject constructor(
         launcherStartup.start()
         observeFeedbackSettings(preferencesRepository)
         downloadManager.clearCompleted()
-        initControllerDetection()
         saveConflicts.start(viewModelScope)
         observeConnectionForSync()
         observeSocialConnectionForSync()
@@ -245,7 +233,6 @@ class ArgosyViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         application.contentResolver.unregisterContentObserver(settingsObserver)
-        inputManager.unregisterInputDeviceListener(inputDeviceListener)
     }
 
     private fun registerSettingsObserver() {
@@ -282,22 +269,7 @@ class ArgosyViewModel @Inject constructor(
         }
     }
 
-    private fun initControllerDetection() {
-        // One-time detection at startup
-        refreshControllerDetection()
-        // Register listener for device changes (connect/disconnect/mode change)
-        inputManager.registerInputDeviceListener(inputDeviceListener, null)
-    }
-
-    fun refreshControllerDetection() {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val result = ControllerDetector.detectFromActiveGamepad()
-            if (_detectedLayout.value != result.layout) {
-                Log.d("ArgosyVM", "Layout changed: ${_detectedLayout.value} -> ${result.layout} (${result.source})")
-                _detectedLayout.value = result.layout
-            }
-        }
-    }
+    fun refreshControllerDetection() = connectedControllerTracker.refresh()
 
     fun triggerPostWizardSync() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -333,7 +305,7 @@ class ArgosyViewModel @Inject constructor(
 
     val uiState: StateFlow<ArgosyUiState> = combine(
         preferencesRepository.userPreferences,
-        _detectedLayout,
+        connectedControllerTracker.activeLayout,
         launcherStartup.complete,
         launcherStartup.status
     ) { prefs, detectedLayout, startupDone, status ->

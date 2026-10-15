@@ -2,6 +2,7 @@ package com.nendo.argosy.libretro
 
 import android.view.InputDevice
 import com.nendo.argosy.core.input.ControllerDetector
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.core.input.isPhysicalGamepad
 import com.nendo.argosy.data.local.entity.ControllerOrderEntity
 import com.swordfish.libretrodroid.PortResolver
@@ -52,7 +53,7 @@ class ControllerPortResolver : PortResolver {
         val pads = connectedGamepads()
         if (pads.none { !ControllerDetector.isBuiltInPad(it) }) {
             pads.filter { ControllerDetector.isBuiltInPad(it) }
-                .forEach { claimedPorts.remove(getControllerId(it)) }
+                .forEach { claimedPorts.remove(controllerIdOf(it)) }
         }
         reseatLaunchPad()
     }
@@ -64,7 +65,7 @@ class ControllerPortResolver : PortResolver {
 
     override fun getPort(device: InputDevice): Int {
         if (device.id == android.view.KeyCharacterMap.VIRTUAL_KEYBOARD) return 0
-        val controllerId = getControllerId(device)
+        val controllerId = controllerIdOf(device)
         seatOf(controllerId)?.let { return it }
         claimPort(controllerId, lowestPort = if (yieldsPlayerOne(device)) 1 else 0)
         return seatOf(controllerId) ?: 0
@@ -73,7 +74,7 @@ class ControllerPortResolver : PortResolver {
     /**
      * The port this pad holds right now. Never seats the pad, so it never takes player one.
      */
-    fun peekPort(device: InputDevice): Int? = seatOf(getControllerId(device))
+    fun peekPort(device: InputDevice): Int? = seatOf(controllerIdOf(device))
 
     fun getPort(controllerId: String, fallbackControllerNumber: Int): Int {
         return seatOf(controllerId) ?: (fallbackControllerNumber - 1).coerceAtLeast(0)
@@ -99,7 +100,7 @@ class ControllerPortResolver : PortResolver {
             return
         }
         val connected = connectedGamepads().map { pad ->
-            SeatedPad(getControllerId(pad), ControllerDetector.isBuiltInPad(pad))
+            SeatedPad(controllerIdOf(pad), ControllerDetector.isBuiltInPad(pad))
         }
         sessionSeats = ControllerSeating.launchPadSeats(
             docked = docked,
@@ -112,7 +113,7 @@ class ControllerPortResolver : PortResolver {
     private fun yieldsPlayerOne(device: InputDevice): Boolean {
         if (!device.isPhysicalGamepad() || !ControllerDetector.isBuiltInPad(device)) return false
         return connectedGamepads().any { pad ->
-            !ControllerDetector.isBuiltInPad(pad) && isUnseated(getControllerId(pad))
+            !ControllerDetector.isBuiltInPad(pad) && isUnseated(controllerIdOf(pad))
         }
     }
 
@@ -122,14 +123,4 @@ class ControllerPortResolver : PortResolver {
         InputDevice.getDeviceIds().toList()
             .mapNotNull { InputDevice.getDevice(it) }
             .filter { it.isPhysicalGamepad() }
-
-    private fun getControllerId(device: InputDevice): String {
-        return "${device.vendorId}:${device.productId}:${device.descriptor}"
-    }
-
-    companion object {
-        fun getControllerId(device: InputDevice): String {
-            return "${device.vendorId}:${device.productId}:${device.descriptor}"
-        }
-    }
 }

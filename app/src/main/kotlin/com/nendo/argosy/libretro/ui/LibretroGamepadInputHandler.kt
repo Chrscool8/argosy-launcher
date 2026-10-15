@@ -1,6 +1,5 @@
 package com.nendo.argosy.libretro.ui
 
-import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import com.nendo.argosy.ui.input.GamepadEvent
@@ -13,8 +12,6 @@ class LibretroGamepadInputHandler(
     private val getActiveHandler: () -> InputHandler?
 ) : RawInputInterceptor {
 
-    override var lastInputDevice: InputDevice? = null
-        private set
     private var rawKeyEventListener: ((KeyEvent) -> Boolean)? = null
     private var rawMotionEventListener: ((MotionEvent) -> Boolean)? = null
 
@@ -32,9 +29,6 @@ class LibretroGamepadInputHandler(
         menuInputHandler.mapKeyToEvent(keyCode)
 
     fun handleKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            lastInputDevice = event.device
-        }
         rawKeyEventListener?.let { return it(event) }
 
         if (event.action != KeyEvent.ACTION_DOWN) return false

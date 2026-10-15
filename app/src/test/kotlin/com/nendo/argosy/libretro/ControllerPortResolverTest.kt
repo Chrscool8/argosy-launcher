@@ -2,6 +2,7 @@ package com.nendo.argosy.libretro
 
 import android.view.InputDevice
 import com.nendo.argosy.core.input.ControllerDetector
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.data.local.entity.ControllerOrderEntity
 import io.mockk.every
 import io.mockk.mockk
@@ -213,7 +214,7 @@ class ControllerPortResolverTest {
         every { InputDevice.getDevice(any()) } answers { byDeviceId[firstArg<Int>()] }
     }
 
-    private fun id(device: InputDevice): String = ControllerPortResolver.getControllerId(device)
+    private fun id(device: InputDevice): String = controllerIdOf(device)
 
     private fun order(device: InputDevice, port: Int) = ControllerOrderEntity(
         port = port,

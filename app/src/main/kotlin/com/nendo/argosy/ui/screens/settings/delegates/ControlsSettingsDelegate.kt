@@ -7,8 +7,9 @@ import com.nendo.argosy.data.preferences.ControlsPreferences
 import com.nendo.argosy.data.preferences.MenuWrapMode
 import com.nendo.argosy.data.preferences.SelectSwapMode
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
-import com.nendo.argosy.core.input.ControllerDetector
+import com.nendo.argosy.core.input.ConnectedControllerTracker
 import com.nendo.argosy.core.input.DetectedLayout
+import com.nendo.argosy.core.input.DetectionResult
 import com.nendo.argosy.ui.components.ListReorder
 import com.nendo.argosy.ui.components.ReorderStep
 import com.nendo.argosy.ui.input.HapticFeedbackManager
@@ -31,7 +32,8 @@ class ControlsSettingsDelegate @Inject constructor(
     private val application: Application,
     private val preferencesRepository: UserPreferencesRepository,
     private val hapticManager: HapticFeedbackManager,
-    private val permissionHelper: PermissionHelper
+    private val permissionHelper: PermissionHelper,
+    private val controllerTracker: ConnectedControllerTracker
 ) {
     private val _state = MutableStateFlow(ControlsState())
     val state: StateFlow<ControlsState> = _state.asStateFlow()
@@ -80,8 +82,10 @@ class ControlsSettingsDelegate @Inject constructor(
         }
     }
 
+    fun detectActiveController(): DetectionResult = controllerTracker.detectActive()
+
     fun refreshDetectedLayout() {
-        val result = ControllerDetector.detectFromActiveGamepad()
+        val result = detectActiveController()
         val layoutName = when (result.layout) {
             DetectedLayout.XBOX -> "Xbox"
             DetectedLayout.NINTENDO -> "Nintendo"
@@ -92,15 +96,6 @@ class ControlsSettingsDelegate @Inject constructor(
                 detectedLayout = layoutName,
                 detectedDeviceName = result.deviceName
             )
-        }
-    }
-
-    fun detectControllerLayout(): String? {
-        val result = ControllerDetector.detectFromActiveGamepad()
-        return when (result.layout) {
-            DetectedLayout.XBOX -> "xbox"
-            DetectedLayout.NINTENDO -> "nintendo"
-            null -> null
         }
     }
 

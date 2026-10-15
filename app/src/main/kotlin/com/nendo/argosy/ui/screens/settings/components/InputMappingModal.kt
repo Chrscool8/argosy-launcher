@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.nendo.argosy.R
+import com.nendo.argosy.core.input.ActiveController
 import com.nendo.argosy.ui.input.AxisDirectionTracker
 import com.nendo.argosy.ui.input.GamepadEvent
 import com.nendo.argosy.ui.input.InputDispatcher
@@ -99,37 +100,37 @@ private sealed class InputMappingState {
 }
 
 /**
- * [inputDispatcher] receives the app's stick and hat edges for the lists. It is null where the host
- * leaves declined joystick samples to the framework, whose synthetic d-pad keys reach the key listener.
+ * Follows [activeController] except during a capture, which [onHoldActiveController] freezes it for.
+ * [inputDispatcher] is null where the host leaves joystick samples to the framework's d-pad keys.
  */
 @Composable
 fun InputMappingModal(
     controllers: List<ControllerInfo>,
+    activeController: ActiveController?,
+    onHoldActiveController: (Boolean) -> Unit,
     inputDispatcher: InputDispatcher?,
-    lockedPlatformIndex: Int? = null,
+    lockedPlatformIndexFor: ((ControllerInfo) -> Int)? = null,
     onGetMapping: suspend (ControllerInfo, String?) -> ScopedMapping,
     onSaveMapping: suspend (ControllerInfo, Map<InputSource, Int>, String?, Boolean, String?) -> Unit,
     onApplyPreset: suspend (ControllerInfo, String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val gamepadInputHandler = LocalGamepadInputHandler.current
+    val platformLocked = lockedPlatformIndexFor != null
 
-    val autoSelectedController = remember {
-        val device = gamepadInputHandler?.lastInputDevice ?: return@remember null
-        controllers.find { it.deviceId == device.id }
-    }
     var state by remember {
-        val initial = if (autoSelectedController != null) {
-            InputMappingState.PlatformMapping(
-                controller = autoSelectedController,
-                platformIndex = lockedPlatformIndex ?: 0,
-                currentMapping = emptyMap()
-            )
-        } else {
-            InputMappingState.ControllerList
-        }
-        mutableStateOf(initial)
+        val initial = activeController?.resolveIn(controllers)
+        mutableStateOf<InputMappingState>(
+            initial?.let {
+                InputMappingState.PlatformMapping(
+                    controller = it,
+                    platformIndex = lockedPlatformIndexFor?.invoke(it) ?: 0,
+                    currentMapping = emptyMap()
+                )
+            } ?: InputMappingState.ControllerList
+        )
     }
+    var loadedControllerId by remember { mutableStateOf<String?>(null) }
     var inheritedMapping by remember { mutableStateOf<Map<InputSource, Int>>(emptyMap()) }
     var controllerFocusIndex by remember { mutableIntStateOf(0) }
     var cancelHoldActive by remember { mutableStateOf(false) }
@@ -166,14 +167,45 @@ fun InputMappingModal(
         }
     }
 
-    if (autoSelectedController != null) {
-        LaunchedEffect(Unit) {
-            val platformIndex = lockedPlatformIndex ?: 0
-            val platformId = MappingPlatforms.dbPlatformId(platformIndex)
-            val scoped = onGetMapping(autoSelectedController, platformId)
-            inheritedMapping = scoped.inherited
-            val current = state as? InputMappingState.PlatformMapping ?: return@LaunchedEffect
-            state = current.copy(currentMapping = scoped.mapping)
+    val showController: suspend (ControllerInfo, Int) -> Unit = { controller, platformIndex ->
+        val scoped = onGetMapping(controller, MappingPlatforms.dbPlatformId(platformIndex))
+        inheritedMapping = scoped.inherited
+        loadedControllerId = controller.controllerId
+        state = InputMappingState.PlatformMapping(
+            controller = controller,
+            platformIndex = platformIndex,
+            currentMapping = scoped.mapping
+        )
+    }
+
+    val isRecording = state is InputMappingState.Recording
+    LaunchedEffect(activeController, controllers, isRecording) {
+        val current = state
+        val editing = (current as? InputMappingState.PlatformMapping)?.controller
+        val target = mappingControllerToLoad(editing, loadedControllerId, isRecording, activeController, controllers)
+            ?: return@LaunchedEffect
+        val platformIndex = lockedPlatformIndexFor?.invoke(target)
+            ?: (current as? InputMappingState.PlatformMapping)?.platformIndex
+            ?: 0
+        showController(target, platformIndex)
+    }
+
+    val currentOnHoldActiveController by rememberUpdatedState(onHoldActiveController)
+    DisposableEffect(isRecording) {
+        if (isRecording) currentOnHoldActiveController(true)
+        onDispose { if (isRecording) currentOnHoldActiveController(false) }
+    }
+
+    val isEditingLoaded: (InputMappingState.PlatformMapping) -> Boolean = {
+        it.controller.controllerId == loadedControllerId
+    }
+    val isStillEditing: (InputMappingState.PlatformMapping) -> Boolean = { editing ->
+        (state as? InputMappingState.PlatformMapping)?.controller?.controllerId == editing.controller.controllerId
+    }
+
+    val selectController: (Int) -> Unit = { index ->
+        controllers.getOrNull(index)?.let { selected ->
+            scope.launch { showController(selected, lockedPlatformIndexFor?.invoke(selected) ?: 0) }
         }
     }
 
@@ -182,22 +214,7 @@ fun InputMappingModal(
             is InputMappingState.ControllerList -> {
                 when (gamepadEvent) {
                     GamepadEvent.Back -> onDismiss()
-                    GamepadEvent.Confirm -> {
-                        if (controllers.isNotEmpty() && controllerFocusIndex < controllers.size) {
-                            val selected = controllers[controllerFocusIndex]
-                            val platformIndex = lockedPlatformIndex ?: 0
-                            val platformId = MappingPlatforms.dbPlatformId(platformIndex)
-                            scope.launch {
-                                val scoped = onGetMapping(selected, platformId)
-                                inheritedMapping = scoped.inherited
-                                state = InputMappingState.PlatformMapping(
-                                    controller = selected,
-                                    platformIndex = platformIndex,
-                                    currentMapping = scoped.mapping
-                                )
-                            }
-                        }
-                    }
+                    GamepadEvent.Confirm -> selectController(controllerFocusIndex)
                     GamepadEvent.Up -> if (controllerFocusIndex > 0) controllerFocusIndex--
                     GamepadEvent.Down -> if (controllerFocusIndex < controllers.size - 1) controllerFocusIndex++
                     else -> {}
@@ -208,7 +225,7 @@ fun InputMappingModal(
                 val platformId = MappingPlatforms.dbPlatformId(currentState.platformIndex)
                 when (gamepadEvent) {
                     GamepadEvent.Back -> {
-                        if (autoSelectedController != null) {
+                        if (activeController?.resolveIn(controllers) != null) {
                             onDismiss()
                         } else {
                             state = InputMappingState.ControllerList
@@ -218,7 +235,7 @@ fun InputMappingModal(
                         }
                     }
                     GamepadEvent.Confirm -> {
-                        if (currentState.focusedButtonIndex < platform.buttons.size) {
+                        if (isEditingLoaded(currentState) && currentState.focusedButtonIndex < platform.buttons.size) {
                             state = InputMappingState.Recording(
                                 controller = currentState.controller,
                                 platformIndex = currentState.platformIndex,
@@ -229,7 +246,7 @@ fun InputMappingModal(
                         }
                     }
                     GamepadEvent.ContextMenu -> {
-                        if (currentState.focusedButtonIndex < platform.buttons.size) {
+                        if (isEditingLoaded(currentState) && currentState.focusedButtonIndex < platform.buttons.size) {
                             state = InputMappingState.Recording(
                                 controller = currentState.controller,
                                 platformIndex = currentState.platformIndex,
@@ -240,42 +257,32 @@ fun InputMappingModal(
                         }
                     }
                     GamepadEvent.SecondaryAction -> {
-                        if (currentState.focusedButtonIndex < platform.buttons.size) {
+                        if (isEditingLoaded(currentState) && currentState.focusedButtonIndex < platform.buttons.size) {
                             val targetButton = platform.buttons[currentState.focusedButtonIndex]
                             val newMapping = currentState.currentMapping.filterValues { it != targetButton }
                             scope.launch {
                                 onSaveMapping(currentState.controller, newMapping, null, false, platformId)
-                                state = currentState.copy(currentMapping = newMapping)
+                                if (isStillEditing(currentState)) state = currentState.copy(currentMapping = newMapping)
                             }
                         }
                     }
-                    GamepadEvent.PrevSection -> {
-                        if (lockedPlatformIndex == null) {
-                            val prevIndex = MappingPlatforms.getPrevIndex(currentState.platformIndex)
-                            val prevPlatformId = MappingPlatforms.dbPlatformId(prevIndex)
-                            scope.launch {
-                                val scoped = onGetMapping(currentState.controller, prevPlatformId)
-                                inheritedMapping = scoped.inherited
-                                state = currentState.copy(
-                                    platformIndex = prevIndex,
-                                    focusedButtonIndex = 0,
-                                    currentMapping = scoped.mapping
-                                )
+                    GamepadEvent.PrevSection, GamepadEvent.NextSection -> {
+                        if (!platformLocked) {
+                            val pagedIndex = if (gamepadEvent == GamepadEvent.PrevSection) {
+                                MappingPlatforms.getPrevIndex(currentState.platformIndex)
+                            } else {
+                                MappingPlatforms.getNextIndex(currentState.platformIndex)
                             }
-                        }
-                    }
-                    GamepadEvent.NextSection -> {
-                        if (lockedPlatformIndex == null) {
-                            val nextIndex = MappingPlatforms.getNextIndex(currentState.platformIndex)
-                            val nextPlatformId = MappingPlatforms.dbPlatformId(nextIndex)
                             scope.launch {
-                                val scoped = onGetMapping(currentState.controller, nextPlatformId)
-                                inheritedMapping = scoped.inherited
-                                state = currentState.copy(
-                                    platformIndex = nextIndex,
-                                    focusedButtonIndex = 0,
-                                    currentMapping = scoped.mapping
-                                )
+                                val scoped = onGetMapping(currentState.controller, MappingPlatforms.dbPlatformId(pagedIndex))
+                                if (isStillEditing(currentState)) {
+                                    inheritedMapping = scoped.inherited
+                                    state = currentState.copy(
+                                        platformIndex = pagedIndex,
+                                        focusedButtonIndex = 0,
+                                        currentMapping = scoped.mapping
+                                    )
+                                }
                             }
                         }
                     }
@@ -415,22 +422,7 @@ fun InputMappingModal(
         is InputMappingState.ControllerList -> ControllerListContent(
             controllers = controllers,
             focusedIndex = controllerFocusIndex,
-            onSelectController = { index ->
-                if (index < controllers.size) {
-                    val selected = controllers[index]
-                    val platformIndex = lockedPlatformIndex ?: 0
-                    val platformId = MappingPlatforms.dbPlatformId(platformIndex)
-                    scope.launch {
-                        val scoped = onGetMapping(selected, platformId)
-                        inheritedMapping = scoped.inherited
-                        state = InputMappingState.PlatformMapping(
-                            controller = selected,
-                            platformIndex = platformIndex,
-                            currentMapping = scoped.mapping
-                        )
-                    }
-                }
-            },
+            onSelectController = selectController,
             onDismiss = onDismiss
         )
         is InputMappingState.PlatformMapping -> PlatformMappingContent(
@@ -439,14 +431,16 @@ fun InputMappingModal(
             mapping = currentState.currentMapping,
             inheritedMapping = inheritedMapping,
             focusedIndex = currentState.focusedButtonIndex,
-            platformLocked = lockedPlatformIndex != null,
+            platformLocked = platformLocked,
             onSelectButton = { retroButton ->
-                state = InputMappingState.Recording(
-                    controller = currentState.controller,
-                    platformIndex = currentState.platformIndex,
-                    targetRetroButton = retroButton,
-                    currentMapping = currentState.currentMapping
-                )
+                if (isEditingLoaded(currentState)) {
+                    state = InputMappingState.Recording(
+                        controller = currentState.controller,
+                        platformIndex = currentState.platformIndex,
+                        targetRetroButton = retroButton,
+                        currentMapping = currentState.currentMapping
+                    )
+                }
             },
             onDismiss = onDismiss
         )

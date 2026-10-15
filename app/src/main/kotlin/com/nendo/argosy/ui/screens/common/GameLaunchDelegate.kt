@@ -30,8 +30,8 @@ import com.nendo.argosy.ui.input.HapticPattern
 import com.nendo.argosy.ui.input.SoundFeedbackManager
 import com.nendo.argosy.core.input.SoundType
 import com.nendo.argosy.libretro.LaunchMode
-import com.nendo.argosy.libretro.ControllerPortResolver
 import com.nendo.argosy.libretro.LibretroActivity
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.core.input.isPhysicalGamepad
 import com.nendo.argosy.R
 import com.nendo.argosy.core.notification.NotificationManager
@@ -124,7 +124,7 @@ class GameLaunchDelegate @Inject constructor(
     private val getUnifiedSavesUseCase: com.nendo.argosy.domain.usecase.save.GetUnifiedSavesUseCase,
     private val launchProgressTracker: LaunchProgressTracker,
     private val resolveSnapshotConflict: com.nendo.argosy.domain.usecase.savechannel.ResolveSnapshotConflictUseCase,
-    private val gamepadInputHandler: com.nendo.argosy.ui.input.GamepadInputHandler,
+    private val connectedControllerTracker: com.nendo.argosy.core.input.ConnectedControllerTracker,
     private val preLaunchRecapStep: PreLaunchRecapStep
 ) {
     companion object {
@@ -549,13 +549,10 @@ class GameLaunchDelegate @Inject constructor(
         if (launchMode != null) intent.putExtra(LaunchMode.EXTRA_LAUNCH_MODE, launchMode.name)
         if (origin != LaunchOrigin.INTERNAL) intent.putExtra(LaunchOrigin.EXTRA_LAUNCH_ORIGIN, origin.name)
         if (intent.component?.className == LibretroActivity::class.java.name) {
-            gamepadInputHandler.lastInputDevice
+            connectedControllerTracker.activeDevice()
                 ?.takeIf { it.isPhysicalGamepad() }
                 ?.let { pad ->
-                    intent.putExtra(
-                        LibretroActivity.EXTRA_LAUNCH_CONTROLLER_ID,
-                        ControllerPortResolver.getControllerId(pad)
-                    )
+                    intent.putExtra(LibretroActivity.EXTRA_LAUNCH_CONTROLLER_ID, controllerIdOf(pad))
                 }
         }
         return intent

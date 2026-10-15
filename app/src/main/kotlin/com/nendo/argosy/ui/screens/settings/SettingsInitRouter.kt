@@ -12,7 +12,6 @@ import com.nendo.argosy.data.emulator.SavePathRegistry
 import com.nendo.argosy.data.remote.jellyfin.JellyfinConnectionState
 import com.nendo.argosy.data.remote.romm.ConnectionState
 import com.nendo.argosy.libretro.LibretroCoreRegistry
-import com.nendo.argosy.core.input.ControllerDetector
 import com.nendo.argosy.core.input.DetectedLayout
 import com.nendo.argosy.ui.screens.settings.delegates.StorageSettingsDelegate
 import com.nendo.argosy.util.AppPaths
@@ -650,7 +649,7 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
         ))
         routeRefreshLaunchTargets(vm)
 
-        val detectionResult = ControllerDetector.detectFromActiveGamepad()
+        val detectionResult = vm.controlsDelegate.detectActiveController()
         val detectedLayoutName = when (detectionResult.layout) {
             DetectedLayout.XBOX -> "Xbox"
             DetectedLayout.NINTENDO -> "Nintendo"

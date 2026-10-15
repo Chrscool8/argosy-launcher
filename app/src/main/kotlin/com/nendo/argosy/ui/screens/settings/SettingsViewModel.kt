@@ -78,6 +78,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -86,6 +87,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -149,6 +151,7 @@ class SettingsViewModel @Inject constructor(
     internal val gradientColorExtractor: GradientColorExtractor,
     internal val coreManager: LibretroCoreManager,
     internal val inputConfigRepository: com.nendo.argosy.data.repository.InputConfigRepository,
+    private val connectedControllerTracker: com.nendo.argosy.core.input.ConnectedControllerTracker,
     internal val frameRegistry: com.nendo.argosy.libretro.frame.FrameRegistry,
     internal val displayAffinityHelper: com.nendo.argosy.util.DisplayAffinityHelper,
     internal val emulatorLaunchTargetResolver: com.nendo.argosy.ui.screens.common.EmulatorLaunchTargetResolver,
@@ -753,7 +756,12 @@ class SettingsViewModel @Inject constructor(
     fun setTouchGenesis6Button(enabled: Boolean) = routeSetTouchGenesis6Button(this, enabled)
     fun showTouchLayoutEditor() = routeShowTouchLayoutEditor(this)
     fun hideTouchLayoutEditor() = routeHideTouchLayoutEditor(this)
-    fun getConnectedControllers() = inputConfigRepository.getConnectedControllers()
+    val connectedControllers: StateFlow<List<com.nendo.argosy.data.repository.ControllerInfo>> =
+        inputConfigRepository.observeConnectedControllers()
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val activeController: StateFlow<com.nendo.argosy.core.input.ActiveController?> =
+        connectedControllerTracker.activeController
+    fun holdActiveController(held: Boolean) = connectedControllerTracker.holdActiveController(held)
 
     suspend fun getControllerMapping(
         controller: com.nendo.argosy.data.repository.ControllerInfo,

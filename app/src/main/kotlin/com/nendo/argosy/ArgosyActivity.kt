@@ -110,6 +110,7 @@ class ArgosyActivity : ComponentActivity() {
     @Inject lateinit var downloadQueueDao: DownloadQueueDao
     @Inject lateinit var downloadQueueRepository: com.nendo.argosy.data.repository.DownloadQueueRepository
     @Inject lateinit var gamepadInputHandler: GamepadInputHandler
+    @Inject lateinit var connectedControllerTracker: com.nendo.argosy.core.input.ConnectedControllerTracker
     @Inject lateinit var triggerAxisKeyEmitter: com.nendo.argosy.ui.input.TriggerAxisKeyEmitter
     @Inject lateinit var imageCacheManager: ImageCacheManager
     @Inject lateinit var resolveGameEmulatorContext:
@@ -393,7 +394,10 @@ class ArgosyActivity : ComponentActivity() {
                                 .focusable()
                         ) {
                             val preferences = dualScreenManager.preferencesRepository.userPreferences
-                            com.nendo.argosy.ui.input.ProvideButtonGlyphs(preferences) {
+                            com.nendo.argosy.ui.input.ProvideButtonGlyphs(
+                                preferences,
+                                connectedControllerTracker.activeLayout
+                            ) {
                                 com.nendo.argosy.ui.components.ProvideStatusBarItems(preferences) {
                                     com.nendo.argosy.ui.dualscreen.PresentationSlotContent(
                                         slot,
@@ -505,6 +509,7 @@ class ArgosyActivity : ComponentActivity() {
         }
 
         if (dualScreenManager.companionHoldsPrimary.value && !isOverlayFocused) {
+            gamepadInputHandler.observeInput(event)
             if (event.action == KeyEvent.ACTION_DOWN || event.action == KeyEvent.ACTION_UP) {
                 if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
                     Logger.verbose(TAG) { "dispatchKeyEvent: FORWARDING key=${event.keyCode} to companion" }

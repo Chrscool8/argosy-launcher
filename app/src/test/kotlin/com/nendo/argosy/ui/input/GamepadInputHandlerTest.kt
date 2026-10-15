@@ -37,7 +37,7 @@ class GamepadInputHandlerTest {
         Dispatchers.setMain(testDispatcher)
         val preferences = mockk<UserPreferencesRepository>()
         every { preferences.preferences } returns emptyFlow()
-        handler = GamepadInputHandler(preferences)
+        handler = GamepadInputHandler(preferences, mockk(relaxed = true))
     }
 
     @After

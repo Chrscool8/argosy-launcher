@@ -58,6 +58,9 @@ class SecondaryHomeActivity :
     @javax.inject.Inject
     lateinit var gamepadInputHandler: com.nendo.argosy.ui.input.GamepadInputHandler
 
+    @javax.inject.Inject
+    lateinit var connectedControllerTracker: com.nendo.argosy.core.input.ConnectedControllerTracker
+
     private var languageTag: String = com.nendo.argosy.core.locale.LocaleHelper.SYSTEM_LANGUAGE_TAG
 
     override fun attachBaseContext(newBase: android.content.Context) {
@@ -176,7 +179,10 @@ class SecondaryHomeActivity :
                     com.nendo.argosy.ui.components.LocalArtworkScraping provides scrapingArtwork,
                     com.nendo.argosy.ui.components.LocalStatusBarItems provides statusBarItems.value
                 ) {
-                    com.nendo.argosy.ui.input.ProvideButtonGlyphs(dsm.preferencesRepository.userPreferences) {
+                    com.nendo.argosy.ui.input.ProvideButtonGlyphs(
+                        dsm.preferencesRepository.userPreferences,
+                        connectedControllerTracker.activeLayout
+                    ) {
                         CompanionRoleContent()
                     }
                 }

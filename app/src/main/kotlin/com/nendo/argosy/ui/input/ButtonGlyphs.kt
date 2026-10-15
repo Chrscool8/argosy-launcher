@@ -9,6 +9,7 @@ import com.nendo.argosy.core.input.ControllerDetector
 import com.nendo.argosy.core.input.DetectedLayout
 import com.nendo.argosy.data.preferences.UserPreferences
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 data class ButtonGlyphSwaps(
     val ab: Boolean,
@@ -27,12 +28,18 @@ fun UserPreferences.buttonGlyphSwaps(detected: DetectedLayout?): ButtonGlyphSwap
 
 /**
  * Supplies the glyph swap locals to [content] for a surface that is not hosted inside `ArgosyApp`.
+ * [detectedLayout] is the active controller's layout.
  */
 @Composable
-fun ProvideButtonGlyphs(preferences: Flow<UserPreferences>, content: @Composable () -> Unit) {
+fun ProvideButtonGlyphs(
+    preferences: Flow<UserPreferences>,
+    detectedLayout: StateFlow<DetectedLayout?>,
+    content: @Composable () -> Unit
+) {
     val prefs by preferences.collectAsState(initial = null)
-    val swaps = remember(prefs) {
-        prefs?.buttonGlyphSwaps(ControllerDetector.getDetectedLayout())
+    val layout by detectedLayout.collectAsState()
+    val swaps = remember(prefs, layout) {
+        prefs?.buttonGlyphSwaps(layout)
             ?: ButtonGlyphSwaps(ab = false, xy = false, startSelect = false)
     }
     CompositionLocalProvider(

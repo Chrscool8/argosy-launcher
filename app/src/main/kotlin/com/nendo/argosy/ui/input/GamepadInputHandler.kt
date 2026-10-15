@@ -1,8 +1,11 @@
 package com.nendo.argosy.ui.input
 
 import android.view.InputDevice
+import android.view.InputEvent
 import android.view.KeyEvent
 import android.view.MotionEvent
+import com.nendo.argosy.core.input.ConnectedControllerTracker
+import com.nendo.argosy.core.input.VirtualPad
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.util.SafeCoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +22,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface RawInputInterceptor {
-    val lastInputDevice: InputDevice?
     fun setRawKeyEventListener(listener: ((KeyEvent) -> Boolean)?)
     fun setRawMotionEventListener(listener: ((MotionEvent) -> Boolean)?)
     fun mapKeyToEvent(keyCode: Int): GamepadEvent?
@@ -59,7 +61,8 @@ sealed interface GamepadEvent {
 
 @Singleton
 class GamepadInputHandler @Inject constructor(
-    preferencesRepository: UserPreferencesRepository
+    preferencesRepository: UserPreferencesRepository,
+    private val controllerTracker: ConnectedControllerTracker
 ) : RawInputInterceptor {
 
     private val _events = MutableSharedFlow<GamepadInput>(extraBufferCapacity = 16)
@@ -79,9 +82,6 @@ class GamepadInputHandler @Inject constructor(
     private var claimedShortcutKey: Int? = null
 
     private val selectModifier = SelectModifier()
-
-    override var lastInputDevice: InputDevice? = null
-        private set
 
     private var rawKeyEventListener: ((KeyEvent) -> Boolean)? = null
     private var rawMotionEventListener: ((MotionEvent) -> Boolean)? = null
@@ -109,6 +109,15 @@ class GamepadInputHandler @Inject constructor(
 
     fun detachShortcutGate(gate: UiShortcutGate) {
         if (shortcutGate === gate) shortcutGate = null
+    }
+
+    /**
+     * Credits [event] to the virtual pad latch and the active controller. Call it for input this
+     * handler never receives directly, such as a key forwarded to the companion screen.
+     */
+    fun observeInput(event: InputEvent) {
+        VirtualPad.observe(event)
+        controllerTracker.noteInput(event)
     }
 
     fun injectEvent(event: GamepadEvent, isRepeat: Boolean) {
@@ -172,7 +181,7 @@ class GamepadInputHandler @Inject constructor(
         steerRightStick: Boolean,
         deliver: (GamepadEvent, Boolean) -> Unit
     ): Boolean {
-        com.nendo.argosy.core.input.VirtualPad.observe(event)
+        observeInput(event)
         if (!event.isFromSource(InputDevice.SOURCE_CLASS_JOYSTICK)) return false
         if (handleMotionEvent(event)) {
             resetStickMotion()
@@ -256,8 +265,7 @@ class GamepadInputHandler @Inject constructor(
      */
     fun handleKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
-            lastInputDevice = event.device
-            com.nendo.argosy.core.input.VirtualPad.observe(event)
+            observeInput(event)
             com.nendo.argosy.util.Logger.verbose("GamepadInput") { "KeyEvent: keyCode=${event.keyCode}, scanCode=${event.scanCode}, device=${event.device?.name}, deviceId=${event.deviceId}, source=${event.source}" }
         }
 

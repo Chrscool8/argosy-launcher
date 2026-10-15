@@ -3,6 +3,7 @@ package com.nendo.argosy.libretro
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.data.repository.InputPresets
 import com.nendo.argosy.data.repository.InputSource
 import com.nendo.argosy.data.repository.RetroButton
@@ -38,11 +39,11 @@ class ControllerInputMapper : KeyMapper {
     }
 
     override fun mapKey(device: InputDevice, keyCode: Int): Int =
-        resolveMappedKey(extendedMappings[getControllerId(device)], keyCode)
+        resolveMappedKey(extendedMappings[controllerIdOf(device)], keyCode)
 
     fun processMotionEvent(event: MotionEvent): List<SyntheticKeyEvent> {
         val device = event.device ?: return emptyList()
-        val controllerId = getControllerId(device)
+        val controllerId = controllerIdOf(device)
         val mapping = extendedMappings[controllerId] ?: return emptyList()
 
         val port = portResolver?.invoke(device) ?: 0
@@ -88,7 +89,7 @@ class ControllerInputMapper : KeyMapper {
     }
 
     fun hasAnalogMappingForAxis(device: InputDevice, axis: Int): Boolean {
-        val mapping = extendedMappings[getControllerId(device)] ?: return false
+        val mapping = extendedMappings[controllerIdOf(device)] ?: return false
         return mapping.keys.any { it is InputSource.AnalogDirection && it.axis == axis }
     }
 
@@ -97,7 +98,7 @@ class ControllerInputMapper : KeyMapper {
      * was resolved or the key is unbound within it.
      */
     fun retroButtonFor(device: InputDevice, keyCode: Int): Int? =
-        extendedMappings[getControllerId(device)]
+        extendedMappings[controllerIdOf(device)]
             ?.takeIf { it.isNotEmpty() }
             ?.get(InputSource.Button(keyCode))
 
@@ -107,10 +108,6 @@ class ControllerInputMapper : KeyMapper {
             .filter { it.key is InputSource.Button }
             .map { (it.key as InputSource.Button).keyCode }
             .toSet()
-    }
-
-    private fun getControllerId(device: InputDevice): String {
-        return "${device.vendorId}:${device.productId}:${device.descriptor}"
     }
 
     companion object {

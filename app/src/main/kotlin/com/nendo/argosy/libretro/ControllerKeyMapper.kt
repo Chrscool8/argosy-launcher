@@ -2,6 +2,7 @@ package com.nendo.argosy.libretro
 
 import android.view.InputDevice
 import android.view.KeyEvent
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.data.repository.RetroButton
 import com.swordfish.libretrodroid.KeyMapper
 
@@ -21,8 +22,7 @@ class ControllerKeyMapper : KeyMapper {
     }
 
     override fun mapKey(device: InputDevice, keyCode: Int): Int {
-        val controllerId = getControllerId(device)
-        val mapping = controllerMappings[controllerId]
+        val mapping = controllerMappings[controllerIdOf(device)]
 
         if (mapping != null) {
             val targetRetroButton = mapping[keyCode]
@@ -32,10 +32,6 @@ class ControllerKeyMapper : KeyMapper {
         }
 
         return defaultSwap(keyCode)
-    }
-
-    private fun getControllerId(device: InputDevice): String {
-        return "${device.vendorId}:${device.productId}:${device.descriptor}"
     }
 
     private fun defaultSwap(keyCode: Int): Int {

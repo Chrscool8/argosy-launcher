@@ -1,9 +1,9 @@
 package com.nendo.argosy.ui.screens.settings.components
 
 import android.view.InputDevice
+import com.nendo.argosy.core.input.controllerIdOf
 import com.nendo.argosy.core.input.isPhysicalGamepad
 import com.nendo.argosy.data.repository.InputConfigRepository
-import com.nendo.argosy.libretro.ControllerPortResolver
 import com.nendo.argosy.libretro.ControllerSeating
 import com.nendo.argosy.ui.input.GamepadEvent
 import kotlinx.coroutines.CoroutineScope
@@ -150,7 +150,7 @@ class ControllerSeatController(
     private suspend fun loadRows(): List<SeatRow> {
         val saved = repository.getControllerOrder().associate { it.controllerId to it.port }
         return connectedPhysicalPads().map { device ->
-            val controllerId = ControllerPortResolver.getControllerId(device)
+            val controllerId = controllerIdOf(device)
             SeatRow(controllerId = controllerId, name = device.name, port = saved[controllerId])
         }
     }
@@ -159,5 +159,5 @@ class ControllerSeatController(
         InputDevice.getDeviceIds().toList()
             .mapNotNull { InputDevice.getDevice(it) }
             .filter { it.isPhysicalGamepad() }
-            .distinctBy { ControllerPortResolver.getControllerId(it) }
+            .distinctBy { controllerIdOf(it) }
 }

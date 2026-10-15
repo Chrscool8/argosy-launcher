@@ -155,19 +155,21 @@ object ControllerDetector {
         return null
     }
 
-    fun detectFromActiveGamepad(): DetectionResult {
-        val deviceIds = InputDevice.getDeviceIds()
-        for (deviceId in deviceIds) {
-            val device = InputDevice.getDevice(deviceId) ?: continue
-            if (device.isPhysicalGamepad()) return detectFromDevice(device)
-        }
-        return DetectionResult(null, null, null, DetectionSource.UNKNOWN)
+    /**
+     * Detects [device], or the first connected physical pad when [device] is null.
+     */
+    fun detectFor(device: InputDevice?): DetectionResult {
+        if (device != null) return detectFromDevice(device)
+        val firstPad = InputDevice.getDeviceIds()
+            .asSequence()
+            .mapNotNull { InputDevice.getDevice(it) }
+            .firstOrNull { it.isPhysicalGamepad() }
+            ?: return DetectionResult(null, null, null, DetectionSource.UNKNOWN)
+        return detectFromDevice(firstPad)
     }
 
     fun isAnyGamepadConnected(): Boolean =
         InputDevice.getDeviceIds().any { InputDevice.getDevice(it)?.isPhysicalGamepad() == true }
-
-    fun getDetectedLayout(): DetectedLayout? = detectFromActiveGamepad().layout
 
     /**
      * Resolves the pad lettering every surface draws glyphs against. [controllerLayout] is the

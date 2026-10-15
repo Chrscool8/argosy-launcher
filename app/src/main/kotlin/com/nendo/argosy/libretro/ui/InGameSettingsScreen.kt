@@ -32,6 +32,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -69,7 +70,9 @@ import com.nendo.argosy.ui.input.stepOption
 import com.nendo.argosy.ui.common.hudCornerFromStored
 import com.nendo.argosy.ui.common.labelRes
 import com.nendo.argosy.core.emulator.LibretroSettingDef
+import com.nendo.argosy.core.input.ActiveController
 import com.nendo.argosy.core.input.SoundType
+import kotlinx.coroutines.flow.StateFlow
 import com.nendo.argosy.ui.screens.settings.libretro.LibretroSettingsAccessor
 import com.nendo.argosy.data.platform.PlatformWeightRegistry
 import com.nendo.argosy.ui.screens.settings.libretro.LibretroSettingsSection
@@ -170,14 +173,16 @@ sealed class InGameControlsAction {
 data class InGameModalCallbacks(
     val controllerSeats: ControllerSeatController,
     val hotkeys: List<HotkeyEntity>,
-    val connectedControllers: List<ControllerInfo>,
+    val connectedControllers: StateFlow<List<ControllerInfo>>,
+    val activeController: StateFlow<ActiveController?>,
+    val onHoldActiveController: (Boolean) -> Unit,
+    val lockedProfileIndexFor: (ControllerInfo) -> Int?,
     val onGetMapping: suspend (ControllerInfo, String?) -> ScopedMapping,
     val onSaveMapping: suspend (ControllerInfo, Map<InputSource, Int>, String?, Boolean, String?) -> Unit,
     val onApplyPreset: suspend (ControllerInfo, String) -> Unit,
     val onSaveHotkey: suspend (HotkeyAction, List<Int>, HotkeyScopeType, String?) -> Unit,
     val onClearHotkey: suspend (HotkeyAction, HotkeyScopeType, String?) -> Unit,
     val onSetHotkeyHoldMs: suspend (HotkeyAction, Long, HotkeyScopeType, String?) -> Unit,
-    val lockedProfileIndex: Int? = null,
     val coreId: String? = null,
     val coreName: String? = null,
     val platformSlug: String? = null,
@@ -722,11 +727,17 @@ fun InGameSettingsScreen(
         }
 
         if (showInputMappingModal) {
+            val controllers by modalCallbacks.connectedControllers.collectAsState()
+            val activeController by modalCallbacks.activeController.collectAsState()
             InputMappingModal(
-                controllers = modalCallbacks.connectedControllers,
+                controllers = controllers,
+                activeController = activeController,
+                onHoldActiveController = modalCallbacks.onHoldActiveController,
                 inputDispatcher = null,
-                lockedPlatformIndex = modalCallbacks.lockedProfileIndex
-                    ?: MappingPlatforms.indexForPlatformSlug(platformSlug ?: ""),
+                lockedPlatformIndexFor = { controller ->
+                    modalCallbacks.lockedProfileIndexFor(controller)
+                        ?: MappingPlatforms.indexForPlatformSlug(platformSlug ?: "")
+                },
                 onGetMapping = modalCallbacks.onGetMapping,
                 onSaveMapping = modalCallbacks.onSaveMapping,
                 onApplyPreset = modalCallbacks.onApplyPreset,
