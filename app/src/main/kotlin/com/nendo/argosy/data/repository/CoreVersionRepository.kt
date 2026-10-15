@@ -15,4 +15,11 @@ class CoreVersionRepository @Inject constructor(
         coreVersionDao.observeWithUpdatesAvailable().map { rows ->
             rows.count { LibretroCoreManager.pendingUpdateOf(it) != null }
         }
+
+    /**
+     * The buildbot stamp of the downloaded build of [coreId], or null when no build was
+     * downloaded.
+     */
+    suspend fun installedBuild(coreId: String): String? =
+        coreVersionDao.getByCoreId(coreId)?.installedVersion
 }

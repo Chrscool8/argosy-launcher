@@ -783,6 +783,10 @@
     <!-- First row of the emulator picker. Verb phrase: falls back to whatever emulator the platform
          is set to use. -->
     <string name="gamedetail_emulator_picker_platform_default">Use Platform Default</string>
+    <!-- Value beside the built-in emulator row. %1$s is the libretro core it runs for this game
+         (an upstream name, never translated), %2$s the date and time that core build was
+         published. "build" is a noun: the compiled release of the core. -->
+    <string name="gamedetail_emulator_picker_builtin_core_build">%1$s (build %2$s)</string>
 
     <!-- Heading of the picker for which edition of the game to launch. Verb phrase. Rendered in
          caps in English. -->

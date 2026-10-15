@@ -2,6 +2,7 @@ package com.nendo.argosy.ui.screens.settings
 
 import androidx.annotation.StringRes
 import com.nendo.argosy.R
+import com.nendo.argosy.ui.common.BuiltinCoreSummary
 import com.nendo.argosy.ui.common.DisplayText
 import com.nendo.argosy.ui.components.TextEntryFocus
 import com.nendo.argosy.ui.components.TextEntryRow
@@ -219,7 +220,8 @@ data class EmulatorPickerInfo(
     val selectedEmulatorName: String?,
     val updates: Map<String, EmulatorUpdateInfo> = emptyMap(),
     val downloadState: EmulatorDownloadState = EmulatorDownloadState.Idle,
-    val downloadingEmulatorId: String? = null
+    val downloadingEmulatorId: String? = null,
+    val builtinCore: BuiltinCoreSummary? = null
 )
 
 data class VariantOption(

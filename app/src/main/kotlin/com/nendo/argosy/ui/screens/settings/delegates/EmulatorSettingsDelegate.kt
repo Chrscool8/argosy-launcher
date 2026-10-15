@@ -21,6 +21,7 @@ import com.nendo.argosy.data.repository.EmulatorSaveConfigRepository
 import com.nendo.argosy.domain.usecase.game.ConfigureEmulatorUseCase
 import com.nendo.argosy.libretro.LibretroCoreManager
 import com.nendo.argosy.libretro.LibretroCoreRegistry
+import com.nendo.argosy.ui.common.BuiltinCoreSummaryLoader
 import com.nendo.argosy.ui.components.ListReorder
 import com.nendo.argosy.ui.components.ReorderStep
 import kotlinx.coroutines.flow.Flow
@@ -73,7 +74,8 @@ class EmulatorSettingsDelegate @Inject constructor(
     private val emulatorDownloadManager: EmulatorDownloadManager,
     private val emulatorUpdateRepository: EmulatorUpdateRepository,
     private val saveHandlerRegistry: PlatformSaveHandlerRegistry,
-    private val savePathAuthority: com.nendo.argosy.data.emulator.savepath.SavePathAuthority
+    private val savePathAuthority: com.nendo.argosy.data.emulator.savepath.SavePathAuthority,
+    private val builtinCoreSummaryLoader: BuiltinCoreSummaryLoader
 ) {
     companion object {
         private const val TAG = "EmulatorSettingsDelegate"
@@ -178,6 +180,11 @@ class EmulatorSettingsDelegate @Inject constructor(
                     installedVariant = update.installedVariant
                 )
             }
+            val builtinCore = if (config.availableEmulators.any { it.def.id == EmulatorRegistry.BUILTIN_ID }) {
+                builtinCoreSummaryLoader.load(gameId = null, platformId = config.platform.id, platformSlug = config.platform.slug)
+            } else {
+                null
+            }
 
             _state.update {
                 it.copy(
@@ -189,7 +196,8 @@ class EmulatorSettingsDelegate @Inject constructor(
                         installedEmulators = config.availableEmulators,
                         downloadableEmulators = config.downloadableEmulators,
                         selectedEmulatorName = config.selectedEmulator,
-                        updates = updateMap
+                        updates = updateMap,
+                        builtinCore = builtinCore
                     ),
                     emulatorPickerFocusIndex = 0,
                     emulatorPickerSelectedIndex = null

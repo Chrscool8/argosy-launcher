@@ -1069,6 +1069,7 @@ private fun GameDetailModals(
     ) {
         EmulatorPickerModal(
             availableEmulators = pickerState.availableEmulators,
+            builtinCore = pickerState.builtinCore,
             currentEmulatorName = game.emulatorName,
             focusIndex = pickerState.emulatorPickerFocusIndex,
             onSelectEmulator = viewModel.pickerModalDelegate::selectEmulator,

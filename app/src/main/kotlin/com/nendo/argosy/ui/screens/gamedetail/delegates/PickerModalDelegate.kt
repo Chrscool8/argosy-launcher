@@ -13,6 +13,8 @@ import com.nendo.argosy.data.model.allSelectableSelected
 import com.nendo.argosy.data.model.selectableFileIds
 import com.nendo.argosy.data.model.visibleWithCollapsed
 import com.nendo.argosy.data.preferences.MenuWrapMode
+import com.nendo.argosy.ui.common.BuiltinCoreSummary
+import com.nendo.argosy.ui.common.BuiltinCoreSummaryLoader
 import com.nendo.argosy.ui.input.InputDispatcher.Companion.computeWrappedIndex
 import com.nendo.argosy.ui.input.SoundFeedbackManager
 import com.nendo.argosy.core.input.SoundType
@@ -30,6 +32,7 @@ data class PickerModalState(
     val showEmulatorPicker: Boolean = false,
     val availableEmulators: List<InstalledEmulator> = emptyList(),
     val emulatorPickerFocusIndex: Int = 0,
+    val builtinCore: BuiltinCoreSummary? = null,
 
     val showCorePicker: Boolean = false,
     val availableCores: List<RetroArchCore> = emptyList(),
@@ -88,7 +91,8 @@ sealed class PickerSelection {
 class PickerModalDelegate @Inject constructor(
     @ApplicationContext private val context: Context,
     private val emulatorDetector: EmulatorDetector,
-    private val soundManager: SoundFeedbackManager
+    private val soundManager: SoundFeedbackManager,
+    private val builtinCoreSummaryLoader: BuiltinCoreSummaryLoader
 ) {
     private val _state = MutableStateFlow(PickerModalState())
     val state: StateFlow<PickerModalState> = _state.asStateFlow()
@@ -185,7 +189,12 @@ class PickerModalDelegate @Inject constructor(
 
     // region Emulator Picker
 
-    suspend fun showEmulatorPicker(platformSlug: String, builtinEnabled: Boolean = true) {
+    suspend fun showEmulatorPicker(
+        gameId: Long,
+        platformId: Long,
+        platformSlug: String,
+        builtinEnabled: Boolean = true
+    ) {
         if (emulatorDetector.installedEmulators.value.isEmpty()) {
             emulatorDetector.detectEmulators()
         }
@@ -193,11 +202,17 @@ class PickerModalDelegate @Inject constructor(
             if (builtinEnabled) list
             else list.filterNot { it.def.packageName == com.nendo.argosy.data.emulator.EmulatorRegistry.BUILTIN_PACKAGE }
         }
+        val builtinCore = if (available.any { it.def.id == EmulatorRegistry.BUILTIN_ID }) {
+            builtinCoreSummaryLoader.load(gameId = gameId, platformId = platformId, platformSlug = platformSlug)
+        } else {
+            null
+        }
         _state.update {
             it.copy(
                 showEmulatorPicker = true,
                 availableEmulators = available,
-                emulatorPickerFocusIndex = 0
+                emulatorPickerFocusIndex = 0,
+                builtinCore = builtinCore
             )
         }
         soundManager.play(SoundType.OPEN_MODAL)

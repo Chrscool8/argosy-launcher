@@ -73,19 +73,12 @@ class EmulatorDetector @Inject constructor(
         installed
     }
 
-    private fun createBuiltinEmulator(def: EmulatorDef): InstalledEmulator {
-        val appVersion = try {
-            val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName
-        } catch (_: PackageManager.NameNotFoundException) {
-            null
-        }
-        return InstalledEmulator(
+    private fun createBuiltinEmulator(def: EmulatorDef): InstalledEmulator =
+        InstalledEmulator(
             def = def,
-            versionName = appVersion,
+            versionName = null,
             versionCode = 0
         )
-    }
 
     private fun detectEmulatorFamilies(
         installed: MutableList<InstalledEmulator>,

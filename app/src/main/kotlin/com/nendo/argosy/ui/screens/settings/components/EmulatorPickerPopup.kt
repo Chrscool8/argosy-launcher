@@ -39,8 +39,10 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import com.nendo.argosy.R
 import com.nendo.argosy.data.emulator.EmulatorDef
+import com.nendo.argosy.data.emulator.EmulatorRegistry
 import com.nendo.argosy.data.emulator.InstalledEmulator
 import com.nendo.argosy.data.remote.github.VersionFormatter
+import com.nendo.argosy.ui.common.builtinCoreSubtitle
 import com.nendo.argosy.ui.components.FocusedScroll
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.InputButton
@@ -217,6 +219,8 @@ fun EmulatorPickerPopup(
                                     val latest = VersionFormatter.formatForDisplay(updateInfo.latestVersion)
                                     stringResource(R.string.settings_emulator_picker_version_update_arrow, current, latest)
                                 }
+                                item.emulator.def.id == EmulatorRegistry.BUILTIN_ID && info.builtinCore != null ->
+                                    builtinCoreSubtitle(info.builtinCore, R.string.settings_emulator_picker_builtin_core_build)
                                 else -> {
                                     val versionSuffix = item.emulator.versionName?.let {
                                         " - ${VersionFormatter.formatForDisplay(it)}"

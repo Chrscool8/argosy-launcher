@@ -4039,6 +4039,10 @@
     <!-- Subtitle prefix on an installed emulator row with no pending update. The installed
          version, if known, is appended after a dash by code, not part of this string. -->
     <string name="settings_emulator_picker_installed_label">Installed</string>
+    <!-- Subtitle on the built-in emulator row. %1$s is the libretro core it runs for this
+         platform (an upstream name, never translated), %2$s the date and time that core build was
+         published. "build" is a noun: the compiled release of the core. -->
+    <string name="settings_emulator_picker_builtin_core_build">%1$s (build %2$s)</string>
     <!-- Heading over emulators available to install but not yet installed. Rendered in caps in
          English; use whatever casing suits a heading in your language. -->
     <string name="settings_emulator_picker_download_header">AVAILABLE TO DOWNLOAD</string>

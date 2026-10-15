@@ -1989,7 +1989,7 @@ class GameDetailViewModel @Inject constructor(
         moreOptionsDelegate.reset()
         viewModelScope.launch {
             val builtinEnabled = preferencesRepository.userPreferences.first().builtinLibretroEnabled
-            pickerModalDelegate.showEmulatorPicker(game.platformSlug, builtinEnabled)
+            pickerModalDelegate.showEmulatorPicker(game.id, game.platformId, game.platformSlug, builtinEnabled)
         }
     }
 
