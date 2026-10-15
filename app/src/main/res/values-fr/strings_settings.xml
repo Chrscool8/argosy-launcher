@@ -2154,6 +2154,7 @@
     <string name="settings_emulator_picker_version_unknown">?</string>
     <string name="settings_emulator_picker_version_update_arrow">%1$s -&gt; %2$s</string>
     <string name="settings_emulator_picker_installed_label">Installé</string>
+    <string name="settings_emulator_picker_builtin_core_build">%1$s (build du %2$s)</string>
     <string name="settings_emulator_picker_download_header">DISPONIBLE AU TÉLÉCHARGEMENT</string>
     <string name="settings_emulator_picker_downloadable_downloading_progress">Téléchargement %1$d %%</string>
     <string name="settings_emulator_picker_downloadable_installing">Installation...</string>

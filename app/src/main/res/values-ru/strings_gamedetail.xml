@@ -279,6 +279,7 @@
 
     <string name="gamedetail_emulator_picker_title">ВЫБОР ЭМУЛЯТОРА</string>
     <string name="gamedetail_emulator_picker_platform_default">Использовать значение платформы по умолчанию</string>
+    <string name="gamedetail_emulator_picker_builtin_core_build">%1$s (сборка от %2$s)</string>
 
     <string name="gamedetail_variant_picker_title">ВЫБОР ВАРИАНТА</string>
     <string name="gamedetail_variant_picker_subtitle">Выберите версию для запуска</string>

@@ -315,6 +315,7 @@
 
     <string name="gamedetail_emulator_picker_title">SELECCIONAR EMULADOR</string>
     <string name="gamedetail_emulator_picker_platform_default">Usar el predeterminado de la plataforma</string>
+    <string name="gamedetail_emulator_picker_builtin_core_build">%1$s (compilación del %2$s)</string>
 
     <string name="gamedetail_variant_picker_title">SELECCIONAR VARIANTE</string>
     <string name="gamedetail_variant_picker_subtitle">Elige qué versión iniciar</string>

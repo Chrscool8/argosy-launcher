@@ -310,6 +310,7 @@
 
     <string name="gamedetail_emulator_picker_title">एमुलेटर चुनें</string>
     <string name="gamedetail_emulator_picker_platform_default">प्लेटफ़ॉर्म डिफ़ॉल्ट इस्तेमाल करें</string>
+    <string name="gamedetail_emulator_picker_builtin_core_build">%1$s (बिल्ड %2$s)</string>
 
     <string name="gamedetail_variant_picker_title">वैरिएंट चुनें</string>
     <string name="gamedetail_variant_picker_subtitle">कौन सा वर्शन लॉन्च करना है चुनें</string>

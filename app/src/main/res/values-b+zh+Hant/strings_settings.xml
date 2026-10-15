@@ -1950,6 +1950,7 @@
     <string name="settings_emulator_picker_version_unknown">?</string>
     <string name="settings_emulator_picker_version_update_arrow">%1$s -&gt; %2$s</string>
     <string name="settings_emulator_picker_installed_label">已安裝</string>
+    <string name="settings_emulator_picker_builtin_core_build">%1$s（建置於 %2$s）</string>
     <string name="settings_emulator_picker_download_header">可供下載</string>
     <string name="settings_emulator_picker_downloadable_downloading_progress">下載中%1$d%%</string>
     <string name="settings_emulator_picker_downloadable_installing">安裝中&#8230;</string>

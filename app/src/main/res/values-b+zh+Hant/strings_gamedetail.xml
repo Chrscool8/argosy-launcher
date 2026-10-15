@@ -266,6 +266,7 @@
 
     <string name="gamedetail_emulator_picker_title">選擇模擬器</string>
     <string name="gamedetail_emulator_picker_platform_default">使用平台預設</string>
+    <string name="gamedetail_emulator_picker_builtin_core_build">%1$s（建置於 %2$s）</string>
 
     <string name="gamedetail_variant_picker_title">選擇版本</string>
     <string name="gamedetail_variant_picker_subtitle">選擇要啟動的版本</string>

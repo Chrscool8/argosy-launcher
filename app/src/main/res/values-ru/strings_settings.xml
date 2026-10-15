@@ -2206,6 +2206,7 @@
     <string name="settings_emulator_picker_version_unknown">?</string>
     <string name="settings_emulator_picker_version_update_arrow">%1$s -&gt; %2$s</string>
     <string name="settings_emulator_picker_installed_label">Установлено</string>
+    <string name="settings_emulator_picker_builtin_core_build">%1$s (сборка от %2$s)</string>
     <string name="settings_emulator_picker_download_header">ДОСТУПНО ДЛЯ ЗАГРУЗКИ</string>
     <string name="settings_emulator_picker_downloadable_downloading_progress">Загрузка %1$d%%</string>
     <string name="settings_emulator_picker_downloadable_installing">Установка...</string>
