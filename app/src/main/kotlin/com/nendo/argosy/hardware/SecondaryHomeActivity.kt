@@ -9,7 +9,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -39,7 +42,7 @@ import com.nendo.argosy.ui.input.SelectModifier
 import com.nendo.argosy.ui.input.mapKeycodeToGamepadEvent
 import com.nendo.argosy.util.Logger
 import com.nendo.argosy.util.PermissionHelper
-import com.nendo.argosy.util.hideSystemBars
+import com.nendo.argosy.util.LauncherSystemBars
 import com.nendo.argosy.util.installImmersiveMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -105,10 +108,11 @@ class SecondaryHomeActivity :
     private val selectModifier = SelectModifier()
 
     private var displayListener: DisplayManager.DisplayListener? = null
+    private val systemBars by lazy { LauncherSystemBars(window) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        installImmersiveMode()
+        installImmersiveMode { systemBars.visibility }
         keepAwakeWhileUserActive()
 
         if (com.nendo.argosy.util.DesktopMode.isActive(this)) {
@@ -212,6 +216,7 @@ class SecondaryHomeActivity :
         androidx.compose.foundation.layout.Box(
             modifier = androidx.compose.ui.Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
                 .focusRequester(presentationSink)
                 .focusable()
         ) {
@@ -222,7 +227,7 @@ class SecondaryHomeActivity :
     override fun onResume() {
         super.onResume()
         if (releaseUnsupportedDisplay()) return
-        window.hideSystemBars()
+        systemBars.apply()
         if (!::dsm.isInitialized) return
         val currentDsm = DualScreenManagerHolder.instance
         if (currentDsm != null && dsm !== currentDsm) {
@@ -695,6 +700,7 @@ class SecondaryHomeActivity :
         loadInitialState()
         if (!isShowcaseRole) dsm.clearMediaInfoRequest()
         dsm.registerCompanionHost(hostDisplayId(), this)
+        systemBars.follow(lifecycleScope, dsm.preferencesRepository.userPreferences)
         lifecycleScope.launch { dsm.companionAchievements.collect { companionAchievements = it } }
         lifecycleScope.launch {
             dsm.companionMediaVisible.collect { visible -> isMediaPanelVisible = visible }
@@ -852,7 +858,7 @@ class SecondaryHomeActivity :
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) window.hideSystemBars() else gamepadInputHandler.resetStickMotion()
+        if (hasFocus) systemBars.apply() else gamepadInputHandler.resetStickMotion()
         if (!::dsm.isInitialized) return
         if (hasFocus) {
             dsm.onLauncherWindowFocused(this)

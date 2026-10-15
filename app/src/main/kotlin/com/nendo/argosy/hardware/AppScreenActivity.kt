@@ -6,7 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.nendo.argosy.DualScreenManager
 import com.nendo.argosy.DualScreenManagerHolder
 import com.nendo.argosy.ui.dualscreen.PresentationSlot
@@ -23,7 +27,7 @@ import com.nendo.argosy.ui.dualscreen.PresentationSlotContent
 import com.nendo.argosy.ui.theme.CustomFontFamilies
 import com.nendo.argosy.ui.theme.ThemeState
 import com.nendo.argosy.ui.theme.toThemeState
-import com.nendo.argosy.util.hideSystemBars
+import com.nendo.argosy.util.LauncherSystemBars
 
 /**
  * The surface on the display holding the app-target role. Holding that display is the point: it
@@ -33,6 +37,7 @@ class AppScreenActivity : ComponentActivity(), DualScreenManager.AppScreenHost {
 
     private var hostDisplayId: Int = Display.DEFAULT_DISPLAY
     private var coveredByApp = false
+    private val systemBars by lazy { LauncherSystemBars(window) }
 
     override fun releaseAppScreen() {
         runOnUiThread { finish() }
@@ -51,6 +56,7 @@ class AppScreenActivity : ComponentActivity(), DualScreenManager.AppScreenHost {
             return
         }
         dsm.registerAppScreenHost(hostDisplayId, this)
+        systemBars.follow(lifecycleScope, dsm.preferencesRepository.userPreferences)
 
         setContent {
             val themeState = remember { mutableStateOf(ThemeState()) }
@@ -66,6 +72,7 @@ class AppScreenActivity : ComponentActivity(), DualScreenManager.AppScreenHost {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBars)
                         .focusRequester(sink)
                         .focusable()
                 ) {
@@ -84,7 +91,7 @@ class AppScreenActivity : ComponentActivity(), DualScreenManager.AppScreenHost {
 
     override fun onResume() {
         super.onResume()
-        window.hideSystemBars()
+        systemBars.apply()
         val dsm = DualScreenManagerHolder.instance ?: return
         if (!dsm.holdsAppScreen(hostDisplayId)) {
             finish()

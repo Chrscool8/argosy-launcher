@@ -117,6 +117,10 @@
     <string name="settings_interface_ui_scale_title">UI-Skalierung</string>
     <string name="settings_interface_compact_footer_title">Kompakter Footer</string>
     <string name="settings_interface_compact_footer_subtitle">Schmalere Bedienleiste verwenden</string>
+    <string name="settings_interface_hide_system_nav_bar_title">System-Navigationsleiste ausblenden</string>
+    <string name="settings_interface_hide_system_nav_bar_subtitle">Blendet die Android-Tasten für Zurück, Startbildschirm und Übersicht oder die Gestenleiste aus. Vom Rand wischen, um sie anzuzeigen</string>
+    <string name="settings_interface_hide_system_status_bar_title">System-Statusleiste ausblenden</string>
+    <string name="settings_interface_hide_system_status_bar_subtitle">Blendet die Android-Statusleiste und Benachrichtigungssymbole aus. Von oben nach unten wischen, um sie anzuzeigen</string>
     <string name="settings_interface_lock_screen_art_title">Sperrbildschirm-Motiv</string>
     <string name="settings_interface_lock_screen_art_subtitle">Solange Argosy deine Startbildschirm-App ist, zeigt der Sperrbildschirm deine Bibliothek oder das laufende Spiel. Ersetzt dein Sperrbildschirm-Hintergrundbild dauerhaft.</string>
     <string name="settings_interface_home_app_title">Als Startbildschirm-App verfügbar</string>
@@ -142,6 +146,8 @@
     <string name="settings_navigation_nav_bar_pages_subtitle">Wähle die Seiten, durch die Navigationsleiste und Schultertasten wechseln, und lege ihre Reihenfolge fest</string>
     <string name="settings_navigation_quick_navigation_title">Schnellnavigation</string>
     <string name="settings_navigation_quick_navigation_subtitle">Schultertasten wechseln die Seite über die Navigationsleiste. Wenn aus, wechseln sie Plattformen und Tabs, und die Trigger springen zwischen Buchstaben</string>
+    <string name="settings_navigation_nav_bar_auto_hide_title">Navigationsleiste automatisch ausblenden</string>
+    <string name="settings_navigation_nav_bar_auto_hide_subtitle">Blendet die Navigationsleiste nach einigen Sekunden aus, damit die Tastenhinweise ihren Platz einnehmen. Wenn aus, bleibt sie sichtbar</string>
     <string name="settings_navigation_nav_bar_pages_count">%1$d / %2$d</string>
     <string name="settings_nav_ring_modal_title">Seiten der Navigationsleiste</string>
     <string name="settings_nav_ring_modal_subtitle">Seiten ein- oder ausschalten und ihre Reihenfolge festlegen</string>

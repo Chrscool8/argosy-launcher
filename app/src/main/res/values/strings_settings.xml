@@ -305,6 +305,17 @@
     <!-- Second line of that row. "Control guide bar" is the strip that says what each button
          does. -->
     <string name="settings_interface_compact_footer_subtitle">Use a thinner control guide bar</string>
+    <!-- Row title. Verb phrase: take Android's own navigation buttons or gesture bar off the
+         screen. Not Argosy's in-app nav bar, which has its own setting. -->
+    <string name="settings_interface_hide_system_nav_bar_title">Hide System Navigation Bar</string>
+    <!-- Second line of that row. Says what is hidden and how to bring it back for a moment. -->
+    <string name="settings_interface_hide_system_nav_bar_subtitle">Hide Android\'s back, home and recents buttons or gesture bar. Swipe from the edge to show them</string>
+    <!-- Row title. Verb phrase: take Android's own status bar (time, notifications, signal at the
+         top of the screen) off the screen. Not Argosy's status bar items, which have their own
+         rows. -->
+    <string name="settings_interface_hide_system_status_bar_title">Hide System Status Bar</string>
+    <!-- Second line of that row. Says what is hidden and how to bring it back for a moment. -->
+    <string name="settings_interface_hide_system_status_bar_subtitle">Hide Android\'s status bar and notification icons. Swipe down from the top to show it</string>
     <!-- Setting title. Noun phrase: the picture Argosy puts behind the device's lock screen. -->
     <string name="settings_interface_lock_screen_art_title">Lock Screen Art</string>
     <!-- Setting subtitle. Explains what the switch does and warns that it takes over the lock
@@ -377,6 +388,10 @@
     <string name="settings_navigation_quick_navigation_title">Quick Navigation</string>
     <!-- Switch subtitle explaining what the shoulder buttons and triggers do in each state. -->
     <string name="settings_navigation_quick_navigation_subtitle">Shoulder buttons move between pages with the nav bar. When off, they switch platforms and tabs, and the triggers jump between letters</string>
+    <!-- Switch title. On, the floating nav bar slides away a few seconds after it appears; off, it stays on screen. "Hide" is a verb. -->
+    <string name="settings_navigation_nav_bar_auto_hide_title">Auto-Hide Nav Bar</string>
+    <!-- Switch subtitle. "Button hints" are the strip along the bottom edge showing which controller button does what. -->
+    <string name="settings_navigation_nav_bar_auto_hide_subtitle">Slide the nav bar away after a few seconds so button hints take its place. When off, it stays on screen</string>
     <!-- Value of that row: pages turned on, then total pages. %1$d and %2$d are whole numbers, shown as "7 / 11". -->
     <string name="settings_navigation_nav_bar_pages_count">%1$d / %2$d</string>
     <!-- Title of the dialog listing every page with an on/off state and an order. Noun phrase. -->

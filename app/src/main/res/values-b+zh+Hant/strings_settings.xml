@@ -96,6 +96,10 @@
     <string name="settings_interface_ui_scale_title">介面縮放</string>
     <string name="settings_interface_compact_footer_title">精簡頁尾</string>
     <string name="settings_interface_compact_footer_subtitle">使用較窄的操作提示列</string>
+    <string name="settings_interface_hide_system_nav_bar_title">隱藏系統導覽列</string>
+    <string name="settings_interface_hide_system_nav_bar_subtitle">隱藏 Android 的返回、主畫面和最近使用按鈕或手勢列。從邊緣滑動即可顯示</string>
+    <string name="settings_interface_hide_system_status_bar_title">隱藏系統狀態列</string>
+    <string name="settings_interface_hide_system_status_bar_subtitle">隱藏 Android 狀態列和通知圖示。從頂部向下滑動即可顯示</string>
     <string name="settings_interface_lock_screen_art_title">鎖定畫面圖片</string>
     <string name="settings_interface_lock_screen_art_subtitle">當 Argosy 是你的主畫面應用程式時，鎖定畫面會顯示你的遊戲庫或尚未結束的遊戲。會永久取代你的鎖定畫面桌布。</string>
     <string name="settings_interface_home_app_title">可作為主畫面應用程式</string>
@@ -119,6 +123,8 @@
     <string name="settings_navigation_nav_bar_pages_subtitle">選擇並排列導覽列與肩鍵切換的頁面</string>
     <string name="settings_navigation_quick_navigation_title">快速導覽</string>
     <string name="settings_navigation_quick_navigation_subtitle">肩鍵透過導覽列切換頁面。關閉時，肩鍵切換平台與分頁，扳機鍵在字母間跳轉</string>
+    <string name="settings_navigation_nav_bar_auto_hide_title">自動隱藏導覽列</string>
+    <string name="settings_navigation_nav_bar_auto_hide_subtitle">導覽列在數秒後隱藏，由按鍵提示取代其位置。關閉時，導覽列始終顯示</string>
     <string name="settings_navigation_nav_bar_pages_count">%1$d / %2$d</string>
     <string name="settings_nav_ring_modal_title">導覽列頁面</string>
     <string name="settings_nav_ring_modal_subtitle">開啟或關閉頁面並設定順序</string>

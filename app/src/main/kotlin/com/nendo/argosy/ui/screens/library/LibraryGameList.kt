@@ -17,6 +17,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.nendo.argosy.ui.components.fastAnimateScrollToItem
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.components.gamelist.GameListRow
 import com.nendo.argosy.ui.screens.home.GameDownloadIndicator
 import com.nendo.argosy.ui.theme.Dimens
@@ -93,7 +94,7 @@ internal fun LibraryGameList(
             start = Dimens.spacingMd,
             end = Dimens.spacingMd + sidebarWidth,
             top = Dimens.headerHeightLg,
-            bottom = Dimens.headerHeightLg
+            bottom = withNavBarClearance(Dimens.headerHeightLg)
         ),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm),
         modifier = Modifier.fillMaxSize()

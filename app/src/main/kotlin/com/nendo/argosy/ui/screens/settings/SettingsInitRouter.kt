@@ -583,6 +583,8 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             libraryBoxArt3d = prefs.libraryBoxArt3d,
             useAccentColorFooter = prefs.useAccentColorFooter,
             compactFooter = prefs.compactFooter,
+            hideSystemNavigationBar = prefs.hideSystemNavigationBar,
+            hideSystemStatusBar = prefs.hideSystemStatusBar,
             lockScreenArt = prefs.lockScreenArt,
             homeAppAvailable = prefs.homeAppAvailable,
             isDefaultHome = vm.displayDelegate.isDefaultHome(),
@@ -672,7 +674,8 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             openNavigationKey = prefs.openNavigationKey,
             openQuickPanelKey = prefs.openQuickPanelKey,
             navRingRoutes = com.nendo.argosy.ui.navigation.NavRing.resolve(prefs.navRingRoutes),
-            quickNavigation = prefs.quickNavigation
+            quickNavigation = prefs.quickNavigation,
+            navBarAutoHide = prefs.navBarAutoHide
         ))
         vm.controlsDelegate.refreshUsageStatsPermission()
 

@@ -101,6 +101,7 @@ import com.nendo.argosy.data.preferences.GridDensity
 import com.nendo.argosy.data.preferences.SelectSwapMode
 import com.nendo.argosy.ui.components.FocusedScroll
 import com.nendo.argosy.ui.components.fastAnimateScrollToItem
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.components.ActiveFilterChipRow
 import com.nendo.argosy.ui.components.ActiveFilterChipUi
 import com.nendo.argosy.ui.components.AddToCollectionModal
@@ -206,7 +207,8 @@ fun LibraryScreen(
 
     val density = LocalDensity.current
     val headerHeightPx = with(density) { Dimens.headerHeightLg.toPx() }.toInt()
-    val footerHeightPx = with(density) { Dimens.footerHeight.toPx() }.toInt()
+    val footerHeight = withNavBarClearance(Dimens.footerHeight)
+    val footerHeightPx = with(density) { footerHeight.toPx() }.toInt()
 
     LaunchedEffect(uiState.focusedIndex, uiState.lastFocusMove) {
         if (uiState.lastFocusMove == null || uiState.games.isEmpty()) return@LaunchedEffect
@@ -448,7 +450,7 @@ fun LibraryScreen(
                                         start = gridSpacing,
                                         end = gridSpacing + sidebarWidth,
                                         top = Dimens.headerHeightLg,
-                                        bottom = cardHeight + gridSpacing
+                                        bottom = withNavBarClearance(cardHeight + gridSpacing)
                                     ),
                                     horizontalArrangement = Arrangement.spacedBy(gridSpacing),
                                     verticalArrangement = Arrangement.spacedBy(gridSpacing),
@@ -1147,7 +1149,7 @@ private fun LibraryMasonryGrid(
             start = gridSpacing,
             end = gridSpacing + sidebarWidth,
             top = Dimens.headerHeightLg,
-            bottom = bottomPadding + gridSpacing
+            bottom = withNavBarClearance(bottomPadding + gridSpacing)
         ),
         horizontalArrangement = Arrangement.spacedBy(gridSpacing),
         verticalItemSpacing = gridSpacing,

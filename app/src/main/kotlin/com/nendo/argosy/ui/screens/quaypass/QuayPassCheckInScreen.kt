@@ -57,6 +57,7 @@ import com.nendo.argosy.data.quaypass.QuayPassService
 import com.nendo.argosy.ui.components.FocusedScroll
 import com.nendo.argosy.ui.components.FooterBar
 import com.nendo.argosy.ui.components.InputButton
+import com.nendo.argosy.ui.components.NavBarClearanceSpacer
 import com.nendo.argosy.ui.components.friends.SocialAvatar
 import com.nendo.argosy.ui.input.LocalInputDispatcher
 import com.nendo.argosy.ui.navigation.Screen
@@ -227,6 +228,7 @@ fun QuayPassCheckInScreen(
                     if (button == InputButton.Y) viewModel.openGreetingEditor()
                 }
             )
+            NavBarClearanceSpacer()
         }
         QuayPassArrivalOverlay(
             trigger = arrivalTrigger,

@@ -110,6 +110,10 @@
     <string name="settings_interface_ui_scale_title">Масштаб интерфейса</string>
     <string name="settings_interface_compact_footer_title">Компактная панель</string>
     <string name="settings_interface_compact_footer_subtitle">Использовать более тонкую панель подсказок</string>
+    <string name="settings_interface_hide_system_nav_bar_title">Скрывать системную панель навигации</string>
+    <string name="settings_interface_hide_system_nav_bar_subtitle">Скрывает кнопки Android «Назад», «Домой» и «Недавние» или панель жестов. Проведите от края экрана, чтобы показать их</string>
+    <string name="settings_interface_hide_system_status_bar_title">Скрывать системную строку состояния</string>
+    <string name="settings_interface_hide_system_status_bar_subtitle">Скрывает строку состояния Android и значки уведомлений. Проведите сверху вниз, чтобы показать её</string>
     <string name="settings_interface_lock_screen_art_title">Картинка экрана блокировки</string>
     <string name="settings_interface_lock_screen_art_subtitle">Пока Argosy — ваше приложение главного экрана, на экране блокировки показывается ваша библиотека или незакрытая игра. Заменяет обои экрана блокировки безвозвратно.</string>
     <string name="settings_interface_home_app_title">Доступно как приложение главного экрана</string>
@@ -135,6 +139,8 @@
     <string name="settings_navigation_nav_bar_pages_subtitle">Выберите и упорядочите страницы, между которыми переключают панель навигации и плечевые кнопки</string>
     <string name="settings_navigation_quick_navigation_title">Быстрая навигация</string>
     <string name="settings_navigation_quick_navigation_subtitle">Плечевые кнопки переключают страницы через панель навигации. Если выключено, они переключают платформы и вкладки, а курки переходят по буквам</string>
+    <string name="settings_navigation_nav_bar_auto_hide_title">Автоскрытие панели навигации</string>
+    <string name="settings_navigation_nav_bar_auto_hide_subtitle">Панель навигации скрывается через несколько секунд, уступая место подсказкам кнопок. Если выключено, она остаётся на экране</string>
     <string name="settings_navigation_nav_bar_pages_count">%1$d / %2$d</string>
     <string name="settings_nav_ring_modal_title">Страницы панели навигации</string>
     <string name="settings_nav_ring_modal_subtitle">Включайте и отключайте страницы и задавайте их порядок</string>

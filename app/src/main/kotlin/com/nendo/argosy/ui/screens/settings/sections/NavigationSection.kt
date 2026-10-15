@@ -78,6 +78,11 @@ internal sealed class NavigationItem(
     )
 
     data object QuickNavigation : NavigationItem("quickNavigation", "navbar")
+    data object NavBarAutoHide : NavigationItem(
+        key = "navBarAutoHide",
+        section = "navbar",
+        visibleWhen = { it.quickNavigation }
+    )
     data object NavBarPages : NavigationItem(
         key = "navBarPages",
         section = "navbar",
@@ -116,7 +121,7 @@ internal sealed class NavigationItem(
                 MenusSpacer, MenusHeader,
                 MenuWrap, SelectLCombo, SelectRCombo, SelectSwap,
                 NavBarSpacer, NavBarHeader,
-                QuickNavigation, NavBarPages,
+                QuickNavigation, NavBarAutoHide, NavBarPages,
                 ShortcutsSpacer, ShortcutsHeader,
                 OpenNavigationShortcut, OpenQuickPanelShortcut
             )
@@ -236,6 +241,14 @@ fun NavigationSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                 isEnabled = controls.quickNavigation,
                 isFocused = isFocused(item),
                 onToggle = { viewModel.setQuickNavigation(it) }
+            )
+
+            NavigationItem.NavBarAutoHide -> SwitchPreference(
+                title = stringResource(R.string.settings_navigation_nav_bar_auto_hide_title),
+                subtitle = stringResource(R.string.settings_navigation_nav_bar_auto_hide_subtitle),
+                isEnabled = controls.navBarAutoHide,
+                isFocused = isFocused(item),
+                onToggle = { viewModel.setNavBarAutoHide(it) }
             )
 
             NavigationItem.HapticFeedback -> SwitchPreference(

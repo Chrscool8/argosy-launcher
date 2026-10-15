@@ -303,6 +303,8 @@ internal class LightSectionsInput(
                 return toggleLeftRight(direction, controls.swapStartSelect) { viewModel.setSwapStartSelect(it) }
             NavigationItem.QuickNavigation ->
                 return toggleLeftRight(direction, controls.quickNavigation) { viewModel.setQuickNavigation(it) }
+            NavigationItem.NavBarAutoHide ->
+                return toggleLeftRight(direction, controls.navBarAutoHide) { viewModel.setNavBarAutoHide(it) }
             NavigationItem.SelectLCombo -> return stepOption(
                 ControlsSettingsDelegate.COMBO_OPTIONS,
                 controls.selectLCombo,

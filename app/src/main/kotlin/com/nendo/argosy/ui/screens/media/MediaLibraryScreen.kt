@@ -25,6 +25,7 @@ import com.nendo.argosy.R
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.components.animateScrollToItemCentered
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.input.LocalInputDispatcher
 import com.nendo.argosy.ui.navigation.Screen
 import com.nendo.argosy.ui.screens.media.components.MediaEmptyState
@@ -133,7 +134,7 @@ fun MediaLibraryScreen(
                             start = Dimens.spacingLg,
                             end = Dimens.spacingLg,
                             top = Dimens.spacingMd,
-                            bottom = Dimens.footerHeight + Dimens.spacingXl
+                            bottom = withNavBarClearance(Dimens.footerHeight + Dimens.spacingXl)
                         ),
                         onColumnsChanged = viewModel::setColumnsCount,
                         onItemClick = { index ->

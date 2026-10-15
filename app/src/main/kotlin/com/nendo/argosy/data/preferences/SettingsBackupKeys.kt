@@ -72,6 +72,8 @@ object SettingsBackupKeys {
         SettingsBackupKey("game_detail_theme", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("use_accent_color_footer", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("compact_footer", SettingsBackupType.BOOLEAN),
+        SettingsBackupKey("hide_system_navigation_bar", SettingsBackupType.BOOLEAN),
+        SettingsBackupKey("hide_system_status_bar", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("lock_screen_art", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("icon_pack", SettingsBackupType.STRING),
         SettingsBackupKey("system_icon_position", SettingsBackupType.STRING),
@@ -177,6 +179,7 @@ object SettingsBackupKeys {
         SettingsBackupKey("open_quick_panel_key", SettingsBackupType.INT),
         SettingsBackupKey("nav_ring_routes", SettingsBackupType.STRING),
         SettingsBackupKey("quick_navigation", SettingsBackupType.BOOLEAN),
+        SettingsBackupKey("nav_bar_auto_hide", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("grip_reserve_enabled", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("grip_reserve_mode", SettingsBackupType.STRING),
         SettingsBackupKey("grip_reserve_percent", SettingsBackupType.INT)

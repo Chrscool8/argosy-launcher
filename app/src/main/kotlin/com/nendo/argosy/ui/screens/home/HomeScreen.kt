@@ -143,6 +143,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.FooterSpacer
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.components.NEW_BADGE_TOP_OVERFLOW
 import com.nendo.argosy.ui.components.FooterVariant
 import com.nendo.argosy.ui.components.DiscPickerModal
@@ -755,7 +756,7 @@ fun HomeScreen(
             val footerHeight = if (presentationShowsHints) {
                 dockHeight + chromeVerticalPadding
             } else {
-                Dimens.footerHeight
+                withNavBarClearance(Dimens.footerHeight)
             }
             val edge = if (maxWidth.value < ComponentDefaults.Carousel.compactWidthDp) {
                 Dimens.spacingMd

@@ -52,6 +52,7 @@ import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.components.PlatformIconAssets
 import com.nendo.argosy.ui.components.animateScrollToItemCentered
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.input.LocalInputDispatcher
 import com.nendo.argosy.ui.navigation.Screen
 import com.nendo.argosy.ui.primitives.ArgosyProgressBar
@@ -114,7 +115,7 @@ fun SyncMonitorScreen(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = Dimens.footerHeight + Dimens.spacingLg),
+                    contentPadding = PaddingValues(bottom = withNavBarClearance(Dimens.footerHeight + Dimens.spacingLg)),
                     verticalArrangement = Arrangement.spacedBy(Dimens.spacingXs)
                 ) {
                     itemsIndexed(

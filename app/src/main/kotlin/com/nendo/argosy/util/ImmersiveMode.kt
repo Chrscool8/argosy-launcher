@@ -8,47 +8,123 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.doOnAttach
+import com.nendo.argosy.data.preferences.UserPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 /**
- * Takes the status and gesture bars off this window, and asks the system to bring them back only
- * for a deliberate swipe from the edge.
- *
- * The request does not survive the window losing and regaining the screen, so a window that wants
- * to stay bare has to ask again on resume and on focus gain. [installImmersiveMode] covers the
- * rest.
+ * Which of Android's system bars a window keeps off the screen. The status flag also covers the
+ * caption bar a freeform window draws along its top edge.
  */
-fun Window.hideSystemBars() {
-    WindowCompat.setDecorFitsSystemWindows(this, false)
-    WindowInsetsControllerCompat(this, decorView).let { controller ->
-        controller.hide(WindowInsetsCompat.Type.systemBars())
-        controller.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+data class SystemBarVisibility(
+    val hideStatusBar: Boolean,
+    val hideNavigationBar: Boolean
+) {
+    val hiddenTypes: Int
+        get() = typesFor(hideStatusBar, hideNavigationBar)
+
+    val shownTypes: Int
+        get() = typesFor(!hideStatusBar, !hideNavigationBar)
+
+    companion object {
+        val IMMERSIVE = SystemBarVisibility(hideStatusBar = true, hideNavigationBar = true)
+
+        fun forLauncher(prefs: UserPreferences): SystemBarVisibility = SystemBarVisibility(
+            hideStatusBar = prefs.hideSystemStatusBar,
+            hideNavigationBar = prefs.hideSystemNavigationBar
+        )
+
+        private fun typesFor(status: Boolean, navigation: Boolean): Int {
+            val top = if (status) {
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.captionBar()
+            } else {
+                0
+            }
+            val bottom = if (navigation) WindowInsetsCompat.Type.navigationBars() else 0
+            return top or bottom
+        }
     }
 }
 
 /**
- * Makes a window immersive and keeps it that way.
+ * Hides and shows the status and navigation bars independently, and asks the system to bring a
+ * hidden bar back only for a deliberate swipe from the edge.
  *
- * Three separate things bring the bars back and each needs its own answer. The first hide waits for
- * decor attach because a call from onCreate races initial layout on a cold start, no-ops, and
- * leaves the bars drawn until the first focus change. The watchdog re-hides on any insets pass that
- * reports them visible, which is what retracts a transient reveal that the swipe behaviour alone
- * leaves on screen - it hides inline rather than posting, because a post lands a tick later and the
- * bars are drawn in between. Resume and focus gain are the caller's, through [hideSystemBars].
- *
- * The watchdog returns the decor view's own inset handling rather than the insets it was given: it
- * replaces that handling, and skipping it stops insets reaching the content view, which leaves
- * Compose reading zero for the IME and every text field unusable.
+ * The request does not survive the window losing and regaining the screen, so a window has to ask
+ * again on resume and on focus gain. [installImmersiveMode] covers the rest.
  */
-fun ComponentActivity.installImmersiveMode() {
+fun Window.applySystemBars(visibility: SystemBarVisibility) {
+    WindowCompat.setDecorFitsSystemWindows(this, false)
+    WindowInsetsControllerCompat(this, decorView).let { controller ->
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (visibility.hiddenTypes != 0) controller.hide(visibility.hiddenTypes)
+        if (visibility.shownTypes != 0) controller.show(visibility.shownTypes)
+    }
+}
+
+fun Window.hideSystemBars() = applySystemBars(SystemBarVisibility.IMMERSIVE)
+
+/**
+ * Keeps a launcher window's system bars matching the user's hide-status-bar and
+ * hide-navigation-bar preferences. [visibility] starts fully hidden until [follow] delivers the
+ * stored preferences.
+ */
+class LauncherSystemBars(private val window: Window) {
+
+    var visibility: SystemBarVisibility = SystemBarVisibility.IMMERSIVE
+        private set
+
+    private var followJob: Job? = null
+
+    fun apply() = window.applySystemBars(visibility)
+
+    fun follow(scope: CoroutineScope, preferences: Flow<UserPreferences>) {
+        followJob?.cancel()
+        followJob = scope.launch {
+            preferences
+                .map(SystemBarVisibility::forLauncher)
+                .distinctUntilChanged()
+                .collect { next ->
+                    visibility = next
+                    apply()
+                }
+        }
+    }
+}
+
+/**
+ * Makes a window edge-to-edge and keeps the bars that [visibility] hides off the screen: the first
+ * apply on decor attach, then an insets watchdog that re-hides any hidden bar an insets pass reports
+ * visible. Resume and focus gain stay with the caller, through [applySystemBars].
+ *
+ * The watchdog hands the insets on to the decor view's own handling, which keeps them reaching the
+ * content view and Compose reading the IME.
+ */
+fun ComponentActivity.installImmersiveMode(
+    visibility: () -> SystemBarVisibility = { SystemBarVisibility.IMMERSIVE }
+) {
     enableEdgeToEdge()
     ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
-        if (insets.isVisible(WindowInsetsCompat.Type.systemBars())) {
-            WindowInsetsControllerCompat(window, window.decorView)
-                .hide(WindowInsetsCompat.Type.systemBars())
+        val reappeared = visibleSystemBarTypes(insets) and visibility().hiddenTypes
+        if (reappeared != 0) {
+            WindowInsetsControllerCompat(window, window.decorView).hide(reappeared)
         }
         ViewCompat.onApplyWindowInsets(view, insets)
     }
     ViewCompat.requestApplyInsets(window.decorView)
-    window.decorView.doOnAttach { window.hideSystemBars() }
+    window.decorView.doOnAttach { window.applySystemBars(visibility()) }
 }
+
+private val SYSTEM_BAR_TYPES = listOf(
+    WindowInsetsCompat.Type.statusBars(),
+    WindowInsetsCompat.Type.captionBar(),
+    WindowInsetsCompat.Type.navigationBars()
+)
+
+private fun visibleSystemBarTypes(insets: WindowInsetsCompat): Int =
+    SYSTEM_BAR_TYPES.filter { insets.isVisible(it) }.fold(0) { mask, type -> mask or type }

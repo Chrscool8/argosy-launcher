@@ -78,6 +78,8 @@ data class DisplayPreferences(
     val presentationBackgroundBlur: Int = 0,
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
+    val hideSystemNavigationBar: Boolean = true,
+    val hideSystemStatusBar: Boolean = true,
     val lockScreenArt: Boolean = true,
     val homeAppAvailable: Boolean = true,
     val iconPack: String? = null,
@@ -182,6 +184,8 @@ class DisplayPreferencesRepository @Inject constructor(
         val PRESENTATION_BACKGROUND_BLUR = intPreferencesKey("presentation_background_blur")
         val USE_ACCENT_COLOR_FOOTER = booleanPreferencesKey("use_accent_color_footer")
         val COMPACT_FOOTER = booleanPreferencesKey("compact_footer")
+        val HIDE_SYSTEM_NAVIGATION_BAR = booleanPreferencesKey("hide_system_navigation_bar")
+        val HIDE_SYSTEM_STATUS_BAR = booleanPreferencesKey("hide_system_status_bar")
         val LOCK_SCREEN_ART = booleanPreferencesKey("lock_screen_art")
         val LOCK_SCREEN_ART_APPLIED = booleanPreferencesKey("lock_screen_art_applied")
         val LIVE_WALLPAPER_OFFERED = booleanPreferencesKey("live_wallpaper_offered")
@@ -294,6 +298,8 @@ class DisplayPreferencesRepository @Inject constructor(
             presentationBackgroundBlur = prefs[Keys.PRESENTATION_BACKGROUND_BLUR] ?: 0,
             useAccentColorFooter = prefs[Keys.USE_ACCENT_COLOR_FOOTER] ?: false,
             compactFooter = prefs[Keys.COMPACT_FOOTER] ?: false,
+            hideSystemNavigationBar = prefs[Keys.HIDE_SYSTEM_NAVIGATION_BAR] ?: true,
+            hideSystemStatusBar = prefs[Keys.HIDE_SYSTEM_STATUS_BAR] ?: true,
             lockScreenArt = prefs[Keys.LOCK_SCREEN_ART] ?: true,
             homeAppAvailable = prefs[Keys.HOME_APP_AVAILABLE] ?: true,
             iconPack = prefs[Keys.ICON_PACK],
@@ -596,6 +602,14 @@ class DisplayPreferencesRepository @Inject constructor(
 
     suspend fun setCompactFooter(enabled: Boolean) {
         dataStore.edit { it[Keys.COMPACT_FOOTER] = enabled }
+    }
+
+    suspend fun setHideSystemNavigationBar(hide: Boolean) {
+        dataStore.edit { it[Keys.HIDE_SYSTEM_NAVIGATION_BAR] = hide }
+    }
+
+    suspend fun setHideSystemStatusBar(hide: Boolean) {
+        dataStore.edit { it[Keys.HIDE_SYSTEM_STATUS_BAR] = hide }
     }
 
     suspend fun setLockScreenArt(enabled: Boolean) {

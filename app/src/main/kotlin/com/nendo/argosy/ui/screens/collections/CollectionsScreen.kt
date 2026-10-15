@@ -60,6 +60,7 @@ import com.nendo.argosy.ui.common.rememberFileImageModel
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.collection.CollectionCell
 import com.nendo.argosy.ui.components.InputButton
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.input.LocalInputDispatcher
 import com.nendo.argosy.ui.navigation.Screen
 import com.nendo.argosy.ui.screens.collections.dialogs.CollectionOptionsModal
@@ -134,7 +135,7 @@ fun CollectionsScreen(
                 start = Dimens.spacingLg,
                 end = Dimens.spacingLg,
                 top = Dimens.spacingLg,
-                bottom = 80.dp
+                bottom = withNavBarClearance(Dimens.footerHeight + Dimens.spacingLg)
             ),
             verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
         ) {

@@ -106,6 +106,13 @@ class ControlsSettingsDelegate @Inject constructor(
         }
     }
 
+    fun setNavBarAutoHide(scope: CoroutineScope, enabled: Boolean) {
+        scope.launch {
+            preferencesRepository.setNavBarAutoHide(enabled)
+            _state.update { it.copy(navBarAutoHide = enabled) }
+        }
+    }
+
     fun setSwapStartSelect(scope: CoroutineScope, enabled: Boolean) {
         scope.launch {
             preferencesRepository.setSwapStartSelect(enabled)

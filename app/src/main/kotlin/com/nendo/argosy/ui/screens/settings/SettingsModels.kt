@@ -273,6 +273,8 @@ data class DisplayState(
     val libraryBoxArt3d: Boolean = false,
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
+    val hideSystemNavigationBar: Boolean = true,
+    val hideSystemStatusBar: Boolean = true,
     val lockScreenArt: Boolean = true,
     val homeAppAvailable: Boolean = true,
     val isDefaultHome: Boolean = false,
@@ -417,6 +419,7 @@ data class ControlsState(
     val shortcutCaptureTarget: com.nendo.argosy.ui.input.UiShortcut? = null,
     val navRingRoutes: List<String> = com.nendo.argosy.ui.navigation.NavRing.DEFAULT_TOKENS,
     val quickNavigation: Boolean = true,
+    val navBarAutoHide: Boolean = true,
     val showNavRingModal: Boolean = false,
     val navRingFocusIndex: Int = 0,
     val navRingReorder: com.nendo.argosy.ui.components.ListReorder<String>? = null

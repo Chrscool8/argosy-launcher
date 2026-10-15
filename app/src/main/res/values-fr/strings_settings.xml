@@ -109,6 +109,10 @@
     <string name="settings_interface_ui_scale_title">Échelle de l\'interface</string>
     <string name="settings_interface_compact_footer_title">Pied de page compact</string>
     <string name="settings_interface_compact_footer_subtitle">Utiliser une barre de contrôle plus fine</string>
+    <string name="settings_interface_hide_system_nav_bar_title">Masquer la barre de navigation système</string>
+    <string name="settings_interface_hide_system_nav_bar_subtitle">Masque les boutons Retour, Accueil et Récents d\'Android ou la barre de gestes. Balayez depuis le bord pour les afficher</string>
+    <string name="settings_interface_hide_system_status_bar_title">Masquer la barre d\'état système</string>
+    <string name="settings_interface_hide_system_status_bar_subtitle">Masque la barre d\'état d\'Android et les icônes de notification. Balayez vers le bas depuis le haut pour l\'afficher</string>
     <string name="settings_interface_lock_screen_art_title">Image de l\'écran de verrouillage</string>
     <string name="settings_interface_lock_screen_art_subtitle">Quand Argosy est votre application d\'accueil, l\'écran de verrouillage affiche votre bibliothèque ou le jeu laissé en cours. Remplace définitivement votre fond d\'écran de verrouillage.</string>
     <string name="settings_interface_home_app_title">Disponible comme application d\'accueil</string>
@@ -134,6 +138,8 @@
     <string name="settings_navigation_nav_bar_pages_subtitle">Choisissez et ordonnez les pages que parcourent la barre de navigation et les boutons supérieurs</string>
     <string name="settings_navigation_quick_navigation_title">Navigation rapide</string>
     <string name="settings_navigation_quick_navigation_subtitle">Les boutons supérieurs changent de page avec la barre de navigation. Désactivée, ils changent de plateforme et d\'onglet, et les gâchettes sautent entre les lettres</string>
+    <string name="settings_navigation_nav_bar_auto_hide_title">Masquer la barre de navigation</string>
+    <string name="settings_navigation_nav_bar_auto_hide_subtitle">Masque la barre de navigation après quelques secondes pour laisser la place aux indications des boutons. Désactivée, elle reste affichée</string>
     <string name="settings_navigation_nav_bar_pages_count">%1$d / %2$d</string>
     <string name="settings_nav_ring_modal_title">Pages de la barre de navigation</string>
     <string name="settings_nav_ring_modal_subtitle">Activez ou désactivez des pages et définissez leur ordre</string>

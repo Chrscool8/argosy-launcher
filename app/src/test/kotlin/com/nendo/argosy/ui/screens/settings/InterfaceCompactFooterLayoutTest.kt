@@ -85,6 +85,22 @@ class InterfaceCompactFooterLayoutTest {
     }
 
     @Test
+    fun `the system bar rows follow compact footer in the general group`() {
+        val order = listOf(
+            InterfaceItem.CompactFooter,
+            InterfaceItem.HideSystemNavigationBar,
+            InterfaceItem.HideSystemStatusBar,
+            InterfaceItem.ControllerGrip
+        ).map { interfaceFocusIndexOf(it, layoutState) }
+
+        assertEquals(order.first() + 1, order[1])
+        assertEquals(order[1] + 1, order[2])
+        assertEquals(order[2] + 1, order[3])
+        assertEquals(InterfaceItem.CompactFooter.section, InterfaceItem.HideSystemNavigationBar.section)
+        assertEquals(InterfaceItem.CompactFooter.section, InterfaceItem.HideSystemStatusBar.section)
+    }
+
+    @Test
     fun `the controller grip submenu row is reachable like its siblings`() {
         val index = interfaceFocusIndexOf(InterfaceItem.ControllerGrip, layoutState)
         assertTrue(index > 0)

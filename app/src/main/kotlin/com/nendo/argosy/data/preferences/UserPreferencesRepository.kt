@@ -110,6 +110,7 @@ class UserPreferencesRepository @Inject constructor(
             openQuickPanelKey = controls.openQuickPanelKey,
             navRingRoutes = controls.navRingRoutes,
             quickNavigation = controls.quickNavigation,
+            navBarAutoHide = controls.navBarAutoHide,
             lastRommSync = sync.lastRommSync,
             lastFavoritesSync = sync.lastFavoritesSync,
             lastFavoritesCheck = sync.lastFavoritesCheck,
@@ -129,6 +130,8 @@ class UserPreferencesRepository @Inject constructor(
             presentationBackgroundBlur = display.presentationBackgroundBlur,
             useAccentColorFooter = display.useAccentColorFooter,
             compactFooter = display.compactFooter,
+            hideSystemNavigationBar = display.hideSystemNavigationBar,
+            hideSystemStatusBar = display.hideSystemStatusBar,
             lockScreenArt = display.lockScreenArt,
             homeAppAvailable = display.homeAppAvailable,
             iconPack = display.iconPack,
@@ -352,6 +355,8 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setPresentationBackgroundBlur(blur: Int) = displayPrefs.setPresentationBackgroundBlur(blur)
     suspend fun setUseAccentColorFooter(use: Boolean) = displayPrefs.setUseAccentColorFooter(use)
     suspend fun setCompactFooter(enabled: Boolean) = displayPrefs.setCompactFooter(enabled)
+    suspend fun setHideSystemNavigationBar(hide: Boolean) = displayPrefs.setHideSystemNavigationBar(hide)
+    suspend fun setHideSystemStatusBar(hide: Boolean) = displayPrefs.setHideSystemStatusBar(hide)
     suspend fun setLockScreenArt(enabled: Boolean) = displayPrefs.setLockScreenArt(enabled)
     suspend fun setIconPack(packageName: String?) = displayPrefs.setIconPack(packageName)
     suspend fun setGripAutoControllers(
@@ -518,6 +523,7 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setOpenQuickPanelKey(keyCode: Int) = controlsPrefs.setOpenQuickPanelKey(keyCode)
     suspend fun setNavRingRoutes(routes: List<String>?) = controlsPrefs.setNavRingRoutes(routes)
     suspend fun setQuickNavigation(enabled: Boolean) = controlsPrefs.setQuickNavigation(enabled)
+    suspend fun setNavBarAutoHide(enabled: Boolean) = controlsPrefs.setNavBarAutoHide(enabled)
 
 
     // --- Storage delegates ---
@@ -850,6 +856,7 @@ data class UserPreferences(
     val openQuickPanelKey: Int = ControlsPreferences.DEFAULT_OPEN_QUICK_PANEL_KEY,
     val navRingRoutes: List<String>? = null,
     val quickNavigation: Boolean = true,
+    val navBarAutoHide: Boolean = true,
     val lastRommSync: Instant? = null,
     val lastFavoritesSync: Instant? = null,
     val lastFavoritesCheck: Instant? = null,
@@ -904,6 +911,8 @@ data class UserPreferences(
     val presentationBackgroundBlur: Int = 0,
     val useAccentColorFooter: Boolean = false,
     val compactFooter: Boolean = false,
+    val hideSystemNavigationBar: Boolean = true,
+    val hideSystemStatusBar: Boolean = true,
     val lockScreenArt: Boolean = true,
     val homeAppAvailable: Boolean = true,
     val iconPack: String? = null,

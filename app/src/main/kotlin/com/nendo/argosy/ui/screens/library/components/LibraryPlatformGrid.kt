@@ -41,6 +41,7 @@ import coil.compose.AsyncImage
 import com.nendo.argosy.R
 import com.nendo.argosy.ui.components.GridFocusedScroll
 import com.nendo.argosy.ui.components.PlatformIconAssets
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.primitives.FocusIndicators
 import com.nendo.argosy.ui.primitives.argosyFocusIndicators
 import com.nendo.argosy.ui.screens.library.LibraryCellUi
@@ -90,7 +91,7 @@ fun LibraryPlatformGrid(
             start = Dimens.spacingMd,
             end = Dimens.spacingMd,
             top = LibraryPlatformGridHeaderHeight,
-            bottom = Dimens.footerClearance
+            bottom = withNavBarClearance(Dimens.footerClearance)
         ),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm),

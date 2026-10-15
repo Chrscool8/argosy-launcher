@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import com.nendo.argosy.ui.input.ModalPresenceEffect
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.Motion
 import com.nendo.argosy.ui.util.clickableNoFocus
@@ -29,6 +30,7 @@ fun ModalScaffold(
     maxWidth: Dp? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    if (visible) ModalPresenceEffect()
     val duration = Motion.durationDrawer / 2
     AnimatedVisibility(
         visible = visible,

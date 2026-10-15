@@ -1162,6 +1162,9 @@ class SettingsViewModel @Inject constructor(
     fun adjustPresentationBackgroundBlur(delta: Int) = routeAdjustPresentationBackgroundBlur(this, delta)
     fun setUseAccentColorFooter(use: Boolean) = displayDelegate.setUseAccentColorFooter(viewModelScope, use)
     fun setCompactFooter(enabled: Boolean) = displayDelegate.setCompactFooter(viewModelScope, enabled)
+    fun setHideSystemNavigationBar(hide: Boolean) =
+        displayDelegate.setHideSystemNavigationBar(viewModelScope, hide)
+    fun setHideSystemStatusBar(hide: Boolean) = displayDelegate.setHideSystemStatusBar(viewModelScope, hide)
     fun setLockScreenArt(enabled: Boolean) = displayDelegate.setLockScreenArt(viewModelScope, enabled)
     fun setPreLaunchRecaps(enabled: Boolean) = displayDelegate.setPreLaunchRecaps(viewModelScope, enabled)
     fun setMonthlyRecap(enabled: Boolean) = displayDelegate.setMonthlyRecap(viewModelScope, enabled)
@@ -1535,6 +1538,7 @@ class SettingsViewModel @Inject constructor(
     fun refreshDetectedLayout() = controlsDelegate.refreshDetectedLayout()
     fun setSwapStartSelect(enabled: Boolean) = controlsDelegate.setSwapStartSelect(viewModelScope, enabled)
     fun setQuickNavigation(enabled: Boolean) = controlsDelegate.setQuickNavigation(viewModelScope, enabled)
+    fun setNavBarAutoHide(enabled: Boolean) = controlsDelegate.setNavBarAutoHide(viewModelScope, enabled)
     fun setSelectLCombo(value: String) = controlsDelegate.setSelectLCombo(viewModelScope, value)
     fun setSelectRCombo(value: String) = controlsDelegate.setSelectRCombo(viewModelScope, value)
     fun setMenuWrapMode(mode: com.nendo.argosy.data.preferences.MenuWrapMode) = controlsDelegate.setMenuWrapMode(viewModelScope, mode)

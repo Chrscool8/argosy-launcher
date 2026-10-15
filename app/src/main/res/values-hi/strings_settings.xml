@@ -107,6 +107,10 @@
     <string name="settings_interface_ui_scale_title">UI स्केल</string>
     <string name="settings_interface_compact_footer_title">कॉम्पैक्ट फ़ुटर</string>
     <string name="settings_interface_compact_footer_subtitle">पतली कंट्रोल गाइड बार का उपयोग करें</string>
+    <string name="settings_interface_hide_system_nav_bar_title">सिस्टम नेविगेशन बार छिपाएँ</string>
+    <string name="settings_interface_hide_system_nav_bar_subtitle">Android के बैक, होम और हाल के ऐप्स बटन या जेस्चर बार छिपाता है। दिखाने के लिए किनारे से स्वाइप करें</string>
+    <string name="settings_interface_hide_system_status_bar_title">सिस्टम स्टेटस बार छिपाएँ</string>
+    <string name="settings_interface_hide_system_status_bar_subtitle">Android का स्टेटस बार और सूचना आइकन छिपाता है। दिखाने के लिए ऊपर से नीचे स्वाइप करें</string>
     <string name="settings_interface_lock_screen_art_title">लॉक स्क्रीन चित्र</string>
     <string name="settings_interface_lock_screen_art_subtitle">जब Argosy आपका होम ऐप हो, लॉक स्क्रीन पर आपकी लाइब्रेरी या चालू छोड़ा गया गेम दिखता है। यह आपके लॉक स्क्रीन वॉलपेपर की जगह हमेशा के लिए ले लेता है।</string>
     <string name="settings_interface_home_app_title">होम ऐप के रूप में उपलब्ध</string>
@@ -132,6 +136,8 @@
     <string name="settings_navigation_nav_bar_pages_subtitle">चुनें और क्रम तय करें कि नेविगेशन बार और शोल्डर बटन किन पेजों के बीच बदलें</string>
     <string name="settings_navigation_quick_navigation_title">क्विक नेविगेशन</string>
     <string name="settings_navigation_quick_navigation_subtitle">शोल्डर बटन नेविगेशन बार से पेज बदलते हैं। बंद होने पर वे प्लेटफ़ॉर्म और टैब बदलते हैं, और ट्रिगर अक्षरों के बीच जाते हैं</string>
+    <string name="settings_navigation_nav_bar_auto_hide_title">नेविगेशन बार अपने-आप छिपाएँ</string>
+    <string name="settings_navigation_nav_bar_auto_hide_subtitle">कुछ सेकंड बाद नेविगेशन बार छिप जाता है ताकि बटन संकेत उसकी जगह दिखें। बंद होने पर यह स्क्रीन पर बना रहता है</string>
     <string name="settings_navigation_nav_bar_pages_count">%1$d / %2$d</string>
     <string name="settings_nav_ring_modal_title">नेविगेशन बार पेज</string>
     <string name="settings_nav_ring_modal_subtitle">पेज चालू या बंद करें और उनका क्रम तय करें</string>

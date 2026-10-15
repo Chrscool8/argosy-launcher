@@ -51,6 +51,7 @@ import com.nendo.argosy.ui.input.InputResult
 import com.nendo.argosy.ui.input.buttonGlyphSwaps
 import com.nendo.argosy.ui.input.SoundFeedbackManager
 import com.nendo.argosy.core.input.SoundType
+import com.nendo.argosy.ui.navigation.NavBarVisibility
 import com.nendo.argosy.ui.navigation.NavRing
 import com.nendo.argosy.ui.navigation.Screen
 import com.nendo.argosy.core.notification.DownloadNotificationObserver
@@ -69,8 +70,6 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -137,10 +136,11 @@ data class DrawerItem(
 data class NavRingState(
     val destinations: List<DrawerItem> = emptyList(),
     val pages: List<DrawerItem> = emptyList(),
-    val isBarVisible: Boolean = false
-)
-
-private const val NAV_BAR_AUTO_HIDE_MS = 5_000L
+    val isBarVisible: Boolean = false,
+    val isAlwaysVisible: Boolean = false
+) {
+    val footerYieldsToBar: Boolean get() = isBarVisible && !isAlwaysVisible
+}
 
 private fun isNavRouteAvailable(route: String, socialConnected: Boolean, mediaSignedIn: Boolean): Boolean =
     when (route) {
@@ -412,15 +412,14 @@ class ArgosyViewModel @Inject constructor(
             return allDrawerItems.filter { isNavRouteAvailable(it.route, socialConnected, _isMediaSignedIn) }
         }
 
-    private val _navBarVisible = MutableStateFlow(false)
-    private var navBarHideJob: kotlinx.coroutines.Job? = null
+    private val navBarVisibility = NavBarVisibility(viewModelScope)
 
     val navRingState: StateFlow<NavRingState> = combine(
         socialRepository.connectionState,
         preferencesRepository.userPreferences,
         quickNavigationSource.enabled,
-        _navBarVisible
-    ) { social, prefs, quickNavigation, barVisible ->
+        navBarVisibility.raised
+    ) { social, prefs, quickNavigation, raised ->
         val socialConnected = social is SocialConnectionState.Connected
         val pages = allDrawerItems.filter {
             isNavRouteAvailable(it.route, socialConnected, prefs.isJellyfinSignedIn)
@@ -435,7 +434,8 @@ class ArgosyViewModel @Inject constructor(
         NavRingState(
             destinations = ring,
             pages = pages,
-            isBarVisible = barVisible
+            isBarVisible = NavBarVisibility.isVisible(quickNavigation, prefs.navBarAutoHide, raised),
+            isAlwaysVisible = NavBarVisibility.isAlwaysVisible(quickNavigation, prefs.navBarAutoHide)
         )
     }.stateIn(
         scope = viewModelScope,
@@ -452,20 +452,12 @@ class ArgosyViewModel @Inject constructor(
     }
 
     fun showNavBar() {
-        if (navRingState.value.destinations.isEmpty()) return
-        navBarHideJob?.cancel()
-        _navBarVisible.update { true }
-        navBarHideJob = viewModelScope.launch {
-            delay(NAV_BAR_AUTO_HIDE_MS)
-            _navBarVisible.update { false }
-        }
+        val state = navRingState.value
+        if (state.destinations.isEmpty()) return
+        navBarVisibility.show(autoHide = !state.isAlwaysVisible)
     }
 
-    fun hideNavBar() {
-        navBarHideJob?.cancel()
-        navBarHideJob = null
-        _navBarVisible.update { false }
-    }
+    fun hideNavBar() = navBarVisibility.hide()
 
     private val _isDrawerOpen = MutableStateFlow(false)
     val isDrawerOpen: StateFlow<Boolean> = _isDrawerOpen.asStateFlow()

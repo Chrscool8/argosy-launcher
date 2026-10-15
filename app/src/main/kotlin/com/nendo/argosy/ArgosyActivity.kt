@@ -12,7 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,7 +52,7 @@ import com.nendo.argosy.hardware.SecondaryHomeActivity
 import com.nendo.argosy.util.DesktopMode
 import com.nendo.argosy.util.DisplayAffinityHelper
 import com.nendo.argosy.util.Logger
-import com.nendo.argosy.util.hideSystemBars
+import com.nendo.argosy.util.LauncherSystemBars
 import com.nendo.argosy.util.installImmersiveMode
 import com.nendo.argosy.util.DisplayRoleResolver
 import dagger.hilt.android.AndroidEntryPoint
@@ -188,6 +191,7 @@ class ArgosyActivity : ComponentActivity() {
         com.nendo.argosy.data.preferences.SessionStateStore(this)
     }
     private val activityScope = SafeCoroutineScope(Dispatchers.Main, "ArgosyActivity")
+    private val systemBars by lazy { LauncherSystemBars(window) }
 
     private lateinit var preferencesObserver: MainActivityPreferencesObserver
 
@@ -244,7 +248,8 @@ class ArgosyActivity : ComponentActivity() {
         }
         val desktopModeChanged = recordDesktopMode(desktopMode, ownDisplayId)
 
-        installImmersiveMode()
+        installImmersiveMode { systemBars.visibility }
+        systemBars.follow(activityScope, preferencesRepository.userPreferences)
         keepAwakeWhileUserActive()
         dimWhileMediaIdle()
 
@@ -390,6 +395,7 @@ class ArgosyActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .windowInsetsPadding(WindowInsets.systemBars)
                                 .focusRequester(presentationSink)
                                 .focusable()
                         ) {
@@ -431,7 +437,7 @@ class ArgosyActivity : ComponentActivity() {
     @SuppressLint("NewApi")
     override fun onResume() {
         super.onResume()
-        window.hideSystemBars()
+        systemBars.apply()
         if (::dualScreenManager.isInitialized) {
             dualScreenManager.notifyUserActivity("mainResume")
         }
@@ -644,7 +650,7 @@ class ArgosyActivity : ComponentActivity() {
                 yieldedFocusToGame = false
                 reassertCompanionForwarding()
             }
-            window.hideSystemBars()
+            systemBars.apply()
             window.decorView.requestFocus()
             if (::dualScreenManager.isInitialized) dualScreenManager.onLauncherWindowFocused(this)
             ambientAudioManager.onLauncherWindowFocused(AUDIO_FOCUS_WINDOW)

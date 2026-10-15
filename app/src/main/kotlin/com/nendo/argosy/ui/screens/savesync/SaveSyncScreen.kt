@@ -60,6 +60,7 @@ import com.nendo.argosy.ui.common.icon
 import com.nendo.argosy.ui.common.rememberFileImageModel
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.InputButton
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.input.LocalInputDispatcher
 import com.nendo.argosy.ui.navigation.Screen
 import com.nendo.argosy.ui.primitives.ArgosyProgressBar
@@ -124,7 +125,7 @@ fun SaveSyncScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = Dimens.spacingLg, end = Dimens.spacingLg, top = Dimens.spacingLg, bottom = Dimens.footerHeight + Dimens.spacingLg),
+            contentPadding = PaddingValues(start = Dimens.spacingLg, end = Dimens.spacingLg, top = Dimens.spacingLg, bottom = withNavBarClearance(Dimens.footerHeight + Dimens.spacingLg)),
             verticalArrangement = Arrangement.spacedBy(Dimens.radiusLg)
         ) {
             item { ThisDeviceRow(uiState.deviceCard) }

@@ -564,6 +564,20 @@ class DisplaySettingsDelegate @Inject constructor(
         }
     }
 
+    fun setHideSystemNavigationBar(scope: CoroutineScope, hide: Boolean) {
+        scope.launch {
+            preferencesRepository.setHideSystemNavigationBar(hide)
+            _state.update { it.copy(hideSystemNavigationBar = hide) }
+        }
+    }
+
+    fun setHideSystemStatusBar(scope: CoroutineScope, hide: Boolean) {
+        scope.launch {
+            preferencesRepository.setHideSystemStatusBar(hide)
+            _state.update { it.copy(hideSystemStatusBar = hide) }
+        }
+    }
+
     fun setLockScreenArt(scope: CoroutineScope, enabled: Boolean) {
         scope.launch {
             preferencesRepository.setLockScreenArt(enabled)

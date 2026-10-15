@@ -11,10 +11,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
@@ -43,6 +46,7 @@ import android.content.Intent
 import com.nendo.argosy.ui.util.doubleTapNoFocus
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import com.nendo.argosy.libretro.LibretroActivity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +61,7 @@ import com.nendo.argosy.ui.components.FooterHost
 import com.nendo.argosy.ui.components.FooterHostController
 import com.nendo.argosy.ui.components.LocalFooterHost
 import com.nendo.argosy.ui.components.LocalFooterHostVisible
+import com.nendo.argosy.ui.components.LocalNavBarClearance
 import com.nendo.argosy.ui.components.LocalFrostedBackdrop
 import com.nendo.argosy.ui.components.frostedBackdropSource
 import com.nendo.argosy.ui.components.rememberFrostedBackdrop
@@ -1073,7 +1078,7 @@ fun ArgosyApp(
         LocalXYIconsSwapped provides uiState.xyIconsSwapped,
         LocalSwapStartSelect provides uiState.swapStartSelect,
         LocalFooterHost provides footerHostController,
-        LocalFooterHostVisible provides (!presentationShowsHints && !navRingState.isBarVisible),
+        LocalFooterHostVisible provides (!presentationShowsHints && !navRingState.footerYieldsToBar),
         LocalFrostedBackdrop provides frostedBackdrop,
         com.nendo.argosy.ui.common.LocalImageCacheManager provides viewModel.imageCacheManager,
         com.nendo.argosy.ui.components.LocalArtworkScraping provides isScrapingArtwork,
@@ -1139,6 +1144,7 @@ fun ArgosyApp(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
+                    .windowInsetsPadding(WindowInsets.systemBars)
                     .padding(bottom = bottomReserved)
                     .revealOnBottomEdgeTouch(edgeHeight = Dimens.footerHeight) {
                         if (currentNavBarAllowed) viewModel.showNavBar()
@@ -1230,12 +1236,29 @@ fun ArgosyApp(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     val monthlyRecapShowing = com.nendo.argosy.ui.components.recap.monthlyRecapShowing()
+                    val density = LocalDensity.current
+                    var navBarHeight by remember { mutableStateOf(0.dp) }
+                    val navBarHoldsSpace = navRingState.isAlwaysVisible && onRingDestination &&
+                        !homeAppBarOwnsBottom && !uiState.isFirstRun && navBarHeight > 0.dp
+                    val navBarClearance = if (navBarHoldsSpace) navBarHeight + Dimens.spacingSm else 0.dp
+                    val navBarLift by androidx.compose.animation.core.animateDpAsState(
+                        targetValue = if (
+                            navRingState.isAlwaysVisible && !presentationShowsHints && footerHostController.isBarVisible
+                        ) {
+                            Dimens.footerHeight
+                        } else {
+                            0.dp
+                        },
+                        animationSpec = tween(Motion.durationSlide),
+                        label = "navBarLift"
+                    )
                     CompositionLocalProvider(
                         LocalTransientHomeStatusVisible provides (
                             currentRoute == Screen.Home.route && maxWidth <= maxHeight &&
                                 !presentationShowsHints && navBarAllowed && navRingState.isBarVisible
                             ),
-                        LocalFrostedBackdrop provides screenFrostedBackdrop
+                        LocalFrostedBackdrop provides screenFrostedBackdrop,
+                        LocalNavBarClearance provides navBarClearance
                     ) {
                         NavGraph(
                             navController = navController,
@@ -1271,7 +1294,10 @@ fun ArgosyApp(
                         onInteract = { viewModel.showNavBar() },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = Dimens.spacingSm),
+                            .padding(bottom = Dimens.spacingSm + navBarLift)
+                            .onSizeChanged { size ->
+                                if (size.height > 0) navBarHeight = with(density) { size.height.toDp() }
+                            },
                         badgeFor = drawerUiState::badgeCountFor
                     )
                 }
@@ -1443,7 +1469,7 @@ fun ArgosyApp(
                 }
             } else {
                 AnimatedVisibility(
-                    visible = !navRingState.isBarVisible,
+                    visible = !navRingState.footerYieldsToBar,
                     enter = slideInVertically(tween(Motion.durationSlide)) { it },
                     exit = slideOutVertically(tween(Motion.durationSlide)) { it },
                     modifier = Modifier.align(Alignment.BottomCenter)

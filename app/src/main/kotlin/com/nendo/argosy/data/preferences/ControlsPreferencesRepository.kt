@@ -41,7 +41,8 @@ data class ControlsPreferences(
     val openNavigationKey: Int = DEFAULT_OPEN_NAVIGATION_KEY,
     val openQuickPanelKey: Int = DEFAULT_OPEN_QUICK_PANEL_KEY,
     val navRingRoutes: List<String>? = null,
-    val quickNavigation: Boolean = true
+    val quickNavigation: Boolean = true,
+    val navBarAutoHide: Boolean = true
 ) {
     companion object {
         const val DEFAULT_HAPTIC_STRENGTH = 0.5f
@@ -81,6 +82,7 @@ class ControlsPreferencesRepository @Inject constructor(
         val OPEN_QUICK_PANEL_KEY = intPreferencesKey("open_quick_panel_key")
         val NAV_RING_ROUTES = stringPreferencesKey("nav_ring_routes")
         val QUICK_NAVIGATION = booleanPreferencesKey("quick_navigation")
+        val NAV_BAR_AUTO_HIDE = booleanPreferencesKey("nav_bar_auto_hide")
     }
 
     val preferences: Flow<ControlsPreferences> = dataStore.data.map { prefs ->
@@ -112,7 +114,8 @@ class ControlsPreferencesRepository @Inject constructor(
                 ?.split(',')
                 ?.map { it.trim() }
                 ?.filter { it.isNotEmpty() },
-            quickNavigation = prefs[Keys.QUICK_NAVIGATION] ?: true
+            quickNavigation = prefs[Keys.QUICK_NAVIGATION] ?: true,
+            navBarAutoHide = prefs[Keys.NAV_BAR_AUTO_HIDE] ?: true
         )
     }.flowOn(Dispatchers.Default)
 
@@ -263,6 +266,10 @@ class ControlsPreferencesRepository @Inject constructor(
 
     suspend fun setQuickNavigation(enabled: Boolean) {
         dataStore.edit { it[Keys.QUICK_NAVIGATION] = enabled }
+    }
+
+    suspend fun setNavBarAutoHide(enabled: Boolean) {
+        dataStore.edit { it[Keys.NAV_BAR_AUTO_HIDE] = enabled }
     }
 
     suspend fun setNavRingRoutes(routes: List<String>?) {

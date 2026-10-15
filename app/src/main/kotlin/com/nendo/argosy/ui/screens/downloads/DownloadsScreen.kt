@@ -63,6 +63,7 @@ import com.nendo.argosy.ui.common.toNotificationText
 import com.nendo.argosy.ui.components.FooterHints
 import com.nendo.argosy.ui.components.InputButton
 import com.nendo.argosy.ui.components.animateScrollToItemCentered
+import com.nendo.argosy.ui.components.withNavBarClearance
 import com.nendo.argosy.ui.input.LocalInputDispatcher
 import com.nendo.argosy.ui.navigation.Screen
 import com.nendo.argosy.ui.primitives.ActionButton
@@ -157,7 +158,12 @@ fun DownloadsScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = Dimens.spacingLg, end = Dimens.spacingLg, top = Dimens.spacingLg, bottom = 80.dp),
+            contentPadding = PaddingValues(
+                start = Dimens.spacingLg,
+                end = Dimens.spacingLg,
+                top = Dimens.spacingLg,
+                bottom = withNavBarClearance(Dimens.footerHeight + Dimens.spacingLg)
+            ),
             verticalArrangement = Arrangement.spacedBy(Dimens.radiusLg)
         ) {
             val activeGroups = uiState.activeGroups

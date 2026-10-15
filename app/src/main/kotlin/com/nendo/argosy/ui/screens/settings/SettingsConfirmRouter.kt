@@ -730,6 +730,9 @@ private fun routeInterfaceConfirm(vm: SettingsViewModel, state: SettingsUiState)
             return InputResult.handled(SoundType.OPEN_MODAL)
         }
         InterfaceItem.CompactFooter -> vm.setCompactFooter(!state.display.compactFooter)
+        InterfaceItem.HideSystemNavigationBar ->
+            vm.setHideSystemNavigationBar(!state.display.hideSystemNavigationBar)
+        InterfaceItem.HideSystemStatusBar -> vm.setHideSystemStatusBar(!state.display.hideSystemStatusBar)
         InterfaceItem.LockScreenArt -> vm.setLockScreenArt(!state.display.lockScreenArt)
         InterfaceItem.HomeApp -> vm.setHomeAppAvailable(!state.display.homeAppAvailable)
         InterfaceItem.StatusClock -> vm.setShowStatusClock(!state.display.showStatusClock)
@@ -1043,6 +1046,11 @@ private fun routeNavigationConfirm(vm: SettingsViewModel, state: SettingsUiState
             val enabled = !state.controls.quickNavigation
             vm.setQuickNavigation(enabled)
             return InputResult.toggled(enabled)
+        }
+        NavigationItem.NavBarAutoHide -> {
+            val autoHide = !state.controls.navBarAutoHide
+            vm.setNavBarAutoHide(autoHide)
+            return InputResult.toggled(autoHide)
         }
         NavigationItem.NavBarPages -> {
             vm.showNavRingModal()

@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.Motion
@@ -45,10 +47,17 @@ class FooterHostController {
     }
 
     val top: FooterEntry? get() = stack.lastOrNull()?.second
+
+    val isBarVisible: Boolean get() = top?.let { it.forced || it.hints.isNotEmpty() } == true
 }
 
 val LocalFooterHost = staticCompositionLocalOf { FooterHostController() }
 val LocalFooterHostVisible = staticCompositionLocalOf { true }
+
+/**
+ * Bottom space held by an always-visible floating nav bar, on top of whatever the guide bar holds.
+ */
+val LocalNavBarClearance = compositionLocalOf { 0.dp }
 
 /** Registers gamepad hints on the app-root guide bar for the lifetime of the calling composable. */
 @Composable
@@ -117,7 +126,6 @@ val FooterHostController.isBarVisible: Boolean
         entry.forced || entry.hints.any { !isObviousHint(it.button) }
     } == true
 
-/** Reserves footer space only while the singleton bar is actually showing. */
 @Composable
 fun FooterSpacer() {
     val controller = LocalFooterHost.current
@@ -127,5 +135,13 @@ fun FooterSpacer() {
         animationSpec = tween(Motion.durationContent, easing = Motion.argosyEase),
         label = "footer-spacer",
     )
-    Spacer(Modifier.height(height))
+    Spacer(Modifier.height(height + LocalNavBarClearance.current))
+}
+
+@Composable
+fun withNavBarClearance(bottom: Dp): Dp = bottom + LocalNavBarClearance.current
+
+@Composable
+fun NavBarClearanceSpacer() {
+    Spacer(Modifier.height(LocalNavBarClearance.current))
 }

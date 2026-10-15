@@ -73,6 +73,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.nendo.argosy.R
 import com.nendo.argosy.ui.coil.AppIconData
 import com.nendo.argosy.ui.input.LocalInputDispatcher
+import com.nendo.argosy.ui.input.ModalPresenceEffect
 import com.nendo.argosy.ui.navigation.Screen
 import com.nendo.argosy.ui.components.AppContextMenuItem
 import com.nendo.argosy.ui.components.AppMenuRow
@@ -332,6 +333,7 @@ fun AppsScreen(
         }
 
         if (uiState.showContextMenu) {
+            ModalPresenceEffect()
             Box(
                 modifier = Modifier
                     .fillMaxSize()

@@ -229,6 +229,7 @@ private fun ScreenRoleModal(
     onDismiss: () -> Unit
 ) {
     if (screen == null) return
+    com.nendo.argosy.ui.input.ModalPresenceEffect()
     Box(
         modifier = Modifier
             .fillMaxSize()

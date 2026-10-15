@@ -57,6 +57,8 @@ internal sealed class InterfaceItem(
     data object Language : InterfaceItem("language", SECTION_GENERAL)
     data object UiScale : InterfaceItem("uiScale", SECTION_GENERAL)
     data object CompactFooter : InterfaceItem("compactFooter", SECTION_GENERAL)
+    data object HideSystemNavigationBar : InterfaceItem("hideSystemNavigationBar", SECTION_GENERAL)
+    data object HideSystemStatusBar : InterfaceItem("hideSystemStatusBar", SECTION_GENERAL)
     data object ControllerGrip : InterfaceItem("controllerGrip", SECTION_GENERAL)
     data object HomeScreen : InterfaceItem("homeScreen", SECTION_SCREENS)
     data object LibraryView : InterfaceItem("libraryView", SECTION_SCREENS)
@@ -96,7 +98,8 @@ internal sealed class InterfaceItem(
         val ALL: List<InterfaceItem>
             get() = listOf(
                 Header("generalHeader", SECTION_GENERAL, R.string.settings_interface_section_general),
-                Language, UiScale, CompactFooter, ControllerGrip,
+                Language, UiScale, CompactFooter, HideSystemNavigationBar, HideSystemStatusBar,
+                ControllerGrip,
                 Header("screensHeader", SECTION_SCREENS, R.string.settings_interface_section_screens),
                 HomeScreen, LibraryView, BoxArt, Presentation, LockScreenArt,
                 HomeApp, HomeAppLocked,
@@ -230,6 +233,22 @@ fun InterfaceSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                     isEnabled = display.compactFooter,
                     isFocused = isFocused(item),
                     onToggle = { viewModel.setCompactFooter(it) }
+                )
+
+                InterfaceItem.HideSystemNavigationBar -> SwitchPreference(
+                    title = stringResource(R.string.settings_interface_hide_system_nav_bar_title),
+                    subtitle = stringResource(R.string.settings_interface_hide_system_nav_bar_subtitle),
+                    isEnabled = display.hideSystemNavigationBar,
+                    isFocused = isFocused(item),
+                    onToggle = { viewModel.setHideSystemNavigationBar(it) }
+                )
+
+                InterfaceItem.HideSystemStatusBar -> SwitchPreference(
+                    title = stringResource(R.string.settings_interface_hide_system_status_bar_title),
+                    subtitle = stringResource(R.string.settings_interface_hide_system_status_bar_subtitle),
+                    isEnabled = display.hideSystemStatusBar,
+                    isFocused = isFocused(item),
+                    onToggle = { viewModel.setHideSystemStatusBar(it) }
                 )
 
                 InterfaceItem.LockScreenArt -> SwitchPreference(
