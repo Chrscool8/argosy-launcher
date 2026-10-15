@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -97,7 +98,7 @@ class GamepadInputHandlerTest {
     fun `a horizontal right stick deflection steps without moving left stick focus`() {
         collectEmitted()
 
-        assertTrue(process(sample(z = -1f)))
+        assertFalse(process(sample(z = -1f)))
         scheduler.runCurrent()
 
         assertTrue(delivered.isEmpty())
@@ -132,30 +133,22 @@ class GamepadInputHandlerTest {
     }
 
     @Test
-    fun `a hat press is an edge and a held hat repeats from the app`() {
-        assertTrue(process(sample(hatX = 1f)))
-        assertEquals(listOf(GamepadEvent.Right to false), delivered)
-
-        scheduler.advanceTimeBy(401)
-        assertEquals(listOf(GamepadEvent.Right to false, GamepadEvent.Right to true), delivered)
-
-        scheduler.advanceTimeBy(150)
-        assertEquals(3, delivered.size)
-
-        process(sample())
+    fun `a hat press with the stick at rest is left unconsumed for DPAD key synthesis`() {
+        assertFalse(process(sample(hatX = 1f)))
         scheduler.advanceTimeBy(1000)
-        assertEquals(3, delivered.size)
+
+        assertTrue(delivered.isEmpty())
     }
 
     @Test
-    fun `a raw motion listener sees a hat press before the trackers and its decline leaves one edge`() {
+    fun `a raw motion listener sees a stick press before the tracker and its decline leaves one edge`() {
         val seen = mutableListOf<MotionEvent>()
         handler.setRawMotionEventListener { seen += it; false }
 
-        val hatPress = sample(hatX = 1f)
-        assertTrue(process(hatPress))
+        val stickPress = sample(x = 1f)
+        assertTrue(process(stickPress))
 
-        assertEquals(listOf(hatPress), seen)
+        assertEquals(listOf(stickPress), seen)
         assertEquals(listOf(GamepadEvent.Right to false), delivered)
     }
 
@@ -176,12 +169,12 @@ class GamepadInputHandlerTest {
     fun `a consumed sample cancels the repeat of a direction still held`() {
         var consuming = false
         handler.setRawMotionEventListener { consuming }
-        process(sample(hatX = 1f))
+        process(sample(x = 1f))
         scheduler.advanceTimeBy(401)
         assertEquals(listOf(GamepadEvent.Right to false, GamepadEvent.Right to true), delivered)
 
         consuming = true
-        process(sample(hatX = 1f))
+        process(sample(x = 1f))
         scheduler.advanceTimeBy(1000)
 
         assertEquals(2, delivered.size)
@@ -217,28 +210,12 @@ class GamepadInputHandlerTest {
     }
 
     @Test
-    fun `a stick released over a held hat hands the hat an immediate first press`() {
-        process(sample(x = 1f, hatY = 1f))
-        process(sample(hatY = 1f))
-        assertEquals(listOf(GamepadEvent.Right to false, GamepadEvent.Down to false), delivered)
+    fun `a stick released over a held hat hands the hat back to DPAD key synthesis`() {
+        assertTrue(process(sample(x = 1f, hatY = 1f)))
+        assertFalse(process(sample(hatY = 1f)))
+        scheduler.advanceTimeBy(1000)
 
-        scheduler.advanceTimeBy(399)
-        assertEquals(2, delivered.size)
-        scheduler.advanceTimeBy(2)
-        assertEquals(GamepadEvent.Down to true, delivered.last())
-        assertEquals(3, delivered.size)
-    }
-
-    @Test
-    fun `a hat held under a stick press gets a first press again when the stick releases`() {
-        process(sample(hatY = 1f))
-        process(sample(x = 1f, hatY = 1f))
-        process(sample(hatY = 1f))
-
-        assertEquals(
-            listOf(GamepadEvent.Down to false, GamepadEvent.Right to false, GamepadEvent.Down to false),
-            delivered
-        )
+        assertEquals(listOf(GamepadEvent.Right to false), delivered)
     }
 
     @Test

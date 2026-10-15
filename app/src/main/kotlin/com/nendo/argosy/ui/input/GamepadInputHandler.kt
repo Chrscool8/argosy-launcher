@@ -154,13 +154,7 @@ class GamepadInputHandler @Inject constructor(
     private var backDeferJob: Job? = null
     private val longPressThresholdMs = 500L
 
-    private class PadDirection {
-        val stick = AxisDirectionTracker()
-        val hat = AxisDirectionTracker()
-        val direction: GamepadEvent? get() = stick.direction ?: hat.direction
-    }
-
-    private val padDirections = mutableMapOf<Int, PadDirection>()
+    private val padDirections = mutableMapOf<Int, AxisDirectionTracker>()
     private var heldDeviceId: Int? = null
     private var heldDirection: GamepadEvent? = null
     private var directionRepeatJob: Job? = null
@@ -168,13 +162,10 @@ class GamepadInputHandler @Inject constructor(
     private val directionRepeatIntervalMs = 150L
 
     /**
-     * Joystick sample to directional event conversion once a raw motion listener declines it.
-     * Right-stick axes drive the right-stick steppers while [steerRightStick] holds; a false value
-     * releases them. [deliver] gets a direction entered, or taken over by the hat from a released
-     * stick, with isRepeat false, then the held direction per repeat tick with isRepeat true until
-     * neutral. A hat edge is withheld while the same pad's stick holds a direction. Only the pad
-     * that entered the held direction can return it to neutral. The result is whether the event
-     * was a joystick sample, consumed either way.
+     * Left-stick sample to directional event conversion once a raw motion listener declines it.
+     * [deliver] gets a direction entered with isRepeat false, then the held direction per repeat
+     * tick with isRepeat true until neutral. The result is true while the stick holds a direction,
+     * so a hat sample with the stick at rest reaches the platform's DPAD key synthesis.
      */
     fun processStickMotion(
         event: MotionEvent,
@@ -190,27 +181,21 @@ class GamepadInputHandler @Inject constructor(
         if (steerRightStick) processRightStickMotion(event) else releaseRightStick()
 
         val deviceId = event.deviceId
-        val pad = padDirections.getOrPut(deviceId) { PadDirection() }
-        val stickEdge = pad.stick.update(
+        val stick = padDirections.getOrPut(deviceId) { AxisDirectionTracker() }
+        val stickEdge = stick.update(
             event.getAxisValue(MotionEvent.AXIS_X),
             event.getAxisValue(MotionEvent.AXIS_Y)
         )
-        val hatEdge = pad.hat.update(
-            event.getAxisValue(MotionEvent.AXIS_HAT_X),
-            event.getAxisValue(MotionEvent.AXIS_HAT_Y)
-        )
-        val direction = pad.direction
+        val direction = stick.direction
         if (direction == null) padDirections.remove(deviceId)
         val ownerId = heldDeviceId
-        if (direction == null && ownerId != null && ownerId != deviceId) return true
+        if (direction == null && ownerId != null && ownerId != deviceId) return false
 
         heldDeviceId = if (direction == null) null else deviceId
-        val takenOver = direction.takeIf { it != heldDirection }
         updateDirectionRepeat(direction, deliver)
 
-        val edge = stickEdge ?: hatEdge.takeIf { pad.stick.direction == null } ?: takenOver
-        edge?.let { deliver(it, false) }
-        return true
+        stickEdge?.let { deliver(it, false) }
+        return direction != null
     }
 
     fun resetStickMotion() {
