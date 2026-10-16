@@ -49,5 +49,12 @@ class NavBarVisibility(
 
         fun isVisible(quickNavigation: Boolean, autoHide: Boolean, raised: Boolean): Boolean =
             isAlwaysVisible(quickNavigation, autoHide) || (quickNavigation && raised)
+
+        /**
+         * Whether a press on the bottom reveal edge raises a hidden bar. A press that does belongs
+         * to the reveal alone and reaches nothing drawn underneath the bar.
+         */
+        fun revealClaimsPress(navBarAllowed: Boolean, barVisible: Boolean, destinationCount: Int): Boolean =
+            navBarAllowed && !barVisible && destinationCount > 1
     }
 }

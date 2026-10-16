@@ -70,6 +70,69 @@ class NavBarVisibilityTest {
     }
 
     @Test
+    fun `a press that raises a hidden bar belongs to the reveal`() {
+        assertTrue(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = false, destinationCount = 3))
+    }
+
+    @Test
+    fun `a press beside a bar already up passes through to the content`() {
+        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = true, destinationCount = 3))
+    }
+
+    @Test
+    fun `a press where no bar can appear passes through to the content`() {
+        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = false, barVisible = false, destinationCount = 3))
+        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = false, destinationCount = 1))
+        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = false, destinationCount = 0))
+    }
+
+    private fun claimsPress(visibility: NavBarVisibility, autoHide: Boolean): Boolean =
+        NavBarVisibility.revealClaimsPress(
+            navBarAllowed = true,
+            barVisible = NavBarVisibility.isVisible(quickNavigation = true, autoHide = autoHide, raised = visibility.raised.value),
+            destinationCount = 3
+        )
+
+    @Test
+    fun `a press on a raised bar reaches the bar until auto-hide lowers it`() = runTest {
+        val visibility = NavBarVisibility(backgroundScope)
+        assertTrue(claimsPress(visibility, autoHide = true))
+
+        visibility.show(autoHide = true)
+        runCurrent()
+        assertFalse(claimsPress(visibility, autoHide = true))
+
+        advanceTimeBy(pastTimeout)
+        runCurrent()
+        assertTrue(claimsPress(visibility, autoHide = true))
+    }
+
+    @Test
+    fun `each press on a raised bar restarts the auto-hide timer`() = runTest {
+        val visibility = NavBarVisibility(backgroundScope)
+        val nearTimeout = NavBarVisibility.AUTO_HIDE_MS - 1_000
+        visibility.show(autoHide = true)
+        runCurrent()
+        advanceTimeBy(nearTimeout)
+        visibility.show(autoHide = true)
+        runCurrent()
+        advanceTimeBy(nearTimeout)
+        runCurrent()
+
+        assertFalse(claimsPress(visibility, autoHide = true))
+    }
+
+    @Test
+    fun `a press on an always-visible bar always reaches the bar`() = runTest {
+        val visibility = NavBarVisibility(backgroundScope)
+        visibility.show(autoHide = false)
+        advanceTimeBy(pastTimeout)
+        runCurrent()
+
+        assertFalse(claimsPress(visibility, autoHide = false))
+    }
+
+    @Test
     fun `only auto-hide off with quick navigation on is always visible`() {
         assertTrue(NavBarVisibility.isAlwaysVisible(quickNavigation = true, autoHide = false))
         assertFalse(NavBarVisibility.isAlwaysVisible(quickNavigation = true, autoHide = true))

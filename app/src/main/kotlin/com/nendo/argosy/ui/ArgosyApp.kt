@@ -100,6 +100,7 @@ import com.nendo.argosy.ui.input.LocalSwapStartSelect
 import com.nendo.argosy.ui.input.UiShortcut
 import com.nendo.argosy.ui.input.UiShortcutGate
 import com.nendo.argosy.core.input.SoundType
+import com.nendo.argosy.ui.navigation.NavBarVisibility
 import com.nendo.argosy.ui.navigation.NavGraph
 import com.nendo.argosy.ui.navigation.NavRing
 import com.nendo.argosy.ui.navigation.RouteRestore
@@ -1147,7 +1148,14 @@ fun ArgosyApp(
                     .windowInsetsPadding(WindowInsets.systemBars)
                     .padding(bottom = bottomReserved)
                     .revealOnBottomEdgeTouch(edgeHeight = Dimens.footerHeight) {
+                        val ringAtPress = viewModel.navRingState.value
+                        val claimsPress = NavBarVisibility.revealClaimsPress(
+                            navBarAllowed = currentNavBarAllowed,
+                            barVisible = ringAtPress.isBarVisible,
+                            destinationCount = ringAtPress.destinations.size
+                        )
                         if (currentNavBarAllowed) viewModel.showNavBar()
+                        claimsPress
                     }
                     .onFocusChanged { keySinkFocused = it.isFocused }
                     .focusRequester(rootFocusRequester)

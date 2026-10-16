@@ -97,10 +97,24 @@ fun FloatingNavBar(
     }
 }
 
-fun Modifier.revealOnBottomEdgeTouch(edgeHeight: Dp, onReveal: () -> Unit): Modifier = composed {
+/**
+ * Runs [onReveal] when a press lands within [edgeHeight] of the bottom edge. When [onReveal]
+ * returns true the press raised a hidden bar, and the whole press is consumed so nothing drawn
+ * underneath the bar clicks, scrolls or takes focus from it.
+ */
+fun Modifier.revealOnBottomEdgeTouch(edgeHeight: Dp, onReveal: () -> Boolean): Modifier = composed {
     val edgePx = with(LocalDensity.current) { edgeHeight.toPx() }
-    observeTouchDowns { y, height ->
-        if (y >= height - edgePx) onReveal()
+    val currentOnReveal by rememberUpdatedState(onReveal)
+    pointerInput(Unit) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            if (down.position.y < size.height - edgePx || !currentOnReveal()) return@awaitEachGesture
+            down.consume()
+            do {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                event.changes.forEach { it.consume() }
+            } while (event.changes.any { it.pressed })
+        }
     }
 }
 
