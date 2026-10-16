@@ -390,6 +390,10 @@
     <!-- Community score in the slim bar that replaces the header once the page is scrolled. %1$d is
          a whole number out of a hundred. -->
     <string name="gamedetail_collapsed_header_rating_percent">%1$d%%</string>
+    <!-- Line under the game's header art when the RomM server no longer has this game and the
+         device keeps its local copy. Statement, not a command. "RomM" is a product name; leave it
+         untranslated. -->
+    <string name="gamedetail_header_not_on_romm">Not on RomM</string>
     <!-- Count of finished sessions in that slim bar. "Play" is a noun here: one sitting with the
          game, not the verb. %1$d is how many there have been. -->
     <plurals name="gamedetail_collapsed_header_play_count">

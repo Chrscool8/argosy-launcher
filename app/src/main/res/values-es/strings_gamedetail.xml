@@ -125,6 +125,7 @@
     <!-- ============================= Collapsed header bar ============================== -->
 
     <string name="gamedetail_collapsed_header_rating_percent">%1$d%%</string>
+    <string name="gamedetail_header_not_on_romm">No está en RomM</string>
     <plurals name="gamedetail_collapsed_header_play_count">
         <item quantity="one">%1$d partida</item>
         <item quantity="many">%1$d partidas</item>

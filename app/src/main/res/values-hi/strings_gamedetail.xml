@@ -124,6 +124,7 @@
     <!-- ============================= Collapsed header bar ============================== -->
 
     <string name="gamedetail_collapsed_header_rating_percent">%1$d%%</string>
+    <string name="gamedetail_header_not_on_romm">RomM पर नहीं है</string>
     <plurals name="gamedetail_collapsed_header_play_count">
         <item quantity="one">%1$d बार</item>
         <item quantity="other">%1$d बार</item>

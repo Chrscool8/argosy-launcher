@@ -114,11 +114,14 @@
     <string name="library_quickmenu_delete_download">Удалить загрузку</string>
     <string name="library_quickmenu_show">Показать</string>
     <string name="library_quickmenu_hide">Скрыть</string>
+    <string name="library_quickmenu_remove_from_library">Удалить из библиотеки</string>
 
     <string name="library_notice_added_to_home_grid">Добавлено на главный экран</string>
     <string name="library_notice_game_data_refreshed">Данные игры обновлены</string>
     <string name="library_notice_android_data_refreshed">Данные игры обновлены</string>
     <string name="library_notice_download_deleted">Загрузка удалена</string>
+    <string name="library_notice_removed_from_library">Удалено из библиотеки</string>
+    <string name="library_notice_remove_failed">Не удалось удалить эту игру</string>
     <string name="library_notice_already_downloaded">Игра уже загружена</string>
     <plurals name="library_notice_downloading_discs">
         <item quantity="one">Загрузка %d диска</item>

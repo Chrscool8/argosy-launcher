@@ -101,6 +101,7 @@ data class HomeGameUi(
     val isFavorite: Boolean,
     val isDownloaded: Boolean,
     val isRommGame: Boolean = false,
+    val canRemoveFromLibrary: Boolean = false,
     val isSteamGame: Boolean = false,
     val rating: Float? = null,
     val userRating: Int = 0,

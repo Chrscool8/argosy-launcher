@@ -1294,6 +1294,7 @@ class GameDetailViewModel @Inject constructor(
             isRommGame = state.game?.isRommGame == true,
             isAndroidApp = state.game?.isAndroidApp == true,
             isSteamGame = state.game?.isSteamGame == true,
+            canRemoveFromLibrary = state.game?.canRemoveFromLibrary == true,
             canManageSaves = state.game?.canManageSaves == true,
             canManageStates = state.game?.canManageStates == true,
             isMultiDisc = state.game?.isMultiDisc == true,

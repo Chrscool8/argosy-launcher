@@ -115,6 +115,7 @@
     <string name="gamedetail_chip_play_time_hours_grouped">%1$sh</string>
 
     <string name="gamedetail_collapsed_header_rating_percent">%1$d%%</string>
+    <string name="gamedetail_header_not_on_romm">Нет на RomM</string>
     <plurals name="gamedetail_collapsed_header_play_count">
         <item quantity="one">%1$d запуск</item>
         <item quantity="few">%1$d запуска</item>

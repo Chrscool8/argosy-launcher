@@ -25,6 +25,12 @@ val GameEntity.isRommGame: Boolean
 val GameListItem.isRommGame: Boolean
     get() = rommId != null || source == GameSource.STEAM
 
+val GameEntity.canRemoveFromLibrary: Boolean
+    get() = isRemovedFromRomm && localPath == null
+
+val GameListItem.canRemoveFromLibrary: Boolean
+    get() = isRemovedFromRomm && localPath == null
+
 val GameEntity.needsAndroidInstall: Boolean
     get() = platformSlug == ANDROID_PLATFORM_SLUG &&
         localPath != null &&

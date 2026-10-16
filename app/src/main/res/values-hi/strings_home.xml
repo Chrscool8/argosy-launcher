@@ -88,6 +88,7 @@
     <string name="home_quick_actions_resync_platform">प्लेटफ़ॉर्म रीसिंक करें</string>
     <string name="home_quick_actions_delete_download">डाउनलोड हटाएं</string>
     <string name="home_quick_actions_remove_from_home">होम से हटाएं</string>
+    <string name="home_quick_actions_remove_from_library">लाइब्रेरी से हटाएं</string>
     <string name="home_quick_actions_hide">छिपाएं</string>
 
     <string name="home_media_empty_next_up_title">आगे कुछ नहीं</string>
@@ -142,6 +143,8 @@
     <string name="home_grid_tile_ra_game_progress">%1$s %2$d/%3$d</string>
 
     <string name="home_notice_game_data_refreshed">गेम डेटा रीफ्रेश हुआ</string>
+    <string name="home_notice_removed_from_library">लाइब्रेरी से हटाया गया</string>
+    <string name="home_notice_remove_failed">यह गेम हटाया नहीं जा सका</string>
     <string name="home_notice_android_data_refreshed">गेम डेटा रीफ्रेश हुआ</string>
 
     <string name="home_notice_already_downloaded">गेम पहले से डाउनलोड हो चुका है</string>

@@ -119,13 +119,23 @@ fun ExpandedHeader(
 ) {
     val art = rememberResolvedArt(game.id)
     val detail = remember(game, friends, art) { game.toCompanionDetail(friends).withLiveArt(art) }
-    GameHero(
-        detail = detail,
-        style = DETAIL_HERO_STYLE,
-        coverMaxHeight = Dimens.gameCardHeight,
-        modifier = modifier.fillMaxWidth(),
-        interactiveCover = true
-    )
+    Column(modifier = modifier.fillMaxWidth()) {
+        GameHero(
+            detail = detail,
+            style = DETAIL_HERO_STYLE,
+            coverMaxHeight = Dimens.gameCardHeight,
+            modifier = Modifier.fillMaxWidth(),
+            interactiveCover = true
+        )
+        if (game.isRemovedFromRomm) {
+            Text(
+                text = stringResource(R.string.gamedetail_header_not_on_romm),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Dimens.spacingSm)
+            )
+        }
+    }
 }
 
 @Composable

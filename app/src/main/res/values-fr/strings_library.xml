@@ -108,11 +108,14 @@
     <string name="library_quickmenu_delete_download">Supprimer le téléchargement</string>
     <string name="library_quickmenu_show">Afficher</string>
     <string name="library_quickmenu_hide">Masquer</string>
+    <string name="library_quickmenu_remove_from_library">Retirer de la bibliothèque</string>
 
     <string name="library_notice_added_to_home_grid">Ajouté à la grille d\'accueil</string>
     <string name="library_notice_game_data_refreshed">Données du jeu actualisées</string>
     <string name="library_notice_android_data_refreshed">Données du jeu actualisées</string>
     <string name="library_notice_download_deleted">Téléchargement supprimé</string>
+    <string name="library_notice_removed_from_library">Retiré de la bibliothèque</string>
+    <string name="library_notice_remove_failed">Impossible de retirer ce jeu</string>
     <string name="library_notice_already_downloaded">Jeu déjà téléchargé</string>
     <plurals name="library_notice_downloading_discs">
         <item quantity="one">Téléchargement de %d disque</item>

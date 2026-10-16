@@ -42,6 +42,7 @@ sealed class GameMenuAction {
     data class ResyncPlatform(val platformId: Long, val platformName: String) : GameMenuAction()
     data class Delete(val gameId: Long) : GameMenuAction()
     data class RemoveFromHome(val gameId: Long) : GameMenuAction()
+    data class RemoveFromLibrary(val gameId: Long) : GameMenuAction()
     data class Hide(val gameId: Long) : GameMenuAction()
 }
 
@@ -98,6 +99,7 @@ class HomeGameMenuDelegate @Inject constructor(
             if (isRommGame || isAndroidApp) maxIndex++
             if (isAndroidApp) maxIndex++
             if (isSyncable) maxIndex++
+            if (focusedGame?.canRemoveFromLibrary == true) maxIndex++
             val newIndex = (it.gameMenuFocusIndex + delta).coerceIn(0, maxIndex)
             it.copy(gameMenuFocusIndex = newIndex)
         }
@@ -133,6 +135,7 @@ class HomeGameMenuDelegate @Inject constructor(
         val resyncIdx = if (isPlatformRow && game.platformId > 0) currentIdx++ else -1
         val deleteIdx = if (game.isDownloaded || game.needsInstall) currentIdx++ else -1
         val removeFromHomeIdx = if (game.isAndroidApp) currentIdx++ else -1
+        val removeFromLibraryIdx = if (game.canRemoveFromLibrary) currentIdx++ else -1
         val hideIdx = currentIdx
 
         return when (focusIndex) {
@@ -145,6 +148,7 @@ class HomeGameMenuDelegate @Inject constructor(
             resyncIdx -> GameMenuAction.ResyncPlatform(game.platformId, game.platformDisplayName)
             deleteIdx -> GameMenuAction.Delete(game.id)
             removeFromHomeIdx -> GameMenuAction.RemoveFromHome(game.id)
+            removeFromLibraryIdx -> GameMenuAction.RemoveFromLibrary(game.id)
             hideIdx -> GameMenuAction.Hide(game.id)
             else -> GameMenuAction.Hide(game.id)
         }
@@ -171,6 +175,21 @@ class HomeGameMenuDelegate @Inject constructor(
                 gameRepository.delete(game)
                 onComplete()
                 soundManager.play(SoundType.UNFAVORITE)
+            }
+        }
+    }
+
+    fun removeFromLibrary(scope: CoroutineScope, gameId: Long, onComplete: suspend () -> Unit) {
+        scope.launch {
+            if (gameActions.removeFromLibrary(gameId)) {
+                notificationManager.showSuccess(
+                    NotificationText.Res(R.string.home_notice_removed_from_library)
+                )
+                onComplete()
+            } else {
+                notificationManager.showError(
+                    NotificationText.Res(R.string.home_notice_remove_failed)
+                )
             }
         }
     }

@@ -226,6 +226,9 @@
     <!-- Row in that menu, for an installed Android app. Verb phrase: drops the app from Argosy's
          home screen without uninstalling it. -->
     <string name="home_quick_actions_remove_from_home">Remove from Home</string>
+    <!-- Row in that menu, for a game the RomM server no longer has and no copy of on the device.
+         Verb phrase: drops the game from Argosy's library. Files and saves stay on disk. -->
+    <string name="home_quick_actions_remove_from_library">Remove from Library</string>
     <!-- Row in that menu. Verb: keeps the game in the library but stops showing it. -->
     <string name="home_quick_actions_hide">Hide</string>
 
@@ -336,6 +339,10 @@
     <!-- Brief message after refreshing one installed Android app's details. Past tense
          statement. -->
     <string name="home_notice_android_data_refreshed">Game data refreshed</string>
+    <!-- Brief message after a game was removed from the library. Past tense statement. -->
+    <string name="home_notice_removed_from_library">Removed from library</string>
+    <!-- Brief message when removing a game from the library did not happen. -->
+    <string name="home_notice_remove_failed">Could not remove this game</string>
 
     <!-- Brief message shown when a download is asked for on a game that is already on the
          device. -->

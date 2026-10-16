@@ -7,6 +7,7 @@ import com.nendo.argosy.data.local.entity.GameScreenshotEntity
 import com.nendo.argosy.data.model.GameSource
 import com.nendo.argosy.data.model.ResolvedGameArt
 import com.nendo.argosy.data.steam.resolveSteamGenres
+import com.nendo.argosy.ui.common.canRemoveFromLibrary
 import com.nendo.argosy.ui.common.displayTitleId
 import com.nendo.argosy.ui.common.isAndroidApp
 import com.nendo.argosy.ui.common.isRommGame
@@ -62,6 +63,8 @@ fun GameEntity.toGameDetailUi(
         completion = completion,
         status = status,
         isRommGame = isRommGame,
+        isRemovedFromRomm = isRemovedFromRomm,
+        canRemoveFromLibrary = canRemoveFromLibrary,
         isFavorite = isFavorite,
         playCount = playCount,
         playTimeMinutes = playTimeMinutes,

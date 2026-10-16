@@ -181,6 +181,7 @@ fun MoreOptionsModal(
             isRommGame = game.isRommGame,
             isAndroidApp = game.isAndroidApp,
             isSteamGame = game.isSteamGame,
+            canRemoveFromLibrary = game.canRemoveFromLibrary,
             canManageSaves = game.canManageSaves,
             canManageStates = game.canManageStates,
             isMultiDisc = game.isMultiDisc,

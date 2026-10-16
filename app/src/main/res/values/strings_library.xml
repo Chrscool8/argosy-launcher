@@ -240,6 +240,9 @@
     <!-- Quick action menu entry when the game is visible. Verb, takes it out of the normal
          list. -->
     <string name="library_quickmenu_hide">Hide</string>
+    <!-- Quick action menu entry for a game the RomM server no longer has and no copy of on the
+         device. Verb phrase: drops the game from the library. Files and saves stay on disk. -->
+    <string name="library_quickmenu_remove_from_library">Remove from Library</string>
 
     <!-- Toast confirming a game was added to the curated home grid. -->
     <string name="library_notice_added_to_home_grid">Added to home grid</string>
@@ -251,6 +254,10 @@
     <!-- Toast confirming the local copy of a game was deleted. "Download" is a noun here,
          the downloaded file. -->
     <string name="library_notice_download_deleted">Download deleted</string>
+    <!-- Toast confirming a game was removed from the library. Past tense statement. -->
+    <string name="library_notice_removed_from_library">Removed from library</string>
+    <!-- Toast shown when removing a game from the library did not happen. -->
+    <string name="library_notice_remove_failed">Could not remove this game</string>
     <!-- Toast shown when a download was asked for but the game is already on the device. -->
     <string name="library_notice_already_downloaded">Game already downloaded</string>
     <!-- Toast confirming a multi-disc game was queued. Counts the discs being fetched. -->

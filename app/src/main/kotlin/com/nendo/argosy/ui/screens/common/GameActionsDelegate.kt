@@ -10,6 +10,7 @@ import com.nendo.argosy.data.remote.romm.RomMResult
 import com.nendo.argosy.domain.usecase.download.DownloadGameUseCase
 import com.nendo.argosy.domain.usecase.download.DownloadResult
 import com.nendo.argosy.domain.usecase.game.DeleteGameUseCase
+import com.nendo.argosy.domain.usecase.game.RemoveServerRemovedGameUseCase
 import com.nendo.argosy.ui.input.SoundFeedbackManager
 import com.nendo.argosy.core.input.SoundType
 import javax.inject.Inject
@@ -24,6 +25,7 @@ sealed class RefreshAndroidResult {
 class GameActionsDelegate @Inject constructor(
     private val gameRepository: GameRepository,
     private val deleteGameUseCase: DeleteGameUseCase,
+    private val removeServerRemovedGame: RemoveServerRemovedGameUseCase,
     private val downloadGameUseCase: DownloadGameUseCase,
     private val soundManager: SoundFeedbackManager,
     private val romMRepository: RomMRepository,
@@ -58,7 +60,8 @@ class GameActionsDelegate @Inject constructor(
         deleteGameUseCase(gameId)
     }
 
-    suspend fun removeFromLibrary(gameId: Long): Boolean = deleteGameUseCase.removeFromLibrary(gameId)
+    suspend fun removeFromLibrary(gameId: Long): Boolean =
+        removeServerRemovedGame(gameId) || deleteGameUseCase.removeFromLibrary(gameId)
 
     suspend fun queueDownload(gameId: Long): DownloadResult {
         return downloadGameUseCase(gameId)

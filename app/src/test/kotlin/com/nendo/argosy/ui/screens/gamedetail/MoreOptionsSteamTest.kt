@@ -35,7 +35,7 @@ class MoreOptionsSteamTest {
     }
 
     @Test
-    fun `removal is offered for steam games only`() {
+    fun `removal is not offered for a game still on RomM`() {
         val romm = MoreOptionsContext(isDownloaded = true, isRommGame = true, platformSlug = "3ds")
 
         assertTrue(buildMoreOptions(romm).contains(MoreOptionAction.Delete))

@@ -106,7 +106,7 @@ class RomMLibrarySyncChangesTest {
             gameFileDao = mockk(relaxed = true),
             saveSyncDao = mockk(relaxed = true),
             saveCacheDao = mockk(relaxed = true),
-            stateCacheDao = mockk(relaxed = true),
+            localRomFiles = mockk(relaxed = true),
             platformDao = platformDao,
             emulatorConfigDao = mockk(relaxed = true),
             platformLibretroSettingsDao = mockk(relaxed = true),

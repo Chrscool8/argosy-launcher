@@ -88,6 +88,7 @@
     <string name="home_quick_actions_resync_platform">Resincronizar plataforma</string>
     <string name="home_quick_actions_delete_download">Eliminar descarga</string>
     <string name="home_quick_actions_remove_from_home">Quitar del inicio</string>
+    <string name="home_quick_actions_remove_from_library">Quitar de la biblioteca</string>
     <string name="home_quick_actions_hide">Ocultar</string>
 
     <string name="home_media_empty_next_up_title">Nada a continuación</string>
@@ -144,6 +145,8 @@
     <string name="home_grid_tile_ra_game_progress">%1$s %2$d/%3$d</string>
 
     <string name="home_notice_game_data_refreshed">Datos del juego actualizados</string>
+    <string name="home_notice_removed_from_library">Quitado de la biblioteca</string>
+    <string name="home_notice_remove_failed">No se pudo quitar este juego</string>
     <string name="home_notice_android_data_refreshed">Datos del juego actualizados</string>
 
     <string name="home_notice_already_downloaded">Juego ya descargado</string>

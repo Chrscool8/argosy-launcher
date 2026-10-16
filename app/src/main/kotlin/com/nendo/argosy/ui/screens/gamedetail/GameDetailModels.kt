@@ -85,6 +85,8 @@ data class GameDetailUi(
     val completion: Int,
     val status: String?,
     val isRommGame: Boolean,
+    val isRemovedFromRomm: Boolean = false,
+    val canRemoveFromLibrary: Boolean = false,
     val isFavorite: Boolean,
     val playCount: Int,
     val playTimeMinutes: Int,
@@ -200,6 +202,7 @@ data class MoreOptionsContext(
     val isRommGame: Boolean = false,
     val isAndroidApp: Boolean = false,
     val isSteamGame: Boolean = false,
+    val canRemoveFromLibrary: Boolean = false,
     val canManageSaves: Boolean = false,
     val canManageStates: Boolean = false,
     val isMultiDisc: Boolean = false,
@@ -234,7 +237,7 @@ fun buildMoreOptions(ctx: MoreOptionsContext): List<MoreOptionAction> = buildLis
     add(MoreOptionAction.AddToCollection)
     add(MoreOptionAction.Artwork)
     if (ctx.isDownloaded || ctx.isAndroidApp) add(MoreOptionAction.Delete)
-    if (ctx.isSteamGame) add(MoreOptionAction.RemoveFromLibrary)
+    if (ctx.isSteamGame || ctx.canRemoveFromLibrary) add(MoreOptionAction.RemoveFromLibrary)
     add(MoreOptionAction.ToggleHide)
 }
 

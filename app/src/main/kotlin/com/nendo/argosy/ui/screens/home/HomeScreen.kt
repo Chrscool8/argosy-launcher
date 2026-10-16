@@ -47,6 +47,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -1506,6 +1507,10 @@ fun HomeScreen(
                         viewModel.toggleGameMenu()
                         viewModel.removeFromHome(focusedGame.id)
                     },
+                    onRemoveFromLibrary = {
+                        viewModel.toggleGameMenu()
+                        viewModel.removeFromLibrary(focusedGame.id)
+                    },
                     onHide = {
                         viewModel.toggleGameMenu()
                         viewModel.hideGame(focusedGame.id)
@@ -2010,6 +2015,7 @@ private fun GameSelectOverlay(
     onResyncPlatform: () -> Unit,
     onDelete: () -> Unit,
     onRemoveFromHome: () -> Unit,
+    onRemoveFromLibrary: () -> Unit,
     onHide: () -> Unit
 ) {
     val primaryIcon = when {
@@ -2036,6 +2042,7 @@ private fun GameSelectOverlay(
     val resyncPlatformLabel = stringResource(R.string.home_quick_actions_resync_platform)
     val deleteDownloadLabel = stringResource(R.string.home_quick_actions_delete_download)
     val removeFromHomeLabel = stringResource(R.string.home_quick_actions_remove_from_home)
+    val removeFromLibraryLabel = stringResource(R.string.home_quick_actions_remove_from_library)
     val hideLabel = stringResource(R.string.home_quick_actions_hide)
 
     data class MenuEntry(
@@ -2101,6 +2108,16 @@ private fun GameSelectOverlay(
                     removeFromHomeLabel,
                     isDangerous = true,
                     onClick = onRemoveFromHome
+                )
+            )
+        }
+        if (game.canRemoveFromLibrary) {
+            add(
+                MenuEntry(
+                    Icons.Default.RemoveCircleOutline,
+                    removeFromLibraryLabel,
+                    isDangerous = true,
+                    onClick = onRemoveFromLibrary
                 )
             )
         }

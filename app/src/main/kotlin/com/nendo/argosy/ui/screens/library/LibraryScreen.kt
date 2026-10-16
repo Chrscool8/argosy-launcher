@@ -43,6 +43,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -665,6 +666,10 @@ fun LibraryScreen(
                     onDelete = {
                         viewModel.toggleQuickMenu()
                         viewModel.deleteLocalFile(game.id)
+                    },
+                    onRemoveFromLibrary = {
+                        viewModel.toggleQuickMenu()
+                        viewModel.removeFromLibrary(game.id)
                     },
                     onHide = {
                         viewModel.toggleQuickMenu()
@@ -1741,6 +1746,7 @@ private fun QuickMenuOverlay(
     onRefresh: () -> Unit,
     onResyncPlatform: () -> Unit,
     onDelete: () -> Unit,
+    onRemoveFromLibrary: () -> Unit,
     onHide: () -> Unit
 ) {
     val primaryIcon = when {
@@ -1777,6 +1783,7 @@ private fun QuickMenuOverlay(
     } else {
         stringResource(R.string.library_quickmenu_delete_download)
     }
+    val removeFromLibraryLabel = stringResource(R.string.library_quickmenu_remove_from_library)
     val hideLabel = if (game.isHidden) {
         stringResource(R.string.library_quickmenu_show)
     } else {
@@ -1809,6 +1816,12 @@ private fun QuickMenuOverlay(
             deleteLabel,
             isDangerous = true,
             onClick = onDelete
+        )
+        LibraryQuickMenuRow.REMOVE_FROM_LIBRARY -> MenuEntry(
+            Icons.Default.RemoveCircleOutline,
+            removeFromLibraryLabel,
+            isDangerous = true,
+            onClick = onRemoveFromLibrary
         )
         LibraryQuickMenuRow.HIDE -> MenuEntry(label = hideLabel, isDangerous = !game.isHidden, onClick = onHide)
     }

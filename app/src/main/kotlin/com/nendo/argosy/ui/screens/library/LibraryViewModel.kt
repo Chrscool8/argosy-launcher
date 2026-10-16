@@ -242,6 +242,7 @@ data class LibraryGameUi(
     val isFavorite: Boolean,
     val isDownloaded: Boolean,
     val isRommGame: Boolean,
+    val canRemoveFromLibrary: Boolean = false,
     val isAndroidApp: Boolean,
     val emulatorName: String?,
     val needsInstall: Boolean = false,
@@ -2031,10 +2032,30 @@ class LibraryViewModel @Inject constructor(
                 toggleQuickMenu()
                 InputResult.HANDLED
             }
+            LibraryQuickMenuRow.REMOVE_FROM_LIBRARY -> {
+                toggleQuickMenu()
+                removeFromLibrary(game.id)
+                InputResult.HANDLED
+            }
             LibraryQuickMenuRow.HIDE -> {
                 if (game.isHidden) unhideGame(game.id) else hideGame(game.id)
                 toggleQuickMenu()
                 InputResult.HANDLED
+            }
+        }
+    }
+
+    fun removeFromLibrary(gameId: Long) {
+        viewModelScope.launch {
+            if (gameActions.removeFromLibrary(gameId)) {
+                notificationManager.showSuccess(
+                    NotificationText.Res(R.string.library_notice_removed_from_library)
+                )
+                loadGames()
+            } else {
+                notificationManager.showError(
+                    NotificationText.Res(R.string.library_notice_remove_failed)
+                )
             }
         }
     }

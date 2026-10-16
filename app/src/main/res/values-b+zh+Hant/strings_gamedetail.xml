@@ -114,6 +114,7 @@
     <string name="gamedetail_chip_play_time_hours_grouped">%1$sh</string>
 
     <string name="gamedetail_collapsed_header_rating_percent">%1$d%%</string>
+    <string name="gamedetail_header_not_on_romm">RomM 上已無此遊戲</string>
     <plurals name="gamedetail_collapsed_header_play_count">
         <item quantity="other">%1$d次遊玩</item>
     </plurals>

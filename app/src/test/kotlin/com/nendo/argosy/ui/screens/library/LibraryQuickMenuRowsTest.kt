@@ -7,7 +7,7 @@ import org.junit.Test
 
 class LibraryQuickMenuRowsTest {
 
-    private fun game(isDownloaded: Boolean = false) = LibraryGameUi(
+    private fun game(isDownloaded: Boolean = false, canRemoveFromLibrary: Boolean = false) = LibraryGameUi(
         id = 1,
         title = "Game",
         sortTitle = "game",
@@ -19,6 +19,7 @@ class LibraryQuickMenuRowsTest {
         isFavorite = false,
         isDownloaded = isDownloaded,
         isRommGame = true,
+        canRemoveFromLibrary = canRemoveFromLibrary,
         isAndroidApp = false,
         emulatorName = null,
         listDetails = com.nendo.argosy.ui.common.GameListDetails()
@@ -68,5 +69,20 @@ class LibraryQuickMenuRowsTest {
             ),
             rows
         )
+    }
+
+    @Test
+    fun `a removable game offers remove from library just before hide`() {
+        val rows = libraryQuickMenuRows(game(canRemoveFromLibrary = true), isCustomGridHome = false, hasSiblingGroup = false)
+
+        assertEquals(LibraryQuickMenuRow.REMOVE_FROM_LIBRARY, rows[rows.lastIndex - 1])
+        assertEquals(LibraryQuickMenuRow.HIDE, rows.last())
+    }
+
+    @Test
+    fun `a game that is not removable never offers remove from library`() {
+        val rows = libraryQuickMenuRows(game(), isCustomGridHome = false, hasSiblingGroup = false)
+
+        assertFalse(rows.contains(LibraryQuickMenuRow.REMOVE_FROM_LIBRARY))
     }
 }

@@ -10,6 +10,7 @@ enum class LibraryQuickMenuRow(val isDangerous: Boolean = false) {
     REFRESH,
     RESYNC_PLATFORM,
     DELETE(isDangerous = true),
+    REMOVE_FROM_LIBRARY(isDangerous = true),
     HIDE(isDangerous = true)
 }
 
@@ -27,5 +28,6 @@ fun libraryQuickMenuRows(
     if (game.isRommGame || game.isAndroidApp) add(LibraryQuickMenuRow.REFRESH)
     add(LibraryQuickMenuRow.RESYNC_PLATFORM)
     if (game.isDownloaded || game.needsInstall) add(LibraryQuickMenuRow.DELETE)
+    if (game.canRemoveFromLibrary) add(LibraryQuickMenuRow.REMOVE_FROM_LIBRARY)
     add(LibraryQuickMenuRow.HIDE)
 }

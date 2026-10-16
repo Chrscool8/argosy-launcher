@@ -102,11 +102,14 @@
     <string name="library_quickmenu_delete_download">Download löschen</string>
     <string name="library_quickmenu_show">Einblenden</string>
     <string name="library_quickmenu_hide">Ausblenden</string>
+    <string name="library_quickmenu_remove_from_library">Aus Bibliothek entfernen</string>
 
     <string name="library_notice_added_to_home_grid">Zum Startraster hinzugefügt</string>
     <string name="library_notice_game_data_refreshed">Spieldaten aktualisiert</string>
     <string name="library_notice_android_data_refreshed">Spieldaten aktualisiert</string>
     <string name="library_notice_download_deleted">Download gelöscht</string>
+    <string name="library_notice_removed_from_library">Aus Bibliothek entfernt</string>
+    <string name="library_notice_remove_failed">Spiel konnte nicht entfernt werden</string>
     <string name="library_notice_already_downloaded">Spiel bereits heruntergeladen</string>
     <plurals name="library_notice_downloading_discs">
         <item quantity="one">%d Disc wird heruntergeladen</item>

@@ -2073,6 +2073,13 @@ class HomeViewModel @Inject constructor(
         gameMenuDelegate.removeFromHome(viewModelScope, gameId) { refreshCurrentRowInternal() }
     }
 
+    fun removeFromLibrary(gameId: Long) {
+        gameMenuDelegate.removeFromLibrary(viewModelScope, gameId) {
+            libraryDelegate.invalidateRecentGamesCache()
+            refreshCurrentRowInternal()
+        }
+    }
+
     fun refreshGameData(gameId: Long) {
         gameMenuDelegate.refreshGameData(viewModelScope, gameId) { refreshCurrentRowInternal() }
     }
@@ -2206,6 +2213,10 @@ class HomeViewModel @Inject constructor(
             is GameMenuAction.RemoveFromHome -> {
                 toggleGameMenu()
                 removeFromHome(action.gameId)
+            }
+            is GameMenuAction.RemoveFromLibrary -> {
+                toggleGameMenu()
+                removeFromLibrary(action.gameId)
             }
             is GameMenuAction.Hide -> {
                 toggleGameMenu()

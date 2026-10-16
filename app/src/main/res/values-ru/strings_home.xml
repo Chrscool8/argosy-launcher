@@ -88,6 +88,7 @@
     <string name="home_quick_actions_resync_platform">Пересинхронизировать платформу</string>
     <string name="home_quick_actions_delete_download">Удалить загрузку</string>
     <string name="home_quick_actions_remove_from_home">Убрать с главного экрана</string>
+    <string name="home_quick_actions_remove_from_library">Удалить из библиотеки</string>
     <string name="home_quick_actions_hide">Скрыть</string>
 
     <string name="home_media_empty_next_up_title">Нечего смотреть далее</string>
@@ -146,6 +147,8 @@
     <string name="home_grid_tile_ra_game_progress">%1$s %2$d/%3$d</string>
 
     <string name="home_notice_game_data_refreshed">Данные игры обновлены</string>
+    <string name="home_notice_removed_from_library">Удалено из библиотеки</string>
+    <string name="home_notice_remove_failed">Не удалось удалить эту игру</string>
     <string name="home_notice_android_data_refreshed">Данные игры обновлены</string>
 
     <string name="home_notice_already_downloaded">Игра уже загружена</string>

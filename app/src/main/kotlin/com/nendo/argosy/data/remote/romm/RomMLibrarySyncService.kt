@@ -71,7 +71,7 @@ class RomMLibrarySyncService @Inject constructor(
     private val gameFileDao: GameFileDao,
     private val saveSyncDao: com.nendo.argosy.data.local.dao.SaveSyncDao,
     private val saveCacheDao: com.nendo.argosy.data.local.dao.SaveCacheDao,
-    private val stateCacheDao: com.nendo.argosy.data.local.dao.StateCacheDao,
+    private val localRomFiles: com.nendo.argosy.data.repository.LocalRomFiles,
     private val platformDao: PlatformDao,
     private val emulatorConfigDao: EmulatorConfigDao,
     private val platformLibretroSettingsDao: PlatformLibretroSettingsDao,
@@ -447,14 +447,11 @@ class RomMLibrarySyncService @Inject constructor(
 
         cleanupInvalidExtensionGames(platformId, scope)
 
+        validateLocalRomFiles(platformId)
+
         if (filters.deleteOrphans && result.error == null) {
             gamesDeleted += reconcileOrphans(platformId, scope, result.decidedRomIds)
         }
-
-        gameRepository.get().validateLocalFilesForPlatform(platformId)
-        gameRepository.get().discoverLocalFilesForPlatform(platformId)
-        gameRepository.get().validateDiscLocalFiles(platformId)
-        gameRepository.get().validateFileLocalFiles(platformId)
 
         val count = gameDao.countByPlatform(platformId, scope.ownerUserId)
         platformDao.updateGameCount(platformId, count)
@@ -834,40 +831,36 @@ class RomMLibrarySyncService @Inject constructor(
         var volumeWithheld = 0
 
         for (game in dirtyGames) {
-            val rommId = game.rommId
-            if (rommId != null && rommId < 0) continue
+            if (!game.isRemovedFromRomm) {
+                val rommId = game.rommId
 
-            val provenDeleted = visibility is RomMVisibility.Known &&
-                rommId != null &&
-                !visibility.hides(rommId, game.platformId)
+                val provenDeleted = visibility is RomMVisibility.Known &&
+                    rommId != null &&
+                    !visibility.hides(rommId, game.platformId)
 
-            if (!provenDeleted) {
-                if (ownerUserId != null) {
-                    val serverHidden = visibility is RomMVisibility.Known
-                    overlayWriter.dropMembership(ownerUserId, game.id, serverHidden)
-                    masked++
-                }
-                continue
-            }
-
-            if (rommId != null && rommId !in decidedRomIds) {
-                val serverRomIds = scope.serverRomIds.get()
-                if (serverRomIds != null && rommId in serverRomIds) {
-                    stillListed++
+                if (!provenDeleted) {
+                    if (ownerUserId != null) {
+                        val serverHidden = visibility is RomMVisibility.Known
+                        overlayWriter.dropMembership(ownerUserId, game.id, serverHidden)
+                        masked++
+                    }
                     continue
                 }
+
+                if (rommId != null && rommId !in decidedRomIds) {
+                    val serverRomIds = scope.serverRomIds.get()
+                    if (serverRomIds != null && rommId in serverRomIds) {
+                        stillListed++
+                        continue
+                    }
+                }
             }
 
-            if (hasLocalContent(game)) {
-                preserveOrphanedGame(game, ownerUserId)
-                continue
+            when (settleServerRemovedGame(game, ownerUserId, romVolumesReadable)) {
+                ServerRemovedOutcome.REMOVED -> deleted++
+                ServerRemovedOutcome.WITHHELD -> volumeWithheld++
+                ServerRemovedOutcome.KEPT -> Unit
             }
-            if (!romVolumesReadable) {
-                volumeWithheld++
-                continue
-            }
-            gameDao.delete(game.id)
-            deleted++
         }
 
         if (deleted > 0) {
@@ -908,29 +901,13 @@ class RomMLibrarySyncService @Inject constructor(
      * Runs only after a whole-library pass that finished clean, and re-reads the id set rather
      * than reusing the one the pass opened with: a rom added while the pass was walking platforms
      * is missing from that older set and present in the library, which is exactly the shape this
-     * sweep deletes. An unavailable set or visibility answer means it withholds entirely.
+     * sweep deletes. An unavailable set or visibility answer withholds those rows. Rows already
+     * kept as server-removed need neither answer and are removed once no local rom files remain.
      */
     private suspend fun reconcileDeletedRoms(scope: SyncScope): Int {
-        val serverRomIds = when (val result = apiClient.getRomIdentifiers()) {
-            is RomMResult.Success -> result.data
-            is RomMResult.Error -> {
-                Logger.info(
-                    TAG,
-                    "reconcileDeletedRoms: rom identifiers unavailable (${result.message}); withholding"
-                )
-                return 0
-            }
-        }
-        if (serverRomIds.isEmpty()) {
-            Logger.info(TAG, "reconcileDeletedRoms: server listed no roms at all; withholding")
-            return 0
-        }
-
-        val visibility = scope.visibility as? RomMVisibility.Known ?: return 0
-        unbindDeletedAndroidApps(serverRomIds, visibility, scope.ownerUserId)
-        val missing = gameDao.getServerBackedIdsForOwner(ROMM_SOURCES, scope.ownerUserId)
-            .filter { it.rommId !in serverRomIds && !visibility.hides(it.rommId, it.platformId) }
-        if (missing.isEmpty()) return 0
+        val candidates = missingServerRoms(scope) +
+            gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, scope.ownerUserId)
+        if (candidates.isEmpty()) return 0
 
         if (!gameRepository.get().romStorageVolumesReadable()) {
             Logger.warn(
@@ -940,19 +917,18 @@ class RomMLibrarySyncService @Inject constructor(
             return 0
         }
 
+        candidates.map { it.platformId }.distinct().forEach { validateLocalRomFiles(it) }
+
         var deleted = 0
         var preserved = 0
 
-        for (ref in missing) {
+        for (ref in candidates) {
             val game = gameDao.getById(ref.id) ?: continue
-
-            if (hasLocalContent(game)) {
-                preserveOrphanedGame(game, scope.ownerUserId)
-                preserved++
-                continue
+            when (settleServerRemovedGame(game, scope.ownerUserId, romVolumesReadable = true)) {
+                ServerRemovedOutcome.REMOVED -> deleted++
+                ServerRemovedOutcome.KEPT -> preserved++
+                ServerRemovedOutcome.WITHHELD -> Unit
             }
-            gameDao.delete(game.id)
-            deleted++
         }
 
         if (deleted > 0) {
@@ -962,10 +938,56 @@ class RomMLibrarySyncService @Inject constructor(
         if (deleted > 0 || preserved > 0) {
             Logger.info(
                 TAG,
-                "reconcileDeletedRoms: $deleted rows removed, $preserved preserved for local content"
+                "reconcileDeletedRoms: $deleted rows removed, $preserved kept for local rom files"
             )
         }
         return deleted
+    }
+
+    private suspend fun missingServerRoms(scope: SyncScope): List<com.nendo.argosy.data.local.dao.ServerBackedGameRef> {
+        val serverRomIds = when (val result = apiClient.getRomIdentifiers()) {
+            is RomMResult.Success -> result.data
+            is RomMResult.Error -> {
+                Logger.info(
+                    TAG,
+                    "reconcileDeletedRoms: rom identifiers unavailable (${result.message}); withholding"
+                )
+                return emptyList()
+            }
+        }
+        if (serverRomIds.isEmpty()) {
+            Logger.info(TAG, "reconcileDeletedRoms: server listed no roms at all; withholding")
+            return emptyList()
+        }
+
+        val visibility = scope.visibility as? RomMVisibility.Known ?: return emptyList()
+        unbindDeletedAndroidApps(serverRomIds, visibility, scope.ownerUserId)
+        return gameDao.getServerBackedIdsForOwner(ROMM_SOURCES, scope.ownerUserId)
+            .filter { it.rommId !in serverRomIds && !visibility.hides(it.rommId, it.platformId) }
+    }
+
+    private enum class ServerRemovedOutcome { KEPT, REMOVED, WITHHELD }
+
+    private suspend fun settleServerRemovedGame(
+        game: GameEntity,
+        ownerUserId: Long?,
+        romVolumesReadable: Boolean
+    ): ServerRemovedOutcome {
+        if (localRomFiles.anyFor(game)) {
+            if (!game.isRemovedFromRomm) preserveOrphanedGame(game, ownerUserId)
+            return ServerRemovedOutcome.KEPT
+        }
+        if (!romVolumesReadable) return ServerRemovedOutcome.WITHHELD
+        gameDao.delete(game.id)
+        return ServerRemovedOutcome.REMOVED
+    }
+
+    private suspend fun validateLocalRomFiles(platformId: Long) {
+        val games = gameRepository.get()
+        games.validateLocalFilesForPlatform(platformId)
+        games.discoverLocalFilesForPlatform(platformId)
+        games.validateDiscLocalFiles(platformId)
+        games.validateFileLocalFiles(platformId)
     }
 
     private suspend fun unbindDeletedAndroidApps(
@@ -1359,8 +1381,8 @@ class RomMLibrarySyncService @Inject constructor(
                 Logger.info(TAG, "syncRomInBatch: ${rom.name} is folder-based multi-disc, marking ${siblingIds.size} individual disc siblings to skip")
                 for (siblingId in siblingIds) {
                     val existingGame = gameDao.getByRommId(siblingId) ?: continue
-                    if (hasLocalContent(existingGame)) {
-                        Logger.info(TAG, "syncRomInBatch: keeping redundant individual disc game ${existingGame.title}, it holds local content")
+                    if (localRomFiles.anyFor(existingGame)) {
+                        Logger.info(TAG, "syncRomInBatch: keeping redundant individual disc game ${existingGame.title}, it holds local rom files")
                         continue
                     }
                     Logger.info(TAG, "syncRomInBatch: deleting redundant individual disc game: ${existingGame.title}")
@@ -1637,18 +1659,6 @@ class RomMLibrarySyncService @Inject constructor(
     }
 
     /**
-     * Whether removing this row would take user content with it. Cached saves and states count:
-     * they outlive the rom on the server, they are addressed by game id, and no foreign key
-     * brings them back once the row is gone.
-     */
-    private suspend fun hasLocalContent(game: GameEntity): Boolean =
-        game.localPath != null ||
-            gameFileDao.getDownloadedCount(game.id) > 0 ||
-            gameDiscDao.getDiscsForGame(game.id).any { it.localPath != null } ||
-            saveCacheDao.countByGameAllOwners(game.id) > 0 ||
-            stateCacheDao.countByGameAllOwners(game.id) > 0
-
-    /**
      * Keeps a game whose rom left the server, under a synthetic id so nothing downstream
      * mistakes it for a synced one. Its sync rows go: they address a rom that no longer
      * answers, and leaving them is what makes a device retry an upload against a dead id
@@ -1662,7 +1672,7 @@ class RomMLibrarySyncService @Inject constructor(
             saveCacheDao.clearRemoteLinkage(game.id, ownerUserId)
             Logger.info(
                 TAG,
-                "preserveOrphanedGame: ${game.title} has local content, rommId ${game.rommId} -> $syntheticId, dropped remote sync state"
+                "preserveOrphanedGame: ${game.title} has local rom files, rommId ${game.rommId} -> $syntheticId, dropped remote sync state"
             )
         }
     }

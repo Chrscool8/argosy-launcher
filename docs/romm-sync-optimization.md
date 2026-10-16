@@ -111,14 +111,20 @@ the one the pass opened with, because a ROM added while the pass was walking
 platforms is missing from that older set and present in the library - exactly
 the shape the sweep deletes.
 
-Both withhold entirely on missing evidence: no id set, an empty id set, an
-unavailable visibility answer, or any platform error.
+Both withhold on missing evidence: no id set, an empty id set, an unavailable
+visibility answer, or any platform error.
 
-Preservation widened at the same time. `hasLocalContent` now counts cached saves
-and states, across every account rather than the syncing one. Neither table has
-a foreign key to `games`, so deleting the row left them dangling and
-unreachable; a game with saves but no ROM on disk is now preserved under the
-synthetic negative id rather than hard-deleted.
+Preservation protects local ROM files only. `LocalRomFiles.anyFor` counts the
+game's own `localPath`, downloaded `game_files` rows and disc paths; cached saves
+and states do not keep a row. A server-deleted game with ROM files is kept under
+the synthetic negative id (`GameEntity.isRemovedFromRomm`) and the detail header
+says it is not on RomM. Both sweeps run local file validation first, so a stale
+path cannot keep a row, and both re-examine rows already kept this way: once no
+ROM files remain, the row is removed. That pass needs no server evidence. Removing
+a row never touches disk: save and state cache files stay where they are, and
+`play_sessions` has no foreign key to `games`, so sessions survive and
+`relinkOrphans` reattaches them if the game returns. Home, Library and game
+detail offer "Remove from Library" for such a row before the next sync clears it.
 
 ## 3. Every sync is a full re-pull
 

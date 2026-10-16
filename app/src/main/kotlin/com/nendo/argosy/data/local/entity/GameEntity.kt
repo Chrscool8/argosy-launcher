@@ -169,6 +169,9 @@ data class GameEntity(
     val isDownloaded: Boolean
         get() = localPath != null || isExternallyManaged
 
+    val isRemovedFromRomm: Boolean
+        get() = isServerRemovedRomm(source, rommId)
+
     companion object {
         const val STORE_NOT_ATTEMPTED = 0
         const val STORE_SUCCESS = 1
@@ -226,7 +229,14 @@ data class GameListItem(
 
     val isDownloaded: Boolean
         get() = localPath != null || isExternallyManaged
+
+    val isRemovedFromRomm: Boolean
+        get() = isServerRemovedRomm(source, rommId)
 }
+
+fun isServerRemovedRomm(source: GameSource, rommId: Long?): Boolean =
+    (source == GameSource.ROMM_REMOTE || source == GameSource.ROMM_SYNCED) &&
+        rommId != null && rommId < 0
 
 data class GameCategoryInfo(
     val id: Long,
