@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -29,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
@@ -490,9 +492,16 @@ private fun TappableFooterHint(
     onHintClick: ((InputButton) -> Unit)?,
     enabled: Boolean = true
 ) {
-    val clickModifier = if (onHintClick != null && enabled) {
+    val tappable = onHintClick != null && enabled
+    val tracker = LocalFooterHintTracker.current
+    val trackKey = remember { Any() }
+    DisposableEffect(tracker, tappable) {
+        onDispose { tracker?.untrackTappableHint(trackKey) }
+    }
+    val clickModifier = if (tappable) {
         Modifier
-            .clickableNoFocus { onHintClick(button) }
+            .onGloballyPositioned { tracker?.trackTappableHint(trackKey, it) }
+            .clickableNoFocus { onHintClick?.invoke(button) }
             .sizeIn(minWidth = minimumTouchTarget, minHeight = minimumTouchTarget)
     } else {
         Modifier

@@ -315,6 +315,7 @@ class RomMLibrarySyncServerRemovedTest {
 
         coVerify(exactly = 1) { gameDao.delete(9L) }
         coVerify(exactly = 0) { apiClient.getRomIdentifiers() }
+        assertNoFileValidation()
     }
 
     @Test
@@ -327,6 +328,20 @@ class RomMLibrarySyncServerRemovedTest {
         assertEquals(0, service.pruneServerRemovedGames())
 
         coVerify(exactly = 0) { gameDao.delete(9L) }
+        assertNoFileValidation()
+    }
+
+    @Test
+    fun `the startup prune judges a preserved row by its stored path without validating it`() = runTest {
+        coEvery { gameDao.getServerRemovedIdsForOwner(romSources, null) } returns
+            listOf(ServerBackedGameRef(id = 9L, rommId = -9L, platformId = 1L))
+        coEvery { gameDao.getById(9L) } returns
+            game(rommId = -9L, localPath = "/roms/snes/x4.cue", source = GameSource.ROMM_SYNCED)
+
+        assertEquals(0, service.pruneServerRemovedGames())
+
+        coVerify(exactly = 0) { gameDao.delete(9L) }
+        assertNoFileValidation()
     }
 
     @Test
@@ -339,6 +354,26 @@ class RomMLibrarySyncServerRemovedTest {
         assertEquals(0, service.pruneServerRemovedGames())
 
         coVerify(exactly = 0) { gameDao.delete(9L) }
+        assertNoFileValidation()
+    }
+
+    @Test
+    fun `the library sweep still validates the platforms of preserved rows`() = runTest {
+        coEvery { gameDao.getServerRemovedIdsForOwner(romSources, null) } returns
+            listOf(ServerBackedGameRef(id = 9L, rommId = -9L, platformId = 1L))
+        coEvery { gameDao.getById(9L) } returns game(rommId = -9L)
+
+        service.syncLibraryChanges(Instant.parse("2026-10-01T00:00:00Z"))
+
+        coVerify(exactly = 1) { gameRepository.validateLocalFilesForPlatform(1L) }
+        coVerify(exactly = 1) { gameRepository.discoverLocalFilesForPlatform(1L) }
+    }
+
+    private fun assertNoFileValidation() {
+        coVerify(exactly = 0) { gameRepository.validateLocalFilesForPlatform(any()) }
+        coVerify(exactly = 0) { gameRepository.discoverLocalFilesForPlatform(any()) }
+        coVerify(exactly = 0) { gameRepository.validateDiscLocalFiles(any()) }
+        coVerify(exactly = 0) { gameRepository.validateFileLocalFiles(any()) }
     }
 
     @Test

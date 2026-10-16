@@ -316,15 +316,29 @@ split-pane layout (wide displays with 2+ named sections: nav rail on the left, c
 the right) and a plain sticky-header LazyColumn. A new section renders through it rather
 than building its own LazyColumn.
 
-Touch mode: a finger on a settings section sets `SettingsUiState.isTouchMode`, and the next
-gamepad input through `SettingsInputHandler` clears it. While it holds, a focus change does
-not scroll the list (`shouldFollowFocus` in `ui/components/SectionScroll.kt`), and a tapped
-row takes focus through `touchFocusRow`. `SectionPaneLayout` wires both from
-`LocalSettingsTouchFocus`. A section that keeps its own LazyColumn passes
-`LocalSettingsTouchFocus.current.isTouchMode` to its scroll call and wraps focusable rows with
-`settingsRowItem`, `settingsRowItems` or `SettingsRowTapArea`
-(`ui/screens/settings/components/SettingsTouchFocus.kt`). A touch control that is meant to
-scroll the list, like the section rail, calls `onExitTouchMode` first.
+Touch mode: a touch-down anywhere in the section content (the box under the settings header,
+`observeTouchDown` in `SettingsScreen`) calls `enterTouchMode` and sets
+`SettingsUiState.isTouchMode`. Every gamepad input through `SettingsInputHandler`, Back
+included, calls `exitTouchMode` first. While it holds, a focus change does not scroll the list
+(`shouldFollowFocus` in `ui/components/SectionScroll.kt`; the first pass still places the
+list). A tapped row takes focus through `touchFocusRow` -> `routeTouchFocus`, which applies
+`SettingsUiState.touchFocused` (out-of-range indices keep the old focus) and resets row
+sub-focus when the index changed; the list stays where the finger left it. The tap observer
+(`settingsRowTap`, built on `observeTap`) does not consume, so the row's own controls still
+receive the same tap. `SectionPaneLayout` wires both from `LocalSettingsTouchFocus`. A section
+that keeps its own LazyColumn passes `LocalSettingsTouchFocus.current.isTouchMode` to its
+scroll call and wraps focusable rows with `settingsRowItem`, `settingsRowItems` or
+`SettingsRowTapArea` (`ui/screens/settings/components/SettingsTouchFocus.kt`), passing a
+negative focus index for rows that take no focus. A touch control that is meant to scroll the
+list, like the section rail, calls `onExitTouchMode` first.
+
+Settings header: every section except `SHADER_STACK` and `FRAME_PICKER` renders
+`SettingsHeader` above the content, with the section title and a back arrow
+(`settings_shell_header_back_desc`). The arrow's `clickableNoFocus` calls
+`SettingsInputHandler.onBack()`, the same path as the gamepad B press, so a tap pops the
+settings back stack exactly as B does (modal first, then `navigateBack`, then leaving
+settings). A screen-specific back action belongs in that path, never in a second tap handler on
+the arrow.
 
 ### Focus Check Pattern
 ```kotlin

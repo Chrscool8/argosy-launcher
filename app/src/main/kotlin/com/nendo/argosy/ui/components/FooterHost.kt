@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nendo.argosy.ui.theme.Dimens
@@ -48,11 +51,25 @@ class FooterHostController {
 
     val top: FooterEntry? get() = stack.lastOrNull()?.second
 
-    val isBarVisible: Boolean get() = top?.let { it.forced || it.hints.isNotEmpty() } == true
+    private val tappableHints = mutableMapOf<Any, LayoutCoordinates>()
+
+    internal fun trackTappableHint(key: Any, coordinates: LayoutCoordinates) {
+        tappableHints[key] = coordinates
+    }
+
+    internal fun untrackTappableHint(key: Any) {
+        tappableHints.remove(key)
+    }
+
+    fun hasTappableHintAt(windowPosition: Offset): Boolean =
+        isBarVisible && tappableHints.values.any { coordinates ->
+            coordinates.isAttached && coordinates.boundsInWindow().contains(windowPosition)
+        }
 }
 
 val LocalFooterHost = staticCompositionLocalOf { FooterHostController() }
 val LocalFooterHostVisible = staticCompositionLocalOf { true }
+internal val LocalFooterHintTracker = staticCompositionLocalOf<FooterHostController?> { null }
 
 /**
  * Bottom space held by an always-visible floating nav bar, on top of whatever the guide bar holds.
@@ -103,7 +120,10 @@ fun FooterHost(
     modifier: Modifier = Modifier
 ) {
     val entry = controller.top
-    CompositionLocalProvider(LocalFooterStyle provides (entry?.style ?: FooterStyleConfig())) {
+    CompositionLocalProvider(
+        LocalFooterStyle provides (entry?.style ?: FooterStyleConfig()),
+        LocalFooterHintTracker provides controller
+    ) {
         when (entry?.variant) {
             FooterVariant.SUBTLE -> SubtleFooterBar(
                 hints = entry.hints.map { it.button to it.action },

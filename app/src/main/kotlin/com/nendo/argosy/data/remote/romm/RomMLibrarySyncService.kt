@@ -894,38 +894,38 @@ class RomMLibrarySyncService @Inject constructor(
     }
 
     /**
-     * Removes rows already kept as server-removed whose local rom files are gone. Needs no
-     * server; withholds when a rom storage volume cannot be read.
+     * Removes rows already kept as server-removed whose local rom files are gone, judged by the
+     * stored file state alone. Needs no server, runs no file validation or discovery, and
+     * withholds when a rom storage volume cannot be read.
      */
-    suspend fun pruneServerRemovedGames(): Int =
-        settleServerRemovedCandidates(
-            gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, overlayWriter.activeOwnerId()),
-            overlayWriter.activeOwnerId()
-        )
+    suspend fun pruneServerRemovedGames(): Int {
+        val ownerUserId = overlayWriter.activeOwnerId()
+        val candidates = gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, ownerUserId)
+        if (candidates.isEmpty() || !romVolumesReadableForRemoval()) return 0
+        return settleServerRemovedCandidates(candidates, ownerUserId)
+    }
 
-    private suspend fun reconcileDeletedRoms(scope: SyncScope): Int =
-        settleServerRemovedCandidates(
-            missingServerRoms(scope) +
-                gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, scope.ownerUserId),
-            scope.ownerUserId
+    private suspend fun reconcileDeletedRoms(scope: SyncScope): Int {
+        val candidates = missingServerRoms(scope) +
+            gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, scope.ownerUserId)
+        if (candidates.isEmpty() || !romVolumesReadableForRemoval()) return 0
+        candidates.map { it.platformId }.distinct().forEach { validateLocalRomFiles(it) }
+        return settleServerRemovedCandidates(candidates, scope.ownerUserId)
+    }
+
+    private suspend fun romVolumesReadableForRemoval(): Boolean {
+        if (gameRepository.get().romStorageVolumesReadable()) return true
+        Logger.warn(
+            TAG,
+            "reconcileDeletedRoms: a rom storage volume could not be read; withholding"
         )
+        return false
+    }
 
     private suspend fun settleServerRemovedCandidates(
         candidates: List<com.nendo.argosy.data.local.dao.ServerBackedGameRef>,
         ownerUserId: Long?
     ): Int {
-        if (candidates.isEmpty()) return 0
-
-        if (!gameRepository.get().romStorageVolumesReadable()) {
-            Logger.warn(
-                TAG,
-                "reconcileDeletedRoms: a rom storage volume could not be read; withholding"
-            )
-            return 0
-        }
-
-        candidates.map { it.platformId }.distinct().forEach { validateLocalRomFiles(it) }
-
         var deleted = 0
         var preserved = 0
 

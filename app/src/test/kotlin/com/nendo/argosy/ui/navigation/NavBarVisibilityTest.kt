@@ -69,28 +69,47 @@ class NavBarVisibilityTest {
         assertFalse(NavBarVisibility.isAlwaysVisible(quickNavigation = false, autoHide = false))
     }
 
+    private fun edgeClaims(
+        navBarAllowed: Boolean = true,
+        barVisible: Boolean = false,
+        destinationCount: Int = 3,
+        pressOnFooterHint: Boolean = false
+    ): Boolean = NavBarVisibility.revealClaimsPress(navBarAllowed, barVisible, destinationCount, pressOnFooterHint)
+
     @Test
     fun `a press that raises a hidden bar belongs to the reveal`() {
-        assertTrue(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = false, destinationCount = 3))
+        assertTrue(edgeClaims())
+        assertTrue(NavBarVisibility.revealRaisesBar(navBarAllowed = true, pressOnFooterHint = false))
     }
 
     @Test
     fun `a press beside a bar already up passes through to the content`() {
-        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = true, destinationCount = 3))
+        assertFalse(edgeClaims(barVisible = true))
     }
 
     @Test
     fun `a press where no bar can appear passes through to the content`() {
-        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = false, barVisible = false, destinationCount = 3))
-        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = false, destinationCount = 1))
-        assertFalse(NavBarVisibility.revealClaimsPress(navBarAllowed = true, barVisible = false, destinationCount = 0))
+        assertFalse(edgeClaims(navBarAllowed = false))
+        assertFalse(edgeClaims(destinationCount = 1))
+        assertFalse(edgeClaims(destinationCount = 0))
+        assertFalse(NavBarVisibility.revealRaisesBar(navBarAllowed = false, pressOnFooterHint = false))
+    }
+
+    @Test
+    fun `a press on a footer hint under a hidden bar reaches the hint and leaves the bar down`() {
+        assertFalse(edgeClaims(pressOnFooterHint = true))
+        assertFalse(NavBarVisibility.revealRaisesBar(navBarAllowed = true, pressOnFooterHint = true))
+    }
+
+    @Test
+    fun `a press on a footer hint beside a bar already up reaches the hint`() {
+        assertFalse(edgeClaims(barVisible = true, pressOnFooterHint = true))
+        assertFalse(NavBarVisibility.revealRaisesBar(navBarAllowed = true, pressOnFooterHint = true))
     }
 
     private fun claimsPress(visibility: NavBarVisibility, autoHide: Boolean): Boolean =
-        NavBarVisibility.revealClaimsPress(
-            navBarAllowed = true,
-            barVisible = NavBarVisibility.isVisible(quickNavigation = true, autoHide = autoHide, raised = visibility.raised.value),
-            destinationCount = 3
+        edgeClaims(
+            barVisible = NavBarVisibility.isVisible(quickNavigation = true, autoHide = autoHide, raised = visibility.raised.value)
         )
 
     @Test

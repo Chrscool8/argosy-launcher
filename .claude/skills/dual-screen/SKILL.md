@@ -53,8 +53,12 @@ monitor and you land back in its profile.
 that bug made every screen card draw at the same aspect) and filters to BUILT_IN and EXTERNAL.
 
 `DualScreenManager.applyStoredScreenLayout(promptWhenUnknown)` is THE entry point that resolves
-and applies a layout. Called from `ArgosyActivity.onCreate`, from the display listener on add and
-remove, and by the settings router after a role change. Do not resolve a layout anywhere else.
+and applies a layout. Called from `ArgosyActivity.onCreate`, from the display listener on screen
+add and remove (only after `isScreenEvent` passes, see below), when the built-in screens come back
+on after docked-dark, when DeX ends, and by the settings router after a role change. It reaches
+the live arrangement through `applyScreenLayout` -> `setPrimaryDisplayId`, so the roles it sets
+come from the stored layout and nothing else. `rederiveRolesFromLayout()` is the role-only
+variant for session end, docking and HDMI cleanup. Do not resolve a layout anywhere else.
 
 Swap rule (`ScreenLayout.withRole`): only PRIMARY and PRESENTATION ever trade. Assigning
 APP_TARGET never disturbs the primary, so a media screen stays put. Tests in
@@ -198,17 +202,25 @@ The transaction numbers are per Android release in `BrightnessController.callsBy
 (Thor, 35/36) is mapped and verified, and the row stays hidden on any release not in that map.
 
 Role-state writers: `swapRoles()` toggles, `applyDisplayRoleOverride(override)` sets, and
-`setPrimaryDisplayId` / `rederiveRolesFromLayout()` apply the stored layout. While a session is
-active each one commits only through `moveGameWithRoles`, which carries the game to the display
-its role lands on first and refuses otherwise. Do not write `_isRolesSwapped` from anywhere else.
+`setPrimaryDisplayId` / `rederiveRolesFromLayout()` apply the stored layout. All of them end in
+`commitRoleSwap`. Do not write `_isRolesSwapped` from anywhere else. While a session is active:
+- `swapRoles`, `applyDisplayRoleOverride` and `setPrimaryDisplayId` commit only through
+  `moveGameWithRoles`, which carries the game to the display its role lands on first and refuses
+  otherwise.
+- `rederiveRolesFromLayout()` does not commit at all and waits for the session end, with one
+  exception: docked-dark (built-in screens off beside an external display) always commits
+  unswapped, session or not.
 
 LAW: the stored layout of the attached set is the only source of the swapped flag. The two user
-commands (`swapRoles`, `applyDisplayRoleOverride`) write the layout through `persistPrimaryRole`;
-nothing else reaches it. Activity creation, display add/remove, docking and session end re-derive
-from the layout; none of them consults the Control Screen override. A refused move during a
-session needs no pending copy, because the layout already holds it and every session end calls
-`rederiveRolesFromLayout()`. The stored override follows the layout (`followingLayout`): AUTO
-stays AUTO, an explicit value is rewritten to the arrangement the layout produces.
+commands (`swapRoles`, `applyDisplayRoleOverride`) write the layout through `persistPrimaryRole`,
+and only once the role change commits; nothing else writes it. Activity creation, screen
+add/remove, docking, DeX exit and session end derive roles from the layout alone; none of them
+consults the Control Screen override. A layout-derived move refused during a session needs no
+pending copy, because the layout already holds it and every session end calls
+`rederiveRolesFromLayout()`. A refused user swap writes no layout; one whose move timed out
+commits late only if the game still reaches the target (`onGameMovedToDisplay`). The stored
+override follows the layout (`followingLayout`, applied in `applyLayoutRoles`): AUTO stays AUTO,
+an explicit value is rewritten to the arrangement the layout produces.
 
 Live move (AYN Thor only, `liveSwapAvailable`): needs `hardware/ThorTaskMover` answering its probe,
 a software-rendered built-in core registered as `LiveMoveHost`, and a game on the PRIMARY or

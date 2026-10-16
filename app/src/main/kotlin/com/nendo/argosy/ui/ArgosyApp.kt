@@ -61,6 +61,7 @@ import com.nendo.argosy.ui.components.FooterHost
 import com.nendo.argosy.ui.components.FooterHostController
 import com.nendo.argosy.ui.components.LocalFooterHost
 import com.nendo.argosy.ui.components.LocalFooterHostVisible
+import com.nendo.argosy.ui.components.isBarVisible
 import com.nendo.argosy.ui.components.LocalNavBarClearance
 import com.nendo.argosy.ui.components.LocalFrostedBackdrop
 import com.nendo.argosy.ui.components.frostedBackdropSource
@@ -1147,14 +1148,18 @@ fun ArgosyApp(
                     .background(MaterialTheme.colorScheme.background)
                     .windowInsetsPadding(WindowInsets.systemBars)
                     .padding(bottom = bottomReserved)
-                    .revealOnBottomEdgeTouch(edgeHeight = Dimens.footerHeight) {
+                    .revealOnBottomEdgeTouch(edgeHeight = Dimens.footerHeight) { windowPosition ->
                         val ringAtPress = viewModel.navRingState.value
+                        val pressOnFooterHint = footerHostController.hasTappableHintAt(windowPosition)
                         val claimsPress = NavBarVisibility.revealClaimsPress(
                             navBarAllowed = currentNavBarAllowed,
                             barVisible = ringAtPress.isBarVisible,
-                            destinationCount = ringAtPress.destinations.size
+                            destinationCount = ringAtPress.destinations.size,
+                            pressOnFooterHint = pressOnFooterHint
                         )
-                        if (currentNavBarAllowed) viewModel.showNavBar()
+                        if (NavBarVisibility.revealRaisesBar(currentNavBarAllowed, pressOnFooterHint)) {
+                            viewModel.showNavBar()
+                        }
                         claimsPress
                     }
                     .onFocusChanged { keySinkFocused = it.isFocused }

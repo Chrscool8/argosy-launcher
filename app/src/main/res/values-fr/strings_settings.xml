@@ -138,7 +138,7 @@
     <string name="settings_navigation_nav_bar_pages_subtitle">Choisissez et ordonnez les pages que parcourent la barre de navigation et les boutons supérieurs</string>
     <string name="settings_navigation_quick_navigation_title">Navigation rapide</string>
     <string name="settings_navigation_quick_navigation_subtitle">Les boutons supérieurs changent de page avec la barre de navigation. Désactivée, ils changent de plateforme et d\'onglet, et les gâchettes sautent entre les lettres</string>
-    <string name="settings_navigation_nav_bar_auto_hide_title">Masquer la barre de navigation</string>
+    <string name="settings_navigation_nav_bar_auto_hide_title">Masquer automatiquement la barre de navigation</string>
     <string name="settings_navigation_nav_bar_auto_hide_subtitle">Masque la barre de navigation après quelques secondes pour laisser la place aux indications des boutons. Désactivée, elle reste affichée</string>
     <string name="settings_navigation_nav_bar_pages_count">%1$d / %2$d</string>
     <string name="settings_nav_ring_modal_title">Pages de la barre de navigation</string>

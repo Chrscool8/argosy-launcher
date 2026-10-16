@@ -51,10 +51,21 @@ class NavBarVisibility(
             isAlwaysVisible(quickNavigation, autoHide) || (quickNavigation && raised)
 
         /**
+         * Whether a press on the bottom reveal edge raises the bar. A press on a tappable guide-bar
+         * hint belongs to that hint and never raises it.
+         */
+        fun revealRaisesBar(navBarAllowed: Boolean, pressOnFooterHint: Boolean): Boolean =
+            navBarAllowed && !pressOnFooterHint
+
+        /**
          * Whether a press on the bottom reveal edge raises a hidden bar. A press that does belongs
          * to the reveal alone and reaches nothing drawn underneath the bar.
          */
-        fun revealClaimsPress(navBarAllowed: Boolean, barVisible: Boolean, destinationCount: Int): Boolean =
-            navBarAllowed && !barVisible && destinationCount > 1
+        fun revealClaimsPress(
+            navBarAllowed: Boolean,
+            barVisible: Boolean,
+            destinationCount: Int,
+            pressOnFooterHint: Boolean
+        ): Boolean = revealRaisesBar(navBarAllowed, pressOnFooterHint) && !barVisible && destinationCount > 1
     }
 }

@@ -91,7 +91,8 @@ class StartupMaintenanceCoordinator @Inject constructor(
         },
         Step(
             key = "server_removed",
-            label = R.string.ui_startup_status_scanning_roms
+            label = R.string.ui_startup_status_scanning_roms,
+            isDue = { preferencesRepository.userPreferences.first().syncFilters.deleteOrphans }
         ) {
             romMRepository.pruneServerRemovedGames()
         },

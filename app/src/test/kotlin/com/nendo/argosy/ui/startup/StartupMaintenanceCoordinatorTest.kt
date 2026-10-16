@@ -1,6 +1,8 @@
 package com.nendo.argosy.ui.startup
 
 import com.nendo.argosy.core.notification.NotificationManager
+import com.nendo.argosy.data.preferences.SyncFilterPreferences
+import com.nendo.argosy.data.preferences.UserPreferences
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.remote.romm.RomMRepository
 import com.nendo.argosy.data.repository.GameRepository
@@ -9,10 +11,12 @@ import com.nendo.argosy.domain.usecase.libretro.LibretroMigrationUseCase
 import com.nendo.argosy.domain.usecase.libretro.MigrationResult
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Before
@@ -81,6 +85,46 @@ class StartupMaintenanceCoordinatorTest {
 
         coVerify(exactly = 1) { romMRepository.syncCollections() }
         verify(exactly = 1) { libraryPointerRepair.start() }
+    }
+
+    private fun preferencesWith(deleteOrphans: Boolean, weeklyIntegrity: Boolean = false) {
+        val preferences = mockk<UserPreferences>(relaxed = true)
+        every { preferences.syncFilters } returns SyncFilterPreferences(deleteOrphans = deleteOrphans)
+        every { preferences.weeklyIntegrityCheckEnabled } returns weeklyIntegrity
+        every { preferences.lastIntegrityCheckTime } returns null
+        every { preferencesRepository.userPreferences } returns flowOf(preferences)
+    }
+
+    @Test
+    fun `the server-removed prune is skipped when deleting orphans is off`() = runBlocking {
+        preferencesWith(deleteOrphans = false)
+
+        withTimeout(PASS_TIMEOUT_MS) { coordinator().awaitPass() }
+
+        coVerify(exactly = 0) { romMRepository.pruneServerRemovedGames() }
+        coVerify(exactly = 1) { romMRepository.syncCollections() }
+    }
+
+    @Test
+    fun `the server-removed prune runs when deleting orphans is on`() = runBlocking {
+        preferencesWith(deleteOrphans = true)
+
+        withTimeout(PASS_TIMEOUT_MS) { coordinator().awaitPass() }
+
+        coVerify(exactly = 1) { romMRepository.pruneServerRemovedGames() }
+    }
+
+    @Test
+    fun `the server-removed prune runs after a due integrity check`() = runBlocking {
+        preferencesWith(deleteOrphans = true, weeklyIntegrity = true)
+
+        withTimeout(PASS_TIMEOUT_MS) { coordinator().awaitPass() }
+
+        coVerifyOrder {
+            gameRepository.validateLocalFiles()
+            gameRepository.discoverLocalFiles()
+            romMRepository.pruneServerRemovedGames()
+        }
     }
 
     private companion object {

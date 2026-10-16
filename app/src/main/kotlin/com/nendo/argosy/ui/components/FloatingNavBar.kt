@@ -24,14 +24,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -98,17 +103,24 @@ fun FloatingNavBar(
 }
 
 /**
- * Runs [onReveal] when a press lands within [edgeHeight] of the bottom edge. When [onReveal]
- * returns true the press raised a hidden bar, and the whole press is consumed so nothing drawn
- * underneath the bar clicks, scrolls or takes focus from it.
+ * Runs [onReveal] with the press position in window coordinates when a press lands within
+ * [edgeHeight] of the bottom edge. When [onReveal] returns true the press raised a hidden bar,
+ * and the whole press is consumed so nothing drawn underneath the bar clicks, scrolls or takes
+ * focus from it.
  */
-fun Modifier.revealOnBottomEdgeTouch(edgeHeight: Dp, onReveal: () -> Boolean): Modifier = composed {
+fun Modifier.revealOnBottomEdgeTouch(
+    edgeHeight: Dp,
+    onReveal: (windowPosition: Offset) -> Boolean
+): Modifier = composed {
     val edgePx = with(LocalDensity.current) { edgeHeight.toPx() }
     val currentOnReveal by rememberUpdatedState(onReveal)
-    pointerInput(Unit) {
+    var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    onGloballyPositioned { coordinates = it }.pointerInput(Unit) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-            if (down.position.y < size.height - edgePx || !currentOnReveal()) return@awaitEachGesture
+            if (down.position.y < size.height - edgePx) return@awaitEachGesture
+            val windowPosition = coordinates?.localToWindow(down.position) ?: return@awaitEachGesture
+            if (!currentOnReveal(windowPosition)) return@awaitEachGesture
             down.consume()
             do {
                 val event = awaitPointerEvent(PointerEventPass.Initial)
