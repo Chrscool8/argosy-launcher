@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalDensity
@@ -137,6 +138,13 @@ suspend fun LazyGridState.animateScrollToItemCentered(index: Int) {
     animateScrollToItem(index, -centerOffset)
 }
 
+/**
+ * Whether a focus-follow scroll moves the list. The first pass always places the list; after
+ * that, a focus change made while [isTouchMode] holds leaves the list where the finger put it.
+ */
+fun shouldFollowFocus(isInitialPass: Boolean, isTouchMode: Boolean): Boolean =
+    isInitialPass || !isTouchMode
+
 data class ListSection(
     val name: String? = null,
     val listStartIndex: Int,
@@ -148,9 +156,11 @@ data class ListSection(
 @Composable
 fun FocusedScroll(
     listState: LazyListState,
-    focusedIndex: Int
+    focusedIndex: Int,
+    isTouchMode: Boolean = false
 ) {
     var isInitialPass by remember(listState) { mutableStateOf(true) }
+    val touchMode by rememberUpdatedState(isTouchMode)
     val footerPx = footerOverlapPx()
 
     LaunchedEffect(focusedIndex, footerPx) {
@@ -167,6 +177,7 @@ fun FocusedScroll(
 
         val instant = isInitialPass
         isInitialPass = false
+        if (!shouldFollowFocus(instant, touchMode)) return@LaunchedEffect
 
         val visibleEnd = layoutInfo.viewportEndOffset - footerPx
         val viewportHeight = visibleEnd - layoutInfo.viewportStartOffset
@@ -211,10 +222,12 @@ fun SectionHeaderLockScroll(
     focusToListIndex: (Int) -> Int,
     sections: List<ListSection>,
     headerListIndexOf: (ListSection) -> Int,
-    headerListIndices: Set<Int>
+    headerListIndices: Set<Int>,
+    isTouchMode: Boolean = false
 ) {
     var previousSection by remember(listState) { mutableIntStateOf(Int.MIN_VALUE) }
     var isInitialPass by remember(listState) { mutableStateOf(true) }
+    val touchMode by rememberUpdatedState(isTouchMode)
     val footerPx = footerOverlapPx()
 
     LaunchedEffect(focusedIndex, sections, footerPx) {
@@ -223,6 +236,7 @@ fun SectionHeaderLockScroll(
         previousSection = sectionIndex
         val instant = isInitialPass
         isInitialPass = false
+        if (!shouldFollowFocus(instant, touchMode)) return@LaunchedEffect
 
         if (listState.layoutInfo.totalItemsCount == 0) {
             snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > 0 }
@@ -342,10 +356,12 @@ fun SectionFocusedScroll(
     listState: LazyListState,
     focusedIndex: Int,
     focusToListIndex: (Int) -> Int,
-    sections: List<ListSection>
+    sections: List<ListSection>,
+    isTouchMode: Boolean = false
 ) {
     var previousFocusIndex by remember { mutableIntStateOf(focusedIndex) }
     var isInitialPass by remember(listState) { mutableStateOf(true) }
+    val touchMode by rememberUpdatedState(isTouchMode)
     val footerPx = footerOverlapPx()
 
     LaunchedEffect(focusedIndex, footerPx) {
@@ -358,8 +374,10 @@ fun SectionFocusedScroll(
             return@LaunchedEffect
         }
 
-        val instant = jumped || isInitialPass
+        val firstPass = isInitialPass
         isInitialPass = false
+        if (!shouldFollowFocus(firstPass, touchMode)) return@LaunchedEffect
+        val instant = jumped || firstPass
 
         val viewportHeight = layoutInfo.viewportEndOffset - footerPx - layoutInfo.viewportStartOffset
         val listIndex = focusToListIndex(focusedIndex)

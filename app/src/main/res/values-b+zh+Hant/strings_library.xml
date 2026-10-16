@@ -4,6 +4,7 @@
     <string name="library_header_all_platforms">所有平台</string>
     <string name="library_header_previous_platform">上一個平台</string>
     <string name="library_header_next_platform">下一個平台</string>
+    <string name="library_header_back_desc">返回</string>
     <string name="library_header_active_filters_label">篩選：</string>
     <plurals name="library_header_game_count">
         <item quantity="other">%d款遊戲</item>

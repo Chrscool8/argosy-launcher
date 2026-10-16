@@ -84,6 +84,7 @@
     <string name="gamedetail_footer_view_reviews">Lire les avis</string>
     <string name="gamedetail_footer_open_related">Ouvrir</string>
     <string name="gamedetail_footer_back">Retour</string>
+    <string name="gamedetail_header_back_desc">Retour</string>
     <string name="gamedetail_footer_new_game">Nouvelle partie</string>
     <string name="gamedetail_footer_shortcut_make_public">Rendre public</string>
     <string name="gamedetail_footer_shortcut_make_private">Rendre privé</string>

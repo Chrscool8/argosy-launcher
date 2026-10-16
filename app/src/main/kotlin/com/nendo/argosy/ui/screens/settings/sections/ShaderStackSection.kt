@@ -46,6 +46,7 @@ import com.nendo.argosy.libretro.shader.ShaderChainManager
 import com.nendo.argosy.ui.screens.settings.ShaderParamDef
 import com.nendo.argosy.ui.screens.settings.ShaderStackEntry
 import com.nendo.argosy.ui.screens.settings.ShaderStackState
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
 import com.nendo.argosy.ui.screens.settings.components.ShaderPickerModal
 import com.nendo.argosy.ui.primitives.StepperControl
 import com.nendo.argosy.ui.theme.Dimens
@@ -65,7 +66,8 @@ fun ShaderStackSection(
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = shaderStack.paramFocusIndex
+        focusedIndex = shaderStack.paramFocusIndex,
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     val pickerBlur = if (shaderStack.showShaderPicker) Motion.blurRadiusModal else 0.dp

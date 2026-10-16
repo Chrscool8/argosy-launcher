@@ -47,6 +47,7 @@ import com.nendo.argosy.ui.screens.settings.CoreUpdateBuilds
 import com.nendo.argosy.ui.screens.settings.PlatformCoreRow
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
@@ -132,7 +133,8 @@ fun CoreManagementSection(
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = layoutInfo.layout.focusToListIndex(coreState.focusedRowIndex, Unit)
+        focusedIndex = layoutInfo.layout.focusToListIndex(coreState.focusedRowIndex, Unit),
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     if (coreState.platforms.isEmpty() && !coreState.showUpdateAll) {

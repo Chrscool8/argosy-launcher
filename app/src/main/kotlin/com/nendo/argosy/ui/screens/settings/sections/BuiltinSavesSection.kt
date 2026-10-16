@@ -11,6 +11,7 @@ import com.nendo.argosy.ui.components.ActionPreference
 import com.nendo.argosy.ui.screens.settings.BuiltinVideoState
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
+import com.nendo.argosy.ui.screens.settings.components.settingsRowItem
 import com.nendo.argosy.ui.screens.settings.libretro.GlobalLibretroSettingsAccessor
 import com.nendo.argosy.ui.screens.settings.libretro.LibretroSettingsScope
 import com.nendo.argosy.ui.screens.settings.libretro.LibretroSettingsSection
@@ -78,7 +79,7 @@ fun BuiltinSavesSection(
         },
         trailingItems = if (showPathItems) {
             {
-                item(key = "save_path") {
+                settingsRowItem(key = "save_path", focusIndex = savePathFocusIndex) {
                     ActionPreference(
                         title = stringResource(R.string.settings_shell_builtinvideo_save_path_title),
                         subtitle = formatStoragePath(effectiveSavePath),
@@ -102,7 +103,7 @@ fun BuiltinSavesSection(
                         }
                     )
                 }
-                item(key = "state_path") {
+                settingsRowItem(key = "state_path", focusIndex = statePathFocusIndex) {
                     ActionPreference(
                         title = stringResource(R.string.settings_shell_builtinvideo_state_path_title),
                         subtitle = formatStoragePath(effectiveStatePath),

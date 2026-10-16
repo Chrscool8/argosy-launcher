@@ -84,6 +84,7 @@
     <string name="gamedetail_footer_view_reviews">Rezensionen lesen</string>
     <string name="gamedetail_footer_open_related">Öffnen</string>
     <string name="gamedetail_footer_back">Zurück</string>
+    <string name="gamedetail_header_back_desc">Zurück</string>
     <string name="gamedetail_footer_new_game">Neues Spiel</string>
     <string name="gamedetail_footer_shortcut_make_public">Öffentlich machen</string>
     <string name="gamedetail_footer_shortcut_make_private">Privat machen</string>

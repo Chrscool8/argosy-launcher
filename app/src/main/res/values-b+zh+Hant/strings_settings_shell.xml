@@ -140,6 +140,7 @@
 
     <string name="settings_shell_context_previous_desc">上一個內容</string>
     <string name="settings_shell_context_next_desc">下一個內容</string>
+    <string name="settings_shell_header_back_desc">返回</string>
 
     <!-- ===== SettingsScreen: file browser titles ===== -->
 

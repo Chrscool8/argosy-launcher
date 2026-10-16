@@ -80,6 +80,7 @@
     <string name="gamedetail_footer_view_reviews">Читать отзывы</string>
     <string name="gamedetail_footer_open_related">Открыть</string>
     <string name="gamedetail_footer_back">Назад</string>
+    <string name="gamedetail_header_back_desc">Назад</string>
     <string name="gamedetail_footer_new_game">Новая игра</string>
     <string name="gamedetail_footer_shortcut_make_public">Сделать публичным</string>
     <string name="gamedetail_footer_shortcut_make_private">Сделать приватным</string>

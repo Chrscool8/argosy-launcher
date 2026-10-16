@@ -316,6 +316,16 @@ split-pane layout (wide displays with 2+ named sections: nav rail on the left, c
 the right) and a plain sticky-header LazyColumn. A new section renders through it rather
 than building its own LazyColumn.
 
+Touch mode: a finger on a settings section sets `SettingsUiState.isTouchMode`, and the next
+gamepad input through `SettingsInputHandler` clears it. While it holds, a focus change does
+not scroll the list (`shouldFollowFocus` in `ui/components/SectionScroll.kt`), and a tapped
+row takes focus through `touchFocusRow`. `SectionPaneLayout` wires both from
+`LocalSettingsTouchFocus`. A section that keeps its own LazyColumn passes
+`LocalSettingsTouchFocus.current.isTouchMode` to its scroll call and wraps focusable rows with
+`settingsRowItem`, `settingsRowItems` or `SettingsRowTapArea`
+(`ui/screens/settings/components/SettingsTouchFocus.kt`). A touch control that is meant to
+scroll the list, like the section rail, calls `onExitTouchMode` first.
+
 ### Focus Check Pattern
 ```kotlin
 fun isFocused(item: SectionItem): Boolean =

@@ -34,6 +34,8 @@ import com.nendo.argosy.ui.screens.settings.DriversState
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
 import com.nendo.argosy.ui.screens.settings.components.DriverVersionPickerModal
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
+import com.nendo.argosy.ui.screens.settings.components.SettingsRowTapArea
 import com.nendo.argosy.ui.theme.Dimens
 
 @Composable
@@ -42,7 +44,11 @@ fun DriversSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
     val drivers = uiState.drivers
     val pickerIndex = drivers.pickerGroupIndex
 
-    FocusedScroll(listState = listState, focusedIndex = uiState.focusedIndex + 1)
+    FocusedScroll(
+        listState = listState,
+        focusedIndex = uiState.focusedIndex + 1,
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
+    )
 
     LazyColumn(
         state = listState,
@@ -65,11 +71,13 @@ fun DriversSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
         }
 
         items(drivers.groups.size, key = { drivers.groups[it].repoPath }) { index ->
-            DriverSourceRow(
-                group = drivers.groups[index],
-                isFocused = uiState.focusedIndex == index,
-                onClick = { viewModel.openDriverPicker(index) }
-            )
+            SettingsRowTapArea(index) {
+                DriverSourceRow(
+                    group = drivers.groups[index],
+                    isFocused = uiState.focusedIndex == index,
+                    onClick = { viewModel.openDriverPicker(index) }
+                )
+            }
         }
 
         if (drivers.downloadedFiles.isNotEmpty()) {

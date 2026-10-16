@@ -58,7 +58,9 @@ import com.nendo.argosy.ui.screens.settings.RASettingsState
 import com.nendo.argosy.ui.screens.settings.raLoggedInPushIndex
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
 import com.nendo.argosy.ui.screens.settings.components.SectionHeader
+import com.nendo.argosy.ui.screens.settings.components.settingsRowItem
 import com.nendo.argosy.ui.theme.ALauncherColors
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
@@ -74,7 +76,8 @@ fun RASettingsSection(
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = uiState.focusedIndex
+        focusedIndex = uiState.focusedIndex,
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -190,7 +193,7 @@ private fun RALoggedInContent(
             Spacer(modifier = Modifier.height(Dimens.spacingMd))
             SectionHeader(stringResource(R.string.settings_ra_section_account))
         }
-        item {
+        settingsRowItem(focusIndex = RA_LOGGED_IN_LOGOUT_INDEX) {
             ActionPreference(
                 icon = Icons.AutoMirrored.Filled.Logout,
                 title = if (raState.isLoggingOut) {
@@ -203,7 +206,7 @@ private fun RALoggedInContent(
                 onClick = { viewModel.logoutFromRA() }
             )
         }
-        item {
+        settingsRowItem(focusIndex = RA_LOGGED_IN_WEB_API_KEY_INDEX) {
             ActionPreference(
                 icon = Icons.Default.Key,
                 title = stringResource(R.string.settings_ra_web_api_key_title),
@@ -220,7 +223,7 @@ private fun RALoggedInContent(
             )
         }
 
-        item {
+        settingsRowItem(focusIndex = RA_LOGGED_IN_PLAY_MODE_INDEX) {
             if (!secureSaves) {
                 ActionPreference(
                     title = stringResource(R.string.settings_ra_play_mode_title),
@@ -275,8 +278,8 @@ private fun RALoggedInContent(
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
                 SectionHeader(stringResource(R.string.settings_ra_section_retroarch))
             }
-            item {
-                val pushIndex = raLoggedInPushIndex(raState.proxyEnabled)
+            val pushIndex = raLoggedInPushIndex(raState.proxyEnabled)
+            settingsRowItem(focusIndex = pushIndex) {
                 ActionPreference(
                     icon = Icons.Default.Sync,
                     title = stringResource(R.string.settings_ra_push_retroarch_title),
@@ -338,7 +341,7 @@ private fun RALoggedOutContent(
         item {
             Spacer(modifier = Modifier.height(Dimens.spacingMd))
         }
-        item {
+        settingsRowItem(focusIndex = 0) {
             ActionPreference(
                 icon = Icons.AutoMirrored.Filled.Login,
                 title = stringResource(R.string.settings_ra_login_row_title),
@@ -363,7 +366,7 @@ private fun LazyListScope.raProxyItems(
         Spacer(modifier = Modifier.height(Dimens.spacingMd))
         SectionHeader(stringResource(R.string.settings_ra_section_offline_proxy))
     }
-    item {
+    settingsRowItem(focusIndex = proxyToggleIndex) {
         SwitchPreference(
             title = stringResource(R.string.settings_ra_proxy_title),
             subtitle = stringResource(R.string.settings_ra_proxy_subtitle),
@@ -373,7 +376,7 @@ private fun LazyListScope.raProxyItems(
         )
     }
     if (raState.proxyEnabled) {
-        item {
+        settingsRowItem(focusIndex = proxyFieldIndex) {
             val inputShape = RoundedCornerShape(Dimens.radiusMd)
             val focusRequester = remember { FocusRequester() }
             LaunchedEffect(raState.focusField) {

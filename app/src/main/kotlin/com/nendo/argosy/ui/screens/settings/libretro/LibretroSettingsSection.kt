@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.res.stringResource
@@ -19,6 +18,9 @@ import com.nendo.argosy.core.emulator.LibretroSettingDef
 import com.nendo.argosy.data.platform.PlatformWeightRegistry
 import com.nendo.argosy.ui.components.ListSection
 import com.nendo.argosy.ui.components.SectionFocusedScroll
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
+import com.nendo.argosy.ui.screens.settings.components.SettingsRowTapArea
+import com.nendo.argosy.ui.screens.settings.components.settingsRowItems
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
 
@@ -144,7 +146,8 @@ fun LibretroSettingsSection(
                 else -> leadingListCount + flatItems.size + trailingContentOffset + settingIdx - visibleSettings.size
             }
         },
-        sections = sections
+        sections = sections,
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     LazyColumn(
@@ -159,11 +162,22 @@ fun LibretroSettingsSection(
                 LibretroSectionHeader(text = leadingHeader.orEmpty(), isFirst = true)
             }
             items(leadingFocusCount, key = { "leading_row_$it" }) { index ->
-                leadingRow(index, focusedIndex == index)
+                SettingsRowTapArea(index) {
+                    leadingRow(index, focusedIndex == index)
+                }
             }
         }
 
-        items(flatItems, key = { it.key }) { item ->
+        settingsRowItems(
+            flatItems,
+            key = { it.key },
+            focusIndexOf = { item ->
+                when (item) {
+                    is LibretroSettingsListItem.Header -> -1
+                    is LibretroSettingsListItem.Setting -> leadingFocusCount + visibleSettings.indexOf(item.def)
+                }
+            }
+        ) { item ->
             when (item) {
                 is LibretroSettingsListItem.Header -> LibretroSectionHeader(
                     text = LibretroSettingDef.SECTIONS[item.section]

@@ -79,6 +79,7 @@
     <string name="gamedetail_footer_view_reviews">阅读评价</string>
     <string name="gamedetail_footer_open_related">打开</string>
     <string name="gamedetail_footer_back">返回</string>
+    <string name="gamedetail_header_back_desc">返回</string>
     <string name="gamedetail_footer_new_game">新游戏</string>
     <string name="gamedetail_footer_shortcut_make_public">设为公开</string>
     <string name="gamedetail_footer_shortcut_make_private">设为私密</string>

@@ -1891,9 +1891,16 @@ internal fun SettingsUiState.poppedSection(restoredFocus: Int? = null): Settings
     )
 }
 
+internal fun SettingsUiState.touchFocused(index: Int, maxIndex: Int): SettingsUiState =
+    copy(
+        focusedIndex = if (index in 0..maxIndex) index else focusedIndex,
+        isTouchMode = true
+    )
+
 data class SettingsUiState(
     val currentSection: SettingsSection = SettingsSection.MAIN,
     val focusedIndex: Int = 0,
+    val isTouchMode: Boolean = false,
     /**
      * Ancestors of [currentSection], oldest first, excluding [currentSection] itself. Empty
      * means there is nothing above the current screen and Back leaves settings, which is

@@ -23,6 +23,8 @@ import com.nendo.argosy.ui.screens.gamedetail.components.OptionItem
 import com.nendo.argosy.ui.screens.settings.CoreOptionsState
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
+import com.nendo.argosy.ui.screens.settings.components.settingsRowItems
 import com.nendo.argosy.ui.screens.settings.menu.DisabledBehavior
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
@@ -120,7 +122,8 @@ fun CoreOptionsSection(
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = layout.focusToListIndex(uiState.focusedIndex, Unit)
+        focusedIndex = layout.focusToListIndex(uiState.focusedIndex, Unit),
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     if (coreState.availablePlatforms.isEmpty()) {
@@ -169,8 +172,11 @@ fun CoreOptionsSection(
             .padding(horizontal = Dimens.spacingMd),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingXs)
     ) {
-        items(visibleItems.size, key = { visibleItems[it].key }) { index ->
-            val item = visibleItems[index]
+        settingsRowItems(
+            visibleItems,
+            key = { it.key },
+            focusIndexOf = { layout.focusIndexOf(it, Unit) }
+        ) { item ->
             val focusIndex = layout.focusIndexOf(item, Unit)
             val isFocused = focusIndex == uiState.focusedIndex
 

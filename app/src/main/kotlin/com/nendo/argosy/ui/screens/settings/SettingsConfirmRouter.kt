@@ -1310,17 +1310,26 @@ internal fun routeMoveFocus(vm: SettingsViewModel, delta: Int): Boolean {
         moved = newIndex != state.focusedIndex
         state.copy(focusedIndex = newIndex)
     }
-    if (vm._uiState.value.currentSection == SettingsSection.PLATFORMS) {
-        vm.emulatorDelegate.resetPlatformSubFocus()
-    }
-    if (vm._uiState.value.currentSection == SettingsSection.BIOS) {
-        vm.biosDelegate.resetPlatformSubFocus()
-        vm.biosDelegate.resetBiosPathActionFocus()
-    }
-    if (vm._uiState.value.currentSection == SettingsSection.ACCOUNTS) {
-        vm.accountsDelegate.resetRowActionFocus()
-    }
+    routeResetRowSubFocus(vm)
     return moved
+}
+
+internal fun routeTouchFocus(vm: SettingsViewModel, index: Int) {
+    val before = vm._uiState.value.focusedIndex
+    vm._uiState.update { it.touchFocused(index, routeMaxFocusIndexOf(vm, it)) }
+    if (vm._uiState.value.focusedIndex != before) routeResetRowSubFocus(vm)
+}
+
+private fun routeResetRowSubFocus(vm: SettingsViewModel) {
+    when (vm._uiState.value.currentSection) {
+        SettingsSection.PLATFORMS -> vm.emulatorDelegate.resetPlatformSubFocus()
+        SettingsSection.BIOS -> {
+            vm.biosDelegate.resetPlatformSubFocus()
+            vm.biosDelegate.resetBiosPathActionFocus()
+        }
+        SettingsSection.ACCOUNTS -> vm.accountsDelegate.resetRowActionFocus()
+        else -> Unit
+    }
 }
 
 /**

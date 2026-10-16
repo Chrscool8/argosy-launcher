@@ -42,6 +42,8 @@ import com.nendo.argosy.libretro.frame.FrameRegistry
 import com.nendo.argosy.ui.components.FocusedScroll
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
+import com.nendo.argosy.ui.screens.settings.components.settingsRowTap
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
 import com.nendo.argosy.ui.util.clickableNoFocus
@@ -79,7 +81,8 @@ fun FrameSection(
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = uiState.focusedIndex
+        focusedIndex = uiState.focusedIndex,
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     Row(
@@ -121,7 +124,8 @@ fun FrameSection(
                         onClick = { viewModel.updatePlatformLibretroSetting(
                             com.nendo.argosy.core.emulator.LibretroSettingDef.Frame, null
                         ) },
-                        onDownload = {}
+                        onDownload = {},
+                        modifier = Modifier.settingsRowTap(0)
                     )
                 }
 
@@ -135,7 +139,8 @@ fun FrameSection(
                         onClick = { viewModel.updatePlatformLibretroSetting(
                             com.nendo.argosy.core.emulator.LibretroSettingDef.Frame, FrameRegistry.NO_FRAME_ID
                         ) },
-                        onDownload = {}
+                        onDownload = {},
+                        modifier = Modifier.settingsRowTap(1)
                     )
                 }
 
@@ -167,7 +172,8 @@ fun FrameSection(
                             { viewModel.requestCustomFrameRemoval(frame.id) }
                         } else {
                             null
-                        }
+                        },
+                        modifier = Modifier.settingsRowTap(index + 2)
                     )
                 }
 
@@ -179,7 +185,8 @@ fun FrameSection(
                         isDownloading = false,
                         isFocused = uiState.focusedIndex == allFrames.size + 2,
                         onClick = { viewModel.requestCustomFramePicker() },
-                        onDownload = {}
+                        onDownload = {},
+                        modifier = Modifier.settingsRowTap(allFrames.size + 2)
                     )
                 }
             }
@@ -210,7 +217,8 @@ private fun FrameListItem(
     isFocused: Boolean,
     onClick: () -> Unit,
     onDownload: () -> Unit,
-    onRemove: (() -> Unit)? = null
+    onRemove: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val focusAccent = LocalArgosyTheme.current.focusAccent
     val backgroundColor = when {
@@ -224,7 +232,7 @@ private fun FrameListItem(
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Dimens.radiusSm))
             .background(backgroundColor)

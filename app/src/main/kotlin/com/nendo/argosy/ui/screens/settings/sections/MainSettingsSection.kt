@@ -52,6 +52,7 @@ import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
 import com.nendo.argosy.ui.screens.settings.components.SectionHeader
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
@@ -342,7 +343,8 @@ fun MainSettingsSection(uiState: SettingsUiState, viewModel: SettingsViewModel) 
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = mainSettingsLayout.focusToListIndex(uiState.focusedIndex, controls)
+        focusedIndex = mainSettingsLayout.focusToListIndex(uiState.focusedIndex, controls),
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     LazyColumn(

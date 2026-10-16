@@ -4,6 +4,7 @@
     <string name="library_header_all_platforms">सभी प्लेटफ़ॉर्म</string>
     <string name="library_header_previous_platform">पिछला प्लेटफ़ॉर्म</string>
     <string name="library_header_next_platform">अगला प्लेटफ़ॉर्म</string>
+    <string name="library_header_back_desc">वापस</string>
     <string name="library_header_active_filters_label">फ़िल्टर:</string>
     <plurals name="library_header_game_count">
         <item quantity="one">%d गेम</item>

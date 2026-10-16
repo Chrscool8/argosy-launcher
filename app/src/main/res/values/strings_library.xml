@@ -19,6 +19,9 @@
     <!-- Screen reader text for the right trigger glyph beside the platform name. It steps the
          list forward one platform. Verb phrase describing the action. -->
     <string name="library_header_next_platform">Next platform</string>
+    <!-- Screen reader text for the arrow left of the library title. It leaves the platform's game
+         list the way the Back button does. -->
+    <string name="library_header_back_desc">Back</string>
     <!-- How many games the game list is currently showing, in its header. -->
     <plurals name="library_header_game_count">
         <item quantity="one">%d game</item>

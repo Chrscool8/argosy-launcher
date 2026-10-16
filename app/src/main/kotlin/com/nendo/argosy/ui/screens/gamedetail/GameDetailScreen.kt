@@ -17,7 +17,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -104,6 +108,7 @@ import com.nendo.argosy.ui.ArgosyViewModel
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalLauncherTheme
 import com.nendo.argosy.ui.theme.Motion
+import com.nendo.argosy.ui.util.clickableNoFocus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
@@ -578,46 +583,57 @@ private fun GameDetailContent(
                             .fillMaxHeight()
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                     ) {
-                        GameDetailMenu(
-                            layoutState = menuLayoutState,
-                            displayState = menuDisplayState,
-                            downloadProgress = downloadProgressState,
-                            onItemClick = { item ->
-                                when (item) {
-                                    MenuItem.Play -> viewModel.primaryAction()
-                                    MenuItem.Saves -> viewModel.syncSavesNow()
-                                    MenuItem.Favorite -> viewModel.toggleFavorite()
-                                    MenuItem.Privacy -> viewModel.togglePrivacy()
-                                    MenuItem.PerGameSettings -> viewModel.showPerGameSettings()
-                                    MenuItem.Options -> viewModel.toggleMoreOptions()
-                                    MenuItem.Details -> coroutineScope.launch {
-                                        scrollState.animateScrollTo(0)
+                        val menuStartPadding = if (isCompactMenu) Dimens.spacingSm else Dimens.spacingXl
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.gamedetail_header_back_desc),
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier
+                                    .padding(start = menuStartPadding, top = Dimens.spacingMd)
+                                    .clickableNoFocus(onClick = { inputHandler.onBack() })
+                                    .padding(Dimens.spacingXs)
+                                    .size(Dimens.iconMd)
+                            )
+                            GameDetailMenu(
+                                layoutState = menuLayoutState,
+                                displayState = menuDisplayState,
+                                downloadProgress = downloadProgressState,
+                                onItemClick = { item ->
+                                    when (item) {
+                                        MenuItem.Play -> viewModel.primaryAction()
+                                        MenuItem.Saves -> viewModel.syncSavesNow()
+                                        MenuItem.Favorite -> viewModel.toggleFavorite()
+                                        MenuItem.Privacy -> viewModel.togglePrivacy()
+                                        MenuItem.PerGameSettings -> viewModel.showPerGameSettings()
+                                        MenuItem.Options -> viewModel.toggleMoreOptions()
+                                        MenuItem.Details -> coroutineScope.launch {
+                                            scrollState.animateScrollTo(0)
+                                        }
+                                        MenuItem.Description -> coroutineScope.launch {
+                                            scrollState.animateScrollTo(descriptionTopY.coerceAtLeast(0))
+                                        }
+                                        MenuItem.Documents -> coroutineScope.launch {
+                                            scrollState.animateScrollTo(documentsTopY.coerceAtLeast(0))
+                                        }
+                                        MenuItem.Screenshots -> viewModel.openScreenshotViewer()
+                                        MenuItem.Reviews -> viewModel.showReviewList()
+                                        MenuItem.Achievements -> coroutineScope.launch {
+                                            scrollState.animateScrollTo(achievementTopY.coerceAtLeast(0))
+                                        }
+                                        MenuItem.RelatedGames -> coroutineScope.launch {
+                                            scrollState.animateScrollTo(relatedTopY.coerceAtLeast(0))
+                                        }
                                     }
-                                    MenuItem.Description -> coroutineScope.launch {
-                                        scrollState.animateScrollTo(descriptionTopY.coerceAtLeast(0))
-                                    }
-                                    MenuItem.Documents -> coroutineScope.launch {
-                                        scrollState.animateScrollTo(documentsTopY.coerceAtLeast(0))
-                                    }
-                                    MenuItem.Screenshots -> viewModel.openScreenshotViewer()
-                                    MenuItem.Reviews -> viewModel.showReviewList()
-                                    MenuItem.Achievements -> coroutineScope.launch {
-                                        scrollState.animateScrollTo(achievementTopY.coerceAtLeast(0))
-                                    }
-                                    MenuItem.RelatedGames -> coroutineScope.launch {
-                                        scrollState.animateScrollTo(relatedTopY.coerceAtLeast(0))
-                                    }
-                                }
-                            },
-                            onFocusChange = viewModel::setMenuFocusIndex,
-                            isCompact = isCompactMenu,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = if (isCompactMenu) Dimens.spacingSm else Dimens.spacingXl,
-                                    top = Dimens.spacingMd
-                                )
-                        )
+                                },
+                                onFocusChange = viewModel::setMenuFocusIndex,
+                                isCompact = isCompactMenu,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .padding(start = menuStartPadding, top = Dimens.spacingSm)
+                            )
+                        }
                     }
 
                     // Right Content (70%)

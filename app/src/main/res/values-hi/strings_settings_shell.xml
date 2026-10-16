@@ -135,6 +135,7 @@
 
     <string name="settings_shell_context_previous_desc">पिछला कॉन्टेक्स्ट</string>
     <string name="settings_shell_context_next_desc">अगला कॉन्टेक्स्ट</string>
+    <string name="settings_shell_header_back_desc">वापस</string>
 
     <!-- ===== SettingsScreen: file browser titles ===== -->
 

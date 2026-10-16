@@ -23,10 +23,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -159,6 +163,9 @@ import com.nendo.argosy.ui.screens.settings.sections.ThemeMusicLayoutState
 import com.nendo.argosy.ui.icons.InputIcons
 import com.nendo.argosy.ui.theme.Motion
 import com.nendo.argosy.ui.util.clickableNoFocus
+import com.nendo.argosy.ui.util.observeTouchDown
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
+import com.nendo.argosy.ui.screens.settings.components.SettingsTouchFocus
 import com.nendo.argosy.ui.screens.settings.sections.LibrarySection
 
 @Composable
@@ -609,6 +616,7 @@ fun SettingsScreen(
                 uiState.currentSection != SettingsSection.FRAME_PICKER) {
                 SettingsHeader(
                     title = settingsSectionTitle(uiState),
+                    onBack = { inputHandler.onBack() },
                     rightContent = if (uiState.currentSection in BUILTIN_PLATFORM_CONTEXT_SECTIONS &&
                         uiState.builtinVideo.availablePlatforms.isNotEmpty()) {
                         {
@@ -638,79 +646,93 @@ fun SettingsScreen(
                 )
             }
 
-            Box(modifier = Modifier.weight(1f)) {
-                when (uiState.currentSection) {
-                    SettingsSection.MAIN -> MainSettingsSection(uiState, viewModel)
-                    SettingsSection.ACCOUNTS -> AccountsSection(uiState, viewModel)
-                    SettingsSection.ROMM -> RomMSection(uiState, viewModel)
-                    SettingsSection.SAVES -> SavesSection(uiState, viewModel)
-                    SettingsSection.SYNC_SETTINGS -> SyncSettingsSection(uiState, viewModel, imageCacheProgress)
-                    SettingsSection.STEAM_SETTINGS -> SteamSection(uiState, viewModel)
-                    SettingsSection.JELLYFIN -> JellyfinSection(uiState, viewModel)
-                    SettingsSection.RETRO_ACHIEVEMENTS -> RASettingsSection(uiState, viewModel)
-                    SettingsSection.STORAGE -> StorageSection(uiState, viewModel)
-                    SettingsSection.STORAGE_GAMES -> StorageGamesSection(uiState, viewModel)
-                    SettingsSection.STORAGE_MEDIA -> StorageMediaSection(uiState, viewModel)
-                    SettingsSection.STORAGE_PLATFORM_GAMES -> StoragePlatformGamesSection(uiState, viewModel)
-                    SettingsSection.STORAGE_CACHES -> StorageCachesSection(uiState, viewModel)
-                    SettingsSection.PLAY_TIME -> PlayTimeSection(uiState, viewModel)
-                    SettingsSection.PLAY_TIME_PLATFORMS ->
-                        PlayTimeListSection(uiState, viewModel, PlayTimeListKind.PLATFORMS)
-                    SettingsSection.PLAY_TIME_DEVICES ->
-                        PlayTimeListSection(uiState, viewModel, PlayTimeListKind.DEVICES)
-                    SettingsSection.PLAY_TIME_GAMES ->
-                        PlayTimeListSection(uiState, viewModel, PlayTimeListKind.GAMES)
-                    SettingsSection.THEME -> ThemeSection(uiState, viewModel)
-                    SettingsSection.AUDIO -> AudioSection(uiState, viewModel)
-                    SettingsSection.THEME_SOUNDS -> ThemeSoundsSection(uiState, viewModel)
-                    SettingsSection.THEME_MUSIC -> ThemeMusicSection(uiState, viewModel)
-                    SettingsSection.THEME_FONTS -> ThemeFontsSection(uiState, viewModel)
-                    SettingsSection.THEME_BACKDROP -> ThemeBackdropSection(uiState, viewModel)
-                    SettingsSection.INTERFACE -> InterfaceSection(uiState, viewModel)
-                    SettingsSection.BOX_ART -> BoxArtSection(uiState, viewModel)
-                    SettingsSection.CONTROLLER_GRIP -> ControllerGripSection(uiState, viewModel)
-                    SettingsSection.HOME_SCREEN -> HomeScreenSection(uiState, viewModel)
-                    SettingsSection.PRESENTATION -> PresentationSection(uiState, viewModel)
-                    SettingsSection.LIBRARY_VIEW -> LibrarySection(uiState, viewModel)
-                    SettingsSection.DISPLAYS -> DisplaysSection(uiState, viewModel)
-                    SettingsSection.SCREENS -> ScreensSection(uiState, viewModel)
-                    SettingsSection.LAUNCH_TARGETS -> LaunchTargetsSection(uiState, viewModel)
-                    SettingsSection.AMBIENT_LED -> AmbientLedSection(uiState, viewModel)
-                    SettingsSection.NAVIGATION -> NavigationSection(uiState, viewModel)
-                    SettingsSection.MANAGED_INSTALLERS -> ManagedInstallersSection(uiState, viewModel)
-                    SettingsSection.BUILTIN_EMULATOR -> BuiltinEmulatorSection(uiState, viewModel)
-                    SettingsSection.PLATFORMS -> EmulatorsSection(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        onLaunchSavePathPicker = {
-                            uiState.emulators.savePathModalInfo?.emulatorId?.let { emulatorId ->
-                                fileBrowserCallback = { path -> viewModel.setEmulatorSavePath(emulatorId, path) }
-                                showFileBrowser = true
+            val onRowTap = remember(viewModel) { { index: Int -> viewModel.touchFocusRow(index) } }
+            val onExitTouchMode = remember(viewModel) { { viewModel.exitTouchMode() } }
+            CompositionLocalProvider(
+                LocalSettingsTouchFocus provides SettingsTouchFocus(
+                    isTouchMode = uiState.isTouchMode,
+                    onRowTap = onRowTap,
+                    onExitTouchMode = onExitTouchMode
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .observeTouchDown { viewModel.enterTouchMode() }
+                ) {
+                    when (uiState.currentSection) {
+                        SettingsSection.MAIN -> MainSettingsSection(uiState, viewModel)
+                        SettingsSection.ACCOUNTS -> AccountsSection(uiState, viewModel)
+                        SettingsSection.ROMM -> RomMSection(uiState, viewModel)
+                        SettingsSection.SAVES -> SavesSection(uiState, viewModel)
+                        SettingsSection.SYNC_SETTINGS -> SyncSettingsSection(uiState, viewModel, imageCacheProgress)
+                        SettingsSection.STEAM_SETTINGS -> SteamSection(uiState, viewModel)
+                        SettingsSection.JELLYFIN -> JellyfinSection(uiState, viewModel)
+                        SettingsSection.RETRO_ACHIEVEMENTS -> RASettingsSection(uiState, viewModel)
+                        SettingsSection.STORAGE -> StorageSection(uiState, viewModel)
+                        SettingsSection.STORAGE_GAMES -> StorageGamesSection(uiState, viewModel)
+                        SettingsSection.STORAGE_MEDIA -> StorageMediaSection(uiState, viewModel)
+                        SettingsSection.STORAGE_PLATFORM_GAMES -> StoragePlatformGamesSection(uiState, viewModel)
+                        SettingsSection.STORAGE_CACHES -> StorageCachesSection(uiState, viewModel)
+                        SettingsSection.PLAY_TIME -> PlayTimeSection(uiState, viewModel)
+                        SettingsSection.PLAY_TIME_PLATFORMS ->
+                            PlayTimeListSection(uiState, viewModel, PlayTimeListKind.PLATFORMS)
+                        SettingsSection.PLAY_TIME_DEVICES ->
+                            PlayTimeListSection(uiState, viewModel, PlayTimeListKind.DEVICES)
+                        SettingsSection.PLAY_TIME_GAMES ->
+                            PlayTimeListSection(uiState, viewModel, PlayTimeListKind.GAMES)
+                        SettingsSection.THEME -> ThemeSection(uiState, viewModel)
+                        SettingsSection.AUDIO -> AudioSection(uiState, viewModel)
+                        SettingsSection.THEME_SOUNDS -> ThemeSoundsSection(uiState, viewModel)
+                        SettingsSection.THEME_MUSIC -> ThemeMusicSection(uiState, viewModel)
+                        SettingsSection.THEME_FONTS -> ThemeFontsSection(uiState, viewModel)
+                        SettingsSection.THEME_BACKDROP -> ThemeBackdropSection(uiState, viewModel)
+                        SettingsSection.INTERFACE -> InterfaceSection(uiState, viewModel)
+                        SettingsSection.BOX_ART -> BoxArtSection(uiState, viewModel)
+                        SettingsSection.CONTROLLER_GRIP -> ControllerGripSection(uiState, viewModel)
+                        SettingsSection.HOME_SCREEN -> HomeScreenSection(uiState, viewModel)
+                        SettingsSection.PRESENTATION -> PresentationSection(uiState, viewModel)
+                        SettingsSection.LIBRARY_VIEW -> LibrarySection(uiState, viewModel)
+                        SettingsSection.DISPLAYS -> DisplaysSection(uiState, viewModel)
+                        SettingsSection.SCREENS -> ScreensSection(uiState, viewModel)
+                        SettingsSection.LAUNCH_TARGETS -> LaunchTargetsSection(uiState, viewModel)
+                        SettingsSection.AMBIENT_LED -> AmbientLedSection(uiState, viewModel)
+                        SettingsSection.NAVIGATION -> NavigationSection(uiState, viewModel)
+                        SettingsSection.MANAGED_INSTALLERS -> ManagedInstallersSection(uiState, viewModel)
+                        SettingsSection.BUILTIN_EMULATOR -> BuiltinEmulatorSection(uiState, viewModel)
+                        SettingsSection.PLATFORMS -> EmulatorsSection(
+                            uiState = uiState,
+                            viewModel = viewModel,
+                            onLaunchSavePathPicker = {
+                                uiState.emulators.savePathModalInfo?.emulatorId?.let { emulatorId ->
+                                    fileBrowserCallback = { path -> viewModel.setEmulatorSavePath(emulatorId, path) }
+                                    showFileBrowser = true
+                                }
                             }
-                        }
-                    )
-                    SettingsSection.PLATFORM_DETAIL -> PlatformDetailSection(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        onLaunchSavePathPicker = {
-                            uiState.emulators.savePathModalInfo?.emulatorId?.let { emulatorId ->
-                                fileBrowserCallback = { path -> viewModel.setEmulatorSavePath(emulatorId, path) }
-                                showFileBrowser = true
+                        )
+                        SettingsSection.PLATFORM_DETAIL -> PlatformDetailSection(
+                            uiState = uiState,
+                            viewModel = viewModel,
+                            onLaunchSavePathPicker = {
+                                uiState.emulators.savePathModalInfo?.emulatorId?.let { emulatorId ->
+                                    fileBrowserCallback = { path -> viewModel.setEmulatorSavePath(emulatorId, path) }
+                                    showFileBrowser = true
+                                }
                             }
-                        }
-                    )
-                    SettingsSection.BUILTIN_VIDEO -> BuiltinVideoSection(uiState, viewModel)
-                    SettingsSection.BUILTIN_CONTROLS -> BuiltinControlsSection(uiState, viewModel)
-                    SettingsSection.BUILTIN_SAVES -> BuiltinSavesSection(uiState, viewModel)
-                    SettingsSection.CORE_MANAGEMENT -> CoreManagementSection(uiState, viewModel)
-                    SettingsSection.CORE_OPTIONS -> CoreOptionsSection(uiState, viewModel)
-                    SettingsSection.BIOS -> BiosSection(uiState, viewModel)
-                    SettingsSection.SHADER_STACK -> ShaderStackSection(viewModel.shaderChainManager)
-                    SettingsSection.FRAME_PICKER -> FrameSection(uiState, viewModel)
-                    SettingsSection.PERMISSIONS -> PermissionsSection(uiState, viewModel)
-                    SettingsSection.DRIVERS -> DriversSection(uiState, viewModel)
-                    SettingsSection.ABOUT -> AboutSection(uiState, viewModel)
-                    SettingsSection.SOCIAL -> SocialSection(uiState, viewModel)
+                        )
+                        SettingsSection.BUILTIN_VIDEO -> BuiltinVideoSection(uiState, viewModel)
+                        SettingsSection.BUILTIN_CONTROLS -> BuiltinControlsSection(uiState, viewModel)
+                        SettingsSection.BUILTIN_SAVES -> BuiltinSavesSection(uiState, viewModel)
+                        SettingsSection.CORE_MANAGEMENT -> CoreManagementSection(uiState, viewModel)
+                        SettingsSection.CORE_OPTIONS -> CoreOptionsSection(uiState, viewModel)
+                        SettingsSection.BIOS -> BiosSection(uiState, viewModel)
+                        SettingsSection.SHADER_STACK -> ShaderStackSection(viewModel.shaderChainManager)
+                        SettingsSection.FRAME_PICKER -> FrameSection(uiState, viewModel)
+                        SettingsSection.PERMISSIONS -> PermissionsSection(uiState, viewModel)
+                        SettingsSection.DRIVERS -> DriversSection(uiState, viewModel)
+                        SettingsSection.ABOUT -> AboutSection(uiState, viewModel)
+                        SettingsSection.SOCIAL -> SocialSection(uiState, viewModel)
+                    }
                 }
             }
 
@@ -1535,6 +1557,7 @@ private fun SettingsAmbientPresentation(uiState: SettingsUiState, viewModel: Set
 @Composable
 private fun SettingsHeader(
     title: String,
+    onBack: () -> Unit,
     rightContent: @Composable (() -> Unit)? = null
 ) {
     Row(
@@ -1545,11 +1568,23 @@ private fun SettingsHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.settings_shell_header_back_desc),
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .clickableNoFocus(onClick = onBack)
+                    .padding(Dimens.spacingXs)
+                    .size(Dimens.iconMd)
+            )
+            Spacer(modifier = Modifier.width(Dimens.spacingXs))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
         rightContent?.invoke()
     }
 }

@@ -93,6 +93,7 @@ class SettingsInputHandler(
     }
 
     private fun dispatch(method: InputMethod, fallback: () -> InputResult): InputResult {
+        viewModel.exitTouchMode()
         val state = viewModel.uiState.value
         modalRouter.intercept(state, method)?.let { return it }
         val handler = handlers[state.currentSection]
@@ -145,6 +146,7 @@ class SettingsInputHandler(
     }
 
     override fun onBack(): InputResult {
+        viewModel.exitTouchMode()
         val state = viewModel.uiState.value
         modalRouter.intercept(state, InputMethod.BACK)?.let { return it }
         return if (!viewModel.navigateBack()) {

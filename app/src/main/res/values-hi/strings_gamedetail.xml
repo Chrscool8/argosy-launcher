@@ -83,6 +83,7 @@
     <string name="gamedetail_footer_view_reviews">समीक्षाएं पढ़ें</string>
     <string name="gamedetail_footer_open_related">खोलें</string>
     <string name="gamedetail_footer_back">वापस</string>
+    <string name="gamedetail_header_back_desc">वापस</string>
     <string name="gamedetail_footer_new_game">नया गेम</string>
     <string name="gamedetail_footer_shortcut_make_public">सार्वजनिक करें</string>
     <string name="gamedetail_footer_shortcut_make_private">निजी करें</string>

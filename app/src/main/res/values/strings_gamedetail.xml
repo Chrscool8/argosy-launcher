@@ -204,6 +204,9 @@
     <string name="gamedetail_footer_open_related">Open</string>
     <!-- Footer hint on the game page. Verb: returns to the previous screen. -->
     <string name="gamedetail_footer_back">Back</string>
+    <!-- Screen reader text for the arrow above the game page menu. It leaves the game page the
+         way the Back button does. -->
+    <string name="gamedetail_header_back_desc">Back</string>
     <!-- Footer hint on the play row for a game that runs in the built-in emulator. Noun phrase:
          opens the menu for starting a fresh run rather than continuing a save. -->
     <string name="gamedetail_footer_new_game">New Game</string>

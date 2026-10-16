@@ -4,6 +4,7 @@
     <string name="library_header_all_platforms">Todas las plataformas</string>
     <string name="library_header_previous_platform">Plataforma anterior</string>
     <string name="library_header_next_platform">Plataforma siguiente</string>
+    <string name="library_header_back_desc">Atrás</string>
     <string name="library_header_active_filters_label">Filtros:</string>
     <plurals name="library_header_game_count">
         <item quantity="one">%d juego</item>

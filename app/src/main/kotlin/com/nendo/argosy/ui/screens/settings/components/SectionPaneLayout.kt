@@ -52,6 +52,11 @@ fun <Item> SectionPaneLayout(
     val namedSections = remember(sections) { sections.filter { it.name != null } }
     val useSplitPane = isWide && namedSections.size >= 2
     val headerListIndices = remember(items) { items.indices.filter { isHeader(items[it]) }.toSet() }
+    val touchFocus = LocalSettingsTouchFocus.current
+    val focusIndexByKey = remember(items, sections) {
+        focusIndexByItemKey(items, focusToListIndex, itemKey) { isHeader(it) || isNavItem(it) }
+    }
+    val rowFocusIndex: (Item) -> Int = { focusIndexByKey[itemKey(it)] ?: -1 }
 
     fun headerListIndexOf(section: ListSection): Int =
         (section.listStartIndex..section.listEndIndex).firstOrNull { it in headerListIndices } ?: section.listStartIndex
@@ -92,7 +97,8 @@ fun <Item> SectionPaneLayout(
                 val original = headerListIndexOf(section)
                 indexMapping[original] ?: original
             },
-            headerListIndices = filteredHeaderIndices
+            headerListIndices = filteredHeaderIndices,
+            isTouchMode = touchFocus.isTouchMode
         )
 
         Row(modifier = modifier) {
@@ -108,7 +114,10 @@ fun <Item> SectionPaneLayout(
                     NavItem(
                         title = section.name ?: "",
                         isActive = isActive,
-                        onClick = { onSectionTap(section) }
+                        onClick = {
+                            touchFocus.onExitTouchMode()
+                            onSectionTap(section)
+                        }
                     )
                 }
             }
@@ -126,7 +135,7 @@ fun <Item> SectionPaneLayout(
                     .verticalEdgeFade(contentListState, fadeHeight = Dimens.spacingMd, top = !headerLock),
                 verticalArrangement = verticalArrangement
             ) {
-                paneItems(filteredItems, itemKey, isHeader, itemContent)
+                paneItems(filteredItems, itemKey, isHeader, rowFocusIndex, itemContent)
             }
         }
     } else {
@@ -139,7 +148,8 @@ fun <Item> SectionPaneLayout(
             sections = sections,
             headerLock = headerLock,
             headerListIndexOf = ::headerListIndexOf,
-            headerListIndices = headerListIndices
+            headerListIndices = headerListIndices,
+            isTouchMode = touchFocus.isTouchMode
         )
 
         LazyColumn(
@@ -147,9 +157,24 @@ fun <Item> SectionPaneLayout(
             modifier = modifier.verticalEdgeFade(listState, fadeHeight = Dimens.spacingMd, top = false),
             verticalArrangement = verticalArrangement
         ) {
-            paneItems(items, itemKey, isHeader, itemContent)
+            paneItems(items, itemKey, isHeader, rowFocusIndex, itemContent)
         }
     }
+}
+
+internal fun <Item> focusIndexByItemKey(
+    items: List<Item>,
+    focusToListIndex: (Int) -> Int,
+    itemKey: (Item) -> Any,
+    isUnfocusable: (Item) -> Boolean
+): Map<Any, Int> {
+    val byKey = mutableMapOf<Any, Int>()
+    for (focusIndex in items.indices) {
+        val item = items.getOrNull(focusToListIndex(focusIndex)) ?: continue
+        if (isUnfocusable(item)) continue
+        byKey.getOrPut(itemKey(item)) { focusIndex }
+    }
+    return byKey
 }
 
 @Composable
@@ -160,7 +185,8 @@ private fun PaneScroll(
     sections: List<ListSection>,
     headerLock: Boolean,
     headerListIndexOf: (ListSection) -> Int,
-    headerListIndices: Set<Int>
+    headerListIndices: Set<Int>,
+    isTouchMode: Boolean
 ) {
     if (headerLock) {
         SectionHeaderLockScroll(
@@ -169,14 +195,16 @@ private fun PaneScroll(
             focusToListIndex = focusToListIndex,
             sections = sections,
             headerListIndexOf = headerListIndexOf,
-            headerListIndices = headerListIndices
+            headerListIndices = headerListIndices,
+            isTouchMode = isTouchMode
         )
     } else {
         SectionFocusedScroll(
             listState = listState,
             focusedIndex = focusedIndex,
             focusToListIndex = focusToListIndex,
-            sections = sections
+            sections = sections,
+            isTouchMode = isTouchMode
         )
     }
 }
@@ -186,6 +214,7 @@ private fun <Item> LazyListScope.paneItems(
     items: List<Item>,
     itemKey: (Item) -> Any,
     isHeader: (Item) -> Boolean,
+    rowFocusIndex: (Item) -> Int,
     itemContent: @Composable (Item) -> Unit
 ) {
     items.forEach { item ->
@@ -201,7 +230,9 @@ private fun <Item> LazyListScope.paneItems(
             }
         } else {
             item(key = itemKey(item)) {
-                itemContent(item)
+                SettingsRowTapArea(rowFocusIndex(item)) {
+                    itemContent(item)
+                }
             }
         }
     }

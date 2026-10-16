@@ -63,6 +63,8 @@ import com.nendo.argosy.ui.input.ModalPresenceEffect
 import com.nendo.argosy.ui.primitives.ActionButton
 import com.nendo.argosy.ui.primitives.ArgosyProgressBar
 import com.nendo.argosy.ui.primitives.ModalScaffold
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
+import com.nendo.argosy.ui.screens.settings.components.settingsRowItems
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
@@ -173,7 +175,8 @@ fun BiosSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
         listState = listState,
         focusedIndex = uiState.focusedIndex,
         focusToListIndex = { layout.focusToListIndex(it, Unit) },
-        sections = sections
+        sections = sections,
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     LazyColumn(
@@ -181,8 +184,11 @@ fun BiosSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
         modifier = Modifier.fillMaxSize().padding(Dimens.spacingMd),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
-        items(visibleItems.size, key = { visibleItems[it].key }) { index ->
-            val item = visibleItems[index]
+        settingsRowItems(
+            visibleItems,
+            key = { it.key },
+            focusIndexOf = { layout.focusIndexOf(it, Unit) }
+        ) { item ->
             when (item) {
                 BiosItem.Summary -> BiosSummaryCard(
                     totalFiles = bios.totalFiles,

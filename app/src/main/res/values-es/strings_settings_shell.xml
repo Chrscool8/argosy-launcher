@@ -144,6 +144,7 @@
 
     <string name="settings_shell_context_previous_desc">Contexto anterior</string>
     <string name="settings_shell_context_next_desc">Contexto siguiente</string>
+    <string name="settings_shell_header_back_desc">Atrás</string>
 
     <!-- ===== SettingsScreen: file browser titles ===== -->
 

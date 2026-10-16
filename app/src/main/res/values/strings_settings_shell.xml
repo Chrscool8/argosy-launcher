@@ -200,6 +200,9 @@
     <string name="settings_shell_context_previous_desc">Previous context</string>
     <!-- Accessibility description for the right-bumper button, next platform context. -->
     <string name="settings_shell_context_next_desc">Next context</string>
+    <!-- Accessibility description for the arrow left of the settings page title. Tapping it goes
+         up one level, or leaves settings from the top page. -->
+    <string name="settings_shell_header_back_desc">Back</string>
 
     <!-- ===== SettingsScreen: file browser titles ===== -->
 

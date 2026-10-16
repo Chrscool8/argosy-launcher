@@ -1010,6 +1010,16 @@ class SettingsViewModel @Inject constructor(
 
     fun setFocusIndex(index: Int) { _uiState.update { it.copy(focusedIndex = index) } }
 
+    fun touchFocusRow(index: Int) = routeTouchFocus(this, index)
+
+    fun enterTouchMode() {
+        _uiState.update { if (it.isTouchMode) it else it.copy(isTouchMode = true) }
+    }
+
+    fun exitTouchMode() {
+        _uiState.update { if (it.isTouchMode) it.copy(isTouchMode = false) else it }
+    }
+
     fun requestEnumPicker(key: String) {
         _uiState.update { it.copy(enumPickerKey = key, enumPickerToken = it.enumPickerToken + 1) }
     }

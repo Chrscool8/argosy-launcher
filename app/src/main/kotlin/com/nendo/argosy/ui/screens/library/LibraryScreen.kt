@@ -40,6 +40,7 @@ import com.nendo.argosy.ui.screens.library.components.LibraryPlatformGridHeaderH
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Download
@@ -531,7 +532,12 @@ fun LibraryScreen(
                         activeFilterChips = activeFilterChips,
                         focusedGameTitle = uiState.focusedGame?.title,
                         onPreviousPlatform = { viewModel.previousPlatform() },
-                        onNextPlatform = { viewModel.nextPlatform() }
+                        onNextPlatform = { viewModel.nextPlatform() },
+                        onBack = if ((uiState.canReturnToPlatformGrid && !uiState.isPlatformGrid) || !isDefaultView) {
+                            { inputHandler.onBack() }
+                        } else {
+                            null
+                        }
                     )
                 }
             }
@@ -823,7 +829,8 @@ private fun LibraryHeader(
     activeFilterChips: List<ActiveFilterChipUi> = emptyList(),
     focusedGameTitle: String? = null,
     onPreviousPlatform: () -> Unit = {},
-    onNextPlatform: () -> Unit = {}
+    onNextPlatform: () -> Unit = {},
+    onBack: (() -> Unit)? = null
 ) {
     val aspectRatioClass = com.nendo.argosy.ui.theme.LocalUiScale.current.aspectRatioClass
     val maxNameLength = when (aspectRatioClass) {
@@ -863,12 +870,26 @@ private fun LibraryHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (showLibraryLabel) {
-                    Text(
-                        text = stringResource(R.string.library_header_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onBack != null) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.library_header_back_desc),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .clickableNoFocus(onClick = onBack)
+                                .padding(Dimens.spacingXs)
+                                .size(Dimens.iconMd)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.spacingXs))
+                    }
+                    if (showLibraryLabel) {
+                        Text(
+                            text = stringResource(R.string.library_header_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
 
                 Row(

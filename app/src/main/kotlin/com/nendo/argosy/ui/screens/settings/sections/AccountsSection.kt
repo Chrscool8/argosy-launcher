@@ -42,7 +42,9 @@ import com.nendo.argosy.ui.screens.settings.AccountUi
 import com.nendo.argosy.ui.screens.settings.AccountsState
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
 import com.nendo.argosy.ui.screens.settings.components.SectionHeader
+import com.nendo.argosy.ui.screens.settings.components.SettingsRowTapArea
 import com.nendo.argosy.ui.theme.Dimens
 import com.nendo.argosy.ui.theme.LocalArgosyTheme
 
@@ -126,7 +128,11 @@ fun AccountsSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
         rows.indexOfFirst { it.second == uiState.focusedIndex }.coerceAtLeast(0)
     }
 
-    FocusedScroll(listState = listState, focusedIndex = focusedListIndex)
+    FocusedScroll(
+        listState = listState,
+        focusedIndex = focusedListIndex,
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
+    )
 
     LazyColumn(
         state = listState,
@@ -137,29 +143,31 @@ fun AccountsSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
         items(rows, key = { it.first.key }) { (item, focusIndex) ->
-            when (item) {
-                is AccountsItem.Header -> SectionHeader(stringResource(item.titleRes))
-                is AccountsItem.Gap -> Spacer(modifier = Modifier.height(Dimens.spacingLg))
-                is AccountsItem.NeedsSyncNotice ->
-                    NeedsSyncCard(stringResource(item.titleRes), item.titles)
-                is AccountsItem.Account -> AccountRow(
-                    account = item.account,
-                    state = accounts,
-                    isFocused = focusIndex == uiState.focusedIndex,
-                    onSwitch = { viewModel.requestAccountSwitch(item.account.id) },
-                    onRemove = { viewModel.requestAccountRemoval(item.account.id) },
-                    onSelectAction = { viewModel.setAccountRowAction(item.account, it) }
-                )
-                AccountsItem.AddAccount -> ActionPreference(
-                    title = stringResource(R.string.settings_accounts_add_title),
-                    subtitle = accounts.activeAccount
-                        ?.let { stringResource(R.string.settings_accounts_add_subtitle, it.serverLabel) }
-                        ?: stringResource(R.string.settings_accounts_add_subtitle_locked),
-                    icon = Icons.Default.PersonAdd,
-                    isEnabled = accounts.activeAccount != null,
-                    isFocused = focusIndex == uiState.focusedIndex,
-                    onClick = { viewModel.startAddAccount() }
-                )
+            SettingsRowTapArea(focusIndex) {
+                when (item) {
+                    is AccountsItem.Header -> SectionHeader(stringResource(item.titleRes))
+                    is AccountsItem.Gap -> Spacer(modifier = Modifier.height(Dimens.spacingLg))
+                    is AccountsItem.NeedsSyncNotice ->
+                        NeedsSyncCard(stringResource(item.titleRes), item.titles)
+                    is AccountsItem.Account -> AccountRow(
+                        account = item.account,
+                        state = accounts,
+                        isFocused = focusIndex == uiState.focusedIndex,
+                        onSwitch = { viewModel.requestAccountSwitch(item.account.id) },
+                        onRemove = { viewModel.requestAccountRemoval(item.account.id) },
+                        onSelectAction = { viewModel.setAccountRowAction(item.account, it) }
+                    )
+                    AccountsItem.AddAccount -> ActionPreference(
+                        title = stringResource(R.string.settings_accounts_add_title),
+                        subtitle = accounts.activeAccount
+                            ?.let { stringResource(R.string.settings_accounts_add_subtitle, it.serverLabel) }
+                            ?: stringResource(R.string.settings_accounts_add_subtitle_locked),
+                        icon = Icons.Default.PersonAdd,
+                        isEnabled = accounts.activeAccount != null,
+                        isFocused = focusIndex == uiState.focusedIndex,
+                        onClick = { viewModel.startAddAccount() }
+                    )
+                }
             }
         }
 

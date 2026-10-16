@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,6 +42,8 @@ import com.nendo.argosy.ui.components.PermissionCard
 import com.nendo.argosy.ui.screens.settings.PermissionsState
 import com.nendo.argosy.ui.screens.settings.SettingsUiState
 import com.nendo.argosy.ui.screens.settings.SettingsViewModel
+import com.nendo.argosy.ui.screens.settings.components.LocalSettingsTouchFocus
+import com.nendo.argosy.ui.screens.settings.components.settingsRowItems
 import com.nendo.argosy.ui.screens.settings.menu.SettingsLayout
 import com.nendo.argosy.ui.theme.Dimens
 
@@ -118,7 +119,8 @@ fun PermissionsSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
 
     FocusedScroll(
         listState = listState,
-        focusedIndex = permissionsLayout.focusToListIndex(uiState.focusedIndex, permissions)
+        focusedIndex = permissionsLayout.focusToListIndex(uiState.focusedIndex, permissions),
+        isTouchMode = LocalSettingsTouchFocus.current.isTouchMode
     )
 
     LazyColumn(
@@ -126,7 +128,11 @@ fun PermissionsSection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
         modifier = Modifier.fillMaxSize().padding(Dimens.spacingMd),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
-        items(visibleItems, key = { it.key }) { item ->
+        settingsRowItems(
+            visibleItems,
+            key = { it.key },
+            focusIndexOf = { permissionsLayout.focusIndexOf(it, permissions) }
+        ) { item ->
             when (item) {
                 PermissionsItem.InfoText -> Text(
                     text = stringResource(R.string.settings_permissions_intro),
