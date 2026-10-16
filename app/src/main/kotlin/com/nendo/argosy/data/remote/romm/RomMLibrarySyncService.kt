@@ -893,17 +893,6 @@ class RomMLibrarySyncService @Inject constructor(
         return deleted
     }
 
-    /**
-     * Removes rows for roms the server no longer lists anywhere, which the per-platform sweep
-     * structurally cannot reach: it only ever examines platforms this pass walked, so a rom on a
-     * platform since disabled, unshared, or dropped from the server keeps its row forever.
-     *
-     * Runs only after a whole-library pass that finished clean, and re-reads the id set rather
-     * than reusing the one the pass opened with: a rom added while the pass was walking platforms
-     * is missing from that older set and present in the library, which is exactly the shape this
-     * sweep deletes. An unavailable set or visibility answer withholds those rows. Rows already
-     * kept as server-removed need neither answer and are removed once no local rom files remain.
-     */
     private suspend fun reconcileDeletedRoms(scope: SyncScope): Int {
         val candidates = missingServerRoms(scope) +
             gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, scope.ownerUserId)

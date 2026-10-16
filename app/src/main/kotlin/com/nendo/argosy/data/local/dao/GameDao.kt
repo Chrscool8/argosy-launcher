@@ -767,12 +767,6 @@ interface GameDao {
         ownerUserId: Long?
     ): List<GameEntity>
 
-    /**
-     * Identity of every row this account still believes is a live server rom, across all
-     * platforms. A projection rather than the entities: the caller compares a whole library
-     * against a server id set and only needs the full row for the few that fail. Rows with a
-     * negative id already left the server and come from [getServerRemovedIdsForOwner] instead.
-     */
     @Query(
         """
         SELECT id, rommId, platformId FROM games
