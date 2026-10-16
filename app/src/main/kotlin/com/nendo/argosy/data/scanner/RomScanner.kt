@@ -4,11 +4,15 @@ import android.net.Uri
 import android.util.Log
 import com.nendo.argosy.data.local.dao.GameDao
 import com.nendo.argosy.data.local.dao.PlatformDao
+import com.nendo.argosy.data.local.entity.GameEntity
+import com.nendo.argosy.data.local.entity.PlatformEntity
 import com.nendo.argosy.data.model.FileOrigin
 import com.nendo.argosy.data.model.GameSource
 import com.nendo.argosy.data.model.VariantCategory
 import com.nendo.argosy.data.platform.PlatformDef
 import com.nendo.argosy.data.platform.PlatformDefinitions
+import com.nendo.argosy.data.platform.PlatformFolderResolver
+import com.nendo.argosy.data.platform.platformRomRoots
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +45,7 @@ data class ScanResult(
 class RomScanner @Inject constructor(
     private val gameDao: GameDao,
     private val platformDao: PlatformDao,
+    private val platformFolderResolver: PlatformFolderResolver,
     private val syncPreferencesRepository: com.nendo.argosy.data.preferences.SyncPreferencesRepository
 ) {
     private val _progress = MutableStateFlow(ScanProgress())
@@ -67,19 +72,19 @@ class RomScanner @Inject constructor(
         var gamesSkipped = 0
         val platformsWithGames = mutableSetOf<String>()
 
+        val storageBase = platformFolderResolver.storageBase()
+        val allPlatforms = platformDao.getAllPlatforms()
+        val touchedPlatformIds = mutableSetOf<Long>()
+
         try {
             scanRecursive(directory, errors) { sortTitle, platformSlug, localPath ->
-                val platform = platformDao.getBySlug(platformSlug)
-                if (platform == null) {
-                    gamesSkipped++
-                    return@scanRecursive
-                }
-                val existing = gameDao.getBySortTitleAndPlatform(sortTitle, platform.id)
+                val existing = findGame(sortTitle, platformSlug, localPath, storageBase, allPlatforms)
                 if (existing != null) {
                     if (existing.localPath == null) {
                         gameDao.updateLocalPath(existing.id, localPath, GameSource.ROMM_SYNCED, FileOrigin.ADOPTED)
                         gamesUpdated++
                         platformsWithGames.add(platformSlug)
+                        touchedPlatformIds.add(existing.platformId)
                         Log.d(TAG, "Marked as installed: ${existing.title}")
                     } else {
                         gamesUpdated++
@@ -95,10 +100,8 @@ class RomScanner @Inject constructor(
             }
 
             val ownerUserId = syncPreferencesRepository.getRommUserId()
-            platformsWithGames.forEach { platformSlug ->
-                val platform = platformDao.getBySlug(platformSlug) ?: return@forEach
-                val count = gameDao.countByPlatform(platform.id, ownerUserId)
-                platformDao.updateGameCount(platform.id, count)
+            touchedPlatformIds.forEach { platformId ->
+                platformDao.updateGameCount(platformId, gameDao.countByPlatform(platformId, ownerUserId))
             }
 
             Log.d(TAG, "Scan complete: updated=$gamesUpdated, skipped=$gamesSkipped")
@@ -107,6 +110,24 @@ class RomScanner @Inject constructor(
         }
 
         ScanResult(gamesAdded, gamesUpdated, gamesSkipped, platformsWithGames, errors)
+    }
+
+    private suspend fun findGame(
+        sortTitle: String,
+        platformSlug: String,
+        localPath: String,
+        storageBase: File,
+        allPlatforms: List<PlatformEntity>
+    ): GameEntity? {
+        val candidates = allPlatforms.filter { it.slug == platformSlug }
+        val (owning, others) = candidates.partition { platform ->
+            platformRomRoots(platform, storageBase, allPlatforms).any { root ->
+                localPath.startsWith(root.absolutePath + File.separator)
+            }
+        }
+        return (owning + others).firstNotNullOfOrNull { platform ->
+            gameDao.getBySortTitleAndPlatform(sortTitle, platform.id)
+        }
     }
 
     suspend fun scanUri(uri: Uri, contentResolver: android.content.ContentResolver): ScanResult {

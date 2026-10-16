@@ -78,7 +78,7 @@ class DownloadGameUseCase @Inject constructor(
             failedEntry.state == DownloadState.FAILED.name &&
             decodedFailure is com.nendo.argosy.data.download.DownloadFailureReason.ExtractionFailed
         ) {
-            val targetFile = downloadManager.getDownloadPath(failedEntry.platformSlug, failedEntry.fileName)
+            val targetFile = downloadManager.getDownloadPath(gameId, failedEntry.platformSlug, failedEntry.fileName)
             if (targetFile.exists()) {
                 return DownloadResult.ExtractionFailed(
                     gameId = gameId,

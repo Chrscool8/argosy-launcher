@@ -1,7 +1,10 @@
 package com.nendo.argosy.data.download
 
 import com.nendo.argosy.data.local.dao.DownloadQueueDao
+import com.nendo.argosy.data.local.dao.GameDao
+import com.nendo.argosy.data.local.dao.PlatformDao
 import com.nendo.argosy.data.local.entity.DownloadQueueEntity
+import com.nendo.argosy.data.platform.PlatformFolderResolver
 import com.nendo.argosy.data.preferences.UserPreferences
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.remote.romm.ConnectionState
@@ -68,13 +71,15 @@ class DownloadManagerAutoStartTest {
                 romStoragePath = storage.root.absolutePath
             )
         )
+        val gameDao = mockk<GameDao>(relaxed = true)
+        coEvery { gameDao.getById(any()) } returns null
+        val platformDao = mockk<PlatformDao>(relaxed = true)
         return DownloadManager(
-            context = mockk(relaxed = true),
-            gameDao = mockk(relaxed = true),
+            gameDao = gameDao,
             gameDiscDao = mockk(relaxed = true),
             gameFileDao = mockk(relaxed = true),
             downloadQueueDao = downloadQueueDao,
-            platformDao = mockk(relaxed = true),
+            platformDao = platformDao,
             romMRepository = romMRepository,
             preferencesRepository = preferencesRepository,
             soundManager = mockk(relaxed = true),
@@ -89,7 +94,13 @@ class DownloadManagerAutoStartTest {
             homeTilePromptQueue = mockk(relaxed = true),
             customGridShapeStore = mockk(relaxed = true),
             extContentOrganizer = mockk(relaxed = true),
-            romStagingManager = mockk(relaxed = true)
+            romStagingManager = mockk(relaxed = true),
+            platformFolderResolver = PlatformFolderResolver(
+                context = mockk(relaxed = true),
+                platformDao = platformDao,
+                gameDao = gameDao,
+                preferencesRepository = preferencesRepository
+            )
         )
     }
 

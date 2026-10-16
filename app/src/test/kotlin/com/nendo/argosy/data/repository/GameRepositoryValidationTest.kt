@@ -72,7 +72,8 @@ class GameRepositoryValidationTest {
             volumeHealth = volumeHealth,
             attributionRepository = mockk(relaxed = true),
             gameArtDao = mockk(relaxed = true),
-            gameScreenshotDao = mockk(relaxed = true)
+            gameScreenshotDao = mockk(relaxed = true),
+            platformFolderResolver = mockk(relaxed = true)
         )
     }
 

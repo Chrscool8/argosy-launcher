@@ -30,6 +30,8 @@ import com.nendo.argosy.data.local.entity.GameFileEntity
 import com.nendo.argosy.data.local.entity.GameListItem
 import com.nendo.argosy.data.local.entity.GameScreenshotEntity
 import com.nendo.argosy.data.local.entity.PlatformEntity
+import com.nendo.argosy.data.platform.PlatformFolderResolver
+import com.nendo.argosy.data.platform.platformDownloadDir
 import com.nendo.argosy.data.platform.platformRomRoots
 import com.nendo.argosy.data.model.FileOrigin
 import com.nendo.argosy.data.model.ResolvedGameArt
@@ -86,52 +88,25 @@ class GameRepository @Inject constructor(
     private val volumeHealth: StorageVolumeHealth,
     private val attributionRepository: StorageAttributionRepository,
     private val gameArtDao: GameArtDao,
-    private val gameScreenshotDao: GameScreenshotDao
+    private val gameScreenshotDao: GameScreenshotDao,
+    private val platformFolderResolver: PlatformFolderResolver
 ) {
-    private val defaultDownloadDir: File by lazy {
-        File(context.getExternalFilesDir(null), "downloads")
-    }
+    private val defaultDownloadDir: File get() = platformFolderResolver.defaultStorageBase
 
     private val validationMutex = Mutex()
     private val validationPass = AtomicInteger()
     private var lastValidationAt = 0L
 
-    /**
-     * Where this platform's roms are written.
-     *
-     * Prefer [downloadDirFor] when the caller holds a platform id. Slugs are not unique -
-     * duplicate-slug rows are a state the schema allows and `getBySlug` takes the first of them -
-     * so resolving by slug can hand one platform another's custom folder, and downloads then land
-     * in the wrong library.
-     */
-    private suspend fun getDownloadDir(platformSlug: String): File =
-        downloadDirFor(platformDao.getBySlug(platformSlug), platformSlug)
-
-    private suspend fun downloadDirFor(platform: PlatformEntity?, platformSlug: String): File {
-        platform?.customRomPath?.let { return File(it).also { dir -> dir.mkdirs() } }
-
-        val base = preferencesRepository.userPreferences.first().romStoragePath
-            ?.let { File(it) }
-            ?: defaultDownloadDir
-        return File(base, platformSlug).also { it.mkdirs() }
-    }
-
     suspend fun getDownloadDirForPlatformId(platformId: Long): File = withContext(Dispatchers.IO) {
-        val platform = platformDao.getById(platformId)
-        downloadDirFor(platform, platform?.slug ?: return@withContext defaultDownloadDir)
+        val platform = platformDao.getById(platformId) ?: return@withContext defaultDownloadDir
+        platformDownloadDir(platform, platform.slug, platformFolderResolver.storageBase())
+            .also { it.mkdirs() }
     }
 
-    private suspend fun candidateRootsFor(platform: PlatformEntity): List<File> {
-        val base = preferencesRepository.userPreferences.first().romStoragePath
-            ?.let { File(it) }
-            ?: defaultDownloadDir
-        return platformRomRoots(platform, base, platformDao.getAllPlatforms())
-    }
+    private suspend fun candidateRootsFor(platform: PlatformEntity): List<File> =
+        platformRomRoots(platform, platformFolderResolver.storageBase(), platformDao.getAllPlatforms())
 
-    private suspend fun getGlobalDownloadDir(): File {
-        val prefs = preferencesRepository.userPreferences.first()
-        return prefs.romStoragePath?.let { File(it) } ?: defaultDownloadDir
-    }
+    private suspend fun getGlobalDownloadDir(): File = platformFolderResolver.storageBase()
 
     private fun isStorageReady(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -193,7 +168,7 @@ class GameRepository @Inject constructor(
         return files.find { titlesMatch(it.nameWithoutExtension, game.title) }
     }
 
-    private suspend fun findPrimaryRomInFolder(folder: File, platformSlug: String): File? {
+    private fun findPrimaryRomInFolder(folder: File, platform: PlatformEntity?): File? {
         val rootEntries = folder.listFiles() ?: return null
         val rootFiles = rootEntries.filter { it.isFile }
 
@@ -202,7 +177,8 @@ class GameRepository @Inject constructor(
             return M3uManager.parseFirstDisc(m3uFile)
         }
 
-        val platform = platformDao.getBySlug(platformSlug) ?: return null
+        if (platform == null) return null
+        val platformSlug = platform.slug
         val validExtensions = platform.romExtensions
             .split(",")
             .map { it.trim().lowercase() }
@@ -227,29 +203,22 @@ class GameRepository @Inject constructor(
         return null
     }
 
-    private suspend fun resolveFileFallback(originalPath: String, platformSlug: String): String? {
+    private suspend fun resolveFileFallback(
+        originalPath: String,
+        platformId: Long,
+        platformSlug: String
+    ): String? {
         val fileName = File(originalPath).name
         val candidateDirs = buildList {
-            // Per-platform custom path
-            val platform = platformDao.getBySlug(platformSlug)
-            if (platform?.customRomPath != null) {
-                add(File(platform.customRomPath))
-            }
-            // Global custom path
-            val prefs = preferencesRepository.userPreferences.first()
-            if (prefs.romStoragePath != null) {
-                add(File(prefs.romStoragePath, platformSlug))
-            }
-            // Default path
+            platformDao.getById(platformId)?.customRomPath?.let { add(File(it)) }
+            preferencesRepository.userPreferences.first().romStoragePath?.let { add(File(it, platformSlug)) }
             add(File(defaultDownloadDir, platformSlug))
         }
 
         for (dir in candidateDirs) {
             if (!dir.exists()) continue
-            // Direct file match
             val candidate = File(dir, fileName)
             if (candidate.exists()) return candidate.absolutePath
-            // Folder match (multi-disc games)
             val folderName = File(originalPath).parentFile?.name
             if (folderName != null) {
                 val folderCandidate = File(dir, folderName)
@@ -313,7 +282,7 @@ class GameRepository @Inject constructor(
             val candidate = claims[game.id] ?: continue
             val entry = entries[candidate] ?: continue
             val resolved = if (candidate.isDirectory) {
-                findPrimaryRomInFolder(entry, platform.slug)
+                findPrimaryRomInFolder(entry, platform)
             } else {
                 entry
             } ?: continue
@@ -443,7 +412,9 @@ class GameRepository @Inject constructor(
         var repaired = 0
         for (info in gamesWithPaths) {
             val path = info.localPath ?: continue
-            val rebased = rebaseToFolderBase(info.id, info.platformSlug, info.source, info.fileOrigin, path) ?: continue
+            val rebased = rebaseToFolderBase(
+                info.id, info.platformId, info.platformSlug, info.source, info.fileOrigin, path
+            ) ?: continue
             repaired++
             Log.i(TAG, "Repaired rom pointer for game ${info.id}: $path -> $rebased")
         }
@@ -483,6 +454,7 @@ class GameRepository @Inject constructor(
 
     private suspend fun rebaseToFolderBase(
         gameId: Long,
+        platformId: Long,
         platformSlug: String,
         source: GameSource,
         fileOrigin: FileOrigin,
@@ -496,7 +468,7 @@ class GameRepository @Inject constructor(
                 file.parentFile?.parentFile
             else -> return null
         } ?: return null
-        val base = findPrimaryRomInFolder(gameFolder, platformSlug) ?: return null
+        val base = findPrimaryRomInFolder(gameFolder, platformDao.getById(platformId)) ?: return null
         if (base.absolutePath == localPath) return null
         gameDao.updateLocalPath(gameId, base.absolutePath, source, fileOrigin)
         return base.absolutePath
@@ -575,7 +547,9 @@ class GameRepository @Inject constructor(
         if (game.localPath != null) {
             if (isGamePathValid(game.localPath, game.platformSlug)) {
                 if (!File(game.localPath).isDirectory) {
-                    rebaseToFolderBase(game.id, game.platformSlug, game.source, game.fileOrigin, game.localPath)
+                    rebaseToFolderBase(
+                        game.id, game.platformId, game.platformSlug, game.source, game.fileOrigin, game.localPath
+                    )
                 }
                 return@withContext true
             }
@@ -734,7 +708,7 @@ class GameRepository @Inject constructor(
         for (game in games) {
             val path = game.localPath ?: continue
             if (isGamePathValid(path, game.platformSlug)) continue
-            val resolved = resolveFileFallback(path, game.platformSlug)
+            val resolved = resolveFileFallback(path, game.platformId, game.platformSlug)
             if (resolved != null) {
                 gameDao.updateLocalPath(game.id, resolved, game.source, game.fileOrigin)
                 Log.d(TAG, "Resolved (fallback): ${game.title} -> $resolved")

@@ -11,6 +11,8 @@ import com.nendo.argosy.core.notification.showError
 import com.nendo.argosy.core.notification.showSuccess
 import com.nendo.argosy.ui.common.notificationType
 import com.nendo.argosy.ui.common.toNotificationText
+import com.nendo.argosy.data.platform.PlatformFolderResolver
+import com.nendo.argosy.data.platform.platformDownloadDir
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.repository.DatabaseAdminRepository
 import com.nendo.argosy.data.repository.HardResetBlocker
@@ -62,7 +64,8 @@ class StorageSettingsDelegate @Inject constructor(
     private val databaseAdminRepository: DatabaseAdminRepository,
     private val saveCacheRepository: com.nendo.argosy.data.repository.SaveCacheRepository,
     private val managedStorageAccessor: ManagedStorageAccessor,
-    private val notificationManager: NotificationManager
+    private val notificationManager: NotificationManager,
+    private val platformFolderResolver: PlatformFolderResolver
 ) {
     private val _state = MutableStateFlow(StorageState())
     val state: StateFlow<StorageState> = _state.asStateFlow()
@@ -345,12 +348,12 @@ class StorageSettingsDelegate @Inject constructor(
 
     fun loadPlatformConfigs(scope: CoroutineScope) {
         scope.launch {
-            val globalPath = _state.value.romStoragePath
+            val storageBase = platformFolderResolver.storageBase()
             val platforms = platformRepository.observeConfigurablePlatforms().first()
             val emulatorInfo = pendingEmulatorInfo
 
             val configs = platforms.map { platform ->
-                val effectivePath = platform.customRomPath ?: "$globalPath/${platform.slug}"
+                val effectivePath = platformDownloadDir(platform, platform.slug, storageBase).absolutePath
                 val downloadedCount = gameRepository.countDownloadedByPlatform(platform.id)
                 val info = emulatorInfo?.get(platform.id)
                 PlatformStorageConfig(
@@ -463,8 +466,8 @@ class StorageSettingsDelegate @Inject constructor(
         if (rejectIfPrivateAppPath(newPath)) return
         scope.launch {
             val platform = platformRepository.getById(platformId) ?: return@launch
-            val globalPath = _state.value.romStoragePath
-            val oldPath = platform.customRomPath ?: "$globalPath/${platform.slug}"
+            val oldPath = platformDownloadDir(platform, platform.slug, platformFolderResolver.storageBase())
+                .absolutePath
 
             val gamesWithPaths = gameRepository.getGamesWithLocalPathsForPlatform(platformId)
             if (gamesWithPaths.isNotEmpty()) {
@@ -506,8 +509,9 @@ class StorageSettingsDelegate @Inject constructor(
         scope.launch {
             val platform = platformRepository.getById(platformId) ?: return@launch
             val customPath = platform.customRomPath ?: return@launch
-            val globalPath = _state.value.romStoragePath
-            val newPath = "$globalPath/${platform.slug}"
+            val newPath = platformDownloadDir(
+                platform.copy(customRomPath = null), platform.slug, platformFolderResolver.storageBase()
+            ).absolutePath
 
             val gamesWithPaths = gameRepository.getGamesWithLocalPathsForPlatform(platformId)
             if (gamesWithPaths.isNotEmpty()) {

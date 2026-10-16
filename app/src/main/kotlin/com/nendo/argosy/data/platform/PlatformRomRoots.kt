@@ -3,6 +3,9 @@ package com.nendo.argosy.data.platform
 import com.nendo.argosy.data.local.entity.PlatformEntity
 import java.io.File
 
+fun platformDownloadDir(platform: PlatformEntity?, fallbackSlug: String, storageBase: File): File =
+    platform?.customRomPath?.let { File(it) } ?: File(storageBase, platform?.slug ?: fallbackSlug)
+
 /**
  * Every directory a platform's roms may legitimately sit directly inside, most specific first.
  *

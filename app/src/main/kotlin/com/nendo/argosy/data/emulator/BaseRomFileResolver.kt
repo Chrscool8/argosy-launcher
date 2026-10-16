@@ -1,16 +1,11 @@
 package com.nendo.argosy.data.emulator
 
-import android.content.Context
 import com.nendo.argosy.data.download.ZipExtractor
 import com.nendo.argosy.data.local.dao.GameDao
-import com.nendo.argosy.data.local.dao.PlatformDao
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.model.VariantCategory
-import com.nendo.argosy.data.platform.platformRomRoots
-import com.nendo.argosy.data.preferences.UserPreferencesRepository
+import com.nendo.argosy.data.platform.PlatformFolderResolver
 import com.nendo.argosy.util.Logger
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.first
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,10 +21,8 @@ private const val TAG = "BaseRomFileResolver"
  */
 @Singleton
 class BaseRomFileResolver @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val gameDao: GameDao,
-    private val platformDao: PlatformDao,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val platformFolderResolver: PlatformFolderResolver
 ) {
     /**
      * An update or DLC file is unbootable alone, so redirect to the base rom and persist it.
@@ -47,7 +40,7 @@ class BaseRomFileResolver @Inject constructor(
         } else {
             parent
         }
-        if (isPlatformRoot(gameFolder, game.platformSlug)) return romFile
+        if (isPlatformRoot(gameFolder, game)) return romFile
         val candidates = (gameFolder.listFiles()?.filter { it.isFile } ?: return romFile)
             .filterNot { isUpdateOrDlc(it.name) }
         val base = if (excluded) {
@@ -75,20 +68,11 @@ class BaseRomFileResolver @Inject constructor(
      * game folder, and the folder logic would repoint the game at the platform directory's
      * largest file.
      */
-    private suspend fun isPlatformRoot(dir: File, platformSlug: String): Boolean {
+    private suspend fun isPlatformRoot(dir: File, game: GameEntity): Boolean {
         val target = runCatching { dir.canonicalFile }.getOrDefault(dir.absoluteFile)
-        return platformRootsFor(platformSlug).any { root ->
+        return platformFolderResolver.romRootsForPlatform(game.platformId, game.platformSlug).any { root ->
             runCatching { root.canonicalFile }.getOrDefault(root.absoluteFile) == target
         }
-    }
-
-    private suspend fun platformRootsFor(platformSlug: String): List<File> {
-        val platform = platformDao.getAllBySlug(platformSlug).singleOrNull()
-        val base = userPreferencesRepository.userPreferences.first().romStoragePath
-            ?.let { File(it) }
-            ?: File(context.getExternalFilesDir(null), "downloads")
-        if (platform == null) return listOf(File(base, platformSlug))
-        return platformRomRoots(platform, base, platformDao.getAllPlatforms())
     }
 
     private companion object {

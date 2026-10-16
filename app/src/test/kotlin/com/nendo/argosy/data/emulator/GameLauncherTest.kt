@@ -13,6 +13,7 @@ import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.local.entity.GameFileEntity
 import com.nendo.argosy.data.model.GameSource
 import com.nendo.argosy.data.platform.InstalledAppResolver
+import com.nendo.argosy.data.platform.PlatformFolderResolver
 import com.nendo.argosy.data.preferences.UserPreferences
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.repository.BiosRepository
@@ -112,6 +113,13 @@ class GameLauncherTest {
             every { value } returns emptyList()
         }
 
+        val platformFolderResolver = PlatformFolderResolver(
+            context = context,
+            platformDao = platformDao,
+            gameDao = gameDao,
+            preferencesRepository = userPreferencesRepository
+        )
+
         launcher = GameLauncher(
             context = context,
             gameDao = gameDao,
@@ -150,11 +158,10 @@ class GameLauncherTest {
             accountSwitchMarkerStore = mockk(relaxed = true),
             extContentOrganizer = mockk(relaxed = true),
             baseRomFileResolver = BaseRomFileResolver(
-                context = context,
                 gameDao = gameDao,
-                platformDao = platformDao,
-                userPreferencesRepository = userPreferencesRepository
+                platformFolderResolver = platformFolderResolver
             ),
+            platformFolderResolver = platformFolderResolver,
             volumeHealth = mockk(relaxed = true),
             dreamcastVmuMigrator = mockk(relaxed = true),
             launchProgressTracker = launchProgressTracker,

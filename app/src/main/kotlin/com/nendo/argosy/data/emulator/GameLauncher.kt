@@ -34,7 +34,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import com.nendo.argosy.data.local.entity.GameDiscEntity
-import com.nendo.argosy.data.platform.platformRomRoots
+import com.nendo.argosy.data.platform.PlatformFolderResolver
 import com.nendo.argosy.data.local.entity.GameEntity
 import com.nendo.argosy.data.model.GameSource
 import com.nendo.argosy.data.model.VariantCategory
@@ -123,6 +123,7 @@ class GameLauncher @Inject constructor(
     private val accountSwitchMarkerStore: com.nendo.argosy.data.preferences.AccountSwitchMarkerStore,
     private val extContentOrganizer: com.nendo.argosy.data.download.ExtContentOrganizer,
     private val baseRomFileResolver: BaseRomFileResolver,
+    private val platformFolderResolver: PlatformFolderResolver,
     private val dreamcastVmuMigrator: DreamcastVmuMigrator,
     private val volumeHealth: StorageVolumeHealth,
     private val launchProgressTracker: LaunchProgressTracker,
@@ -1998,19 +1999,6 @@ class GameLauncher @Inject constructor(
         }
     }
 
-    /**
-     * Mirrors the download-side resolver: a custom folder is only trusted when the slug
-     * identifies exactly one platform, so this and the writer cannot disagree about where a
-     * platform's roms live.
-     */
-    private suspend fun platformDownloadDir(platformSlug: String): File {
-        platformDao.getAllBySlug(platformSlug).singleOrNull()?.customRomPath?.let { return File(it) }
-        val custom = userPreferencesRepository.userPreferences.first().romStoragePath
-        return if (custom != null) File(custom, platformSlug)
-        else File(File(context.getExternalFilesDir(null), "downloads"), platformSlug)
-    }
-
-
     private suspend fun validateAndResolveLaunchFile(game: GameEntity, romFile: File): File {
         if (romFile.extension.lowercase() != "m3u") return romFile
 
@@ -2225,7 +2213,7 @@ class GameLauncher @Inject constructor(
      */
     private suspend fun consolidateExtContent(game: GameEntity, emulator: EmulatorDef): File? {
         if (!extContentOrganizer.isExtcontentEmulator(emulator.id, game.platformSlug)) return null
-        val platformDir = platformDownloadDir(game.platformSlug)
+        val platformDir = platformFolderResolver.downloadDirForPlatform(game.platformId, game.platformSlug)
         if (extContentOrganizer.usesCombinedLayout(game.platformId, game.platformSlug)) {
             extContentOrganizer.enforceCombinedLayout(game, platformDir)?.let { return it }
         }
