@@ -24,7 +24,7 @@ class ScreenCatalog @Inject constructor(
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
 
     fun attachedScreens(): List<AttachedScreen> = displayManager.displays
-        .filter { it.isUsablePhysicalDisplay() }
+        .filter { isScreen(it) }
         .sortedBy { it.displayId }
         .mapIndexed { index, display ->
             val size = panelSizeOf(context, display)
@@ -129,10 +129,14 @@ class ScreenCatalog @Inject constructor(
             return flags and Display.FLAG_PRESENTATION == 0
         }
 
-        private fun Display.isUsablePhysicalDisplay(): Boolean {
-            val type = displayType()
+        /**
+         * Whether Argosy treats [display] as a screen: a built-in or external panel. Virtual,
+         * overlay and app-created presentation displays are not screens.
+         */
+        fun isScreen(display: Display): Boolean {
+            val type = display.displayType()
             if (type != null) return type == DISPLAY_TYPE_BUILT_IN || type == DISPLAY_TYPE_EXTERNAL
-            return flags and Display.FLAG_PRIVATE == 0
+            return display.flags and Display.FLAG_PRIVATE == 0
         }
     }
 }

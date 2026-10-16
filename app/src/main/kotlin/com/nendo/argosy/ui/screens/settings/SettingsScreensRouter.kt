@@ -1,10 +1,10 @@
 package com.nendo.argosy.ui.screens.settings
 
 import androidx.lifecycle.viewModelScope
-import com.nendo.argosy.data.preferences.DisplayRoleOverride
 import com.nendo.argosy.domain.model.ScreenLayout
 import com.nendo.argosy.domain.model.ScreenLayouts
 import com.nendo.argosy.domain.model.ScreenRole
+import com.nendo.argosy.util.DisplayAffinityHelper
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -65,11 +65,14 @@ internal fun routeAssignScreenRole(vm: SettingsViewModel, role: ScreenRole) {
     }
 
     val updated = screens.map { it.copy(role = next.roleFor(it.key) ?: it.role) }
+    val primaryDisplayId = updated.first { it.key == next.primaryKey }.displayId
     vm.displayDelegate.updateState(
         state.display.copy(
             screens = updated,
             screenRoleModalOpen = false,
-            displayRoleOverride = DisplayRoleOverride.AUTO
+            displayRoleOverride = state.display.displayRoleOverride.followingLayout(
+                DisplayAffinityHelper.rolesSwappedForPrimary(primaryDisplayId)
+            )
         )
     )
 
@@ -77,10 +80,7 @@ internal fun routeAssignScreenRole(vm: SettingsViewModel, role: ScreenRole) {
         val stored = vm.preferencesRepository.userPreferences.first().screenLayouts
         val setKey = ScreenLayouts.setKeyOf(screens.map { it.key })
         vm.preferencesRepository.setScreenLayouts(stored.with(setKey, next))
-        com.nendo.argosy.DualScreenManagerHolder.instance?.let {
-            it.clearDisplayRoleOverride()
-            it.applyStoredScreenLayout()
-        }
+        com.nendo.argosy.DualScreenManagerHolder.instance?.applyStoredScreenLayout()
     }
 }
 

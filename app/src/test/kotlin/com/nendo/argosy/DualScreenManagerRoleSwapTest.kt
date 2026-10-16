@@ -54,6 +54,10 @@ class DualScreenManagerRoleSwapTest {
                         this@DualScreenManagerRoleSwapTest.keyguardLocked
                     }
                 }
+            every { getSystemService(android.hardware.display.DisplayManager::class.java) } returns
+                mockk(relaxed = true)
+            every { getSystemService(android.os.PowerManager::class.java) } returns
+                mockk(relaxed = true)
         }
         hostContext = mockk(relaxed = true) {
             every { applicationContext } returns appContext
@@ -147,14 +151,143 @@ class DualScreenManagerRoleSwapTest {
     }
 
     @Test
-    fun `clearing the override restores auto without touching the arrangement`() {
-        manager.setRolesSwapped(true)
-        every { sessionStateStore.getDisplayRoleOverride() } returns "SWAPPED"
+    fun `a layout giving the top screen primary swaps the roles under an auto override`() {
+        thorWithLayout(primary = TOP_SCREEN, override = DisplayRoleOverride.AUTO)
 
-        manager.clearDisplayRoleOverride()
+        manager.rederiveRolesFromLayout()
+        testScope.testScheduler.advanceUntilIdle()
 
-        verify { sessionStateStore.setDisplayRoleOverride(DisplayRoleOverride.AUTO.name) }
         assertTrue(manager.isRolesSwapped.value)
+        verify { sessionStateStore.setRolesSwapped(true) }
+        verify(exactly = 0) { sessionStateStore.setDisplayRoleOverride(any()) }
+    }
+
+    @Test
+    fun `a layout giving the top screen primary swaps the roles under a standard override, which follows it`() {
+        thorWithLayout(primary = TOP_SCREEN, override = DisplayRoleOverride.STANDARD)
+
+        manager.rederiveRolesFromLayout()
+        testScope.testScheduler.advanceUntilIdle()
+
+        assertTrue(manager.isRolesSwapped.value)
+        verify { sessionStateStore.setRolesSwapped(true) }
+        verify { sessionStateStore.setDisplayRoleOverride(DisplayRoleOverride.SWAPPED.name) }
+    }
+
+    @Test
+    fun `a layout giving the lower screen primary unswaps the roles under a swapped override, which follows it`() {
+        thorWithLayout(primary = LOWER_SCREEN, override = DisplayRoleOverride.SWAPPED)
+        manager.setRolesSwapped(true)
+
+        manager.rederiveRolesFromLayout()
+        testScope.testScheduler.advanceUntilIdle()
+
+        assertEquals(false, manager.isRolesSwapped.value)
+        verify { sessionStateStore.setRolesSwapped(false) }
+        verify { sessionStateStore.setDisplayRoleOverride(DisplayRoleOverride.STANDARD.name) }
+    }
+
+    @Test
+    fun `a layout already matching the live arrangement commits nothing`() {
+        thorWithLayout(primary = TOP_SCREEN, override = DisplayRoleOverride.AUTO)
+        manager.setRolesSwapped(true)
+
+        manager.rederiveRolesFromLayout()
+        testScope.testScheduler.advanceUntilIdle()
+
+        assertTrue(manager.isRolesSwapped.value)
+        verify(exactly = 0) { sessionStateStore.setRolesSwapped(any()) }
+    }
+
+    @Test
+    fun `re-deriving waits while a session is active`() {
+        thorWithLayout(primary = TOP_SCREEN, override = DisplayRoleOverride.AUTO)
+        every { sessionStateStore.hasActiveSession() } returns true
+
+        manager.rederiveRolesFromLayout()
+        testScope.testScheduler.advanceUntilIdle()
+
+        assertEquals(false, manager.isRolesSwapped.value)
+    }
+
+    @Test
+    fun `a layout the running game could not follow applies when the session ends`() {
+        thorWithLayout(primary = TOP_SCREEN, override = DisplayRoleOverride.AUTO)
+        var sessionActive = true
+        every { sessionStateStore.hasActiveSession() } answers { sessionActive }
+
+        manager.setPrimaryDisplayId(TOP_SCREEN.displayId)
+        testScope.testScheduler.advanceUntilIdle()
+        assertEquals(false, manager.isRolesSwapped.value)
+
+        sessionActive = false
+        manager.onSessionChanged(-1L)
+        testScope.testScheduler.advanceUntilIdle()
+
+        assertTrue(manager.isRolesSwapped.value)
+        verify { sessionStateStore.setRolesSwapped(true) }
+    }
+
+    @Test
+    fun `a virtual display coming and going during a session leaves roles, override and session alone`() {
+        val (listener, tracker) = sessionOnLowerScreen(screens = { listOf(TOP_SCREEN, LOWER_SCREEN) })
+
+        listener.onDisplayAdded(VIRTUAL_DISPLAY)
+        listener.onDisplayChanged(VIRTUAL_DISPLAY)
+        listener.onDisplayRemoved(VIRTUAL_DISPLAY)
+        testScope.testScheduler.advanceUntilIdle()
+
+        assertTrue(manager.isRolesSwapped.value)
+        assertEquals(LOWER_SCREEN.displayId, manager.emulatorDisplayId)
+        verify(exactly = 0) { sessionStateStore.setRolesSwapped(any()) }
+        verify(exactly = 0) { sessionStateStore.setDisplayRoleOverride(any()) }
+        verify(exactly = 0) { sessionStateStore.clearSession() }
+        verify(exactly = 0) { tracker.endSessionInBackground(any(), any()) }
+    }
+
+    @Test
+    fun `a screen removed during a session still reaches the session teardown`() {
+        var screens = listOf(TOP_SCREEN, LOWER_SCREEN)
+        val (listener, tracker) = sessionOnLowerScreen(screens = { screens })
+
+        screens = listOf(TOP_SCREEN)
+        listener.onDisplayRemoved(LOWER_SCREEN.displayId)
+        testScope.testScheduler.advanceUntilIdle()
+
+        verify(exactly = 1) { tracker.endSessionInBackground(any(), any()) }
+    }
+
+    private fun sessionOnLowerScreen(
+        screens: () -> List<com.nendo.argosy.util.AttachedScreen>
+    ): Pair<android.hardware.display.DisplayManager.DisplayListener,
+        com.nendo.argosy.data.emulator.PlaySessionTracker> {
+        io.mockk.mockkObject(com.nendo.argosy.hardware.CompanionGuardService.Companion)
+        every { com.nendo.argosy.hardware.CompanionGuardService.start(any()) } returns Unit
+        every { com.nendo.argosy.hardware.CompanionGuardService.stop(any()) } returns Unit
+        val listener = slot<android.hardware.display.DisplayManager.DisplayListener>()
+        val helper = mockk<com.nendo.argosy.util.DisplayAffinityHelper>(relaxed = true) {
+            every { getRoleDisplayIds(any()) } returns null
+            every { isPhysicalDisplay(any()) } returns true
+            every { isDockedDark } returns false
+            every { isDesktopMode } returns false
+            every { registerDisplayListener(capture(listener), any()) } returns Unit
+        }
+        val tracker = mockk<com.nendo.argosy.data.emulator.PlaySessionTracker>(relaxed = true)
+        every { preferencesRepository.userPreferences } returns
+            kotlinx.coroutines.flow.flowOf(UserPreferences())
+        every { sessionStateStore.hasActiveSession() } returns true
+        every { sessionStateStore.getDisplayRoleOverride() } returns DisplayRoleOverride.STANDARD.name
+        manager = newManager(
+            scope = testScope.backgroundScope,
+            displayAffinityHelper = helper,
+            attachedScreens = screens,
+            playSessionTracker = tracker
+        )
+        manager.setRolesSwapped(true)
+        manager.emulatorDisplayId = LOWER_SCREEN.displayId
+        manager.registerReceivers()
+        testScope.testScheduler.advanceUntilIdle()
+        return listener.captured to tracker
     }
 
     @Test
@@ -383,16 +516,50 @@ class DualScreenManagerRoleSwapTest {
         }
     }
 
+    private fun thorWithLayout(
+        primary: com.nendo.argosy.util.AttachedScreen,
+        override: DisplayRoleOverride
+    ) {
+        val screens = listOf(TOP_SCREEN, LOWER_SCREEN)
+        val layout = com.nendo.argosy.domain.model.ScreenLayout(
+            screens.associate {
+                it.key to if (it == primary) {
+                    com.nendo.argosy.domain.model.ScreenRole.PRIMARY
+                } else {
+                    com.nendo.argosy.domain.model.ScreenRole.PRESENTATION
+                }
+            }
+        )
+        val layouts = com.nendo.argosy.domain.model.ScreenLayouts().with(
+            com.nendo.argosy.domain.model.ScreenLayouts.setKeyOf(screens.map { it.key }),
+            layout
+        )
+        every { preferencesRepository.userPreferences } returns
+            kotlinx.coroutines.flow.flowOf(UserPreferences(screenLayouts = layouts))
+        every { sessionStateStore.getDisplayRoleOverride() } returns override.name
+        manager = newManager(attachedScreens = { screens })
+        manager.setRolesSwapped(false)
+    }
+
     private companion object {
         const val PRIMARY_DISPLAY = 0
         const val PRESENTATION_DISPLAY = 1
+        const val VIRTUAL_DISPLAY = 9
+        val TOP_SCREEN = com.nendo.argosy.util.AttachedScreen(
+            key = "top", displayId = 0, number = 1, widthPx = 1920, heightPx = 1080, builtIn = true
+        )
+        val LOWER_SCREEN = com.nendo.argosy.util.AttachedScreen(
+            key = "lower", displayId = 4, number = 2, widthPx = 1240, heightPx = 1080, builtIn = true
+        )
     }
 
     private fun newManager(
         scope: kotlinx.coroutines.CoroutineScope = testScope,
         displayAffinityHelper: com.nendo.argosy.util.DisplayAffinityHelper =
             mockk(relaxed = true) { every { getRoleDisplayIds(any()) } returns null },
-        gameWindowMover: com.nendo.argosy.hardware.GameWindowMover = FakeGameWindowMover(arrives = false)
+        gameWindowMover: com.nendo.argosy.hardware.GameWindowMover = FakeGameWindowMover(arrives = false),
+        attachedScreens: () -> List<com.nendo.argosy.util.AttachedScreen> = { emptyList() },
+        playSessionTracker: com.nendo.argosy.data.emulator.PlaySessionTracker = mockk(relaxed = true)
     ): DualScreenManager = DualScreenManager(
         context = hostContext,
         scope = scope,
@@ -440,7 +607,7 @@ class DualScreenManagerRoleSwapTest {
         saveHandlerRegistry = mockk(relaxed = true),
         steamDownloadQueueDao = mockk(relaxed = true),
         steamRepository = mockk(relaxed = true),
-        playSessionTracker = mockk(relaxed = true),
+        playSessionTracker = playSessionTracker,
         permissionHelper = mockk(relaxed = true),
         steamContentManager = mockk(relaxed = true),
         repairImageCacheUseCase = mockk(relaxed = true),
@@ -460,6 +627,7 @@ class DualScreenManagerRoleSwapTest {
         mediaDownloadDelegate = mockk(relaxed = true),
         mediaSeriesDelegate = mockk(relaxed = true),
         mediaSiblingsDelegate = mockk(relaxed = true),
-        gameWindowMover = gameWindowMover
+        gameWindowMover = gameWindowMover,
+        attachedScreens = attachedScreens
     )
 }

@@ -369,12 +369,8 @@ class DisplayAffinityHelper @Inject constructor(
             Display::class.java.getMethod("getType").invoke(this) as? Int
         } catch (_: Exception) { null }
 
-        private fun Display.isPhysicalDisplay(): Boolean {
-            if (state == Display.STATE_OFF) return false
-            val type = displayType()
-            if (type != null) return type == DISPLAY_TYPE_BUILT_IN || type == DISPLAY_TYPE_EXTERNAL
-            return flags and Display.FLAG_PRIVATE == 0
-        }
+        private fun Display.isPhysicalDisplay(): Boolean =
+            state != Display.STATE_OFF && ScreenCatalog.isScreen(this)
 
         /**
          * The display carrying the companion surface: the role holder that is not the default
@@ -472,5 +468,14 @@ class DisplayAffinityHelper @Inject constructor(
                 secondary to Display.DEFAULT_DISPLAY
             }
         }
+
+        internal fun rolesSwappedForPrimary(primaryDisplayId: Int): Boolean =
+            primaryDisplayId == Display.DEFAULT_DISPLAY
+
+        internal fun rolesSwappedFor(
+            layout: com.nendo.argosy.domain.model.ScreenLayout,
+            attached: List<AttachedScreen>
+        ): Boolean? = attached.find { it.key == layout.primaryKey }
+            ?.let { rolesSwappedForPrimary(it.displayId) }
     }
 }

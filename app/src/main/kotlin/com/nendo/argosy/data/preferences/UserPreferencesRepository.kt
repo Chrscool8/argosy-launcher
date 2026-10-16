@@ -1245,9 +1245,19 @@ enum class DisplayRoleOverride(val displayName: String) {
     STANDARD("Standard"),
     SWAPPED("Swapped");
 
+    /**
+     * The override to record once a screen layout puts the roles at [rolesSwapped]. AUTO stays
+     * AUTO; an explicit choice follows the layout, so the two never name different arrangements.
+     */
+    fun followingLayout(rolesSwapped: Boolean): DisplayRoleOverride =
+        if (this == AUTO) AUTO else matching(rolesSwapped)
+
     companion object {
         fun fromString(value: String?): DisplayRoleOverride =
             entries.find { it.name == value } ?: AUTO
+
+        fun matching(rolesSwapped: Boolean): DisplayRoleOverride =
+            if (rolesSwapped) SWAPPED else STANDARD
     }
 }
 

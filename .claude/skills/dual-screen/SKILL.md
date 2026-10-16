@@ -198,9 +198,17 @@ The transaction numbers are per Android release in `BrightnessController.callsBy
 (Thor, 35/36) is mapped and verified, and the row stays hidden on any release not in that map.
 
 Role-state writers: `swapRoles()` toggles, `applyDisplayRoleOverride(override)` sets, and
-`setPrimaryDisplayId` applies a stored layout. While a session is active each one commits only
-through `moveGameWithRoles`, which carries the game to the display its role lands on first and
-refuses otherwise. Do not write `_isRolesSwapped` from anywhere else.
+`setPrimaryDisplayId` / `rederiveRolesFromLayout()` apply the stored layout. While a session is
+active each one commits only through `moveGameWithRoles`, which carries the game to the display
+its role lands on first and refuses otherwise. Do not write `_isRolesSwapped` from anywhere else.
+
+LAW: the stored layout of the attached set is the only source of the swapped flag. The two user
+commands (`swapRoles`, `applyDisplayRoleOverride`) write the layout through `persistPrimaryRole`;
+nothing else reaches it. Activity creation, display add/remove, docking and session end re-derive
+from the layout; none of them consults the Control Screen override. A refused move during a
+session needs no pending copy, because the layout already holds it and every session end calls
+`rederiveRolesFromLayout()`. The stored override follows the layout (`followingLayout`): AUTO
+stays AUTO, an explicit value is rewritten to the arrangement the layout produces.
 
 Live move (AYN Thor only, `liveSwapAvailable`): needs `hardware/ThorTaskMover` answering its probe,
 a software-rendered built-in core registered as `LiveMoveHost`, and a game on the PRIMARY or
@@ -221,8 +229,15 @@ as the intercept handler so every other button still reaches the screen behind i
 Known-set changes never prompt; they just apply the stored profile.
 
 UNPROVEN: this path has not been exercised with real hardware. `overlay_display_devices` cannot
-fake it, because `ScreenCatalog` filters to BUILT_IN/EXTERNAL and the listener gates on
-`isPhysicalDisplay`. Needs a monitor plugged into the Thor.
+fake it, because `ScreenCatalog` filters to BUILT_IN/EXTERNAL and the listener gates on the
+same set.
+
+LAW: the DSM display listener acts only on screens. `isScreenEvent` passes a display that is in
+`ScreenCatalog.attachedScreens()` now or was at the previous event (a removed display can no
+longer be classified, so membership is remembered). Emulators such as Azahar create and remove
+their own virtual and presentation displays mid-session; those never reach role re-derivation,
+companion relaunch, docked sync or session teardown. `ScreenCatalog.isScreen` is the one
+predicate; `DisplayAffinityHelper.isPhysicalDisplay` is that predicate plus "not off". Needs a monitor plugged into the Thor.
 
 ## Process and lifecycle (unchanged, still true)
 

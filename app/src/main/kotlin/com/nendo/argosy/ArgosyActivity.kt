@@ -54,7 +54,6 @@ import com.nendo.argosy.util.DisplayAffinityHelper
 import com.nendo.argosy.util.Logger
 import com.nendo.argosy.util.LauncherSystemBars
 import com.nendo.argosy.util.installImmersiveMode
-import com.nendo.argosy.util.DisplayRoleResolver
 import dagger.hilt.android.AndroidEntryPoint
 import com.nendo.argosy.util.SafeCoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -257,16 +256,12 @@ class ArgosyActivity : ComponentActivity() {
 
         displayAffinityHelper.dualScreenEnabled = sessionStateStore.isDualScreenEnabled()
         displayAffinityHelper.secondaryDisplayUsable = sessionStateStore.isSecondaryDisplayUsable()
-        val resolver = DisplayRoleResolver(displayAffinityHelper, sessionStateStore)
-        val initialSwapped = resolver.isSwapped
-        sessionStateStore.setRolesSwapped(initialSwapped)
 
         val existingDsm = DualScreenManagerHolder.instance
         if (existingDsm != null) {
             dualScreenManager = existingDsm
             dualScreenManager.rebind(this, activityScope)
             if (desktopModeChanged) dualScreenManager.onDesktopModeChanged()
-            dualScreenManager.setRolesSwapped(initialSwapped)
         } else {
             dualScreenManager = DualScreenManager(
                 context = this,
@@ -335,7 +330,7 @@ class ArgosyActivity : ComponentActivity() {
                 resolveGameEmulatorContext = resolveGameEmulatorContext,
                 hapticManager = hapticFeedbackManager,
                 soundManager = soundFeedbackManager,
-                initialRolesSwapped = initialSwapped
+                initialRolesSwapped = sessionStateStore.isRolesSwapped()
             )
             DualScreenManagerHolder.instance = dualScreenManager
         }
