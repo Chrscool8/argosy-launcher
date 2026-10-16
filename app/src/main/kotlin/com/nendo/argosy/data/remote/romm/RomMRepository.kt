@@ -220,6 +220,8 @@ class RomMRepository @Inject constructor(
 
     suspend fun syncPlatform(platformId: Long): SyncResult = librarySyncService.syncPlatform(platformId)
 
+    suspend fun pruneServerRemovedGames(): Int = librarySyncService.pruneServerRemovedGames()
+
     suspend fun syncPlatformsOnly(): Result<Int> = librarySyncService.syncPlatformsOnly()
 
     suspend fun syncSingleRom(romId: Long): RomMResult<com.nendo.argosy.data.local.entity.GameEntity> =

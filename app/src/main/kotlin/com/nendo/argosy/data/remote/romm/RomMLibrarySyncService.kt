@@ -893,9 +893,27 @@ class RomMLibrarySyncService @Inject constructor(
         return deleted
     }
 
-    private suspend fun reconcileDeletedRoms(scope: SyncScope): Int {
-        val candidates = missingServerRoms(scope) +
-            gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, scope.ownerUserId)
+    /**
+     * Removes rows already kept as server-removed whose local rom files are gone. Needs no
+     * server; withholds when a rom storage volume cannot be read.
+     */
+    suspend fun pruneServerRemovedGames(): Int =
+        settleServerRemovedCandidates(
+            gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, overlayWriter.activeOwnerId()),
+            overlayWriter.activeOwnerId()
+        )
+
+    private suspend fun reconcileDeletedRoms(scope: SyncScope): Int =
+        settleServerRemovedCandidates(
+            missingServerRoms(scope) +
+                gameDao.getServerRemovedIdsForOwner(ROMM_SOURCES, scope.ownerUserId),
+            scope.ownerUserId
+        )
+
+    private suspend fun settleServerRemovedCandidates(
+        candidates: List<com.nendo.argosy.data.local.dao.ServerBackedGameRef>,
+        ownerUserId: Long?
+    ): Int {
         if (candidates.isEmpty()) return 0
 
         if (!gameRepository.get().romStorageVolumesReadable()) {
@@ -913,7 +931,7 @@ class RomMLibrarySyncService @Inject constructor(
 
         for (ref in candidates) {
             val game = gameDao.getById(ref.id) ?: continue
-            when (settleServerRemovedGame(game, scope.ownerUserId, romVolumesReadable = true)) {
+            when (settleServerRemovedGame(game, ownerUserId, romVolumesReadable = true)) {
                 ServerRemovedOutcome.REMOVED -> deleted++
                 ServerRemovedOutcome.KEPT -> preserved++
                 ServerRemovedOutcome.WITHHELD -> Unit

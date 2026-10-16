@@ -90,6 +90,12 @@ class StartupMaintenanceCoordinator @Inject constructor(
             }
         },
         Step(
+            key = "server_removed",
+            label = R.string.ui_startup_status_scanning_roms
+        ) {
+            romMRepository.pruneServerRemovedGames()
+        },
+        Step(
             key = "collections",
             label = R.string.ui_startup_status_syncing_collections,
             isDue = { romMRepository.isConnected() }

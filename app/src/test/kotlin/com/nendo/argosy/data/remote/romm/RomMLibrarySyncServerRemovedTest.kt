@@ -306,6 +306,42 @@ class RomMLibrarySyncServerRemovedTest {
     }
 
     @Test
+    fun `the startup prune removes a preserved row with no rom files without asking the server`() = runTest {
+        coEvery { gameDao.getServerRemovedIdsForOwner(romSources, null) } returns
+            listOf(ServerBackedGameRef(id = 9L, rommId = -9L, platformId = 1L))
+        coEvery { gameDao.getById(9L) } returns game(rommId = -9L)
+
+        assertEquals(1, service.pruneServerRemovedGames())
+
+        coVerify(exactly = 1) { gameDao.delete(9L) }
+        coVerify(exactly = 0) { apiClient.getRomIdentifiers() }
+    }
+
+    @Test
+    fun `the startup prune keeps a preserved row that still has rom files`() = runTest {
+        coEvery { gameDao.getServerRemovedIdsForOwner(romSources, null) } returns
+            listOf(ServerBackedGameRef(id = 9L, rommId = -9L, platformId = 1L))
+        coEvery { gameDao.getById(9L) } returns game(rommId = -9L)
+        coEvery { gameFileDao.getDownloadedCount(9L) } returns 1
+
+        assertEquals(0, service.pruneServerRemovedGames())
+
+        coVerify(exactly = 0) { gameDao.delete(9L) }
+    }
+
+    @Test
+    fun `the startup prune withholds when a rom volume cannot be read`() = runTest {
+        coEvery { gameDao.getServerRemovedIdsForOwner(romSources, null) } returns
+            listOf(ServerBackedGameRef(id = 9L, rommId = -9L, platformId = 1L))
+        coEvery { gameDao.getById(9L) } returns game(rommId = -9L)
+        coEvery { gameRepository.romStorageVolumesReadable() } returns false
+
+        assertEquals(0, service.pruneServerRemovedGames())
+
+        coVerify(exactly = 0) { gameDao.delete(9L) }
+    }
+
+    @Test
     fun `the library sweep only asks for server-removed rows under RomM sources`() = runTest {
         service.syncLibraryChanges(Instant.parse("2026-10-01T00:00:00Z"))
 
