@@ -1935,6 +1935,9 @@
     <string name="settings_library_layout_title">Раскладка</string>
     <string name="settings_library_layout_grid">Сетка</string>
     <string name="settings_library_layout_list">Список</string>
+    <string name="settings_library_list_style_title">Стиль списка</string>
+    <string name="settings_library_list_style_relaxed">Свободный</string>
+    <string name="settings_library_list_style_compact">Компактный</string>
     <string name="settings_library_box_art_title">Обложки</string>
     <string name="settings_library_box_art_subtitle">Показывает 3D-коробку для игр, у которых она есть</string>
     <string name="settings_library_box_art_option_2d">2D-обложка</string>

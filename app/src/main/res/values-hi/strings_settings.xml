@@ -1834,6 +1834,9 @@
     <string name="settings_library_layout_title">लेआउट</string>
     <string name="settings_library_layout_grid">ग्रिड</string>
     <string name="settings_library_layout_list">सूची</string>
+    <string name="settings_library_list_style_title">सूची शैली</string>
+    <string name="settings_library_list_style_relaxed">खुली</string>
+    <string name="settings_library_list_style_compact">कॉम्पैक्ट</string>
     <string name="settings_library_box_art_title">बॉक्स आर्ट</string>
     <string name="settings_library_box_art_subtitle">जिन गेम में 3D बॉक्स है, उनके लिए उसे दिखाता है</string>
     <string name="settings_library_box_art_option_2d">2D कवर</string>

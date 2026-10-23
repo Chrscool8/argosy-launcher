@@ -570,6 +570,7 @@ internal fun routeLoadSettings(vm: SettingsViewModel) {
             bodyFontScale = prefs.bodyFontScale,
             gridDensity = prefs.gridDensity,
             libraryLayout = prefs.libraryLayout,
+            libraryListStyle = prefs.libraryListStyle,
             backgroundBlur = prefs.backgroundBlur,
             backgroundSaturation = prefs.backgroundSaturation,
             backgroundOpacity = prefs.backgroundOpacity,

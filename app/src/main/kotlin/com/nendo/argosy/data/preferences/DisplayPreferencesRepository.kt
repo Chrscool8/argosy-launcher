@@ -51,6 +51,7 @@ data class DisplayPreferences(
     val bodyFontScale: Int = 100,
     val gridDensity: GridDensity = GridDensity.NORMAL,
     val libraryLayout: LibraryLayout = LibraryLayout.GRID,
+    val libraryListStyle: LibraryListStyle = LibraryListStyle.RELAXED,
     val libraryBoxArt3d: Boolean = false,
     val libraryDefaultSort: String = "TITLE",
     val libraryDefaultSortDescending: Boolean? = null,
@@ -160,6 +161,7 @@ class DisplayPreferencesRepository @Inject constructor(
         val FONT_BODY_SCALE = intPreferencesKey("font_body_scale")
         val UI_DENSITY = stringPreferencesKey("ui_density")
         val LIBRARY_LAYOUT = stringPreferencesKey("library_layout")
+        val LIBRARY_LIST_STYLE = stringPreferencesKey("library_list_style")
         val LIBRARY_BOX_ART_3D = booleanPreferencesKey("library_box_art_3d")
         val LIBRARY_DEFAULT_SORT = stringPreferencesKey("library_default_sort")
         val LIBRARY_DEFAULT_SORT_DESC = booleanPreferencesKey("library_default_sort_desc")
@@ -268,6 +270,7 @@ class DisplayPreferencesRepository @Inject constructor(
             bodyFontScale = prefs[Keys.FONT_BODY_SCALE] ?: 100,
             gridDensity = GridDensity.fromString(prefs[Keys.UI_DENSITY]),
             libraryLayout = LibraryLayout.fromString(prefs[Keys.LIBRARY_LAYOUT]),
+            libraryListStyle = LibraryListStyle.fromString(prefs[Keys.LIBRARY_LIST_STYLE]),
             libraryBoxArt3d = prefs[Keys.LIBRARY_BOX_ART_3D] ?: false,
             libraryDefaultSort = prefs[Keys.LIBRARY_DEFAULT_SORT] ?: "TITLE",
             libraryDefaultSortDescending = prefs[Keys.LIBRARY_DEFAULT_SORT_DESC],
@@ -475,6 +478,10 @@ class DisplayPreferencesRepository @Inject constructor(
 
     suspend fun setLibraryLayout(layout: LibraryLayout) {
         dataStore.edit { it[Keys.LIBRARY_LAYOUT] = layout.name }
+    }
+
+    suspend fun setLibraryListStyle(style: LibraryListStyle) {
+        dataStore.edit { it[Keys.LIBRARY_LIST_STYLE] = style.name }
     }
 
     suspend fun setLibraryBoxArt3d(enabled: Boolean) {

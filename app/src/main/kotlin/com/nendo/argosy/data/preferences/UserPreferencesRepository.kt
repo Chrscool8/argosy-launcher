@@ -147,6 +147,7 @@ class UserPreferencesRepository @Inject constructor(
             folderNameFromRom = storage.folderNameFromRom,
             gridDensity = display.gridDensity,
             libraryLayout = display.libraryLayout,
+            libraryListStyle = display.libraryListStyle,
             libraryBoxArt3d = display.libraryBoxArt3d,
             libraryDefaultSort = display.libraryDefaultSort,
             libraryDefaultSortDescending = display.libraryDefaultSortDescending,
@@ -317,6 +318,8 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun setFontScale(slot: FontSlot, scale: Int) = displayPrefs.setFontScale(slot, scale)
     suspend fun setGridDensity(density: GridDensity) = displayPrefs.setGridDensity(density)
     suspend fun setLibraryLayout(layout: LibraryLayout) = displayPrefs.setLibraryLayout(layout)
+
+    suspend fun setLibraryListStyle(style: LibraryListStyle) = displayPrefs.setLibraryListStyle(style)
 
     suspend fun setLibraryBoxArt3d(enabled: Boolean) = displayPrefs.setLibraryBoxArt3d(enabled)
 
@@ -877,6 +880,7 @@ data class UserPreferences(
     val folderNameFromRom: Boolean = false,
     val gridDensity: GridDensity = GridDensity.NORMAL,
     val libraryLayout: LibraryLayout = LibraryLayout.GRID,
+    val libraryListStyle: LibraryListStyle = LibraryListStyle.RELAXED,
     val libraryBoxArt3d: Boolean = false,
     val libraryDefaultSort: String = "TITLE",
     val libraryDefaultSortDescending: Boolean? = null,
@@ -1064,6 +1068,15 @@ enum class LibraryLayout {
     companion object {
         fun fromString(value: String?): LibraryLayout =
             entries.find { it.name == value } ?: GRID
+    }
+}
+
+enum class LibraryListStyle {
+    COMPACT, RELAXED;
+
+    companion object {
+        fun fromString(value: String?): LibraryListStyle =
+            entries.find { it.name == value } ?: RELAXED
     }
 }
 

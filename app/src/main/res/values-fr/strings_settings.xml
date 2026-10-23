@@ -1886,6 +1886,9 @@
     <string name="settings_library_layout_title">Disposition</string>
     <string name="settings_library_layout_grid">Grille</string>
     <string name="settings_library_layout_list">Liste</string>
+    <string name="settings_library_list_style_title">Style de liste</string>
+    <string name="settings_library_list_style_relaxed">Aéré</string>
+    <string name="settings_library_list_style_compact">Compact</string>
     <string name="settings_library_box_art_title">Jaquette</string>
     <string name="settings_library_box_art_subtitle">Affiche un boîtier 3D pour les jeux qui en ont un</string>
     <string name="settings_library_box_art_option_2d">Jaquette 2D</string>

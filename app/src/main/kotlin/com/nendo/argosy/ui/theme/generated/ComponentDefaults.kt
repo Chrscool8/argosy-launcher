@@ -110,6 +110,9 @@ object ComponentDefaults {
 
     object GameListRow {
         const val rowHeight = 84
+        const val compactRowMinHeight = 32
+        const val compactArtworkAspectRatio = 0.75f
+        const val compactArtworkMaxWidthRatio = 0.45f
         const val footerHeight = 22
         const val footerSecondTabAlpha = 0.55f
         const val footerThirdTabAlpha = 0.3f

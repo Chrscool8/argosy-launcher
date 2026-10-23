@@ -76,6 +76,18 @@ class DisplayPreferencesLibraryTest {
     }
 
     @Test
+    fun `an unset or unknown list style reads as relaxed`() = runTest {
+        val backing = store()
+        val repo = DisplayPreferencesRepository(backing)
+
+        assertEquals(LibraryListStyle.RELAXED, repo.preferences.first().libraryListStyle)
+
+        backing.edit { it[stringPreferencesKey("library_list_style")] = "DENSE" }
+
+        assertEquals(LibraryListStyle.RELAXED, repo.preferences.first().libraryListStyle)
+    }
+
+    @Test
     fun `a legacy platform name becomes the matching platform id`() = runTest {
         val backing = store()
         backing.edit { it[legacyPlatformKey] = SNES_NAME }

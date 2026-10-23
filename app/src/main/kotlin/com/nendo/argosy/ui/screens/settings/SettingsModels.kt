@@ -258,6 +258,8 @@ data class DisplayState(
     val gridDensity: GridDensity = GridDensity.NORMAL,
     val libraryLayout: com.nendo.argosy.data.preferences.LibraryLayout =
         com.nendo.argosy.data.preferences.LibraryLayout.GRID,
+    val libraryListStyle: com.nendo.argosy.data.preferences.LibraryListStyle =
+        com.nendo.argosy.data.preferences.LibraryListStyle.RELAXED,
     val backgroundBlur: Int = 0,
     val backgroundSaturation: Int = 100,
     val backgroundOpacity: Int = 100,

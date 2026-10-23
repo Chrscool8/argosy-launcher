@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
@@ -82,16 +85,12 @@ fun GameListRow(
     onCoverLoadFailed: ((String) -> Unit)? = null
 ) {
     val cornerRadius = LocalBoxArtStyle.current.cornerRadiusDp
-    val shape = RoundedCornerShape(cornerRadius)
     val focusWidth = ComponentDefaults.GameListRow.focusBorderWidth.dp
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(ComponentDefaults.GameListRow.rowHeight.dp)
-            .focusBorder(isFocused, MaterialTheme.colorScheme.primary, focusWidth, shape)
-            .clickableNoFocus(onClick = onClick, onLongClick = onLongClick),
-        shape = shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    GameListRowCard(
+        isFocused = isFocused,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        modifier = modifier.height(ComponentDefaults.GameListRow.rowHeight.dp)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
             GameListRowBody(
@@ -121,6 +120,74 @@ fun GameListRow(
             )
             GameListCover(title = title, coverPath = coverPath, onLoadFailed = onCoverLoadFailed)
         }
+    }
+}
+
+@Composable
+internal fun CompactGameListRow(
+    title: String,
+    isDownloaded: Boolean,
+    isFocused: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    needsInstall: Boolean = false,
+    downloadIndicator: GameDownloadIndicator = GameDownloadIndicator.NONE,
+    saveState: SaveListState? = null
+) {
+    GameListRowCard(
+        isFocused = isFocused,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        containerColor = if (isFocused) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        },
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = ComponentDefaults.GameListRow.compactRowMinHeight.dp)
+                .padding(horizontal = Dimens.spacingSm, vertical = Dimens.spacingXs),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            TitleLine(
+                title = title,
+                saveState = saveState,
+                downloadIndicator = downloadIndicator,
+                isDownloaded = isDownloaded,
+                needsInstall = needsInstall
+            )
+        }
+    }
+}
+
+@Composable
+private fun GameListRowCard(
+    isFocused: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    content: @Composable () -> Unit
+) {
+    val shape = RoundedCornerShape(LocalBoxArtStyle.current.cornerRadiusDp)
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .focusBorder(
+                isFocused,
+                MaterialTheme.colorScheme.primary,
+                ComponentDefaults.GameListRow.focusBorderWidth.dp,
+                shape
+            )
+            .clickableNoFocus(onClick = onClick, onLongClick = onLongClick),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = containerColor)
+    ) {
+        content()
     }
 }
 
@@ -219,29 +286,42 @@ private fun TitleLine(
 
 @Composable
 private fun GameListCover(title: String, coverPath: String?, onLoadFailed: ((String) -> Unit)?) {
-    Box(
+    GameCoverImage(
+        title = title,
+        coverPath = coverPath,
+        contentScale = ContentScale.Crop,
+        onLoadFailed = onLoadFailed,
         modifier = Modifier
             .fillMaxHeight()
             .aspectRatio(LocalBoxArtStyle.current.aspectRatio, matchHeightConstraintsFirst = true)
             .background(MaterialTheme.colorScheme.surface)
-    ) {
+    )
+}
+
+@Composable
+internal fun GameCoverImage(
+    title: String,
+    coverPath: String?,
+    contentScale: ContentScale,
+    onLoadFailed: ((String) -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (coverPath != null) {
             AsyncImage(
                 model = rememberFileImageModel(coverPath),
                 contentDescription = title,
-                contentScale = ContentScale.Crop,
+                contentScale = contentScale,
                 onError = { onLoadFailed?.invoke(coverPath) },
                 modifier = Modifier.fillMaxSize()
             )
         } else {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Icon(
-                    Icons.Default.SportsEsports,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = PLACEHOLDER_ICON_ALPHA),
-                    modifier = Modifier.fillMaxSize(PLACEHOLDER_ICON_FILL)
-                )
-            }
+            Icon(
+                Icons.Default.SportsEsports,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = PLACEHOLDER_ICON_ALPHA),
+                modifier = Modifier.fillMaxSize(PLACEHOLDER_ICON_FILL)
+            )
         }
     }
 }

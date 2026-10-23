@@ -406,6 +406,13 @@ class DisplaySettingsDelegate @Inject constructor(
         }
     }
 
+    fun setLibraryListStyle(scope: CoroutineScope, style: com.nendo.argosy.data.preferences.LibraryListStyle) {
+        scope.launch {
+            preferencesRepository.setLibraryListStyle(style)
+            _state.update { it.copy(libraryListStyle = style) }
+        }
+    }
+
     fun setLibraryBoxArt3d(scope: CoroutineScope, enabled: Boolean) {
         scope.launch {
             preferencesRepository.setLibraryBoxArt3d(enabled)

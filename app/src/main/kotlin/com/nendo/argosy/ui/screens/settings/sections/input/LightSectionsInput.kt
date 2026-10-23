@@ -11,6 +11,7 @@ import com.nendo.argosy.data.preferences.SelectSwapMode
 import com.nendo.argosy.ui.screens.settings.delegates.ControlsSettingsDelegate
 import com.nendo.argosy.util.LogLevel
 import com.nendo.argosy.data.preferences.LibraryLayout
+import com.nendo.argosy.data.preferences.LibraryListStyle
 import com.nendo.argosy.domain.model.HomeLayoutKind
 import com.nendo.argosy.ui.common.hudCornerFromStored
 import com.nendo.argosy.ui.components.HudCorner
@@ -415,6 +416,8 @@ internal class LightSectionsInput(
         when (libraryItemAtFocusIndex(state.focusedIndex, layoutState)) {
             LibraryItem.LayoutItem ->
                 return stepOption(LibraryLayout.entries, display.libraryLayout, direction, viewModel::setLibraryLayout)
+            LibraryItem.ListStyleItem ->
+                return stepOption(LibraryListStyle.entries, display.libraryListStyle, direction, viewModel::setLibraryListStyle)
             LibraryItem.GridDensityItem ->
                 return stepOption(GridDensity.entries, display.gridDensity, direction, viewModel::setGridDensity)
             LibraryItem.BoxArtItem ->

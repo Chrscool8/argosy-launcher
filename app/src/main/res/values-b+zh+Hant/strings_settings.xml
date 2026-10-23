@@ -1706,6 +1706,9 @@
     <string name="settings_library_layout_title">版面配置</string>
     <string name="settings_library_layout_grid">格線</string>
     <string name="settings_library_layout_list">清單</string>
+    <string name="settings_library_list_style_title">清單樣式</string>
+    <string name="settings_library_list_style_relaxed">寬鬆</string>
+    <string name="settings_library_list_style_compact">精簡</string>
     <string name="settings_library_box_art_title">封面圖</string>
     <string name="settings_library_box_art_subtitle">為有 3D 盒裝圖的遊戲顯示 3D 盒裝</string>
     <string name="settings_library_box_art_option_2d">2D 封面</string>

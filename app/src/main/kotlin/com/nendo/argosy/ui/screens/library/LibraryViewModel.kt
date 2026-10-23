@@ -39,6 +39,7 @@ import com.nendo.argosy.data.model.computeSections
 import com.nendo.argosy.data.preferences.BoxArtBorderStyle
 import com.nendo.argosy.data.preferences.GridDensity
 import com.nendo.argosy.data.preferences.LibraryLayout
+import com.nendo.argosy.data.preferences.LibraryListStyle
 import com.nendo.argosy.data.preferences.UserPreferencesRepository
 import com.nendo.argosy.data.repository.SaveListStatusRepository
 import com.nendo.argosy.data.social.FriendActivity
@@ -279,6 +280,7 @@ data class LibraryUiState(
     val isCustomGridHome: Boolean = false,
     val gridDensity: GridDensity = GridDensity.NORMAL,
     val libraryLayout: LibraryLayout = LibraryLayout.GRID,
+    val libraryListStyle: LibraryListStyle = LibraryListStyle.RELAXED,
     val boxArt3d: Boolean = false,
     val saveStates: Map<Long, SaveListState> = emptyMap(),
     val friendsActivity: Map<Int, List<FriendActivity>> = emptyMap(),
@@ -813,6 +815,7 @@ class LibraryViewModel @Inject constructor(
                     it.copy(
                         gridDensity = prefs.gridDensity,
                         libraryLayout = prefs.libraryLayout,
+                        libraryListStyle = prefs.libraryListStyle,
                         boxArt3d = prefs.libraryBoxArt3d,
                         recentSearches = prefs.libraryRecentSearches,
                         isCustomGridHome = prefs.homeLayout.selected ==

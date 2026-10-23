@@ -134,6 +134,7 @@ object SettingsBackupKeys {
         SettingsBackupKey("library_default_platform", SettingsBackupType.STRING),
         SettingsBackupKey("library_default_players", SettingsBackupType.STRING),
         SettingsBackupKey("library_layout", SettingsBackupType.STRING),
+        SettingsBackupKey("library_list_style", SettingsBackupType.STRING),
         SettingsBackupKey("library_default_sort", SettingsBackupType.STRING),
         SettingsBackupKey("library_default_sort_desc", SettingsBackupType.BOOLEAN),
         SettingsBackupKey("library_default_source", SettingsBackupType.STRING),

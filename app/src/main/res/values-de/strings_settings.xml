@@ -1844,6 +1844,9 @@
     <string name="settings_library_layout_title">Layout</string>
     <string name="settings_library_layout_grid">Raster</string>
     <string name="settings_library_layout_list">Liste</string>
+    <string name="settings_library_list_style_title">Listenstil</string>
+    <string name="settings_library_list_style_relaxed">Locker</string>
+    <string name="settings_library_list_style_compact">Kompakt</string>
     <string name="settings_library_box_art_title">Box-Art</string>
     <string name="settings_library_box_art_subtitle">Zeigt eine 3D-Box für Spiele, die eine haben</string>
     <string name="settings_library_box_art_option_2d">2D-Cover</string>

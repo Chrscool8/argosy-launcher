@@ -153,6 +153,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
+import com.nendo.argosy.data.preferences.LibraryListStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -208,7 +210,14 @@ fun LibraryScreen(
     }
 
     val density = LocalDensity.current
-    val headerHeightPx = with(density) { Dimens.headerHeightLg.toPx() }.toInt()
+    val isCompactList = uiState.isListLayout && uiState.libraryListStyle == LibraryListStyle.COMPACT
+    var compactHeaderHeightPx by remember { mutableStateOf(0) }
+    val defaultHeaderHeightPx = with(density) { Dimens.headerHeightLg.toPx() }.toInt()
+    val headerHeightPx = if (isCompactList && compactHeaderHeightPx > 0) {
+        compactHeaderHeightPx
+    } else {
+        defaultHeaderHeightPx
+    }
     val footerHeight = withNavBarClearance(Dimens.footerHeight)
     val footerHeightPx = with(density) { footerHeight.toPx() }.toInt()
 
@@ -527,6 +536,8 @@ fun LibraryScreen(
                 } else {
                     val activeFilterChips = remember(uiState.activeFilters) { uiState.activeFilters.chips }
                     LibraryHeader(
+                        compact = isCompactList,
+                        modifier = Modifier.onSizeChanged { compactHeaderHeightPx = it.height },
                         platformName = uiState.currentPlatform?.displayName
                             ?: stringResource(R.string.library_header_all_platforms),
                         gameCount = uiState.games.size,
@@ -835,7 +846,9 @@ private fun LibraryHeader(
     focusedGameTitle: String? = null,
     onPreviousPlatform: () -> Unit = {},
     onNextPlatform: () -> Unit = {},
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    compact: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     val aspectRatioClass = com.nendo.argosy.ui.theme.LocalUiScale.current.aspectRatioClass
     val maxNameLength = when (aspectRatioClass) {
@@ -853,9 +866,9 @@ private fun LibraryHeader(
 
     val surfaceColor = MaterialTheme.colorScheme.surface
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .height(Dimens.headerHeightLg)
+            .then(if (compact) Modifier else Modifier.height(Dimens.headerHeightLg))
             .background(
                 Brush.verticalGradient(
                     0.0f to surfaceColor,
@@ -1363,12 +1376,13 @@ private fun LibraryFooter(
 @Composable
 internal fun SectionDivider(
     label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = Dimens.spacingSm),
+            .padding(vertical = if (compact) 0.dp else Dimens.spacingSm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
     ) {

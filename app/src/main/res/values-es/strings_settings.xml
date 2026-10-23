@@ -1896,6 +1896,9 @@
     <string name="settings_library_layout_title">Diseño</string>
     <string name="settings_library_layout_grid">Cuadrícula</string>
     <string name="settings_library_layout_list">Lista</string>
+    <string name="settings_library_list_style_title">Estilo de lista</string>
+    <string name="settings_library_list_style_relaxed">Espacioso</string>
+    <string name="settings_library_list_style_compact">Compacto</string>
     <string name="settings_library_box_art_title">Carátula</string>
     <string name="settings_library_box_art_subtitle">Muestra una caja 3D en los juegos que la tienen</string>
     <string name="settings_library_box_art_option_2d">Portada 2D</string>

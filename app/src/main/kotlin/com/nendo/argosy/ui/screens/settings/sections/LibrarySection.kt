@@ -14,6 +14,7 @@ import com.nendo.argosy.data.local.entity.getDisplayName
 import com.nendo.argosy.data.model.SortOption
 import com.nendo.argosy.data.preferences.GridDensity
 import com.nendo.argosy.data.preferences.LibraryLayout
+import com.nendo.argosy.data.preferences.LibraryListStyle
 import com.nendo.argosy.domain.model.PlayerCountBucket
 import com.nendo.argosy.ui.common.labelRes
 import com.nendo.argosy.ui.components.CyclePreference
@@ -57,6 +58,11 @@ internal sealed class LibraryItem(
     class Header(key: String, section: String, val titleRes: Int) : LibraryItem(key, section)
 
     data object LayoutItem : LibraryItem("libraryLayout", "layout")
+    data object ListStyleItem : LibraryItem(
+        key = "libraryListStyle",
+        section = "layout",
+        visibleWhen = { it.libraryLayout == LibraryLayout.LIST }
+    )
     data object GridDensityItem : LibraryItem(
         key = "libraryGridDensity",
         section = "layout",
@@ -80,6 +86,7 @@ internal sealed class LibraryItem(
             get() = listOf(
                 Header("libraryLayoutHeader", "layout", R.string.settings_library_section_layout),
                 LayoutItem,
+                ListStyleItem,
                 GridDensityItem,
                 BoxArtItem,
                 Header("libraryDefaultsHeader", "defaults", R.string.settings_library_section_defaults),
@@ -226,6 +233,17 @@ fun LibrarySection(uiState: SettingsUiState, viewModel: SettingsViewModel) {
                 selectedIndex = LibraryLayout.entries.indexOf(display.libraryLayout),
                 isFocused = isFocused(item),
                 onSelect = { viewModel.setLibraryLayout(LibraryLayout.entries[it]) }
+            )
+
+            LibraryItem.ListStyleItem -> SegmentedPreference(
+                title = stringResource(R.string.settings_library_list_style_title),
+                options = listOf(
+                    stringResource(R.string.settings_library_list_style_compact),
+                    stringResource(R.string.settings_library_list_style_relaxed)
+                ),
+                selectedIndex = LibraryListStyle.entries.indexOf(display.libraryListStyle),
+                isFocused = isFocused(item),
+                onSelect = { viewModel.setLibraryListStyle(LibraryListStyle.entries[it]) }
             )
 
             LibraryItem.GridDensityItem -> SegmentedPreference(

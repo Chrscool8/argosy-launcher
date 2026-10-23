@@ -1141,6 +1141,9 @@ class SettingsViewModel @Inject constructor(
     fun setLibraryLayout(layout: com.nendo.argosy.data.preferences.LibraryLayout) =
         displayDelegate.setLibraryLayout(viewModelScope, layout)
 
+    fun setLibraryListStyle(style: com.nendo.argosy.data.preferences.LibraryListStyle) =
+        displayDelegate.setLibraryListStyle(viewModelScope, style)
+
     fun setLibraryBoxArt3d(enabled: Boolean) = displayDelegate.setLibraryBoxArt3d(viewModelScope, enabled)
 
     fun setHomeBoxArt3d(enabled: Boolean) =
